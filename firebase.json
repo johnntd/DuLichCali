@@ -64,6 +64,9 @@
       { "source": "/vendor-subscription",  "destination": "/vendor-subscription.html" },
       { "source": "/vendor-signup",         "destination": "/vendor-signup.html" },
       { "source": "/security-alerts",       "destination": "/security-alerts.html" },
+      { "source": "/style-studio",          "destination": "/style-studio.html" },
+      { "source": "/driver",                "destination": "/driver/dashboard.html" },
+      { "source": "/driver/login",          "destination": "/driver/login.html" },
       { "source": "/mobile-barber",         "destination": "/mobile-barber/index.html" },
       { "source": "/mobile-barber/dashboard", "destination": "/mobile-barber/dashboard.html" },
       { "source": "/mobile-barber/vendor/**", "destination": "/mobile-barber/vendor.html" }
@@ -83,6 +86,13 @@
         "source": "**/*.@(js|css)",
         "headers": [
           { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+        ]
+      },
+      {
+        "source": "/driver/sw.js",
+        "headers": [
+          { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+          { "key": "Service-Worker-Allowed", "value": "/driver/" }
         ]
       },
       {

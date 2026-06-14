@@ -1609,7 +1609,10 @@
   var STORED_IMAGE_FIELDS = [
     'selectedHaircutImageUrl', 'selectedHaircutThumbnailUrl', 'selectedHaircutImageStoragePath',
     'selectedAiStyleImage', 'selectedStylePreviewUrl',
-    'customerSelfieUrl', 'customerSelfieStoragePath', 'selfieDataUrl'
+    'customerSelfieUrl', 'customerSelfieStoragePath', 'selfieDataUrl',
+    // AI Style Studio (vendor tool) — defensive: studio never persists images,
+    // but if a booking ever carries these they must be stripped too.
+    'studioSelectedPreviewUrl', 'studioSelfieDataUrl'
   ];
   function isPersistedImageValue(v) {
     return typeof v === 'string' && (

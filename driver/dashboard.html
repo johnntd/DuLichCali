@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0d2f50">
+  <title>Driver Portal</title>
+  <link rel="manifest" href="/driver/manifest.webmanifest">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="/assets/icons/driver-180.png?v=1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/driver-180.png?v=1">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/driver-192.png?v=1">
+  <link rel="icon" type="image/png" sizes="512x512" href="/assets/icons/driver-512.png?v=1">
+  <link rel="stylesheet" href="/portal-kit/portal-kit.css?v=20260606a">
+  <style>
+    :root { --pk-accent:#176f7f; --pk-radius:14px; --pk-bg:#eef4f7; --pk-gold:#f4b73e; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--pk-bg); color:var(--pk-text); font-family:Jost, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .driver-brand { display:grid; gap:3px; }
+    .driver-brand strong { color:var(--pk-navy); font-size:1.18rem; }
+    .driver-brand span { color:var(--pk-muted); font-weight:700; }
+    .driver-actions, .driver-toggle-row, .driver-lang { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+    .driver-toggle-row { margin-top:16px; }
+    .driver-toggle { justify-content:space-between; min-width:min(100%, 220px); border-radius:12px; }
+    .driver-toggle[aria-pressed="true"] { color:#fff; background:var(--pk-accent); border-color:var(--pk-accent); }
+    .driver-panel { margin:14px 0; }
+    .driver-empty { padding:18px; color:var(--pk-muted); text-align:center; font-weight:700; }
+    .driver-card-main { display:grid; gap:10px; }
+    .driver-card-line { display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between; }
+    .driver-card-title { font-weight:850; color:var(--pk-navy); }
+    .driver-card-meta { display:grid; gap:4px; color:var(--pk-muted); font-size:.9rem; }
+    .driver-detail-grid, .driver-form-grid, .driver-settings-grid { display:grid; gap:12px; }
+    .driver-detail-grid { grid-template-columns:1fr; margin-top:12px; }
+    .driver-kv { padding:10px; border:1px solid rgba(13,47,80,.1); border-radius:10px; background:rgba(13,47,80,.025); }
+    .driver-kv span { display:block; color:var(--pk-muted); font-size:.78rem; font-weight:800; }
+    .driver-kv strong { display:block; margin-top:3px; overflow-wrap:anywhere; }
+    .driver-form-grid label, .driver-check, .driver-day { display:grid; gap:5px; font-weight:800; color:var(--pk-navy); }
+    .driver-form-grid input, .driver-form-grid textarea, .driver-form-grid select { width:100%; min-height:42px; border:1px solid rgba(13,47,80,.16); border-radius:9px; padding:8px 10px; font:inherit; background:#fff; }
+    .driver-check { grid-template-columns:auto 1fr; align-items:center; }
+    .driver-day { grid-template-columns:auto 1fr 110px 110px; align-items:center; }
+    .driver-list { display:grid; gap:8px; }
+    .driver-blackout { display:flex; flex-wrap:wrap; gap:8px; }
+    .driver-chip { display:inline-flex; align-items:center; gap:6px; padding:7px 10px; border-radius:999px; background:#fff; border:1px solid rgba(13,47,80,.12); }
+    .driver-accordion-body { padding:0 16px 16px; }
+    .driver-toast[hidden] { display:none; }
+    .driver-toast[data-tone="error"] { background:var(--pk-danger); }
+    .driver-notif-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px; }
+    .cal-nav, .cal-legend { display:flex; align-items:center; justify-content:center; gap:10px; margin:8px 0; }
+    .cal-grid { display:grid; grid-template-columns:repeat(7, minmax(0, 1fr)); gap:6px; overflow-x:auto; }
+    .cal-day { min-width:104px; min-height:120px; border:1px solid rgba(13,47,80,.12); border-radius:10px; background:#fff; padding:8px; }
+    .cal-day--today { border-color:var(--pk-accent); }
+    .cal-day-name, .cal-block-label { font-weight:800; }
+    .cal-block { margin-top:6px; padding:6px; border-radius:8px; font-size:.78rem; }
+    .cal-block--gold { background:#fff2c2; }
+    .cal-block--blue { background:#dbeafe; }
+    .cal-empty-week { text-align:center; color:var(--pk-muted); padding:12px; }
+    .comp-banner { padding:12px; border-radius:10px; background:#fff; border:1px solid rgba(13,47,80,.12); margin-bottom:12px; }
+    .doc-badge { display:inline-flex; margin-left:8px; padding:3px 8px; border-radius:999px; background:var(--pk-muted); color:#fff; font-size:.75rem; }
+    .comp-ok { background:#dcfce7; color:#166534; }
+    .comp-pending { background:#fef3c7; color:#92400e; }
+    .comp-missing { background:#e0f2fe; color:#075985; }
+    .comp-rejected, .comp-expired { background:#fee2e2; color:#991b1b; }
+    @media (min-width:768px) {
+      .driver-detail-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); }
+      .driver-form-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); }
+      .driver-form-grid .wide { grid-column:1 / -1; }
+      .driver-settings-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); align-items:start; }
+    }
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
+  <script src="/portal-kit/portal-auth.js?v=20260606a"></script>
+  <script src="/portal-kit/portal-pwa.js?v=20260606a"></script>
+  <script src="/portal-kit/portal-notify.js?v=20260606a"></script>
+  <script src="/portal-kit/portal-shell.js?v=20260606a"></script>
+  <script src="/driver-calendar.js"></script>
+  <script src="/driver-compliance.js"></script>
+  <script src="/ride-booking.js"></script>
+  <script src="/notifications.js"></script>
+  <script src="/driver/driver-portal.js?v=20260606c" defer></script>
+</head>
+<body>
+  <main class="pk-shell" id="driverApp">
+    <section class="pk-hero">
+      <div>
+        <div class="pk-topbar">
+          <div class="driver-brand">
+            <strong data-i18n="appTitle"></strong>
+            <span id="driverName" data-i18n="loading"></span>
+          </div>
+          <div class="driver-actions">
+            <div class="driver-lang" aria-label="Language">
+              <button class="pk-btn pk-btn--sm" type="button" data-action="lang" data-lang="vi">VI</button>
+              <button class="pk-btn pk-btn--sm" type="button" data-action="lang" data-lang="en">EN</button>
+              <button class="pk-btn pk-btn--sm" type="button" data-action="lang" data-lang="es">ES</button>
+            </div>
+            <button class="pk-notif-bell" id="notifBell" type="button" aria-label="Notifications">!<span class="pk-notif-badge" id="notifBadge" hidden>0</span></button>
+            <button class="pk-btn pk-btn--ghost pk-btn--sm" type="button" data-action="signOut" data-i18n="signOut"></button>
+          </div>
+        </div>
+        <div class="driver-toggle-row">
+          <span class="pk-status driver-toggle" id="availStatus" aria-live="polite"></span>
+          <button class="pk-btn pk-btn--primary" id="enableAlertsBtn" type="button" data-i18n="enableAlerts"></button>
+        </div>
+      </div>
+    </section>
+    <section id="counterMount" class="driver-panel"></section>
+    <section id="filterMount" class="driver-panel"></section>
+    <section id="cardMount" class="driver-panel" aria-live="polite"></section>
+    <section class="driver-settings-grid">
+      <details class="pk-accordion" open>
+        <summary><span data-i18n="profileAccordion"></span><span class="pk-accordion__chevron">⌄</span></summary>
+        <div class="driver-accordion-body">
+          <div class="driver-form-grid">
+            <label><span data-i18n="nameLabel"></span><input id="fName" type="text"></label>
+            <label><span data-i18n="phoneLabel"></span><input id="fPhone" type="tel"></label>
+          </div>
+          <div class="pk-card__actions"><button class="pk-btn pk-btn--primary" type="button" data-action="saveProfile" data-i18n="save"></button></div>
+        </div>
+      </details>
+      <details class="pk-accordion">
+        <summary><span data-i18n="vehicleAccordion"></span><span class="pk-accordion__chevron">⌄</span></summary>
+        <div class="driver-accordion-body">
+          <div class="driver-form-grid">
+            <label><span data-i18n="makeLabel"></span><input id="fMake" type="text"></label>
+            <label><span data-i18n="modelLabel"></span><input id="fModel" type="text"></label>
+            <label><span data-i18n="yearLabel"></span><input id="fYear" type="text"></label>
+            <label><span data-i18n="colorLabel"></span><input id="fColor" type="text"></label>
+            <label><span data-i18n="seatsLabel"></span><input id="fSeats" type="number" min="1" max="12"></label>
+            <label><span data-i18n="plateLabel"></span><input id="fPlate" type="text"></label>
+          </div>
+          <div class="pk-card__actions"><button class="pk-btn pk-btn--primary" type="button" data-action="saveProfile" data-i18n="save"></button></div>
+        </div>
+      </details>
+      <details class="pk-accordion">
+        <summary><span data-i18n="regionsAccordion"></span><span class="pk-accordion__chevron">⌄</span></summary>
+        <div class="driver-accordion-body driver-list" id="regionsMount"></div>
+      </details>
+      <details class="pk-accordion">
+        <summary><span data-i18n="hoursAccordion"></span><span class="pk-accordion__chevron">⌄</span></summary>
+        <div class="driver-accordion-body driver-list" id="scheduleMount"></div>
+      </details>
+      <details class="pk-accordion">
+        <summary><span data-i18n="blackoutAccordion"></span><span class="pk-accordion__chevron">⌄</span></summary>
+        <div class="driver-accordion-body">
+          <div class="driver-form-grid">
+            <label><span data-i18n="blackoutDateLabel"></span><input id="newBlackout" type="date"></label>
+          </div>
+          <div class="pk-card__actions"><button class="pk-btn" type="button" data-action="addBlackout" data-i18n="add"></button></div>
+          <div class="driver-blackout" id="blackoutMount"></div>
+        </div>
+      </details>
+      <details class="pk-accordion">
+        <summary><span data-i18n="complianceAccordion"></span><span class="pk-accordion__chevron">⌄</span></summary>
+        <div class="driver-accordion-body" id="complianceMount"></div>
+      </details>
+      <details class="pk-accordion">
+        <summary><span data-i18n="alertsAccordion"></span><span class="pk-accordion__chevron">⌄</span></summary>
+        <div class="driver-accordion-body">
+          <div class="pk-card__actions">
+            <button class="pk-btn pk-btn--primary" type="button" data-action="enableAlerts" data-i18n="enableAlerts"></button>
+            <button class="pk-btn" type="button" data-action="toggleSound" data-i18n="toggleSound"></button>
+            <button class="pk-btn" type="button" data-action="enablePush" data-i18n="enablePush"></button>
+            <button class="pk-btn" type="button" data-action="disablePush" data-i18n="disablePush"></button>
+          </div>
+          <p id="alertsStatus" class="driver-muted"></p>
+          <p id="pushStatus" class="driver-muted" data-i18n="pushDisabled"></p>
+        </div>
+      </details>
+      <details class="pk-accordion">
+        <summary><span data-i18n="gpsAccordion"></span><span class="pk-accordion__chevron">⌄</span></summary>
+        <div class="driver-accordion-body">
+          <button class="pk-btn pk-btn--primary" id="gpsBtn" type="button" data-action="toggleGps" data-i18n="gpsStart"></button>
+          <p id="gpsStatus" class="driver-muted" data-i18n="gpsOff"></p>
+        </div>
+      </details>
+      <details class="pk-accordion">
+        <summary><span data-i18n="calendarAccordion"></span><span class="pk-accordion__chevron">⌄</span></summary>
+        <div class="driver-accordion-body"><div id="calendarContent"></div></div>
+      </details>
+      <details class="pk-accordion">
+        <summary><span data-i18n="earningsAccordion"></span><span class="pk-accordion__chevron">⌄</span></summary>
+        <div class="driver-accordion-body">
+          <div id="earningsTripBlock"></div>
+          <div id="earningsRatingsBlock"></div>
+        </div>
+      </details>
+      <details class="pk-accordion">
+        <summary><span data-i18n="languageAccordion"></span><span class="pk-accordion__chevron">⌄</span></summary>
+        <div class="driver-accordion-body driver-lang">
+          <button class="pk-btn" type="button" data-action="lang" data-lang="vi">VI</button>
+          <button class="pk-btn" type="button" data-action="lang" data-lang="en">EN</button>
+          <button class="pk-btn" type="button" data-action="lang" data-lang="es">ES</button>
+        </div>
+      </details>
+    </section>
+  </main>
+  <aside class="pk-drawer" id="notifDrawer" hidden>
+    <div class="pk-drawer__backdrop"></div>
+    <div class="pk-drawer__panel">
+      <div class="driver-notif-head">
+        <strong data-i18n="notificationsTitle"></strong>
+        <button class="pk-btn pk-btn--sm" type="button" data-action="closeDrawer" data-i18n="close"></button>
+      </div>
+      <div id="notifList"></div>
+    </div>
+  </aside>
+  <div class="pk-toast driver-toast" id="toast" hidden></div>
+</body>
+</html>

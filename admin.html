@@ -2315,8 +2315,7 @@
             ${expWarn ? `<div class="driver-row__meta" style="color:#fb923c;margin-top:0.15rem;font-size:0.68rem">${escHtml(expWarn)}</div>` : ''}
           </div>
           <div class="driver-row__actions">
-            <button class="toggle-pill ${d.active?'on':'off'}" onclick="toggleDriver('${id}','active',${!d.active})">${d.active?'● Active':'○ Inactive'}</button>
-            <button class="toggle-pill ${d.rideServiceEnabled?'on':'off'}" onclick="toggleDriver('${id}','rideServiceEnabled',${!d.rideServiceEnabled})">${d.rideServiceEnabled?'● Ride On':'○ Ride Off'}</button>
+            <button class="toggle-pill ${d.active?'on':'off'}" onclick="toggleDriverEnabled('${id}',${!d.active})" title="Admin-controlled: show this driver as available for rides">${d.active?'● Enabled for rides':'○ Disabled'}</button>
             <button class="btn-sm-outline" onclick="toggleDriverProfile('${id}')">Profile</button>
             <button class="btn-sm-outline" onclick="toggleDriverInfo('${id}')">PIN / Login</button>
             <button class="btn-sm-outline" onclick="toggleDriverCompliance('${id}')">Compliance</button>
@@ -2586,6 +2585,29 @@
       });
       loadDriverPanel();
       loadDriversRealtime(); // refresh assignment list too
+    }
+
+    // Admin-only "Enable for rides" toggle. Sets BOTH active + rideServiceEnabled so the
+    // driver shows on the customer homepage (which gates on active) and is dispatchable.
+    // Has explicit success/error feedback — a silent failure here previously looked like
+    // "I can't enable a driver as admin". Firestore rules require isAdmin() to write these.
+    async function toggleDriverEnabled(driverId, enabled) {
+      try {
+        await db.collection('drivers').doc(driverId).update({
+          active: enabled,
+          rideServiceEnabled: enabled,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        loadDriverPanel();
+        loadDriversRealtime();
+      } catch (e) {
+        const msg = (e && e.message) ? e.message : String(e);
+        const denied = /permission|insufficient|PERMISSION_DENIED/i.test(msg);
+        alert(denied
+          ? 'Could not enable driver: your admin session is not authorized to write drivers (permission denied). Re-login to admin with the admin account (johnntd@gmail.com), then try again.'
+          : ('Could not update driver availability: ' + msg));
+        console.error('[toggleDriverEnabled]', e);
+      }
     }
 
     async function deleteDriver(driverId, name) {

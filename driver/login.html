@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0d2f50">
+  <title>Driver Portal</title>
+  <link rel="manifest" href="/driver/manifest.webmanifest">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="/assets/icons/driver-180.png?v=1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/driver-180.png?v=1">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/driver-192.png?v=1">
+  <link rel="icon" type="image/png" sizes="512x512" href="/assets/icons/driver-512.png?v=1">
+  <link rel="stylesheet" href="/portal-kit/portal-kit.css?v=20260606a">
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
+  <script src="/portal-kit/portal-auth.js?v=20260606a"></script>
+  <style>
+    :root { --pk-accent:#176f7f; --pk-radius:14px; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; background:#0d2f50; color:var(--pk-text); font-family:Jost, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .driver-login { min-height:100vh; display:grid; place-items:center; padding:calc(18px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px)); }
+    .driver-login .pk-hero { width:min(100%, 430px); background:#fff; }
+    .driver-login__brand { display:grid; gap:6px; }
+    .driver-login__brand strong { font-size:1.35rem; color:#0d2f50; }
+    .driver-login__brand span { color:var(--pk-muted); }
+    .driver-login__lang { display:flex; gap:6px; justify-content:flex-end; }
+    .driver-login__form { display:grid; gap:14px; margin-top:8px; }
+    .driver-field { display:grid; gap:6px; font-weight:800; color:#0d2f50; }
+    .driver-field input { width:100%; min-height:48px; border:1px solid rgba(13,47,80,.18); border-radius:10px; padding:0 12px; font:inherit; }
+    .driver-error { min-height:1.4em; color:var(--pk-danger); font-weight:700; }
+    .driver-muted { color:var(--pk-muted); line-height:1.5; margin:0; }
+  </style>
+</head>
+<body>
+  <main class="driver-login">
+    <section class="pk-hero">
+      <div class="pk-topbar">
+        <div class="driver-login__brand">
+          <strong data-i18n="loginTitle"></strong>
+          <span data-i18n="loginSubtitle"></span>
+        </div>
+        <div class="driver-login__lang" aria-label="Language">
+          <button class="pk-btn pk-btn--sm" type="button" data-lang="vi">VI</button>
+          <button class="pk-btn pk-btn--sm" type="button" data-lang="en">EN</button>
+          <button class="pk-btn pk-btn--sm" type="button" data-lang="es">ES</button>
+        </div>
+      </div>
+      <p class="driver-muted" data-i18n="loginHint"></p>
+      <form class="driver-login__form" id="driverLoginForm">
+        <label class="driver-field">
+          <span data-i18n="phoneLabel"></span>
+          <input id="loginPhone" type="tel" autocomplete="tel" inputmode="tel">
+        </label>
+        <label class="driver-field">
+          <span data-i18n="pinLabel"></span>
+          <input id="loginPin" type="password" autocomplete="current-password" inputmode="numeric" maxlength="6">
+        </label>
+        <div class="driver-error" id="loginError" aria-live="polite"></div>
+        <button class="pk-btn pk-btn--primary" id="btnLogin" type="submit" data-i18n="signIn"></button>
+      </form>
+    </section>
+  </main>
+  <script>
+    (function () {
+      'use strict';
+      var STRINGS = {
+        en: {
+          loginTitle: 'Driver Portal', loginSubtitle: 'Du Lich Cali', loginHint: 'Sign in with the phone number and PIN assigned by admin.',
+          phoneLabel: 'Phone number', pinLabel: 'PIN', signIn: 'Sign in', required: 'Enter your phone number and PIN.',
+          invalidPhone: 'Enter a valid phone number.', notDriver: 'This account is not registered as a driver. Contact admin.',
+          missingDriver: 'Driver account was not found. Contact admin.', deletedDriver: 'Driver account was removed. Contact admin.',
+          blocked: 'This account is blocked by admin. Contact Du Lich Cali.', inactive: 'This account is paused. Contact admin.',
+          badLogin: 'Phone number or PIN is incorrect.', tooMany: 'Too many attempts. Try again later.', errorPrefix: 'Error: '
+        },
+        vi: {
+          loginTitle: 'Cổng Tài Xế', loginSubtitle: 'Du Lịch Cali', loginHint: 'Đăng nhập bằng số điện thoại và mã PIN do admin cấp.',
+          phoneLabel: 'Số điện thoại', pinLabel: 'Mã PIN', signIn: 'Đăng nhập', required: 'Vui lòng nhập số điện thoại và mã PIN.',
+          invalidPhone: 'Số điện thoại không hợp lệ.', notDriver: 'Tài khoản này chưa được đăng ký là tài xế. Liên hệ admin.',
+          missingDriver: 'Tài khoản tài xế không tồn tại. Liên hệ admin.', deletedDriver: 'Tài khoản tài xế đã bị xóa. Liên hệ admin.',
+          blocked: 'Tài khoản bị chặn bởi admin. Liên hệ Du Lịch Cali để mở lại.', inactive: 'Tài khoản đang tạm dừng hoạt động. Liên hệ admin.',
+          badLogin: 'Số điện thoại hoặc PIN không đúng. Kiểm tra lại.', tooMany: 'Quá nhiều lần thử. Vui lòng thử lại sau.', errorPrefix: 'Lỗi: '
+        },
+        es: {
+          loginTitle: 'Portal de Conductores', loginSubtitle: 'Du Lich Cali', loginHint: 'Inicia sesión con el teléfono y PIN asignados por administración.',
+          phoneLabel: 'Teléfono', pinLabel: 'PIN', signIn: 'Iniciar sesión', required: 'Ingresa tu teléfono y PIN.',
+          invalidPhone: 'Ingresa un teléfono válido.', notDriver: 'Esta cuenta no está registrada como conductor. Contacta a administración.',
+          missingDriver: 'No se encontró la cuenta del conductor. Contacta a administración.', deletedDriver: 'La cuenta del conductor fue eliminada. Contacta a administración.',
+          blocked: 'Esta cuenta está bloqueada por administración. Contacta a Du Lich Cali.', inactive: 'Esta cuenta está pausada. Contacta a administración.',
+          badLogin: 'El teléfono o PIN no es correcto.', tooMany: 'Demasiados intentos. Intenta más tarde.', errorPrefix: 'Error: '
+        }
+      };
+      var firebaseConfig = {
+        apiKey: 'AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ',
+        authDomain: 'dulichcali-booking-calendar.firebaseapp.com',
+        projectId: 'dulichcali-booking-calendar',
+        storageBucket: 'dulichcali-booking-calendar.appspot.com',
+        messagingSenderId: '623460884698',
+        appId: '1:623460884698:web:a08bd435c453a7b4db05e3'
+      };
+      if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+      var db = firebase.firestore();
+      var auth = firebase.auth();
+      var lang = readLang();
+      function readLang() {
+        try { return localStorage.getItem('dlc_lang') || localStorage.getItem('dlcLang') || 'vi'; } catch (e) { return 'vi'; }
+      }
+      function setLang(next) {
+        lang = STRINGS[next] ? next : 'vi';
+        try { localStorage.setItem('dlc_lang', lang); localStorage.setItem('dlcLang', lang); } catch (e) {}
+        applyI18n();
+      }
+      function t(key) { return (STRINGS[lang] && STRINGS[lang][key]) || STRINGS.en[key] || key; }
+      function applyI18n() {
+        document.documentElement.lang = lang;
+        document.querySelectorAll('[data-i18n]').forEach(function (el) { el.textContent = t(el.getAttribute('data-i18n')); });
+      }
+      function normalizeDigits(phone) {
+        var d = String(phone || '').replace(/\D/g, '');
+        if (d.length === 11 && d.charAt(0) === '1') d = d.slice(1);
+        return d;
+      }
+      function statusError(status) {
+        if (status === 'blocked') return 'blocked';
+        if (status === 'deactivated' || status === 'archived') return 'inactive';
+        return '';
+      }
+      function verifyDriver(user) {
+        return db.collection('driverUsers').doc(user.uid).get().then(function (doc) {
+          if (!doc.exists) throw new Error('notDriver');
+          var driverId = doc.data().driverId || user.uid;
+          return db.collection('drivers').doc(driverId).get();
+        }).then(function (dDoc) {
+          if (!dDoc.exists) throw new Error('missingDriver');
+          var d = dDoc.data() || {};
+          if (d.deleted) throw new Error('deletedDriver');
+          var statusKey = statusError(d.adminStatus);
+          if (statusKey) throw new Error(statusKey);
+          window.location.href = '/driver/dashboard';
+        });
+      }
+      function signIn(email, pass) {
+        return auth.signInWithEmailAndPassword(email, pass).then(function (cred) { return verifyDriver(cred.user); });
+      }
+      function doLogin(event) {
+        event.preventDefault();
+        var phone = document.getElementById('loginPhone').value.trim();
+        var pin = document.getElementById('loginPin').value.trim();
+        var errEl = document.getElementById('loginError');
+        var btn = document.getElementById('btnLogin');
+        errEl.textContent = '';
+        if (!phone || !pin) { errEl.textContent = t('required'); return; }
+        var allDigits = phone.replace(/\D/g, '');
+        if (allDigits.length < 10) { errEl.textContent = t('invalidPhone'); return; }
+        btn.disabled = true;
+        var pass = pin.padEnd(6, '0');
+        var digits10 = normalizeDigits(phone);
+        var email10 = 'd' + digits10 + '@dlc.app';
+        var email11 = allDigits !== digits10 ? 'd' + allDigits + '@dlc.app' : null;
+        PortalAuth.enableLocalPersistence(auth).then(function () {
+          return signIn(email10, pass);
+        }).catch(function (err) {
+          var code = err && err.code;
+          if ((code === 'auth/invalid-credential' || code === 'auth/user-not-found' || code === 'auth/wrong-password') && email11) {
+            return signIn(email11, pass);
+          }
+          throw err;
+        }).catch(function (err) {
+          btn.disabled = false;
+          var code = err && err.code;
+          if (code === 'auth/too-many-requests') errEl.textContent = t('tooMany');
+          else if (code === 'auth/invalid-credential' || code === 'auth/user-not-found' || code === 'auth/wrong-password') errEl.textContent = t('badLogin');
+          else errEl.textContent = t((err && err.message) || '') || (t('errorPrefix') + ((err && err.message) || ''));
+        });
+      }
+      document.querySelectorAll('[data-lang]').forEach(function (btn) {
+        btn.addEventListener('click', function () { setLang(btn.getAttribute('data-lang')); });
+      });
+      document.getElementById('driverLoginForm').addEventListener('submit', doLogin);
+      PortalAuth.enableLocalPersistence(auth);
+      applyI18n();
+    })();
+  </script>
+</body>
+</html>

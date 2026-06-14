@@ -21,7 +21,7 @@
  */
 
 const { onDocumentCreated, onDocumentWritten } = require('firebase-functions/v2/firestore');
-const { onCall, onRequest } = require('firebase-functions/v2/https');
+const { onCall, onRequest, HttpsError } = require('firebase-functions/v2/https');
 const { onSchedule }        = require('firebase-functions/v2/scheduler');
 const { defineSecret }      = require('firebase-functions/params');
 const admin                 = require('firebase-admin');
@@ -32,6 +32,8 @@ const path                  = require('path');
 const fs                    = require('fs');
 const ffmpegPath            = require('ffmpeg-static');
 const ffmpeg                = require('fluent-ffmpeg');
+// Pure, dependency-free Style Studio helpers (unit-tested in tests/unit/style-studio.test.js).
+const StudioLib             = require('./style-studio-lib.js');
 
 // ── Secrets (Google Cloud Secret Manager) ────────────────────────────────────
 // These are injected at runtime — never stored in code or .env files.
@@ -2579,7 +2581,27 @@ function normalizeHaircutPref(v) {
 }
 
 const IDENTITY_CLAUSE = 'CRITICAL — IDENTITY LOCK: keep the EXACT SAME PERSON from the photo — same face, same facial features and bone structure, same ethnicity and skin tone, same age, same gender presentation, same eyes, nose, mouth and complexion. Do NOT swap in a different model and do NOT beautify or change the face. Change ONLY the hair (and hair color where stated). Photorealistic, natural lighting, head-and-shoulders portrait, sharp focus.';
+// Wig + hair-system modes are full-hair REPLACEMENTS, not in-place edits. The
+// in-place IDENTITY_CLAUSE ("change ONLY the hair") contradicts the task and
+// makes the image model produce weak/empty output, so those modes use this
+// replacement-forcing clause instead (still locks identity).
+const REPLACE_HAIR_CLAUSE = 'CRITICAL — IDENTITY LOCK: keep the EXACT SAME PERSON — same face shape, eyes, nose, lips, skin tone, age and gender presentation; do NOT swap the person or beautify the face. REPLACE the existing hair with the selected style rendered as REAL, NATURAL-GROWING HUMAN HAIR that looks indistinguishable from the person\'s own hair — NOT a wig, NOT a hairpiece, NOT a costume. Render a SEAMLESS, slightly IRREGULAR natural hairline that blends softly into the forehead and temples with fine baby hairs and a few flyaways — NO hard edge, NO straight wig-cap line, NO visible lace front, NO helmet shape. Vary the hair density, thickness and direction naturally (not uniform); show a realistic scalp/part where the style calls for it, with natural strand detail. Soft, matte-to-natural sheen — NOT plastic, glossy or synthetic. Match the hair colour and undertone to the person\'s complexion and the photo lighting so the roots and hairline read as truly their own. Photorealistic, natural lighting, head-and-shoulders portrait, sharp focus.';
+// Two-pass realism refine prompt for wig/hair-system: the first-pass image is
+// fed BACK into the image model with this realism-only instruction to dissolve
+// the wig seam and remove the "costume" look without changing the style.
+const WIG_REFINE_CLAUSE = 'REFINE PASS — keep the EXACT SAME PERSON and the SAME hairstyle, cut, length and colour shown in this image; do NOT change the face or the style. Make ONLY the hair read as 100% real, naturally-growing human hair: dissolve any wig edge, lace line or hard hairline into the forehead and temples with fine baby hairs and soft flyaways; add natural density and individual-strand variation; remove any helmet shape, plastic shine or costume look; integrate the roots, part and scalp so it looks like the person\'s own hair under the photo\'s exact lighting and skin tone. Sharp, photorealistic, natural lighting, head-and-shoulders portrait.';
+// Refine a first-pass replacement edit. Returns the refined dataUrl, or null on
+// any failure (caller keeps the first pass). callGeminiImageEdit is hoisted.
+async function refineHairRealism(geminiKey, firstPassDataUrl) {
+  const m = /^data:(image\/[a-z0-9.+-]+);base64,(.+)$/i.exec(firstPassDataUrl || '');
+  if (!m) return null;
+  const out = await callGeminiImageEdit(geminiKey, m[2], m[1], WIG_REFINE_CLAUSE);
+  return (out && out.dataUrl) ? out.dataUrl : null;
+}
 const CHILD_SAFETY_CLAUSE = ' This subject is a CHILD: keep them clearly the same child of the same age, with wholesome, school-appropriate kid styling only — no adult/edgy looks, no facial hair, no aging.';
+// Master Stylist composite edit: lock facial identity but allow hair/color/
+// eyebrow/beard enhancement (+ wig/hair-system if beneficial).
+const MASTER_STYLIST_CLAUSE = 'CRITICAL — IDENTITY LOCK: keep the EXACT SAME PERSON — same face, eyes, nose, lips, age range, ethnicity, skin tone and facial bone structure; do NOT swap the person or alter facial features. You MAY enhance the hair (cut, color, texture, bangs), eyebrows and facial hair/beard, and add a natural wig or hair system ONLY if it clearly improves fullness or harmony. Produce the single most flattering, harmonious, youthful, confident and natural result. Photorealistic, natural lighting, head-and-shoulders portrait, sharp focus.';
 
 // audience → instruction phrasing for the analysis model
 const HAIRCUT_AUDIENCE_BRIEF = {
@@ -2789,13 +2811,22 @@ async function callGeminiHaircutAnalysis(geminiKey, base64, mimeType, promptText
   return extractHaircutJson(text);
 }
 
-function normalizeHaircutStyle(s, audience, idx) {
+function normalizeHaircutStyle(s, audience, idx, mode) {
   s = s || {};
   var title = String(s.styleTitle || s.title || '').trim() || ('Style ' + (idx + 1));
   var childClause = (audience === 'child') ? CHILD_SAFETY_CLAUSE : '';
+  // wig / hair-system need actual replacement; every other mode is an in-place edit.
+  var isReplace = (mode === 'wig' || mode === 'hairsystem');
+  var lockClause = isReplace ? REPLACE_HAIR_CLAUSE : IDENTITY_CLAUSE;
   var edit = String(s.imageEditPrompt || s.editPrompt || '').trim();
-  if (edit && edit.toUpperCase().indexOf('IDENTITY LOCK') < 0) edit += ' ' + IDENTITY_CLAUSE + childClause;
-  if (!edit) edit = 'Restyle the subject’s hair into "' + title + '". ' + IDENTITY_CLAUSE + childClause;
+  if (isReplace && edit) {
+    // Force the replacement clause even if the vision model already emitted an
+    // in-place identity lock — wig/hair-system must visibly replace the hair.
+    edit += ' ' + lockClause + childClause;
+  } else if (edit && edit.toUpperCase().indexOf('IDENTITY LOCK') < 0) {
+    edit += ' ' + lockClause + childClause;
+  }
+  if (!edit) edit = (isReplace ? 'Replace the subject’s hair with "' : 'Restyle the subject’s hair into "') + title + '". ' + lockClause + childClause;
   var aud = String(s.targetAudience || '').toLowerCase();
   var sid = String(s.styleId || ('style-' + (idx + 1))).toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '');
   return {
@@ -2827,7 +2858,7 @@ async function planHaircutStyles(geminiKey, base64, mimeType, opts) {
     var plan = await callGeminiHaircutAnalysis(geminiKey, base64, mimeType, prompt);
     analysisText = String((plan && plan.analysis) || '').trim();
     var raw = (plan && Array.isArray(plan.styles)) ? plan.styles : [];
-    styles = raw.map(function (s, i) { return normalizeHaircutStyle(s, audience, i); })
+    styles = raw.map(function (s, i) { return normalizeHaircutStyle(s, audience, i, 'haircut'); })
                 .filter(function (s) { return s.imageEditPrompt; });
     analysisOk = styles.length > 0;
   } catch (e) {
@@ -2835,7 +2866,7 @@ async function planHaircutStyles(geminiKey, base64, mimeType, opts) {
   }
   if (styles.length < 5) {
     var scaffold = buildHaircutScaffold(audience, exploreList, lang)
-                     .map(function (s, i) { return normalizeHaircutStyle(s, audience, i); });
+                     .map(function (s, i) { return normalizeHaircutStyle(s, audience, i, 'haircut'); });
     var seen = {};
     styles.forEach(function (s) { seen[s.styleId] = true; });
     for (var i = 0; i < scaffold.length && styles.length < 5; i++) {
@@ -3009,6 +3040,366 @@ exports.generateHaircutPreviews = onCall(
       generationTimeMs: tookMs,
       successCount: successful.length
     };
+  }
+);
+
+// ────────────────────────────────────────────────────────────────────────
+// AI STYLE STUDIO — vendor-only expansion of the AI hairstyle engine.
+// Isolated from generateHaircutPreviews (which stays public + unchanged).
+// Reuses the same Gemini vision + image-edit helpers. No images persist.
+// ────────────────────────────────────────────────────────────────────────
+
+// Require an authenticated mobile-barber VENDOR. Customers (anonymous on the
+// /mobile-barber landing) must NOT be able to call the studio.
+async function requireMobileBarberVendor(request) {
+  const auth = request.auth;
+  if (!auth || !auth.uid) {
+    throw new HttpsError('unauthenticated', 'Sign in as a vendor to use the Style Studio.');
+  }
+  const provider = auth.token && auth.token.firebase && auth.token.firebase.sign_in_provider;
+  if (provider === 'anonymous') {
+    throw new HttpsError('permission-denied', 'Anonymous users cannot use the Style Studio.');
+  }
+  // vendorUsers/{uid} maps an authed user to a vendor (same rule as the portal's
+  // isPortalVendorUser()). Uses the module-scoped `db` (admin.firestore()).
+  const snap = await db.collection('vendorUsers').doc(auth.uid).get();
+  if (!snap.exists) {
+    throw new HttpsError('permission-denied', 'This account is not a registered vendor.');
+  }
+  return snap.data() || {};
+}
+
+// Coerce the model's raw analysis object into the studio analysis schema
+// (features + scores + strategy + thinning). Factored out of runStudioPlan so
+// the Master Stylist path reuses the EXACT same normalization.
+function normalizeStudioAnalysis(rawAnalysis) {
+  rawAnalysis = rawAnalysis || {};
+  return {
+    features: (rawAnalysis.features && typeof rawAnalysis.features === 'object' && !Array.isArray(rawAnalysis.features)) ? rawAnalysis.features : {},
+    scores: StudioLib.normalizeStudioScores(rawAnalysis.scores),
+    strategy: {
+      emphasize: Array.isArray(rawAnalysis.strategy && rawAnalysis.strategy.emphasize) ? rawAnalysis.strategy.emphasize.slice(0, 6) : [],
+      balance: Array.isArray(rawAnalysis.strategy && rawAnalysis.strategy.balance) ? rawAnalysis.strategy.balance.slice(0, 6) : [],
+    },
+    thinning: {
+      level: ['none', 'mild', 'moderate', 'advanced'].indexOf(String(rawAnalysis.thinning && rawAnalysis.thinning.level)) >= 0
+        ? rawAnalysis.thinning.level : 'none',
+      note: String((rawAnalysis.thinning && rawAnalysis.thinning.note) || '').trim(),
+    },
+  };
+}
+
+// Plan analysis + 5 styles for a studio mode. Mirrors planHaircutStyles but
+// with the richer analysis schema (features + scores + strategy + thinning).
+async function runStudioPlan(geminiKey, base64, mimeType, opts) {
+  const prompt = StudioLib.buildStudioAnalysisPrompt(
+    opts.mode, opts.options, opts.audience, opts.preference, opts.goal, opts.lang
+  );
+  const plan = await callGeminiHaircutAnalysis(geminiKey, base64, mimeType, prompt); // reused vision call
+  const analysis = normalizeStudioAnalysis(plan && plan.analysis);
+  const rawStyles = (plan && Array.isArray(plan.styles)) ? plan.styles : [];
+  const styles = rawStyles
+    .map((s, i) => normalizeHaircutStyle(s, opts.audience, i, opts.mode)) // mode selects in-place vs replacement clause
+    .filter((s) => s.imageEditPrompt)
+    .slice(0, 5);
+  return { analysis, styles };
+}
+
+// Shared studio core used by BOTH the vendor and public callables. Performs the
+// analysis + per-mode (5 recs) OR master (1 masterpiece) generation. Returns the
+// response object (without ok/auth concerns). The per-mode path is the existing
+// vendor studio behavior moved here VERBATIM — response shape is unchanged.
+async function runStudioGeneration(params) {
+  const { mode, options, audience, preference, goal, lang, base64, mimeType, geminiKey } = params;
+  const t0 = Date.now();
+
+  if (mode === 'master') {
+    const prompt = StudioLib.buildMasterStylistPrompt(audience, goal, lang);
+    let plan;
+    try {
+      plan = await callGeminiHaircutAnalysis(geminiKey, base64, mimeType, prompt);
+    } catch (e) {
+      console.error('[runStudioGeneration] master analysis failure', e);
+      return { ok: false, vendorMessage: 'Master Stylist analysis failed. Please try again.', debugCode: 'MASTER_PLAN_ERROR' };
+    }
+    const analysis = normalizeStudioAnalysis(plan && plan.analysis);
+    const best = StudioLib.normalizeMasterpiece(plan && plan.bestLook);
+    if (!best.imageEditPrompt) {
+      return { ok: false, vendorMessage: 'Master Stylist could not design a look. Try a clearer photo.', debugCode: 'MASTER_EMPTY' };
+    }
+    let edit;
+    try {
+      edit = await callGeminiImageEdit(
+        geminiKey, base64, mimeType,
+        best.imageEditPrompt + ' ' + MASTER_STYLIST_CLAUSE + (audience === 'child' ? CHILD_SAFETY_CLAUSE : '')
+      );
+    } catch (e) {
+      console.error('[runStudioGeneration] master edit failure', e);
+      return { ok: false, vendorMessage: 'Master Stylist could not render the look. Please try again.', debugCode: 'MASTER_EDIT_ERROR' };
+    }
+    return {
+      ok: true,
+      mode: 'master', audience,
+      analysis,
+      masterpiece: { previewDataUrl: edit.dataUrl, title: best.title, explanation: best.explanation, attributes: best.attributes },
+      provider: 'gemini-2.5-flash-image',
+      generationTimeMs: Date.now() - t0,
+    };
+  }
+
+  // per-mode path (the existing studio behavior, moved verbatim from the callable)
+  let plan;
+  try {
+    plan = await runStudioPlan(geminiKey, base64, mimeType, { mode, options, audience, preference, goal, lang });
+  } catch (e) {
+    console.error('[runStudioGeneration] planning failure', e);
+    return { ok: false, vendorMessage: 'Style Studio analysis failed. Please try again.', debugCode: 'PLAN_ERROR' };
+  }
+  const styles = (plan && plan.styles) || [];
+  if (!styles.length) {
+    return { ok: false, vendorMessage: 'Style Studio returned no styles. Try a clearer photo.', debugCode: 'PLAN_EMPTY' };
+  }
+
+  let recommendations;
+  try {
+    recommendations = await Promise.all(styles.map(async (style) => {
+      const baseRec = {
+        styleId: style.styleId, title: style.styleTitle, styleTitle: style.styleTitle,
+        targetAudience: style.targetAudience, explanation: style.description, description: style.description,
+        whyItFitsFace: style.whyItFitsFace, maintenance: style.maintenanceLevel, maintenanceLevel: style.maintenanceLevel,
+        barberNotes: style.haircutInstructionsForBarber, haircutInstructionsForBarber: style.haircutInstructionsForBarber,
+        colorRecommendation: style.colorRecommendation, highlightRecommendation: style.highlightRecommendation,
+        curlStraightRecommendation: style.curlStraightRecommendation, confidence: style.confidence,
+        safetyNotes: style.safetyNotes,
+      };
+      try {
+        const edit = await callGeminiImageEdit(geminiKey, base64, mimeType, style.imageEditPrompt); // first pass
+        return Object.assign({}, baseRec, {
+          previewDataUrl: edit.dataUrl,
+          // Intentional: studio uses a slightly stricter "your_preview" bar (>=0.5)
+          // than generateHaircutPreviews (<0.45). Do not "fix" to match.
+          previewKind: (style.confidence >= 0.5) ? 'your_preview' : 'style_inspiration',
+        });
+      } catch (e) {
+        return Object.assign({}, baseRec, { previewDataUrl: '', previewKind: 'style_inspiration', error: (e && e.message) || 'edit_failed' });
+      }
+    }));
+  } catch (e) {
+    console.error('[runStudioGeneration] image edit failure', e);
+    return { ok: false, vendorMessage: 'Style Studio could not render previews. Please try again.', debugCode: 'EDIT_ERROR' };
+  }
+
+  // Realism refine for wig/hair-system: refine ONLY the best-match (highest
+  // confidence) preview — one extra pass, not five. This keeps the realism gain
+  // on the featured "best natural match" the client shows, while avoiding the
+  // multi-pass latency that pushed full wig runs past the timeout. Refine failure
+  // keeps the first-pass image.
+  if (mode === 'wig' || mode === 'hairsystem') {
+    let bestIdx = -1, bestConf = -1;
+    recommendations.forEach((r, i) => {
+      const c = Number(r.confidence) || 0;
+      if (r.previewDataUrl && !r.error && c > bestConf) { bestConf = c; bestIdx = i; }
+    });
+    if (bestIdx >= 0) {
+      try {
+        const refined = await refineHairRealism(geminiKey, recommendations[bestIdx].previewDataUrl);
+        if (refined) recommendations[bestIdx] = Object.assign({}, recommendations[bestIdx], { previewDataUrl: refined });
+      } catch (e) { /* keep the first-pass best image */ }
+    }
+  }
+
+  return {
+    ok: true,
+    mode, audience, options, preference, goal,
+    analysis: plan.analysis,            // vendor-only; caller must NOT persist
+    recommendations,
+    provider: 'gemini-2.5-flash-image',
+    generationTimeMs: Date.now() - t0,
+  };
+}
+
+exports.generateStyleStudio = onCall(
+  {
+    region: 'us-central1',
+    secrets: [GEMINI_API_KEY],
+    timeoutSeconds: 300,
+    memory: '1GiB',
+    cors: true,
+  },
+  async (request) => {
+    await requireMobileBarberVendor(request); // throws HttpsError on non-vendor
+
+    const data = request.data || {};
+    const mode = StudioLib.normalizeStudioMode(data.mode);
+    const audience = StudioLib.audienceForMode(mode, data.audience);
+    const options = StudioLib.normalizeStudioOptions(mode, data.options);
+    const preference = StudioLib.normalizeStudioPref(data.preference);
+    const goal = StudioLib.normalizeStudioGoal(data.goal);
+    const langParam = String(data.lang || 'en').toLowerCase();
+    const lang = HAIRCUT_LANG_NAME[langParam] ? langParam : 'en';
+
+    const rawDataUrl = String(data.selfieDataUrl || '');
+    if (rawDataUrl.indexOf('data:image/') !== 0) {
+      return { ok: false, vendorMessage: 'Missing or invalid selfie image.', debugCode: 'INVALID_INPUT' };
+    }
+    const match = rawDataUrl.match(/^data:(image\/(?:jpeg|png|webp));base64,(.+)$/);
+    if (!match) return { ok: false, vendorMessage: 'Selfie format not supported (use JPEG/PNG/WebP).', debugCode: 'BAD_MIME' };
+    const mimeType = match[1];
+    const base64 = match[2];
+    if (base64.length > 1_500_000) {
+      return { ok: false, vendorMessage: 'Selfie is too large. Please use a smaller photo.', debugCode: 'IMAGE_TOO_LARGE' };
+    }
+
+    const geminiKey = await getAiKey('gemini');
+    if (!geminiKey) {
+      return { ok: false, vendorMessage: 'AI Style Studio is temporarily unavailable.', debugCode: 'NO_GEMINI_KEY' };
+    }
+
+    return runStudioGeneration({ mode, options, audience, preference, goal, lang, base64, mimeType, geminiKey });
+  }
+);
+
+// ────────────────────────────────────────────────────────────────────────
+// PUBLIC AI STYLE STUDIO — anon-auth, promo-gated reuse of the studio engine.
+// Same Gemini engine as the vendor studio (runStudioGeneration), but open to
+// anonymous customers on /style-studio, capped by a launch promo window and a
+// per-uid daily counter. Privacy-first: only an integer counter is stored, never
+// an image. The vendor callable above is UNCHANGED.
+// ────────────────────────────────────────────────────────────────────────
+
+// 5-min cache of the `config/styleStudioPromo` doc (clone of the getAiKey/
+// _loadFirestoreAiKeys pattern). Reads via the module-scoped Admin SDK `db`,
+// which bypasses the rules `allow read: if false` on this doc.
+let _promoCache = null, _promoCacheAt = 0;
+async function getStyleStudioPromo() {
+  if (_promoCache && (Date.now() - _promoCacheAt) < 5 * 60 * 1000) return _promoCache;
+  let promo = {};
+  try {
+    const snap = await db.collection('config').doc('styleStudioPromo').get();
+    if (snap.exists) promo = snap.data() || {};
+  } catch (e) { /* fall back to empty (limit resolves to 0) */ }
+  _promoCache = promo;
+  _promoCacheAt = Date.now();
+  return _promoCache;
+}
+
+// Require an authenticated guest. Anonymous Firebase Auth is OK (the public page
+// signs the visitor in anonymously); only a fully-unauthenticated call is rejected.
+function requireAuthedGuest(request) {
+  if (!request.auth || !request.auth.uid) {
+    throw new HttpsError('unauthenticated', 'Open the page so we can start a free session.');
+  }
+  return request.auth.uid;
+}
+
+// READ-ONLY: resolve today's free-preview limit and how many this uid has used.
+// No write — the counter is incremented AFTER a successful generation so a failed
+// render does not consume a free preview.
+async function checkPublicQuota(uid, isAnonymous) {
+  const promo = await getStyleStudioPromo();
+  const todayISO = new Date().toISOString().slice(0, 10);
+  // GUEST (anonymous) = the 14-day launch promo limit (resolveDailyLimit → 0
+  // once the promo ends, which triggers the create-account wall). A logged-in
+  // MEMBER is NOT a guest: they get a generous member daily limit and must NEVER
+  // be shown "create a free account" — they already have one. Member limit is
+  // configurable via config/styleStudioPromo.memberGenerationsPerUser (default 100).
+  const guestLimit = StudioLib.resolveDailyLimit(promo, todayISO);
+  const memberLimit = (promo && Number(promo.memberGenerationsPerUser) > 0)
+    ? Math.floor(promo.memberGenerationsPerUser) : 100;
+  const limit = isAnonymous ? guestLimit : memberLimit;
+  let used = 0;
+  try {
+    const snap = await db.collection('styleStudioUsage').doc(uid).collection('days').doc(todayISO).get();
+    used = (snap.exists && Number(snap.data().count)) || 0;
+  } catch (e) { used = 0; }
+  return { allowed: used < limit, limit, used, today: todayISO, isAnonymous: !!isAnonymous };
+}
+
+// Transactionally bump the per-uid daily counter (called only on ok:true).
+async function incrementPublicUsage(uid, today) {
+  const ref = db.collection('styleStudioUsage').doc(uid).collection('days').doc(today);
+  await ref.set({
+    count: admin.firestore.FieldValue.increment(1),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  }, { merge: true });
+}
+
+exports.generateStyleStudioPublic = onCall(
+  {
+    region: 'us-central1',
+    secrets: [GEMINI_API_KEY],
+    timeoutSeconds: 300,
+    memory: '1GiB',
+    cors: true,
+  },
+  async (request) => {
+    const uid = requireAuthedGuest(request); // anonymous OK; throws only if unauthenticated
+    // Distinguish a GUEST (anonymous session) from a logged-in MEMBER (real
+    // account). Members are never subject to the guest promo/create-account wall.
+    const signInProvider = request.auth && request.auth.token && request.auth.token.firebase &&
+      request.auth.token.firebase.sign_in_provider;
+    const isAnonymous = (signInProvider === 'anonymous');
+
+    const data = request.data || {};
+    // The public callable allows the flagship 'master' mode (the vendor studio
+    // does not). normalizeStudioMode would fall back to 'haircut' for 'master',
+    // so accept it explicitly; otherwise normalize to one of the 9 modes.
+    const mode = (data.mode === 'master') ? 'master' : StudioLib.normalizeStudioMode(data.mode);
+    // Master mode auto-decides everything: pass audience through the plain
+    // normalizer (no beard-forcing, which only applies to mode 'beard').
+    const audience = (mode === 'master')
+      ? StudioLib.normalizeStudioAudience(data.audience)
+      : StudioLib.audienceForMode(mode, data.audience);
+    const options = StudioLib.normalizeStudioOptions(mode === 'master' ? 'haircut' : mode, data.options);
+    const preference = StudioLib.normalizeStudioPref(data.preference);
+    const goal = StudioLib.normalizeStudioGoal(data.goal);
+    const langParam = String(data.lang || 'en').toLowerCase();
+    const lang = HAIRCUT_LANG_NAME[langParam] ? langParam : 'en';
+
+    const rawDataUrl = String(data.selfieDataUrl || '');
+    if (rawDataUrl.indexOf('data:image/') !== 0) {
+      return { ok: false, vendorMessage: 'Missing or invalid selfie image.', debugCode: 'INVALID_INPUT' };
+    }
+    const match = rawDataUrl.match(/^data:(image\/(?:jpeg|png|webp));base64,(.+)$/);
+    if (!match) return { ok: false, vendorMessage: 'Selfie format not supported (use JPEG/PNG/WebP).', debugCode: 'BAD_MIME' };
+    const mimeType = match[1];
+    const base64 = match[2];
+    if (base64.length > 1_500_000) {
+      return { ok: false, vendorMessage: 'Selfie is too large. Please use a smaller photo.', debugCode: 'IMAGE_TOO_LARGE' };
+    }
+
+    // READ-ONLY quota check first (no write yet — count only after a success).
+    const q = await checkPublicQuota(uid, isAnonymous);
+    if (!q.allowed) {
+      if (isAnonymous) {
+        // Guest over the free-preview limit → the create-account wall.
+        return {
+          ok: false, code: 'LIMIT_REACHED', requireLogin: true,
+          vendorMessage: 'You have used your free previews. Create a free account to keep going.',
+          limit: q.limit,
+        };
+      }
+      // Logged-in MEMBER over their generous daily limit → a "try again
+      // tomorrow" message, NOT a create-account prompt (they already have one).
+      return {
+        ok: false, code: 'DAILY_LIMIT', requireLogin: false,
+        vendorMessage: 'You have reached today\'s limit. Please try again tomorrow.',
+        limit: q.limit,
+      };
+    }
+
+    const geminiKey = await getAiKey('gemini');
+    if (!geminiKey) {
+      return { ok: false, vendorMessage: 'AI Style Studio is temporarily unavailable.', debugCode: 'NO_GEMINI_KEY' };
+    }
+
+    const result = await runStudioGeneration({ mode, options, audience, preference, goal, lang, base64, mimeType, geminiKey });
+    if (result && result.ok) {
+      // Count this success against the daily quota. Best-effort: never fail the
+      // response if the counter write hiccups.
+      try { await incrementPublicUsage(uid, q.today); } catch (e) { /* ignore */ }
+    }
+    return result;
   }
 );
 
@@ -3291,6 +3682,99 @@ exports.sendMobileBarberBookingPush = onDocumentCreated(
       }
     }));
     console.log(`[mb-push][${bookingId}] dispatched to ${subsSnap.size} subscription(s) for ${vendorId}`);
+  }
+);
+
+// ── Web Push ride offer alert → the selected driver's device(s) ─────────────
+// Best-effort background push for newly-created bookingOffers. Foreground
+// PortalNotify listeners remain primary; this does not alter the offer window
+// or accept/decline lifecycle. Dead subscriptions are pruned.
+exports.sendDriverRidePush = onDocumentCreated(
+  {
+    document:       'bookingOffers/{bookingId}',
+    region:         'us-central1',
+    secrets:        [VAPID_PRIVATE_KEY],
+    timeoutSeconds: 60,
+    retry:          false,
+  },
+  async (event) => {
+    const bookingId = event.params.bookingId;
+    try {
+      const offer = event.data && event.data.data();
+      if (!offer) return;
+      const driverId = String(offer.driverId || '').trim();
+      if (!driverId) return;
+
+      let webpush;
+      try { webpush = require('web-push'); } catch (e) { console.warn('[driver-push] web-push unavailable'); return; }
+      const priv = VAPID_PRIVATE_KEY.value();
+      if (!priv) { console.warn('[driver-push] VAPID_PRIVATE_KEY not set — skipping'); return; }
+      webpush.setVapidDetails('mailto:dulichcali21@gmail.com', VAPID_PUBLIC_KEY, priv);
+
+      const db = admin.firestore();
+      const subsSnap = await db.collection('drivers').doc(driverId).collection('pushSubscriptions').get();
+      if (subsSnap.empty) { console.log(`[driver-push][${bookingId}] no subscriptions for ${driverId}`); return; }
+
+      let booking = {};
+      const sourceBookingId = String(offer.bookingId || bookingId || '').trim();
+      if (sourceBookingId) {
+        try {
+          const bookingSnap = await db.collection('bookings').doc(sourceBookingId).get();
+          booking = bookingSnap.exists ? (bookingSnap.data() || {}) : {};
+        } catch (e) { booking = {}; }
+      }
+
+      let badgeCount = 0;
+      try {
+        const pendingOffers = await db.collection('bookingOffers')
+          .where('driverId', '==', driverId)
+          .where('status', '==', 'pending')
+          .limit(50)
+          .get();
+        const activeRides = await db.collection('bookings')
+          .where('driver.driverId', '==', driverId)
+          .where('status', 'in', ['assigned', 'driver_confirmed'])
+          .limit(50)
+          .get();
+        badgeCount = pendingOffers.size + activeRides.size;
+      } catch (e) { badgeCount = 0; }
+
+      const service = offer.serviceType || offer.serviceLabel || booking.serviceType || booking.serviceLabel || 'Ride';
+      const airport = offer.airport || booking.airport || '';
+      const pickupRaw = offer.pickupTime || offer.datetime || offer.rideTime || offer.arrivalTime || offer.departureTime ||
+        booking.pickupTime || booking.datetime || booking.rideTime || booking.arrivalTime || booking.departureTime || '';
+      const pickupDate = offer.pickupDate || offer.rideDate || offer.arrivalDate || offer.departureDate ||
+        booking.pickupDate || booking.rideDate || booking.arrivalDate || booking.departureDate || '';
+      const pickup = [pickupDate, pickupRaw].filter(Boolean).join(' ');
+      const body = [service, airport, pickup].filter(Boolean).join(' · ') || 'Tap to review the offer in your driver dashboard.';
+      const payload = JSON.stringify({
+        title: 'New ride offer',
+        body: body,
+        url: '/driver/dashboard.html',
+        tag: 'dlc-ride-offer',
+        audience: 'driver',
+        badgeCount: badgeCount
+      });
+
+      await Promise.all(subsSnap.docs.map(async (doc) => {
+        const s = doc.data() || {};
+        if (!s.endpoint || !s.keys) return;
+        try {
+          await webpush.sendNotification({ endpoint: s.endpoint, keys: s.keys }, payload, { TTL: 3600 });
+        } catch (err) {
+          const code = err && err.statusCode;
+          if (code === 404 || code === 410) {
+            await doc.ref.delete().catch(() => {});
+            console.log(`[driver-push][${bookingId}] pruned dead subscription ${doc.id}`);
+          } else {
+            console.warn(`[driver-push][${bookingId}] send failed (${code}):`, err && err.message);
+          }
+        }
+      }));
+      console.log(`[driver-push][${bookingId}] dispatched to ${subsSnap.size} subscription(s) for ${driverId}`);
+    } catch (err) {
+      console.warn(`[driver-push][${bookingId}] skipped after error:`, err && err.message);
+    }
   }
 );
 

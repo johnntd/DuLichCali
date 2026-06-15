@@ -292,6 +292,22 @@
       profileSave: 'Save profile', profileCancel: 'Cancel', profileRemove: 'Remove', profileActiveBadge: 'Active', profileSwitch: 'Switch',
       profileViewing: 'Viewing', profileNamePlaceholder: 'e.g. Mom', profileDefaultName: 'Me',
       membershipStatusGuest: 'Guest — free previews during launch', membershipStatusMember: 'Member — your looks stay with you',
+      // ── SP-10.5 — Viral Transformation Engine (share cards, reels, captions) ──
+      shareTransform: 'Share my transformation', shareSheetTitle: 'Share your transformation',
+      card_before: 'BEFORE', card_after: 'AFTER', card_tagline: 'Created with AI Style Studio',
+      shareNow: 'Share', shareSavePhotos: 'Save to Photos', shareCopyLink: 'Copy link', shareCopied: 'Link copied!',
+      shareFacebook: 'Facebook', shareWhatsApp: 'WhatsApp', shareMessenger: 'Messenger', shareInstagram: 'Instagram',
+      shareCaptionLabel: 'Caption (tap to copy)', shareCaptionCopied: 'Caption copied!',
+      shareCardBuilding: 'Creating your card…', shareThemeLabel: 'Card style', shareClose: 'Close',
+      shareIgHint: 'Saved! Open Instagram and add it to your Story or Reel.',
+      cardtheme_professional: 'Professional', cardtheme_youthful: 'Youthful', cardtheme_wedding: 'Wedding', cardtheme_vacation: 'Vacation',
+      cardtheme_executive: 'Executive', cardtheme_elegant: 'Elegant', cardtheme_natural: 'Natural', cardtheme_wig: 'Wig Match',
+      cardtheme_younger: 'Younger', cardtheme_transformation: 'Transformation', cardtheme_asian: 'Asian Beauty',
+      makeReel: 'Create a reel', reelBuilding: 'Creating your reel…', reelDownload: 'Download video', reelReplay: 'Replay',
+      reelUnsupported: 'Your device can’t export a video here — save the card image to share instead.',
+      reelScene_q: 'What would you look like?', reelScene_ai: 'AI Master Stylist', reelScene_analyzing: 'AI analyzing…',
+      reelScene_final: 'See Your Best Look', reelScene_try: 'Try it Free',
+      dashShareHint: 'Turn any saved look into a shareable before/after card.',
     },
     vi: {
       heroChip: 'Chuyên Gia Tạo Kiểu AI',
@@ -539,6 +555,22 @@
       profileSave: 'Lưu hồ sơ', profileCancel: 'Hủy', profileRemove: 'Xóa', profileActiveBadge: 'Đang dùng', profileSwitch: 'Chuyển',
       profileViewing: 'Đang xem', profileNamePlaceholder: 'vd: Mẹ', profileDefaultName: 'Tôi',
       membershipStatusGuest: 'Khách — xem trước miễn phí khi ra mắt', membershipStatusMember: 'Thành viên — kiểu của bạn luôn được giữ',
+      // ── SP-10.5 — Cỗ máy biến đổi lan truyền (thẻ chia sẻ, reel, chú thích) ──
+      shareTransform: 'Chia sẻ sự biến đổi của tôi', shareSheetTitle: 'Chia sẻ sự biến đổi của bạn',
+      card_before: 'TRƯỚC', card_after: 'SAU', card_tagline: 'Tạo bằng AI Style Studio',
+      shareNow: 'Chia sẻ', shareSavePhotos: 'Lưu vào Ảnh', shareCopyLink: 'Sao chép liên kết', shareCopied: 'Đã sao chép liên kết!',
+      shareFacebook: 'Facebook', shareWhatsApp: 'WhatsApp', shareMessenger: 'Messenger', shareInstagram: 'Instagram',
+      shareCaptionLabel: 'Chú thích (chạm để sao chép)', shareCaptionCopied: 'Đã sao chép chú thích!',
+      shareCardBuilding: 'Đang tạo thẻ của bạn…', shareThemeLabel: 'Kiểu thẻ', shareClose: 'Đóng',
+      shareIgHint: 'Đã lưu! Mở Instagram và thêm vào Story hoặc Reel của bạn.',
+      cardtheme_professional: 'Chuyên nghiệp', cardtheme_youthful: 'Trẻ trung', cardtheme_wedding: 'Đám cưới', cardtheme_vacation: 'Du lịch',
+      cardtheme_executive: 'Lãnh đạo', cardtheme_elegant: 'Thanh lịch', cardtheme_natural: 'Tự nhiên', cardtheme_wig: 'Ghép tóc',
+      cardtheme_younger: 'Trẻ hơn', cardtheme_transformation: 'Biến đổi', cardtheme_asian: 'Vẻ đẹp Á Đông',
+      makeReel: 'Tạo reel', reelBuilding: 'Đang tạo reel của bạn…', reelDownload: 'Tải video', reelReplay: 'Phát lại',
+      reelUnsupported: 'Thiết bị của bạn không thể xuất video ở đây — hãy lưu ảnh thẻ để chia sẻ.',
+      reelScene_q: 'Bạn sẽ trông như thế nào?', reelScene_ai: 'Chuyên Gia Tạo Kiểu AI', reelScene_analyzing: 'AI đang phân tích…',
+      reelScene_final: 'Xem diện mạo đẹp nhất của bạn', reelScene_try: 'Thử miễn phí',
+      dashShareHint: 'Biến bất kỳ kiểu đã lưu nào thành thẻ trước/sau để chia sẻ.',
     },
     es: {
       heroChip: 'Estilista Maestro AI',
@@ -786,6 +818,22 @@
       profileSave: 'Guardar perfil', profileCancel: 'Cancelar', profileRemove: 'Quitar', profileActiveBadge: 'Activo', profileSwitch: 'Cambiar',
       profileViewing: 'Viendo', profileNamePlaceholder: 'ej. Mamá', profileDefaultName: 'Yo',
       membershipStatusGuest: 'Invitado — vistas previas gratis en el lanzamiento', membershipStatusMember: 'Miembro — tus looks te acompañan',
+      // ── SP-10.5 — Motor de transformación viral (tarjetas, reels, textos) ──
+      shareTransform: 'Compartir mi transformación', shareSheetTitle: 'Comparte tu transformación',
+      card_before: 'ANTES', card_after: 'DESPUÉS', card_tagline: 'Creado con AI Style Studio',
+      shareNow: 'Compartir', shareSavePhotos: 'Guardar en Fotos', shareCopyLink: 'Copiar enlace', shareCopied: '¡Enlace copiado!',
+      shareFacebook: 'Facebook', shareWhatsApp: 'WhatsApp', shareMessenger: 'Messenger', shareInstagram: 'Instagram',
+      shareCaptionLabel: 'Texto (toca para copiar)', shareCaptionCopied: '¡Texto copiado!',
+      shareCardBuilding: 'Creando tu tarjeta…', shareThemeLabel: 'Estilo de tarjeta', shareClose: 'Cerrar',
+      shareIgHint: '¡Guardado! Abre Instagram y añádelo a tu Historia o Reel.',
+      cardtheme_professional: 'Profesional', cardtheme_youthful: 'Juvenil', cardtheme_wedding: 'Boda', cardtheme_vacation: 'Vacaciones',
+      cardtheme_executive: 'Ejecutivo', cardtheme_elegant: 'Elegante', cardtheme_natural: 'Natural', cardtheme_wig: 'Peluca',
+      cardtheme_younger: 'Más joven', cardtheme_transformation: 'Transformación', cardtheme_asian: 'Belleza asiática',
+      makeReel: 'Crear un reel', reelBuilding: 'Creando tu reel…', reelDownload: 'Descargar video', reelReplay: 'Repetir',
+      reelUnsupported: 'Tu dispositivo no puede exportar video aquí — guarda la imagen de la tarjeta para compartir.',
+      reelScene_q: '¿Cómo te verías?', reelScene_ai: 'Estilista Maestro AI', reelScene_analyzing: 'AI analizando…',
+      reelScene_final: 'Mira tu mejor look', reelScene_try: 'Pruébalo gratis',
+      dashShareHint: 'Convierte cualquier look guardado en una tarjeta antes/después para compartir.',
     },
   };
 
@@ -1452,6 +1500,7 @@
     body.appendChild(buildActions(src, item.title || 'best-look', [item], 0, lookRec));
     card.appendChild(body);
     host.appendChild(card);
+    cacheLocal(state.sessionId, '__before', before); // SP-10.5: local before for share cards
     cacheLocal(state.sessionId, 'master', src);
     recordLook('master', item.title, item.why, state.sessionId, 'master');
     if (state.isCustomer) { var ap = doc.getElementById('ssAccountPanel'); if (ap && !ap.hidden) renderAccountPanel(); }
@@ -1511,6 +1560,7 @@
     var items = recs.map(function (rec) {
       return { src: rec.previewDataUrl || '', before: before, title: rec.title || '', why: rec.whyItFitsFace || '' };
     });
+    cacheLocal(state.sessionId, '__before', before); // SP-10.5: local before for share cards
     var track = elt('div', 'ss-carousel');
     track.setAttribute('role', 'list');
     recs.forEach(function (rec, i) {
@@ -1557,6 +1607,23 @@
   // shown — favorites are localStorage only (never Firestore/Storage).
   function buildActions(src, baseName, items, index, lookRec) {
     var actions = elt('div', 'ss-actions');
+
+    // SP-10.5 — viral sharing: a before→after card + an in-app reel, shown only
+    // for an honest before/after (a real selfie + a generated result). Both are
+    // composited on-device; the selfie/result never leave the device.
+    var cur = (items && items[index]) || {};
+    if (cur.src && cur.before) {
+      var shareT = elt('button', 'ss-action-btn ss-action-btn--share');
+      shareT.type = 'button';
+      shareT.innerHTML = icon('share') + '<span>' + t('shareTransform') + '</span>';
+      shareT.addEventListener('click', function () { openTransformationShare(cur, themeForLook(lookRec)); });
+      actions.appendChild(shareT);
+      var reelB = elt('button', 'ss-action-btn ss-action-btn--reel');
+      reelB.type = 'button';
+      reelB.innerHTML = icon('reel') + '<span>' + t('makeReel') + '</span>';
+      reelB.addEventListener('click', function () { openReel(cur, themeForLook(lookRec)); });
+      actions.appendChild(reelB);
+    }
 
     if (lookRec && (lookRec.title || lookRec.styleId)) {
       var fav = elt('button', 'ss-action-btn ss-action-btn--fav');
@@ -1695,6 +1762,7 @@
       compare: '<rect x="3" y="5" width="18" height="14" rx="2"/><line x1="12" y1="5" x2="12" y2="19"/>',
       bookmark: '<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>',
       sparkle: '<path d="M12 3 9.5 9.5 3 12l6.5 2.5L12 21l2.5-6.5L21 12l-6.5-2.5Z"/>',
+      reel: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9.5v5l4-2.5z" fill="currentColor"/>',
       x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
     };
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (P[name] || '') + '</svg>';
@@ -2521,6 +2589,7 @@
     bBody.appendChild(buildActions(bSrc, best.styleId || best.title || 'best-wig', allItems, 0, bestRec));
     bestCard.appendChild(bBody);
     host.appendChild(bestCard);
+    cacheLocal(state.sessionId, '__before', before); // SP-10.5: local before for share cards
     cacheLocal(state.sessionId, best.styleId || '', bSrc);
     recordLook('wig', best.title || 'best-wig', best.whyItFitsFace || '', state.sessionId, best.styleId || '');
 
@@ -2857,7 +2926,8 @@
   function buildAccountLook(rec, tab) {
     var tile = elt('article', 'ss-acct__look');
     var cached = readCachedImage(rec.sessionId, rec.styleId);
-    var item = { src: cached, before: state.selfieDataUrl || '', title: rec.title || '', why: rec.why || '' };
+    var beforeCached = readCachedImage(rec.sessionId, '__before') || state.selfieDataUrl || '';
+    var item = { src: cached, before: beforeCached, title: rec.title || '', why: rec.why || '' };
     if (cached) {
       var fig = elt('button', 'ss-acct__look-fig'); fig.type = 'button';
       fig.setAttribute('aria-label', t('expand'));
@@ -2872,6 +2942,13 @@
     }
     var body = elt('div', 'ss-acct__look-body');
     if (rec.title) body.appendChild(elt('strong', 'ss-acct__look-title', rec.title));
+    // SP-10.5 — share a saved look as a before→after card (honest before from
+    // the on-device session cache; falls back to current selfie). Local only.
+    if (cached && beforeCached) {
+      var sh = elt('button', 'ss-acct__look-share', t('shareTransform')); sh.type = 'button';
+      sh.addEventListener('click', function () { openTransformationShare({ src: cached, before: beforeCached, title: rec.title || '' }, themeForLook(rec)); });
+      body.appendChild(sh);
+    }
     if (tab === 'favorites') {
       var rm = elt('button', 'ss-acct__look-rm', t('removeFavorite'));
       rm.type = 'button';
@@ -3692,13 +3769,411 @@
     if (list.length < 2) host.appendChild(elt('p', 'ss-acct__hint', t('compareEmpty')));
   }
 
+  // ════════════════ SP-10.5 — Viral Transformation Engine ════════════════
+  // Effortless, beautiful, PRIVACY-FIRST sharing: a before→after card and an
+  // in-app reel are composited ENTIRELY on-device (canvas / MediaRecorder).
+  // The selfie and result never leave the device — share goes through the
+  // native Web Share sheet (the image is handed to the OS share UI) or a
+  // link-only intent (Facebook/WhatsApp share the studio URL, never the image).
+  var SS_SHARE_URL = 'https://www.dulichcali21.com/style-studio';
+  var SS_SHARE_URL_TEXT = 'www.dulichcali21.com/style-studio';
+  // Card themes — accent + background gradient + label ink. Mirrors the 10.5G
+  // viral theme list; each gives the card a slightly different luxury palette.
+  var SHARE_THEMES = {
+    professional: { accent: '#9fb4d4', g1: '#0a1830', g2: '#16243f' },
+    youthful:     { accent: '#f7b8d2', g1: '#241027', g2: '#3a1633' },
+    wedding:      { accent: '#e8d4a8', g1: '#1c1422', g2: '#2c1d2e' },
+    vacation:     { accent: '#67c7d6', g1: '#06222b', g2: '#0c3340' },
+    executive:    { accent: '#c9d2e0', g1: '#0a0f1c', g2: '#161c2c' },
+    elegant:      { accent: '#d8b4fe', g1: '#150f2c', g2: '#241640' },
+    natural:      { accent: '#a8d8b0', g1: '#0c1f17', g2: '#13301f' },
+    wig:          { accent: '#c084fc', g1: '#140e2e', g2: '#241646' },
+    younger:      { accent: '#ffcf8b', g1: '#241405', g2: '#3a2410' },
+    transformation:{ accent: '#d4af37', g1: '#0a1226', g2: '#1a2440' },
+    asian:        { accent: '#f5c542', g1: '#1f0f12', g2: '#33161b' },
+  };
+  // Viral captions — per language pools (translatable, all 3 present). Picked at
+  // random so shares feel fresh. Emoji are content, not UI icons.
+  var CAPTIONS = {
+    en: ['I never imagined this style would fit me this well 😍', 'What do you think? 😄', 'Would you try this look?', 'Before vs after — same me, new confidence ✨', 'AI gave me my best look in seconds 💫'],
+    vi: ['Không ngờ kiểu tóc này lại hợp với mình như vậy 😍', 'Bạn thấy sao? 😄', 'Bạn có thử kiểu này không?', 'Trước và sau — vẫn là mình, nhưng tự tin hơn ✨', 'AI tạo cho mình diện mạo đẹp nhất chỉ trong vài giây 💫'],
+    es: ['Nunca imaginé que este estilo me quedaría tan bien 😍', '¿Qué opinas? 😄', '¿Te animarías a probar este look?', 'Antes y después — la misma yo, nueva confianza ✨', 'La AI me dio mi mejor look en segundos 💫'],
+  };
+  function pickCaption() { var pool = CAPTIONS[state.lang] || CAPTIONS.en; return pool[Math.floor(Math.random() * pool.length)]; }
+  // Map a generated look to a card theme (mode + goal → theme key).
+  function themeForLook(rec) {
+    rec = rec || {};
+    if (rec.mode === 'wig') return 'wig';
+    var g = state.goal || '';
+    var byGoal = { youthful: 'youthful', wedding: 'wedding', vacation: 'vacation', executive: 'executive', elegant: 'elegant', professional: 'professional', natural: 'natural', glamorous: 'elegant', confident: 'professional' };
+    if (byGoal[g]) return byGoal[g];
+    if (rec.mode === 'event') return 'wedding';
+    if (rec.mode === 'vacation') return 'vacation';
+    if (rec.mode === 'color') return 'youthful';
+    return 'transformation';
+  }
+  function loadImg(src) {
+    return new Promise(function (resolve, reject) {
+      if (!src) { reject(new Error('no-src')); return; }
+      var im = new Image();
+      im.onload = function () { resolve(im); };
+      im.onerror = function () { reject(new Error('img-load')); };
+      im.src = src;
+    });
+  }
+  function rrPath(ctx, x, y, w, h, r) {
+    if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); return; }
+    ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+  }
+  function drawCover(ctx, img, x, y, w, h) {
+    var ir = img.width / img.height, fr = w / h, sw, sh, sx, sy;
+    if (ir > fr) { sh = img.height; sw = sh * fr; sx = (img.width - sw) / 2; sy = 0; }
+    else { sw = img.width; sh = sw / fr; sx = 0; sy = (img.height - sh) / 2; }
+    ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+  }
+  // Build the 1080×1920 before→after share card on-device. Returns a Promise<dataURL>.
+  function buildShareCard(beforeSrc, afterSrc, themeKey, title) {
+    var th = SHARE_THEMES[themeKey] || SHARE_THEMES.transformation;
+    var fontsReady = (doc.fonts && doc.fonts.ready) ? doc.fonts.ready.catch(function () {}) : Promise.resolve();
+    return Promise.all([loadImg(beforeSrc), loadImg(afterSrc), fontsReady]).then(function (a) {
+      var bImg = a[0], aImg = a[1];
+      var W = 1080, H = 1920;
+      var cv = doc.createElement('canvas'); cv.width = W; cv.height = H;
+      var ctx = cv.getContext('2d');
+      // Background gradient.
+      var bg = ctx.createLinearGradient(0, 0, W, H); bg.addColorStop(0, th.g1); bg.addColorStop(1, th.g2);
+      ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+      var disp = "'Bodoni Moda', Georgia, serif", body = "'Jost', system-ui, sans-serif";
+      // Header: theme chip.
+      ctx.textAlign = 'center';
+      ctx.fillStyle = th.accent; ctx.font = '600 34px ' + body;
+      ctx.fillText((t('cardtheme_' + themeKey) || '').toUpperCase(), W / 2, 96);
+      // Panels.
+      var px = 64, pw = W - px * 2, ph = 720, pa_y = 150, pb_y = 1000, rad = 28;
+      function panel(img, x, y, w, h, label) {
+        ctx.save(); rrPath(ctx, x, y, w, h, rad); ctx.clip();
+        drawCover(ctx, img, x, y, w, h);
+        // bottom scrim for the label
+        var sc = ctx.createLinearGradient(0, y + h - 130, 0, y + h); sc.addColorStop(0, 'rgba(0,0,0,0)'); sc.addColorStop(1, 'rgba(0,0,0,.62)');
+        ctx.fillStyle = sc; ctx.fillRect(x, y + h - 130, w, 130);
+        ctx.restore();
+        ctx.save(); rrPath(ctx, x, y, w, h, rad); ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,255,255,.14)'; ctx.stroke(); ctx.restore();
+        ctx.textAlign = 'left'; ctx.fillStyle = '#fff'; ctx.font = '700 40px ' + body;
+        ctx.fillText(label, x + 30, y + h - 38);
+        // accent tick
+        ctx.fillStyle = th.accent; ctx.fillRect(x + 30, y + h - 78, 64, 6);
+      }
+      panel(bImg, px, pa_y, pw, ph, t('card_before'));
+      panel(aImg, px, pb_y, pw, ph, t('card_after'));
+      // Down arrow between panels.
+      var ax = W / 2, ay = pa_y + ph + (pb_y - (pa_y + ph)) / 2;
+      ctx.save();
+      ctx.beginPath(); ctx.arc(ax, ay, 40, 0, Math.PI * 2); ctx.fillStyle = th.accent; ctx.fill();
+      ctx.strokeStyle = th.g1; ctx.lineWidth = 7; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.beginPath(); ctx.moveTo(ax - 16, ay - 8); ctx.lineTo(ax, ay + 12); ctx.lineTo(ax + 16, ay - 8); ctx.stroke();
+      ctx.restore();
+      // Optional title.
+      if (title) {
+        ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.font = '400 46px ' + disp;
+        var tt = String(title); if (tt.length > 34) tt = tt.slice(0, 33) + '…';
+        ctx.fillText(tt, W / 2, pb_y + ph + 96);
+      }
+      // Footer watermark (10.5F) — elegant, not intrusive.
+      ctx.textAlign = 'center';
+      ctx.fillStyle = th.accent; ctx.font = '400 42px ' + disp;
+      ctx.fillText(t('card_tagline'), W / 2, H - 96);
+      ctx.fillStyle = 'rgba(255,255,255,.72)'; ctx.font = '500 30px ' + body;
+      ctx.fillText(SS_SHARE_URL_TEXT, W / 2, H - 50);
+      return cv.toDataURL('image/jpeg', 0.92);
+    });
+  }
+
+  // ── Share sheet (10.5B) ─────────────────────────────────────────────────
+  var _ovScrollY = 0;
+  function ovLock() {
+    _ovScrollY = root.scrollY || root.pageYOffset || 0;
+    doc.body.style.position = 'fixed'; doc.body.style.top = (-_ovScrollY) + 'px';
+    doc.body.style.left = '0'; doc.body.style.right = '0'; doc.body.style.width = '100%';
+    doc.body.classList.add('ss-viewer-open');
+  }
+  function ovUnlock() {
+    doc.body.style.position = ''; doc.body.style.top = ''; doc.body.style.left = ''; doc.body.style.right = ''; doc.body.style.width = '';
+    doc.body.classList.remove('ss-viewer-open');
+    try { root.scrollTo(0, _ovScrollY); } catch (e) {}
+  }
+  function closeOverlay(id) { var n = doc.getElementById(id); if (n && n.parentNode) n.parentNode.removeChild(n); ovUnlock(); }
+
+  function openTransformationShare(item, themeKey) {
+    if (!item || !item.src || !item.before) return; // honest before/after only
+    var theme = themeKey || 'transformation';
+    var caption = pickCaption();
+    closeOverlay('ssShareSheet');
+    var ov = elt('div', 'ss-share'); ov.id = 'ssShareSheet';
+    ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true');
+    var card = elt('div', 'ss-share__card');
+    var head = elt('div', 'ss-share__head');
+    head.appendChild(elt('strong', 'ss-share__title', t('shareSheetTitle')));
+    var close = elt('button', 'ss-auth__close', '×'); close.type = 'button'; close.setAttribute('aria-label', t('shareClose'));
+    close.addEventListener('click', function () { closeOverlay('ssShareSheet'); });
+    head.appendChild(close); card.appendChild(head);
+
+    // Preview
+    var preview = elt('div', 'ss-share__preview');
+    preview.appendChild(elt('p', 'ss-share__building', t('shareCardBuilding')));
+    card.appendChild(preview);
+
+    // Theme chips
+    var themeRow = elt('div', 'ss-share__themes');
+    themeRow.appendChild(elt('span', 'ss-share__themes-lbl', t('shareThemeLabel')));
+    var chips = elt('div', 'ss-share__themechips');
+    var current = { key: theme, dataUrl: '' };
+    Object.keys(SHARE_THEMES).forEach(function (k) {
+      var c = elt('button', 'ss-share__themechip', t('cardtheme_' + k)); c.type = 'button';
+      c.style.setProperty('--ac', SHARE_THEMES[k].accent);
+      if (k === theme) c.classList.add('ss-share__themechip--on');
+      c.addEventListener('click', function () {
+        current.key = k;
+        chips.querySelectorAll('.ss-share__themechip').forEach(function (x) { x.classList.remove('ss-share__themechip--on'); });
+        c.classList.add('ss-share__themechip--on');
+        rebuild();
+      });
+      chips.appendChild(c);
+    });
+    themeRow.appendChild(chips); card.appendChild(themeRow);
+
+    // Caption (tap to copy)
+    var capWrap = elt('div', 'ss-share__cap');
+    capWrap.appendChild(elt('span', 'ss-share__cap-lbl', t('shareCaptionLabel')));
+    var capBtn = elt('button', 'ss-share__cap-text', caption); capBtn.type = 'button';
+    capBtn.addEventListener('click', function () { copyText(caption); toast(capBtn, t('shareCaptionCopied')); });
+    capWrap.appendChild(capBtn); card.appendChild(capWrap);
+
+    // Actions
+    var acts = elt('div', 'ss-share__acts');
+    function actBtn(cls, label, handler) {
+      var b = elt('button', 'ss-share__btn ' + cls, label); b.type = 'button';
+      b.addEventListener('click', handler); acts.appendChild(b); return b;
+    }
+    var name = 'transformation-' + (current.key);
+    actBtn('ss-share__btn--primary', t('shareNow'), function () { shareCardNative(current.dataUrl, name, caption); });
+    actBtn('', t('shareSavePhotos'), function () { saveImage(current.dataUrl, name, [{ src: current.dataUrl, title: '', why: '' }], 0); });
+    actBtn('', t('shareFacebook'), function () { root.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(SS_SHARE_URL), '_blank', 'noopener'); trackCommerce('share_click', { net: 'facebook', theme: current.key }); });
+    actBtn('', t('shareWhatsApp'), function () { root.open('https://wa.me/?text=' + encodeURIComponent(caption + ' ' + SS_SHARE_URL), '_blank', 'noopener'); trackCommerce('share_click', { net: 'whatsapp', theme: current.key }); });
+    actBtn('', t('shareMessenger'), function () { shareMessenger(caption); });
+    actBtn('', t('shareInstagram'), function () { saveImage(current.dataUrl, name, [{ src: current.dataUrl, title: '', why: '' }], 0); toast(acts, t('shareIgHint')); trackCommerce('share_click', { net: 'instagram', theme: current.key }); });
+    var copyBtn = actBtn('', t('shareCopyLink'), function () { copyText(SS_SHARE_URL); toast(copyBtn, t('shareCopied')); trackCommerce('share_click', { net: 'copylink', theme: current.key }); });
+    card.appendChild(acts);
+
+    ov.appendChild(card);
+    ov.addEventListener('click', function (e) { if (e.target === ov) closeOverlay('ssShareSheet'); });
+    ovLock(); doc.body.appendChild(ov);
+
+    function rebuild() {
+      preview.innerHTML = ''; preview.appendChild(elt('p', 'ss-share__building', t('shareCardBuilding')));
+      buildShareCard(item.before, item.src, current.key, item.title || '').then(function (dataUrl) {
+        current.dataUrl = dataUrl;
+        preview.innerHTML = '';
+        var img = doc.createElement('img'); img.className = 'ss-share__img'; img.src = dataUrl; img.alt = t('shareSheetTitle');
+        preview.appendChild(img);
+      }).catch(function () { preview.innerHTML = ''; preview.appendChild(elt('p', 'ss-share__building', t('error'))); });
+    }
+    rebuild();
+    trackCommerce('share_open', { from: 'card', theme: theme });
+    logUi({ event: 'share-open' });
+  }
+  function shareCardNative(dataUrl, name, caption) {
+    if (!dataUrl) return;
+    var fname = String(name || 'transformation').replace(/[^a-z0-9_-]+/gi, '-') + '.jpg';
+    var canFile = !!(root.navigator && root.navigator.canShare && typeof File !== 'undefined' && typeof fetch === 'function');
+    if (canFile) {
+      dataUrlToFile(dataUrl, fname).then(function (file) {
+        if (root.navigator.canShare({ files: [file] })) {
+          return root.navigator.share({ files: [file], text: caption + ' ' + SS_SHARE_URL });
+        }
+        throw new Error('cannot-share-file');
+      }).then(function () { trackCommerce('share_click', { net: 'native', ok: true }); })
+        .catch(function () { saveImage(dataUrl, name, [{ src: dataUrl }], 0); });
+      return;
+    }
+    if (root.navigator && typeof root.navigator.share === 'function') {
+      root.navigator.share({ title: t('heroChip'), text: caption + ' ' + SS_SHARE_URL }).catch(function () {});
+    } else { saveImage(dataUrl, name, [{ src: dataUrl }], 0); }
+  }
+  function shareMessenger(caption) {
+    // No reliable web image-intent for Messenger; native share covers it on mobile.
+    if (root.navigator && typeof root.navigator.share === 'function') {
+      root.navigator.share({ text: caption + ' ' + SS_SHARE_URL }).catch(function () {});
+    } else {
+      root.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(SS_SHARE_URL), '_blank', 'noopener');
+    }
+    trackCommerce('share_click', { net: 'messenger' });
+  }
+  function copyText(txt) {
+    try {
+      if (root.navigator && root.navigator.clipboard && root.navigator.clipboard.writeText) { root.navigator.clipboard.writeText(txt).catch(function () {}); return; }
+    } catch (e) {}
+    try { var ta = doc.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0'; doc.body.appendChild(ta); ta.select(); doc.execCommand('copy'); doc.body.removeChild(ta); } catch (e) {}
+  }
+  function toast(anchor, msg) {
+    try {
+      var tEl = elt('span', 'ss-toast', msg);
+      doc.body.appendChild(tEl);
+      root.setTimeout(function () { tEl.classList.add('ss-toast--show'); }, 10);
+      root.setTimeout(function () { tEl.classList.remove('ss-toast--show'); root.setTimeout(function () { if (tEl.parentNode) tEl.parentNode.removeChild(tEl); }, 300); }, 1700);
+    } catch (e) {}
+  }
+
+  // ── In-app reel (10.5C) — client-side, privacy-safe ─────────────────────
+  // Animates the 5-scene transformation on a canvas (muted, autoplay). Where the
+  // browser supports MediaRecorder + captureStream, offers a downloadable video;
+  // otherwise it still plays in-page and the user shares the card (iPhone path).
+  function reelMime() {
+    if (typeof MediaRecorder === 'undefined' || !MediaRecorder.isTypeSupported) return '';
+    var c = ['video/mp4', 'video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
+    for (var i = 0; i < c.length; i++) { try { if (MediaRecorder.isTypeSupported(c[i])) return c[i]; } catch (e) {} }
+    return '';
+  }
+  function openReel(item, themeKey) {
+    if (!item || !item.src || !item.before) return;
+    var theme = themeKey || 'transformation';
+    var th = SHARE_THEMES[theme] || SHARE_THEMES.transformation;
+    closeOverlay('ssReel');
+    var ov = elt('div', 'ss-reel'); ov.id = 'ssReel';
+    ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true');
+    var box = elt('div', 'ss-reel__box');
+    var head = elt('div', 'ss-share__head');
+    head.appendChild(elt('strong', 'ss-share__title', t('makeReel')));
+    var close = elt('button', 'ss-auth__close', '×'); close.type = 'button'; close.setAttribute('aria-label', t('shareClose'));
+    close.addEventListener('click', function () { stop(); closeOverlay('ssReel'); });
+    head.appendChild(close); box.appendChild(head);
+    var W = 1080, H = 1920;
+    var cv = doc.createElement('canvas'); cv.width = W; cv.height = H; cv.className = 'ss-reel__canvas';
+    box.appendChild(cv);
+    var status = elt('p', 'ss-reel__status', ''); box.appendChild(status);
+    var acts = elt('div', 'ss-reel__acts');
+    var replay = elt('button', 'ss-share__btn', t('reelReplay')); replay.type = 'button';
+    acts.appendChild(replay);
+    var dl = elt('button', 'ss-share__btn ss-share__btn--primary', t('reelDownload')); dl.type = 'button'; dl.style.display = 'none';
+    acts.appendChild(dl);
+    box.appendChild(acts);
+    ov.appendChild(box);
+    ov.addEventListener('click', function (e) { if (e.target === ov) { stop(); closeOverlay('ssReel'); } });
+    ovLock(); doc.body.appendChild(ov);
+
+    var ctx = cv.getContext('2d');
+    var DUR = 11.0; // seconds
+    var raf = 0, startT = 0, rec = null, chunks = [], recUrl = '';
+    var imgs = {};
+    var disp = "'Bodoni Moda', Georgia, serif", body = "'Jost', system-ui, sans-serif";
+    function ease(t) { return t < .5 ? 2 * t * t : -1 + (4 - 2 * t) * t; }
+    function bgFill() { var bg = ctx.createLinearGradient(0, 0, W, H); bg.addColorStop(0, th.g1); bg.addColorStop(1, th.g2); ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H); }
+    function center(img, scale) {
+      var s = (scale || 1), dw = W * s, dh = H * s;
+      ctx.save(); ctx.globalAlpha = 1; drawCover(ctx, img, (W - dw) / 2, (H - dh) / 2, dw, dh); ctx.restore();
+    }
+    function text(str, y, font, color, alpha) {
+      ctx.save(); ctx.globalAlpha = alpha == null ? 1 : alpha; ctx.textAlign = 'center';
+      ctx.fillStyle = color; ctx.font = font;
+      ctx.shadowColor = 'rgba(0,0,0,.55)'; ctx.shadowBlur = 18; ctx.fillText(str, W / 2, y); ctx.restore();
+    }
+    function watermark() {
+      ctx.save(); ctx.globalAlpha = .9; ctx.textAlign = 'center';
+      ctx.fillStyle = th.accent; ctx.font = '400 38px ' + disp; ctx.fillText(t('card_tagline'), W / 2, H - 80);
+      ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.font = '500 28px ' + body; ctx.fillText(SS_SHARE_URL_TEXT, W / 2, H - 38);
+      ctx.restore();
+    }
+    function frame(now) {
+      if (!startT) startT = now;
+      var t0 = (now - startT) / 1000;
+      bgFill();
+      var b = imgs.before, a = imgs.after;
+      if (t0 < 2.4) { // Scene 1 — selfie + question
+        if (b) { ctx.save(); ctx.globalAlpha = Math.min(1, t0 / .5); center(b, 1 + .03 * t0); ctx.restore(); }
+        scrim(); text(t('reelScene_q'), H - 220, '600 64px ' + disp, '#fff', Math.min(1, t0 / .6));
+      } else if (t0 < 5.0) { // Scene 2 — analyzing
+        if (b) center(b, 1.06);
+        var scanY = ((t0 - 2.4) / 2.6) * H;
+        ctx.save(); ctx.fillStyle = 'rgba(' + hexToRgb(th.accent) + ',.28)'; ctx.fillRect(0, scanY - 6, W, 12);
+        ctx.globalAlpha = .25; ctx.fillStyle = th.accent; ctx.fillRect(0, 0, W, scanY); ctx.restore();
+        scrim(); text(t('reelScene_analyzing'), 150, '600 48px ' + body, th.accent, 1);
+        text(t('reelScene_ai'), H - 200, '700 60px ' + disp, '#fff', 1);
+      } else if (t0 < 7.8) { // Scene 3 — before → after wipe
+        var p = ease((t0 - 5.0) / 2.8);
+        if (a) center(a, 1.04);
+        if (b) { ctx.save(); var cut = Math.floor(H * (1 - p)); ctx.beginPath(); ctx.rect(0, 0, W, cut); ctx.clip(); center(b, 1.04); ctx.restore();
+          ctx.save(); ctx.fillStyle = th.accent; ctx.fillRect(0, cut - 4, W, 8); ctx.restore(); }
+        label(t('card_before'), 150, p < .5 ? 1 : (1 - (p - .5) * 2));
+        label(t('card_after'), H - 230, p > .5 ? (p - .5) * 2 : 0);
+      } else if (t0 < 9.8) { // Scene 4 — zoom final
+        var z = 1.04 + ease((t0 - 7.8) / 2.0) * 0.12;
+        if (a) center(a, z);
+        scrim(); text(t('reelScene_final'), H - 210, '600 62px ' + disp, '#fff', 1);
+      } else if (t0 < DUR) { // Scene 5 — logo + CTA
+        var fa = Math.min(1, (t0 - 9.8) / .5);
+        ctx.save(); ctx.globalAlpha = fa; ctx.textAlign = 'center';
+        ctx.fillStyle = th.accent; ctx.font = '400 88px ' + disp; ctx.fillText('AI Style Studio', W / 2, H / 2 - 40);
+        ctx.fillStyle = '#fff'; ctx.font = '700 64px ' + body; ctx.fillText(t('reelScene_try'), W / 2, H / 2 + 70);
+        ctx.fillStyle = 'rgba(255,255,255,.8)'; ctx.font = '500 34px ' + body; ctx.fillText(SS_SHARE_URL_TEXT, W / 2, H / 2 + 150);
+        ctx.restore();
+      } else { finishPlayback(); return; }
+      if (t0 >= 2.4) watermark();
+      raf = root.requestAnimationFrame(frame);
+    }
+    function scrim() { var sc = ctx.createLinearGradient(0, H - 420, 0, H); sc.addColorStop(0, 'rgba(0,0,0,0)'); sc.addColorStop(1, 'rgba(0,0,0,.66)'); ctx.fillStyle = sc; ctx.fillRect(0, H - 420, W, 420); }
+    function label(str, y, alpha) { if (alpha <= 0) return; ctx.save(); ctx.globalAlpha = alpha; ctx.textAlign = 'center'; ctx.fillStyle = th.accent; ctx.font = '700 54px ' + body; ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 16; ctx.fillText(str, W / 2, y); ctx.restore(); }
+    function hexToRgb(h) { var m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(h); return m ? (parseInt(m[1], 16) + ',' + parseInt(m[2], 16) + ',' + parseInt(m[3], 16)) : '212,175,55'; }
+    function startRecording() {
+      var mime = reelMime();
+      if (!mime || !cv.captureStream) { dl.style.display = 'none'; status.textContent = t('reelUnsupported'); return; }
+      try {
+        chunks = []; var stream = cv.captureStream(30);
+        rec = new MediaRecorder(stream, { mimeType: mime });
+        rec.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
+        rec.onstop = function () {
+          try {
+            var blob = new Blob(chunks, { type: mime.split(';')[0] });
+            if (recUrl) { try { URL.revokeObjectURL(recUrl); } catch (e) {} }
+            recUrl = URL.createObjectURL(blob);
+            var ext = mime.indexOf('mp4') !== -1 ? 'mp4' : 'webm';
+            dl.style.display = ''; dl.onclick = function () {
+              if (root.navigator && root.navigator.canShare && typeof File !== 'undefined') {
+                var f = new File([blob], 'style-studio-reel.' + ext, { type: blob.type });
+                if (root.navigator.canShare({ files: [f] })) { root.navigator.share({ files: [f] }).catch(function () {}); trackCommerce('reel_share', { ext: ext }); return; }
+              }
+              var aEl = doc.createElement('a'); aEl.href = recUrl; aEl.download = 'style-studio-reel.' + ext; doc.body.appendChild(aEl); aEl.click(); doc.body.removeChild(aEl); trackCommerce('reel_download', { ext: ext });
+            };
+          } catch (e) {}
+        };
+        rec.start();
+      } catch (e) { rec = null; dl.style.display = 'none'; status.textContent = t('reelUnsupported'); }
+    }
+    function finishPlayback() { try { if (rec && rec.state !== 'inactive') rec.stop(); } catch (e) {} raf = 0; replay.disabled = false; }
+    function stop() { if (raf) root.cancelAnimationFrame(raf); raf = 0; try { if (rec && rec.state !== 'inactive') rec.stop(); } catch (e) {} if (recUrl) { try { URL.revokeObjectURL(recUrl); } catch (e) {} recUrl = ''; } }
+    function play() {
+      stop(); startT = 0; replay.disabled = true; dl.style.display = 'none'; status.textContent = '';
+      startRecording();
+      raf = root.requestAnimationFrame(frame);
+    }
+    replay.addEventListener('click', play);
+    status.textContent = t('reelBuilding');
+    Promise.all([loadImg(item.before), loadImg(item.src)]).then(function (r) {
+      imgs.before = r[0]; imgs.after = r[1]; status.textContent = ''; play();
+    }).catch(function () { status.textContent = t('error'); });
+    trackCommerce('reel_open', { theme: theme });
+    logUi({ event: 'reel-open' });
+  }
+
   root.StyleStudioPublic = { init: init, setLang: setLang, _t: t, _state: state, _strings: SS_STRINGS, _openViewer: openViewer, _closeViewer: closeViewer, _onWigGenerate: onWigGenerate, _buildShowcase: buildShowcase, _buildGallery: buildGallery, _buildWigExamples: buildWigExamples, _buildTestimonials: buildTestimonials, _renderMasterpiece: renderMasterpiece, _renderWigResult: renderWigResult, _openAuthPanel: openAuthPanel, _closeAuthPanel: closeAuthPanel, _openAccountPanel: openAccountPanel, _closeAccountPanel: closeAccountPanel, _customerEmailForPhone: customerEmailForPhone, _normalizePhone: normalizePhone, _isCustomerUser: isCustomerUser,
     // SP-10 hooks (testing + future):
     _buildConcierge: buildConcierge, _buildLifestyle: buildLifestyle, _buildInspiration: buildInspiration,
     _renderAccountPanel: renderAccountPanel, _applyStyleIntent: applyStyleIntent,
     _getProfiles: getProfiles, _activeProfileId: activeProfileId, _setActiveProfile: setActiveProfile, _addProfile: addProfile, _removeProfile: removeProfile,
     _toggleCompare: toggleCompare, _isInCompare: isInCompare, _toggleShopLater: toggleShopLater, _isShopLater: isShopLater,
-    _CONCIERGE_GOALS: CONCIERGE_GOALS, _LIFESTYLE_COLLECTIONS: LIFESTYLE_COLLECTIONS, _INSPIRATION: INSPIRATION, _FITTING_SERVICES: FITTING_SERVICES, _PROVIDERS: PROVIDERS };
+    _CONCIERGE_GOALS: CONCIERGE_GOALS, _LIFESTYLE_COLLECTIONS: LIFESTYLE_COLLECTIONS, _INSPIRATION: INSPIRATION, _FITTING_SERVICES: FITTING_SERVICES, _PROVIDERS: PROVIDERS,
+    // SP-10.5 viral engine hooks (testing):
+    _buildShareCard: buildShareCard, _openTransformationShare: openTransformationShare, _openReel: openReel,
+    _SHARE_THEMES: SHARE_THEMES, _CAPTIONS: CAPTIONS, _pickCaption: pickCaption, _themeForLook: themeForLook, _reelMime: reelMime };
 
   if (doc.readyState === 'loading') {
     doc.addEventListener('DOMContentLoaded', init);

@@ -1072,3 +1072,36 @@ body.ss-viewer-open { overflow: hidden; }
 .ss-premium__check svg { width: 11px; height: 11px; }
 .ss-premium__cta { width: 100%; min-height: 44px; border: 1px dashed var(--border-g); border-radius: 99px; background: transparent; color: var(--gold); font-family: var(--font-b); font-weight: 700; font-size: .85rem; cursor: not-allowed; opacity: .85; }
 .ss-premium__note { font-family: var(--font-b); font-size: .72rem; color: var(--muted); text-align: center; margin: .5rem 0 0; }
+
+/* ════════════════ SP-9 — partner catalog: Shop Similar Looks (demo) ════════════════ */
+.ss-shop { margin-top: 1.4rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+.ss-shop__title { font-family: var(--font-d); font-weight: 400; font-size: 1.3rem; color: var(--cream); margin: 0 0 .2rem; }
+.ss-shop__privacy { font-family: var(--font-b); font-size: .76rem; color: var(--muted); margin: 0 0 .9rem; }
+.ss-shop__grid { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+.ss-prod { background: var(--navy-800); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; }
+.ss-prod__media { position: relative; aspect-ratio: 1 / 1; background: var(--navy-900); overflow: hidden; }
+.ss-prod__img { width: 100%; height: 100%; object-fit: cover; object-position: center 18%; }
+.ss-prod__badge { position: absolute; top: .4rem; left: .4rem; font-family: var(--font-b); font-weight: 700; font-size: .58rem; letter-spacing: .04em; text-transform: uppercase; padding: .15rem .45rem; border-radius: 99px; background: rgba(8,10,24,.7); color: #d8b4fe; border: 1px solid rgba(192,132,252,.4); }
+.ss-prod__body { padding: .6rem .7rem .7rem; display: flex; flex-direction: column; gap: .3rem; flex: 1; }
+.ss-prod__provider { font-family: var(--font-b); font-weight: 700; font-size: .62rem; letter-spacing: .05em; text-transform: uppercase; color: var(--gold); }
+.ss-prod__name { font-family: var(--font-b); font-weight: 600; font-size: .85rem; color: var(--cream); line-height: 1.25; }
+.ss-prod__chips { display: flex; flex-wrap: wrap; gap: .25rem; }
+.ss-prod__chip { font-family: var(--font-b); font-size: .62rem; text-transform: capitalize; padding: .12rem .4rem; border-radius: 99px; background: var(--navy-900); border: 1px solid var(--border); color: var(--muted); }
+.ss-prod__price { font-family: var(--font-b); font-weight: 700; font-size: .8rem; color: var(--cream); }
+.ss-prod__why { font-family: var(--font-b); font-size: .72rem; color: var(--muted); margin: 0; line-height: 1.4; }
+.ss-prod__acts { display: flex; gap: .4rem; margin-top: auto; padding-top: .4rem; }
+.ss-prod__view { flex: 1; min-height: 38px; border-radius: 99px; border: 1px solid var(--border-g); background: transparent; color: var(--gold); font-family: var(--font-b); font-weight: 700; font-size: .76rem; cursor: pointer; }
+.ss-prod__save { width: 38px; height: 38px; flex-shrink: 0; border-radius: 50%; border: 1px solid var(--border); background: var(--navy-900); color: var(--muted); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.ss-prod__save svg { width: 16px; height: 16px; }
+.ss-prod__save--on { color: #ff6b9d; border-color: rgba(255,107,157,.5); }
+.ss-shop__note { font-family: var(--font-b); font-size: .74rem; color: var(--gold); text-align: center; margin: .7rem 0 0; }
+.ss-shop__note:empty { margin: 0; }
+.ss-shop__consult { width: 100%; margin-top: .9rem; }
+.ss-consult { margin-top: .9rem; padding: 1rem; border-radius: 14px; border: 1px solid var(--border-g); background: var(--navy-800); }
+.ss-consult__title { display: block; font-family: var(--font-d); font-weight: 400; font-size: 1.1rem; color: var(--cream); }
+.ss-consult__intro { font-family: var(--font-b); font-size: .8rem; color: var(--muted); margin: .3rem 0 .5rem; }
+.ss-consult__style { font-family: var(--font-b); font-size: .8rem; color: var(--cream); margin: 0 0 .6rem; }
+.ss-consult__row { display: flex; gap: .5rem; }
+.ss-consult__btn { flex: 1; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: 99px; background: var(--gold); color: var(--navy-900); font-family: var(--font-b); font-weight: 700; font-size: .82rem; text-decoration: none; }
+.ss-consult__privacy { font-family: var(--font-b); font-size: .72rem; color: var(--muted); margin: .6rem 0 0; }
+@media (min-width: 768px) { .ss-shop__grid { grid-template-columns: 1fr 1fr 1fr 1fr; } }

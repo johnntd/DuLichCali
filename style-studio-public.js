@@ -109,6 +109,15 @@
       premiumTitle: 'Premium', premiumBadge: 'Coming soon', premiumSub: 'Everything you love — without limits.',
       premiumF1: 'Unlimited previews', premiumF2: 'Saved looks across devices', premiumF3: 'Priority generation', premiumF4: 'Exclusive styles & studios',
       premiumCta: 'Coming soon', premiumNote: 'You won’t be charged — Premium isn’t live yet.',
+      // SP-9 partner catalog (demo).
+      shopSimilar: 'Shop Similar Looks', shopPrivacy: 'Matched by style only — your photo is never shared.',
+      bookConsult: 'Book Fitting Consultation', viewProduct: 'View Product', saveProduct: 'Save', unsave: 'Saved',
+      matchPrefix: 'Matches your', matchGeneric: 'A natural option similar to your look',
+      status_demo: 'Demo', status_affiliate_ready: 'Preview',
+      demoProductNote: 'Demo catalog — product links activate as partners come online.',
+      consultTitle: 'Book a local fitting consultation', consultIntro: 'A stylist helps you choose and fit the right look. No payment now.',
+      consultStyle: 'Your look:', consultCall: 'Call', consultEmail: 'Email',
+      consultPrivacy: 'We never share your photo or generated images with partners.',
       viewerClose: 'Close', viewerPrev: 'Previous look', viewerNext: 'Next look',
       pressHold: 'Press and hold the image to save to Photos.',
       err_INVALID_INPUT: 'Please choose a valid photo.',
@@ -283,6 +292,14 @@
       premiumTitle: 'Premium', premiumBadge: 'Sắp ra mắt', premiumSub: 'Mọi thứ bạn yêu thích — không giới hạn.',
       premiumF1: 'Xem trước không giới hạn', premiumF2: 'Lưu kiểu trên mọi thiết bị', premiumF3: 'Ưu tiên tạo kiểu', premiumF4: 'Kiểu & studio độc quyền',
       premiumCta: 'Sắp ra mắt', premiumNote: 'Bạn sẽ không bị tính phí — Premium chưa hoạt động.',
+      shopSimilar: 'Mua kiểu tương tự', shopPrivacy: 'Chỉ khớp theo phong cách — không bao giờ chia sẻ ảnh của bạn.',
+      bookConsult: 'Đặt tư vấn thử kiểu', viewProduct: 'Xem sản phẩm', saveProduct: 'Lưu', unsave: 'Đã lưu',
+      matchPrefix: 'Phù hợp với kiểu', matchGeneric: 'Một lựa chọn tự nhiên tương tự diện mạo của bạn',
+      status_demo: 'Demo', status_affiliate_ready: 'Xem trước',
+      demoProductNote: 'Danh mục demo — liên kết sản phẩm sẽ kích hoạt khi đối tác tham gia.',
+      consultTitle: 'Đặt tư vấn thử kiểu tại địa phương', consultIntro: 'Chuyên gia sẽ giúp bạn chọn và thử kiểu phù hợp. Không thanh toán bây giờ.',
+      consultStyle: 'Kiểu của bạn:', consultCall: 'Gọi', consultEmail: 'Email',
+      consultPrivacy: 'Chúng tôi không bao giờ chia sẻ ảnh hay hình ảnh tạo ra của bạn với đối tác.',
       viewerClose: 'Đóng', viewerPrev: 'Kiểu trước', viewerNext: 'Kiểu tiếp',
       pressHold: 'Nhấn giữ ảnh để lưu vào Ảnh.',
       err_INVALID_INPUT: 'Vui lòng chọn một ảnh hợp lệ.',
@@ -454,6 +471,14 @@
       premiumTitle: 'Premium', premiumBadge: 'Próximamente', premiumSub: 'Todo lo que te encanta — sin límites.',
       premiumF1: 'Vistas previas ilimitadas', premiumF2: 'Looks guardados en todos tus dispositivos', premiumF3: 'Generación prioritaria', premiumF4: 'Estilos y estudios exclusivos',
       premiumCta: 'Próximamente', premiumNote: 'No se te cobrará — Premium aún no está activo.',
+      shopSimilar: 'Compra looks similares', shopPrivacy: 'Coincidencia solo por estilo — tu foto nunca se comparte.',
+      bookConsult: 'Reservar consulta de prueba', viewProduct: 'Ver producto', saveProduct: 'Guardar', unsave: 'Guardado',
+      matchPrefix: 'Coincide con tu', matchGeneric: 'Una opción natural similar a tu look',
+      status_demo: 'Demo', status_affiliate_ready: 'Vista previa',
+      demoProductNote: 'Catálogo demo — los enlaces se activan cuando los socios se incorporen.',
+      consultTitle: 'Reserva una consulta de prueba local', consultIntro: 'Un estilista te ayuda a elegir y probar el look ideal. Sin pago ahora.',
+      consultStyle: 'Tu look:', consultCall: 'Llamar', consultEmail: 'Email',
+      consultPrivacy: 'Nunca compartimos tu foto ni tus imágenes generadas con los socios.',
       viewerClose: 'Cerrar', viewerPrev: 'Look anterior', viewerNext: 'Look siguiente',
       pressHold: 'Mantén presionada la imagen para guardarla en Fotos.',
       err_INVALID_INPUT: 'Por favor elige una foto válida.',
@@ -1913,6 +1938,151 @@
     s.textContent = msg || '';
     s.classList.toggle('ss-status--error', !!isError);
   }
+  // ── SP-9: Partner Catalog MVP — provider-agnostic, privacy-safe, DEMO only ──
+  // NO API, NO payment, NO inventory, NO checkout, NO real partner contact yet.
+  // Matching uses ONLY non-private style attributes (length/color/density/style
+  // type/audience/naturalness) — NEVER the selfie or generated image. productUrl
+  // is a placeholder until a partner is onboarded (partnerStatus: demo →
+  // affiliate_ready → active). Adding a partner/product = editing this config.
+  var WIG_PARTNERS = {
+    tinhair:  { name: 'TINHAIR',  status: 'demo' },
+    lordhair: { name: 'Lordhair', status: 'demo' },
+    uniwigs:  { name: 'UniWigs',  status: 'demo' },
+  };
+  var SS_SHOWCASE = '/assets/style-studio/showcase/';
+  var WIG_CATALOG = [
+    { id: 'th-long-layer', provider: 'tinhair',  productName: 'Natural Lace Wig — Long Layers', category: 'wig',         styleType: 'layered',  colorFamily: 'dark_brown', length: 'long',   density: 'full',   audience: 'women', priceRange: '$$',  imageUrl: SS_SHOWCASE + 'wig-match-asian-female.webp',              productUrl: '#', partnerStatus: 'demo' },
+    { id: 'th-topper',     provider: 'tinhair',  productName: 'Everyday Crown Topper',           category: 'topper',      styleType: 'straight', colorFamily: 'black',      length: 'medium', density: 'medium', audience: 'women', priceRange: '$',   imageUrl: SS_SHOWCASE + 'transformations/color-woman-after.webp',   productUrl: '#', partnerStatus: 'demo' },
+    { id: 'lh-full-system',provider: 'lordhair', productName: "Men's Hair System — Full",        category: 'hair_system', styleType: 'natural',  colorFamily: 'black',      length: 'short',  density: 'full',   audience: 'men',   priceRange: '$$$', imageUrl: SS_SHOWCASE + 'wig-match-asian-male.webp',                productUrl: '#', partnerStatus: 'demo' },
+    { id: 'lh-crown',      provider: 'lordhair', productName: 'Crown Volume System',             category: 'hair_system', styleType: 'natural',  colorFamily: 'dark_brown', length: 'short',  density: 'medium', audience: 'men',   priceRange: '$$',  imageUrl: SS_SHOWCASE + 'transformations/wig-fuller-after.webp',    productUrl: '#', partnerStatus: 'demo' },
+    { id: 'uw-wavy',       provider: 'uniwigs',  productName: 'Wavy Glamour Wig',                category: 'wig',         styleType: 'wavy',     colorFamily: 'caramel',    length: 'long',   density: 'full',   audience: 'women', priceRange: '$$',  imageUrl: SS_SHOWCASE + 'hair-texture-asian-female.webp',           productUrl: '#', partnerStatus: 'demo' },
+    { id: 'uw-bob',        provider: 'uniwigs',  productName: 'Soft Layered Bob',                category: 'wig',         styleType: 'layered',  colorFamily: 'ash_brown',  length: 'medium', density: 'medium', audience: 'women', priceRange: '$$',  imageUrl: SS_SHOWCASE + 'hair-styles-asian-female.webp',            productUrl: '#', partnerStatus: 'demo' },
+    { id: 'th-sleek',      provider: 'tinhair',  productName: 'Sleek Straight Wig',              category: 'wig',         styleType: 'straight', colorFamily: 'black',      length: 'long',   density: 'full',   audience: 'women', priceRange: '$$',  imageUrl: SS_SHOWCASE + 'transformations/wedding-woman-after.webp', productUrl: '#', partnerStatus: 'demo' },
+    { id: 'uw-density',    provider: 'uniwigs',  productName: 'Natural Density Topper',          category: 'topper',      styleType: 'straight', colorFamily: 'dark_brown', length: 'medium', density: 'light',  audience: 'women', priceRange: '$',   imageUrl: SS_SHOWCASE + 'transformations/master-young-after.webp',  productUrl: '#', partnerStatus: 'demo' },
+  ];
+  var SAVED_PRODUCTS_KEY = 'ss_saved_products';
+  var COMMERCE_EVENTS_KEY = 'ss_commerce_events';
+
+  // Local, analytics-safe tracking. NEVER stores images or customer identity —
+  // only event + product/provider + text attrs + timestamp, capped on-device.
+  function trackCommerce(event, data) {
+    try {
+      var l = loadStore(COMMERCE_EVENTS_KEY);
+      l.unshift(Object.assign({ event: event, ts: Date.now() }, data || {}));
+      saveStore(COMMERCE_EVENTS_KEY, l.slice(0, 100));
+    } catch (e) {}
+    try { root.console && root.console.log('[style-commerce]', event, data || {}); } catch (e) {}
+  }
+  function isProductSaved(id) { return loadStore(SAVED_PRODUCTS_KEY).some(function (r) { return r.id === id; }); }
+  function toggleSavedProduct(p) {
+    var l = loadStore(SAVED_PRODUCTS_KEY);
+    if (l.some(function (r) { return r.id === p.id; })) l = l.filter(function (r) { return r.id !== p.id; });
+    else l.unshift({ id: p.id, provider: p.provider, productName: p.productName, ts: Date.now() }); // text only
+    saveStore(SAVED_PRODUCTS_KEY, l.slice(0, 60));
+  }
+
+  // Derive NON-PRIVATE match attributes from the AI result TEXT + the chosen
+  // audience. No image/selfie is ever read here.
+  function deriveWigAttrs(best) {
+    var txt = (((best && best.title) || '') + ' ' + ((best && best.whyItFitsFace) || '')).toLowerCase();
+    var pick = function (map) { for (var k in map) { if (map[k].test(txt)) return k; } return ''; };
+    return {
+      audience: state.audience === 'man' ? 'men' : (state.audience === 'woman' ? 'women' : ''),
+      styleType: pick({ layered: /layer/, wavy: /wav|curl/, straight: /straight|sleek/ }),
+      length: pick({ long: /long/, short: /short|crop|\bbob\b|pixie/, medium: /medium|mid|shoulder/ }),
+      colorFamily: pick({ black: /black|jet/, caramel: /caramel|honey|balayage|warm/, ash_brown: /ash/, dark_brown: /brown|brunette|chestnut|espresso/ }),
+    };
+  }
+  function matchCatalog(best) {
+    var a = deriveWigAttrs(best);
+    var scored = WIG_CATALOG.map(function (p) {
+      var s = 0, reasons = [];
+      if (a.audience && p.audience === a.audience) s += 1;
+      if (a.styleType && p.styleType === a.styleType) { s += 3; reasons.push(a.styleType); }
+      if (a.length && p.length === a.length) { s += 2; reasons.push(a.length); }
+      if (a.colorFamily && p.colorFamily === a.colorFamily) { s += 2; reasons.push(a.colorFamily.replace(/_/g, ' ')); }
+      return { p: p, s: s, reasons: reasons };
+    }).sort(function (x, y) { return y.s - x.s; });
+    return scored.slice(0, 4);
+  }
+
+  // "Shop Similar Looks" — demo product cards + a fitting-consultation CTA.
+  function buildWigCommerce(best) {
+    var wrap = elt('section', 'ss-shop');
+    wrap.appendChild(elt('h3', 'ss-shop__title', t('shopSimilar')));
+    wrap.appendChild(elt('p', 'ss-shop__privacy', t('shopPrivacy')));
+    var grid = elt('div', 'ss-shop__grid'); grid.setAttribute('role', 'list');
+    matchCatalog(best).forEach(function (m) { grid.appendChild(buildProductCard(m.p, m.reasons)); });
+    wrap.appendChild(grid);
+    var note = elt('p', 'ss-shop__note'); note.setAttribute('aria-live', 'polite');
+    wrap.appendChild(note);
+    var consult = elt('button', 'ss-cta ss-shop__consult', t('bookConsult')); consult.type = 'button';
+    consult.addEventListener('click', function () { trackCommerce('consultation_click', { from: 'wig' }); openConsult(wrap, best); });
+    wrap.appendChild(consult);
+    return wrap;
+  }
+  function buildProductCard(p, reasons) {
+    var card = elt('article', 'ss-prod'); card.setAttribute('role', 'listitem');
+    var media = elt('div', 'ss-prod__media');
+    var img = doc.createElement('img'); img.className = 'ss-prod__img'; img.src = p.imageUrl; img.alt = p.productName; img.loading = 'lazy';
+    img.addEventListener('error', function () { media.classList.add('ss-prod__media--ph'); if (img.parentNode) img.parentNode.removeChild(img); });
+    media.appendChild(img);
+    if (p.partnerStatus !== 'active') media.appendChild(elt('span', 'ss-prod__badge', t('status_' + p.partnerStatus)));
+    card.appendChild(media);
+    var body = elt('div', 'ss-prod__body');
+    body.appendChild(elt('span', 'ss-prod__provider', (WIG_PARTNERS[p.provider] || {}).name || p.provider));
+    body.appendChild(elt('strong', 'ss-prod__name', p.productName));
+    var chips = elt('div', 'ss-prod__chips');
+    [p.styleType, p.length, String(p.colorFamily).replace(/_/g, ' '), p.density].forEach(function (c) {
+      if (c) chips.appendChild(elt('span', 'ss-prod__chip', String(c).replace(/_/g, ' ')));
+    });
+    body.appendChild(chips);
+    body.appendChild(elt('span', 'ss-prod__price', p.priceRange));
+    var why = (reasons && reasons.length) ? (t('matchPrefix') + ' ' + reasons.join(', ')) : t('matchGeneric');
+    body.appendChild(elt('p', 'ss-prod__why', why));
+    var acts = elt('div', 'ss-prod__acts');
+    var view = elt('button', 'ss-prod__view', t('viewProduct')); view.type = 'button';
+    view.addEventListener('click', function () { trackCommerce('product_view', { productId: p.id, provider: p.provider, status: p.partnerStatus }); onViewProduct(card, p); });
+    acts.appendChild(view);
+    var save = elt('button', 'ss-prod__save'); save.type = 'button';
+    var paint = function () { var on = isProductSaved(p.id); save.classList.toggle('ss-prod__save--on', on); save.innerHTML = on ? heartFilledIcon() : icon('heart'); save.setAttribute('aria-label', t(on ? 'unsave' : 'saveProduct')); };
+    paint();
+    save.addEventListener('click', function () { toggleSavedProduct(p); paint(); trackCommerce('save_product', { productId: p.id, provider: p.provider, saved: isProductSaved(p.id) }); });
+    acts.appendChild(save);
+    body.appendChild(acts);
+    card.appendChild(body);
+    return card;
+  }
+  // Demo: never navigate to a partner yet (validating interest first). Active
+  // products would open productUrl; demo/affiliate_ready show a placeholder note.
+  function onViewProduct(card, p) {
+    if (p.partnerStatus === 'active' && p.productUrl && p.productUrl !== '#') { root.open(p.productUrl, '_blank', 'noopener'); return; }
+    var shop = card.closest ? card.closest('.ss-shop') : null;
+    var note = shop && shop.querySelector('.ss-shop__note');
+    if (note) note.textContent = t('demoProductNote');
+  }
+  // Fitting consultation — routes to the existing DuLichCali contact (no payment,
+  // no images shared). Reveals an inline consult block under the shop section.
+  function openConsult(wrap, best) {
+    if (wrap.querySelector('.ss-consult')) { wrap.querySelector('.ss-consult').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); return; }
+    var styleText = (best && best.title) || '';
+    var box = elt('div', 'ss-consult');
+    box.appendChild(elt('strong', 'ss-consult__title', t('consultTitle')));
+    box.appendChild(elt('p', 'ss-consult__intro', t('consultIntro')));
+    if (styleText) box.appendChild(elt('p', 'ss-consult__style', t('consultStyle') + ' ' + styleText));
+    var row = elt('div', 'ss-consult__row');
+    var tel = elt('a', 'ss-consult__btn', t('consultCall')); tel.href = 'tel:+14089163439';
+    tel.addEventListener('click', function () { trackCommerce('consultation_call', { from: 'wig' }); });
+    var subject = encodeURIComponent('Wig fitting consultation' + (styleText ? ' — ' + styleText : ''));
+    var mail = elt('a', 'ss-consult__btn', t('consultEmail')); mail.href = 'mailto:dulichcali21@gmail.com?subject=' + subject;
+    mail.addEventListener('click', function () { trackCommerce('consultation_email', { from: 'wig' }); });
+    row.appendChild(tel); row.appendChild(mail);
+    box.appendChild(row);
+    box.appendChild(elt('p', 'ss-consult__privacy', t('consultPrivacy')));
+    wrap.appendChild(box);
+    try { box.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
+  }
+
   function renderWigResult(recs, analysis) {
     var host = doc.getElementById('ssWigResult');
     if (!host) return;
@@ -1997,6 +2167,8 @@
         host.appendChild(hint);
       }
     }
+    // SP-9: "Shop Similar Looks" partner catalog (demo) + fitting consultation.
+    host.appendChild(buildWigCommerce(best));
     if (state.isCustomer) { var ap = doc.getElementById('ssAccountPanel'); if (ap && !ap.hidden) renderAccountPanel(); }
     try { bestCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
     logUi({ event: 'wig-rendered' });
@@ -2761,7 +2933,7 @@
     onScroll();
   }
 
-  root.StyleStudioPublic = { init: init, setLang: setLang, _t: t, _state: state, _strings: SS_STRINGS, _openViewer: openViewer, _closeViewer: closeViewer, _onWigGenerate: onWigGenerate, _buildShowcase: buildShowcase, _buildGallery: buildGallery, _buildWigExamples: buildWigExamples, _buildTestimonials: buildTestimonials, _renderMasterpiece: renderMasterpiece, _openAuthPanel: openAuthPanel, _closeAuthPanel: closeAuthPanel, _openAccountPanel: openAccountPanel, _closeAccountPanel: closeAccountPanel, _customerEmailForPhone: customerEmailForPhone, _normalizePhone: normalizePhone, _isCustomerUser: isCustomerUser };
+  root.StyleStudioPublic = { init: init, setLang: setLang, _t: t, _state: state, _strings: SS_STRINGS, _openViewer: openViewer, _closeViewer: closeViewer, _onWigGenerate: onWigGenerate, _buildShowcase: buildShowcase, _buildGallery: buildGallery, _buildWigExamples: buildWigExamples, _buildTestimonials: buildTestimonials, _renderMasterpiece: renderMasterpiece, _renderWigResult: renderWigResult, _openAuthPanel: openAuthPanel, _closeAuthPanel: closeAuthPanel, _openAccountPanel: openAccountPanel, _closeAccountPanel: closeAccountPanel, _customerEmailForPhone: customerEmailForPhone, _normalizePhone: normalizePhone, _isCustomerUser: isCustomerUser };
 
   if (doc.readyState === 'loading') {
     doc.addEventListener('DOMContentLoaded', init);

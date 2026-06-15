@@ -2960,6 +2960,21 @@ async function planHaircutStyles(geminiKey, base64, mimeType, opts) {
 // identity). The function still THROWS after exhausting attempts, so callers'
 // existing error handling (clear error, never text-as-result) is preserved.
 const IMAGE_RETRY_SUFFIX = ' IMPORTANT: Output an EDITED PHOTOGRAPH (an image) of the SAME person — do NOT reply with text, a caption, or a description. Keep the EXACT same face, eyes, nose, lips, skin tone, age and bone structure; change ONLY the hair / style as instructed. Return the image only.';
+// Relaxed safety for the IMAGE edit: this is a benign hair-makeover of a
+// consenting adult's own selfie. We turn OFF the four configurable harm
+// categories so an ordinary portrait is never refused as a false positive.
+// NOTE: the non-configurable child-safety / IMAGE_SAFETY filter still applies
+// and CANNOT be disabled — a true child-safety block is surfaced, not bypassed.
+const IMAGE_SAFETY_SETTINGS = [
+  { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+  { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+  { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+  { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }
+];
+// finishReason values that mean a deterministic content block — retrying with
+// the same photo will fail the same way, so we stop and surface it as a block
+// rather than burning a second call.
+const IMAGE_BLOCK_REASONS = ['SAFETY', 'IMAGE_SAFETY', 'PROHIBITED_CONTENT', 'RECITATION', 'BLOCKLIST', 'SPII'];
 async function callGeminiImageEdit(geminiKey, inlineImageBase64, mimeType, editPrompt, attempts) {
   const maxAttempts = Math.max(1, attempts == null ? 2 : attempts);
   let lastErr;
@@ -2973,7 +2988,8 @@ async function callGeminiImageEdit(geminiKey, inlineImageBase64, mimeType, editP
           { text: prompt }
         ]
       }],
-      generationConfig: { responseModalities: ['IMAGE'] }
+      generationConfig: { responseModalities: ['IMAGE'] },
+      safetySettings: IMAGE_SAFETY_SETTINGS
     };
     try {
       const raw = await httpsPost(
@@ -2990,11 +3006,26 @@ async function callGeminiImageEdit(geminiKey, inlineImageBase64, mimeType, editP
         const inline = imagePart.inline_data || imagePart.inlineData;
         return { dataUrl: `data:${inline.mime_type || inline.mimeType || 'image/png'};base64,${inline.data}` };
       }
-      // 200 OK but no image part = text-only / safety refusal → retry.
-      lastErr = new Error(
-        (!parsed.candidates || !parsed.candidates.length) ? 'no_candidates'
-          : (!parts || !parts.length) ? 'no_parts' : 'no_inline_data'
-      );
+      // 200 OK but no image part = text-only / safety refusal / empty candidate.
+      // Log the model's own diagnostics so production logs reveal WHY (this is
+      // the only place that knows the real finishReason + safety verdict).
+      const finishReason = (cand && cand.finishReason) || (parsed.promptFeedback && parsed.promptFeedback.blockReason) || 'unknown';
+      const safety = (cand && cand.safetyRatings) || (parsed.promptFeedback && parsed.promptFeedback.safetyRatings) || [];
+      const code = (!parsed.candidates || !parsed.candidates.length) ? 'no_candidates'
+        : (!parts || !parts.length) ? 'no_parts' : 'no_inline_data';
+      const blocked = IMAGE_BLOCK_REASONS.indexOf(finishReason) !== -1
+        || !!(parsed.promptFeedback && parsed.promptFeedback.blockReason);
+      console.warn('[callGeminiImageEdit] no image returned', JSON.stringify({
+        attempt, code, finishReason, blocked,
+        safetyRatings: safety.map(r => ({ c: r.category, p: r.probability, blocked: r.blocked })),
+      }));
+      lastErr = new Error(code);
+      lastErr.finishReason = finishReason;
+      lastErr.blocked = blocked;
+      // A deterministic content block won't change on retry — stop now and let
+      // the caller show a "try a different photo" message instead of a generic
+      // transient error.
+      if (blocked) { lastErr.code = 'image_blocked'; break; }
     } catch (e) {
       lastErr = e; // network / non-2xx (5xx, 429) → retry
     }
@@ -3243,7 +3274,12 @@ async function runStudioGeneration(params) {
         best.imageEditPrompt + ' ' + MASTER_STYLIST_CLAUSE + (audience === 'child' ? CHILD_SAFETY_CLAUSE : '')
       );
     } catch (e) {
-      console.error('[runStudioGeneration] master edit failure', e);
+      console.error('[runStudioGeneration] master edit failure', e && e.message, 'finishReason=' + (e && e.finishReason), 'blocked=' + (e && e.blocked));
+      // A deterministic content block (the model refused THIS photo) gets a
+      // distinct, actionable message — retrying the same photo won't help.
+      if (e && e.blocked) {
+        return { ok: false, vendorMessage: 'This photo couldn’t be processed. Please use a clear, front-facing photo of one person with a plain background — no filters, sunglasses, hats, or group shots.', debugCode: 'MASTER_BLOCKED' };
+      }
       return { ok: false, vendorMessage: 'Master Stylist could not render the look. Please try again.', debugCode: 'MASTER_EDIT_ERROR' };
     }
     // Realism quality gate: if the look reads as fake/costume, retry once with the

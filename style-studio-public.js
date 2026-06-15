@@ -308,6 +308,7 @@
       reelScene_q: 'What would you look like?', reelScene_ai: 'AI Master Stylist', reelScene_analyzing: 'AI analyzing…',
       reelScene_final: 'See Your Best Look', reelScene_try: 'Try it Free',
       dashShareHint: 'Turn any saved look into a shareable before/after card.',
+      shareCtaTitle: 'Love your new look? Share your transformation ✨',
     },
     vi: {
       heroChip: 'Chuyên Gia Tạo Kiểu AI',
@@ -571,6 +572,7 @@
       reelScene_q: 'Bạn sẽ trông như thế nào?', reelScene_ai: 'Chuyên Gia Tạo Kiểu AI', reelScene_analyzing: 'AI đang phân tích…',
       reelScene_final: 'Xem diện mạo đẹp nhất của bạn', reelScene_try: 'Thử miễn phí',
       dashShareHint: 'Biến bất kỳ kiểu đã lưu nào thành thẻ trước/sau để chia sẻ.',
+      shareCtaTitle: 'Thích diện mạo mới? Chia sẻ sự biến đổi của bạn ✨',
     },
     es: {
       heroChip: 'Estilista Maestro AI',
@@ -834,6 +836,7 @@
       reelScene_q: '¿Cómo te verías?', reelScene_ai: 'Estilista Maestro AI', reelScene_analyzing: 'AI analizando…',
       reelScene_final: 'Mira tu mejor look', reelScene_try: 'Pruébalo gratis',
       dashShareHint: 'Convierte cualquier look guardado en una tarjeta antes/después para compartir.',
+      shareCtaTitle: '¿Te encanta tu nuevo look? Comparte tu transformación ✨',
     },
   };
 
@@ -1472,6 +1475,7 @@
 
     var body = elt('div', 'ss-master-card__body');
     body.appendChild(elt('strong', 'ss-master-card__title', item.title));
+    var masterCta = buildShareCTA(item, lookRec); if (masterCta) body.appendChild(masterCta); // SP-10.5: prominent share/reel
     if (mp.explanation) {
       var ex = elt('div', 'ss-explain');
       ex.appendChild(elt('span', 'ss-explain__label', t('explanationLabel')));
@@ -2587,6 +2591,7 @@
     if (best.maintenance) bBody.appendChild(elt('p', 'ss-card__meta', best.maintenance));
     var bestRec = { mode: 'wig', title: best.title || 'best-wig', why: best.whyItFitsFace || '', sessionId: state.sessionId, styleId: best.styleId || '' };
     bBody.appendChild(buildActions(bSrc, best.styleId || best.title || 'best-wig', allItems, 0, bestRec));
+    var wigCta = buildShareCTA(allItems[0], bestRec); if (wigCta) bBody.appendChild(wigCta); // SP-10.5: prominent share/reel
     bestCard.appendChild(bBody);
     host.appendChild(bestCard);
     cacheLocal(state.sessionId, '__before', before); // SP-10.5: local before for share cards
@@ -4024,6 +4029,24 @@
     } catch (e) {}
   }
 
+  // Prominent share CTA shown directly under a flagship result (Master / Wig) so
+  // the viral action is impossible to miss — separate from the small icon row.
+  function buildShareCTA(item, lookRec) {
+    if (!item || !item.src || !item.before) return null;
+    var wrap = elt('div', 'ss-sharecta');
+    wrap.appendChild(elt('p', 'ss-sharecta__title', t('shareCtaTitle')));
+    var row = elt('div', 'ss-sharecta__row');
+    var share = elt('button', 'ss-cta ss-sharecta__share'); share.type = 'button';
+    share.innerHTML = icon('share') + '<span>' + t('shareTransform') + '</span>';
+    share.addEventListener('click', function () { openTransformationShare(item, themeForLook(lookRec)); });
+    var reel = elt('button', 'ss-sharecta__reel'); reel.type = 'button';
+    reel.innerHTML = icon('reel') + '<span>' + t('makeReel') + '</span>';
+    reel.addEventListener('click', function () { openReel(item, themeForLook(lookRec)); });
+    row.appendChild(share); row.appendChild(reel);
+    wrap.appendChild(row);
+    return wrap;
+  }
+
   // ── In-app reel (10.5C) — client-side, privacy-safe ─────────────────────
   // Animates the 5-scene transformation on a canvas (muted, autoplay). Where the
   // browser supports MediaRecorder + captureStream, offers a downloadable video;
@@ -4172,7 +4195,7 @@
     _toggleCompare: toggleCompare, _isInCompare: isInCompare, _toggleShopLater: toggleShopLater, _isShopLater: isShopLater,
     _CONCIERGE_GOALS: CONCIERGE_GOALS, _LIFESTYLE_COLLECTIONS: LIFESTYLE_COLLECTIONS, _INSPIRATION: INSPIRATION, _FITTING_SERVICES: FITTING_SERVICES, _PROVIDERS: PROVIDERS,
     // SP-10.5 viral engine hooks (testing):
-    _buildShareCard: buildShareCard, _openTransformationShare: openTransformationShare, _openReel: openReel,
+    _buildShareCard: buildShareCard, _openTransformationShare: openTransformationShare, _openReel: openReel, _buildShareCTA: buildShareCTA,
     _SHARE_THEMES: SHARE_THEMES, _CAPTIONS: CAPTIONS, _pickCaption: pickCaption, _themeForLook: themeForLook, _reelMime: reelMime };
 
   if (doc.readyState === 'loading') {

@@ -1304,3 +1304,13 @@ body.ss-viewer-open { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .ss-toast { transition: none; }
 }
+
+/* SP-10.5 — prominent share CTA under flagship results (discoverability) */
+.ss-sharecta { margin: .7rem 0 .9rem; padding: .8rem .85rem; border-radius: 14px; border: 1px solid var(--border-g); background: radial-gradient(120% 100% at 0% 0%, rgba(212,175,55,.16) 0%, transparent 60%), var(--navy-900); }
+.ss-sharecta__title { font-family: var(--font-d); font-weight: 400; font-size: 1.02rem; color: var(--cream); margin: 0 0 .55rem; text-align: center; }
+.ss-sharecta__row { display: flex; gap: .5rem; }
+.ss-sharecta__share { flex: 2; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: .4rem; }
+.ss-sharecta__share svg { width: 18px; height: 18px; }
+.ss-sharecta__reel { flex: 1; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: .4rem; border-radius: 99px; border: 1px solid rgba(192,132,252,.5); background: rgba(192,132,252,.14); color: #d8b4fe; font-family: var(--font-b); font-weight: 700; font-size: .82rem; cursor: pointer; touch-action: manipulation; }
+.ss-sharecta__reel svg { width: 18px; height: 18px; }
+.ss-sharecta__reel:hover { background: rgba(192,132,252,.24); }

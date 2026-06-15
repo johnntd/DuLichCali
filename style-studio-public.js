@@ -219,6 +219,79 @@
       noHistory: 'Your generated looks will appear here.',
       favoritesHint: 'Saved on this device only.',
       removeFavorite: 'Remove',
+      // ── SP-10 — AI Concierge + Local Services + Collections + Family + Lifestyle + Inspiration ──
+      // Shared style vocabulary (referenced by the concierge + lifestyle configs).
+      den_light: 'Light, natural', den_medium: 'Medium, balanced', den_full: 'Full, voluminous',
+      tex_straight: 'Straight & sleek', tex_wavy: 'Soft waves', tex_curly: 'Defined curls', tex_natural: 'Your natural texture', tex_layered: 'Layered movement',
+      col_natural: 'Natural, matched to you', col_warm: 'Warm caramel / honey', col_cool: 'Cool ash / espresso', col_rich: 'Rich dark', col_soft: 'Soft face-framing highlights', col_gray: 'Elegant gray blend',
+      len_short: 'Short', len_medium: 'Medium', len_long: 'Long',
+      cg_wig_none: 'Not needed', cg_wig_optional: 'Optional — for extra fullness', cg_wig_recommended: 'Recommended — for natural fullness',
+      // Fitting services (10A) + providers.
+      svc_wig_fitting: 'Wig fitting', svc_hairsystem_fitting: 'Hair system fitting', svc_trimming: 'Trimming', svc_styling: 'Styling', svc_maintenance: 'Maintenance',
+      consultServicesLabel: 'What do you need?', consultProviderLabel: 'Stylist', consultAnyProvider: 'First available',
+      consultPickHint: 'Pick one or more services.',
+      // AI Concierge (10B).
+      conciergeChip: 'AI Concierge', conciergeTitle: 'Your Personal AI Stylist',
+      conciergeSub: 'Tell us your goal — get a tailored plan: style, color, density, texture, and where to make it real.',
+      conciergeQ: 'What is your goal?',
+      cg_younger: 'Younger appearance', cg_professional: 'Professional look', cg_wedding: 'Wedding', cg_vacation: 'Vacation', cg_confidence: 'Everyday confidence', cg_fuller: 'Fuller hair', cg_thinning: 'Hair thinning', cg_executive: 'Executive style',
+      conciergePlanTitle: 'Your personalized plan', conciergeFor: 'For',
+      cg_f_style: 'Style', cg_f_color: 'Color', cg_f_density: 'Density', cg_f_texture: 'Texture', cg_f_wig: 'Wig / hair system', cg_f_provider: 'Where to make it real', cg_f_why: 'Why this works',
+      conciergeTry: 'Generate this look', conciergeConsult: 'Book a consultation', conciergeReset: 'Pick another goal',
+      cg_younger_style: 'A soft, layered, face-framing cut with gentle volume on top',
+      cg_younger_why: 'Softer layers and lift around the face create a fresher, more youthful frame.',
+      cg_professional_style: 'A clean, polished, well-structured cut that holds its shape',
+      cg_professional_why: 'A neat, structured shape reads as competent and put-together in any room.',
+      cg_wedding_style: 'An elegant styled look with soft waves or a romantic updo',
+      cg_wedding_why: 'Soft, photogenic volume and movement photograph beautifully on the big day.',
+      cg_vacation_style: 'An easy, breezy, low-maintenance natural style',
+      cg_vacation_why: 'A relaxed, wash-and-go shape stays effortless through travel and humidity.',
+      cg_confidence_style: 'A balanced, flattering everyday cut tailored to your face',
+      cg_confidence_why: 'A shape that fits your features makes daily styling quick and confident.',
+      cg_fuller_style: 'A volumizing layered cut, with an optional natural fullness boost',
+      cg_fuller_why: 'Strategic layers plus a natural fullness option add believable density.',
+      cg_thinning_style: 'A flattering shape that adds the look of density where it counts',
+      cg_thinning_why: 'The right cut, and an optional hair system, restore a full, natural look.',
+      cg_executive_style: 'A sharp, refined, commanding cut with clean lines',
+      cg_executive_why: 'Crisp lines and a refined finish project authority and presence.',
+      // Lifestyle Collections (10E).
+      lifestyleTitle: 'Lifestyle Collections', lifestyleSub: 'Curated looks for every chapter — with recommended colors, density and lengths.',
+      lc_colors: 'Colors', lc_density: 'Density', lc_lengths: 'Lengths', lifestyleTry: 'Try this style',
+      lc_professional: 'Professional', lc_executive: 'Executive', lc_elegant: 'Elegant', lc_wedding: 'Wedding', lc_vacation: 'Vacation', lc_casual: 'Casual', lc_youthful: 'Youthful', lc_natural: 'Natural',
+      lc_professional_d: 'Polished and put-together for the workplace.',
+      lc_executive_d: 'Commanding, refined presence for leaders.',
+      lc_elegant_d: 'Soft glamour for evenings and special moments.',
+      lc_wedding_d: 'Romantic, photo-ready looks for the big day.',
+      lc_vacation_d: 'Effortless, breezy styles for the getaway.',
+      lc_casual_d: 'Easy everyday looks that just work.',
+      lc_youthful_d: 'Fresh, trend-forward and bright.',
+      lc_natural_d: 'Healthy, authentic, beautifully you.',
+      // Style Inspiration (10F) — inspired-by only, never a copy.
+      inspoTitle: 'Style Inspiration', inspoSub: 'Inspired-by directions — never a copy. We design an original look for you.',
+      inspoBadge: 'Inspired by', inspoTry: 'Try an inspired look',
+      inspoDisclaimer: 'Inspiration only — Style Studio creates an original look designed for your face, never a copy of any real person.',
+      insp_korean_actor: 'Korean Actor', insp_viet_celebrity: 'Vietnamese Star', insp_executive: 'Executive Style', insp_classic_gentleman: 'Classic Gentleman', insp_elegant_woman: 'Elegant Woman', insp_modern_asian: 'Modern Asian Fashion',
+      insp_korean_actor_d: 'Soft textured fringe, leading-man polish.',
+      insp_viet_celebrity_d: 'Glamorous volume and red-carpet shine.',
+      insp_executive_d: 'Clean, classic, boardroom-ready.',
+      insp_classic_gentleman_d: 'Timeless side-part and refined grooming.',
+      insp_elegant_woman_d: 'Sleek, graceful, effortlessly sophisticated.',
+      insp_modern_asian_d: 'Bold, editorial, runway-modern.',
+      // Dashboard (10G) + Collections (10C) + Family Profiles (10D).
+      dashTitle: 'My Studio',
+      dash_saved: 'Saved Looks', dash_history: 'History', dash_wishlist: 'Wishlist', dash_shoplater: 'Shop Later', dash_compare: 'Compare', dash_collections: 'Collections', dash_family: 'Family', dash_membership: 'Membership',
+      collectionsPrivacy: 'Saved on this device and your account only — never shared with anyone.',
+      wishlistEmpty: 'Tap the heart on any product to add it to your wishlist.',
+      shopLaterEmpty: 'Bookmark products to shop later.', shopLaterAdd: 'Shop later', shopLaterSaved: 'Saved to shop later',
+      compareEmpty: 'Add 2 or more looks to compare them side by side.', compareAdd: 'Compare', compareAdded: 'In compare', compareClear: 'Clear', compareTitle: 'Compare looks',
+      collectionsBrowseHint: 'Explore curated lifestyle collections and style inspiration.',
+      goToLifestyle: 'Lifestyle Collections', goToInspo: 'Style Inspiration',
+      profilesTitle: 'Family Profiles', profilesSub: 'One account, a profile for everyone — each keeps its own looks, favorites and history.',
+      profileAdd: 'Add profile', profileNameLabel: 'Name', profileRelationLabel: 'Relation',
+      rel_me: 'Me', rel_husband: 'Husband', rel_wife: 'Wife', rel_child: 'Child', rel_parent: 'Parent',
+      profileSave: 'Save profile', profileCancel: 'Cancel', profileRemove: 'Remove', profileActiveBadge: 'Active', profileSwitch: 'Switch',
+      profileViewing: 'Viewing', profileNamePlaceholder: 'e.g. Mom', profileDefaultName: 'Me',
+      membershipStatusGuest: 'Guest — free previews during launch', membershipStatusMember: 'Member — your looks stay with you',
     },
     vi: {
       heroChip: 'Chuyên Gia Tạo Kiểu AI',
@@ -399,6 +472,73 @@
       noHistory: 'Các kiểu bạn tạo sẽ hiển thị tại đây.',
       favoritesHint: 'Chỉ lưu trên thiết bị này.',
       removeFavorite: 'Xóa',
+      // ── SP-10 — AI Concierge + Dịch vụ tại chỗ + Bộ sưu tập + Hồ sơ gia đình + Phong cách sống + Cảm hứng ──
+      den_light: 'Mỏng, tự nhiên', den_medium: 'Vừa, cân đối', den_full: 'Dày, bồng bềnh',
+      tex_straight: 'Thẳng & mượt', tex_wavy: 'Sóng nhẹ', tex_curly: 'Xoăn rõ nét', tex_natural: 'Kết cấu tự nhiên của bạn', tex_layered: 'Tóc layer chuyển động',
+      col_natural: 'Tự nhiên, hợp với bạn', col_warm: 'Nâu caramel / mật ong ấm', col_cool: 'Khói / nâu espresso lạnh', col_rich: 'Đen sẫm đậm', col_soft: 'Highlight nhẹ ôm gương mặt', col_gray: 'Pha xám thanh lịch',
+      len_short: 'Ngắn', len_medium: 'Vừa', len_long: 'Dài',
+      cg_wig_none: 'Không cần', cg_wig_optional: 'Tùy chọn — để dày thêm', cg_wig_recommended: 'Khuyến nghị — để dày tự nhiên',
+      svc_wig_fitting: 'Thử tóc giả', svc_hairsystem_fitting: 'Lắp hệ thống tóc', svc_trimming: 'Cắt tỉa', svc_styling: 'Tạo kiểu', svc_maintenance: 'Bảo dưỡng',
+      consultServicesLabel: 'Bạn cần gì?', consultProviderLabel: 'Chuyên gia', consultAnyProvider: 'Ai rảnh trước',
+      consultPickHint: 'Chọn một hoặc nhiều dịch vụ.',
+      conciergeChip: 'Trợ Lý AI', conciergeTitle: 'Chuyên Gia Tạo Kiểu Riêng Của Bạn',
+      conciergeSub: 'Cho chúng tôi biết mục tiêu của bạn — nhận kế hoạch riêng: kiểu, màu, độ dày, kết cấu, và nơi thực hiện.',
+      conciergeQ: 'Mục tiêu của bạn là gì?',
+      cg_younger: 'Trẻ trung hơn', cg_professional: 'Chuyên nghiệp', cg_wedding: 'Đám cưới', cg_vacation: 'Du lịch', cg_confidence: 'Tự tin mỗi ngày', cg_fuller: 'Tóc dày hơn', cg_thinning: 'Tóc thưa', cg_executive: 'Phong cách lãnh đạo',
+      conciergePlanTitle: 'Kế hoạch riêng của bạn', conciergeFor: 'Cho',
+      cg_f_style: 'Kiểu', cg_f_color: 'Màu', cg_f_density: 'Độ dày', cg_f_texture: 'Kết cấu', cg_f_wig: 'Tóc giả / Hệ thống tóc', cg_f_provider: 'Nơi thực hiện', cg_f_why: 'Vì sao hợp',
+      conciergeTry: 'Tạo kiểu này', conciergeConsult: 'Đặt tư vấn', conciergeReset: 'Chọn mục tiêu khác',
+      cg_younger_style: 'Kiểu cắt layer mềm ôm gương mặt, hơi bồng phần đỉnh',
+      cg_younger_why: 'Lớp tóc mềm và độ phồng quanh mặt tạo khung gương mặt tươi và trẻ hơn.',
+      cg_professional_style: 'Kiểu cắt gọn gàng, chỉn chu, giữ phom tốt',
+      cg_professional_why: 'Phom tóc gọn gàng, có cấu trúc thể hiện sự chuyên nghiệp ở mọi nơi.',
+      cg_wedding_style: 'Kiểu tạo kiểu thanh lịch với sóng mềm hoặc búi lãng mạn',
+      cg_wedding_why: 'Độ phồng mềm, chuyển động lên ảnh rất đẹp trong ngày trọng đại.',
+      cg_vacation_style: 'Kiểu tự nhiên nhẹ nhàng, dễ chăm sóc',
+      cg_vacation_why: 'Phom tóc thoải mái, gội-là-xong giữ vẻ tự nhiên suốt chuyến đi và thời tiết ẩm.',
+      cg_confidence_style: 'Kiểu thường ngày cân đối, tôn gương mặt bạn',
+      cg_confidence_why: 'Phom tóc hợp đường nét giúp tạo kiểu hằng ngày nhanh và tự tin.',
+      cg_fuller_style: 'Kiểu cắt layer tạo phồng, có thể thêm độ dày tự nhiên',
+      cg_fuller_why: 'Layer hợp lý cùng lựa chọn tăng độ dày tự nhiên tạo cảm giác tóc dày thật.',
+      cg_thinning_style: 'Phom tóc tôn dáng, tạo cảm giác dày ở nơi cần thiết',
+      cg_thinning_why: 'Kiểu cắt phù hợp, kèm hệ thống tóc tùy chọn, phục hồi vẻ dày tự nhiên.',
+      cg_executive_style: 'Kiểu cắt sắc nét, chỉn chu, đường nét rõ ràng',
+      cg_executive_why: 'Đường nét gọn sắc và hoàn thiện tinh tế thể hiện uy tín và khí chất.',
+      lifestyleTitle: 'Bộ Sưu Tập Phong Cách Sống', lifestyleSub: 'Những kiểu được tuyển chọn cho từng dịp — kèm gợi ý màu, độ dày và độ dài.',
+      lc_colors: 'Màu', lc_density: 'Độ dày', lc_lengths: 'Độ dài', lifestyleTry: 'Thử kiểu này',
+      lc_professional: 'Chuyên nghiệp', lc_executive: 'Lãnh đạo', lc_elegant: 'Thanh lịch', lc_wedding: 'Đám cưới', lc_vacation: 'Du lịch', lc_casual: 'Thường ngày', lc_youthful: 'Trẻ trung', lc_natural: 'Tự nhiên',
+      lc_professional_d: 'Chỉn chu, gọn gàng cho công sở.',
+      lc_executive_d: 'Khí chất uy tín, tinh tế cho người dẫn dắt.',
+      lc_elegant_d: 'Quyến rũ nhẹ nhàng cho buổi tối và dịp đặc biệt.',
+      lc_wedding_d: 'Lãng mạn, sẵn sàng lên ảnh cho ngày trọng đại.',
+      lc_vacation_d: 'Nhẹ nhàng, thoải mái cho chuyến đi.',
+      lc_casual_d: 'Kiểu thường ngày dễ phối, dễ đẹp.',
+      lc_youthful_d: 'Tươi mới, hợp xu hướng và rạng rỡ.',
+      lc_natural_d: 'Khỏe khoắn, chân thật, đúng chất bạn.',
+      inspoTitle: 'Cảm Hứng Phong Cách', inspoSub: 'Theo hướng cảm hứng — không phải bản sao. Chúng tôi thiết kế kiểu riêng cho bạn.',
+      inspoBadge: 'Lấy cảm hứng từ', inspoTry: 'Thử kiểu lấy cảm hứng',
+      inspoDisclaimer: 'Chỉ là cảm hứng — Style Studio tạo kiểu nguyên bản thiết kế riêng cho gương mặt bạn, không sao chép bất kỳ người thật nào.',
+      insp_korean_actor: 'Diễn Viên Hàn', insp_viet_celebrity: 'Sao Việt', insp_executive: 'Phong Cách Lãnh Đạo', insp_classic_gentleman: 'Quý Ông Cổ Điển', insp_elegant_woman: 'Quý Cô Thanh Lịch', insp_modern_asian: 'Thời Trang Á Đông Hiện Đại',
+      insp_korean_actor_d: 'Mái mềm có kết cấu, phong độ nam chính.',
+      insp_viet_celebrity_d: 'Bồng bềnh quyến rũ, lấp lánh thảm đỏ.',
+      insp_executive_d: 'Gọn gàng, cổ điển, sẵn sàng phòng họp.',
+      insp_classic_gentleman_d: 'Rẽ ngôi cổ điển và phong thái chỉn chu.',
+      insp_elegant_woman_d: 'Mượt mà, duyên dáng, tinh tế tự nhiên.',
+      insp_modern_asian_d: 'Táo bạo, kiểu tạp chí, hiện đại sàn diễn.',
+      dashTitle: 'Studio Của Tôi',
+      dash_saved: 'Kiểu Đã Lưu', dash_history: 'Lịch Sử', dash_wishlist: 'Yêu Thích', dash_shoplater: 'Mua Sau', dash_compare: 'So Sánh', dash_collections: 'Bộ Sưu Tập', dash_family: 'Gia Đình', dash_membership: 'Thành Viên',
+      collectionsPrivacy: 'Chỉ lưu trên thiết bị này và tài khoản của bạn — không chia sẻ với bất kỳ ai.',
+      wishlistEmpty: 'Chạm vào trái tim trên sản phẩm để thêm vào danh sách yêu thích.',
+      shopLaterEmpty: 'Đánh dấu sản phẩm để mua sau.', shopLaterAdd: 'Mua sau', shopLaterSaved: 'Đã lưu để mua sau',
+      compareEmpty: 'Thêm từ 2 kiểu trở lên để so sánh cạnh nhau.', compareAdd: 'So sánh', compareAdded: 'Đang so sánh', compareClear: 'Xóa', compareTitle: 'So sánh các kiểu',
+      collectionsBrowseHint: 'Khám phá bộ sưu tập phong cách sống và cảm hứng kiểu dáng.',
+      goToLifestyle: 'Bộ Sưu Tập Phong Cách Sống', goToInspo: 'Cảm Hứng Phong Cách',
+      profilesTitle: 'Hồ Sơ Gia Đình', profilesSub: 'Một tài khoản, hồ sơ cho mỗi người — mỗi hồ sơ giữ kiểu, yêu thích và lịch sử riêng.',
+      profileAdd: 'Thêm hồ sơ', profileNameLabel: 'Tên', profileRelationLabel: 'Quan hệ',
+      rel_me: 'Tôi', rel_husband: 'Chồng', rel_wife: 'Vợ', rel_child: 'Con', rel_parent: 'Cha mẹ',
+      profileSave: 'Lưu hồ sơ', profileCancel: 'Hủy', profileRemove: 'Xóa', profileActiveBadge: 'Đang dùng', profileSwitch: 'Chuyển',
+      profileViewing: 'Đang xem', profileNamePlaceholder: 'vd: Mẹ', profileDefaultName: 'Tôi',
+      membershipStatusGuest: 'Khách — xem trước miễn phí khi ra mắt', membershipStatusMember: 'Thành viên — kiểu của bạn luôn được giữ',
     },
     es: {
       heroChip: 'Estilista Maestro AI',
@@ -579,6 +719,73 @@
       noHistory: 'Tus looks generados aparecerán aquí.',
       favoritesHint: 'Guardado solo en este dispositivo.',
       removeFavorite: 'Quitar',
+      // ── SP-10 — Concierge AI + Servicios locales + Colecciones + Perfiles + Estilo de vida + Inspiración ──
+      den_light: 'Ligera, natural', den_medium: 'Media, equilibrada', den_full: 'Abundante, con volumen',
+      tex_straight: 'Lacio y pulido', tex_wavy: 'Ondas suaves', tex_curly: 'Rizos definidos', tex_natural: 'Tu textura natural', tex_layered: 'Capas con movimiento',
+      col_natural: 'Natural, a tu medida', col_warm: 'Caramelo / miel cálido', col_cool: 'Ceniza / espresso frío', col_rich: 'Oscuro intenso', col_soft: 'Reflejos suaves alrededor del rostro', col_gray: 'Mezcla de gris elegante',
+      len_short: 'Corto', len_medium: 'Medio', len_long: 'Largo',
+      cg_wig_none: 'No necesaria', cg_wig_optional: 'Opcional — para más volumen', cg_wig_recommended: 'Recomendada — para volumen natural',
+      svc_wig_fitting: 'Prueba de peluca', svc_hairsystem_fitting: 'Colocación de sistema capilar', svc_trimming: 'Recorte', svc_styling: 'Peinado', svc_maintenance: 'Mantenimiento',
+      consultServicesLabel: '¿Qué necesitas?', consultProviderLabel: 'Estilista', consultAnyProvider: 'El primero disponible',
+      consultPickHint: 'Elige uno o más servicios.',
+      conciergeChip: 'Concierge AI', conciergeTitle: 'Tu Estilista Personal con AI',
+      conciergeSub: 'Cuéntanos tu objetivo — recibe un plan a medida: estilo, color, densidad, textura y dónde hacerlo realidad.',
+      conciergeQ: '¿Cuál es tu objetivo?',
+      cg_younger: 'Apariencia más joven', cg_professional: 'Look profesional', cg_wedding: 'Boda', cg_vacation: 'Vacaciones', cg_confidence: 'Confianza diaria', cg_fuller: 'Cabello más abundante', cg_thinning: 'Cabello fino', cg_executive: 'Estilo ejecutivo',
+      conciergePlanTitle: 'Tu plan personalizado', conciergeFor: 'Para',
+      cg_f_style: 'Estilo', cg_f_color: 'Color', cg_f_density: 'Densidad', cg_f_texture: 'Textura', cg_f_wig: 'Peluca / sistema capilar', cg_f_provider: 'Dónde hacerlo realidad', cg_f_why: 'Por qué funciona',
+      conciergeTry: 'Generar este look', conciergeConsult: 'Reservar una consulta', conciergeReset: 'Elegir otro objetivo',
+      cg_younger_style: 'Un corte suave en capas que enmarca el rostro, con volumen ligero arriba',
+      cg_younger_why: 'Las capas suaves y el volumen alrededor del rostro crean un marco más fresco y joven.',
+      cg_professional_style: 'Un corte limpio, pulido y bien estructurado que mantiene su forma',
+      cg_professional_why: 'Una forma ordenada y estructurada transmite competencia en cualquier lugar.',
+      cg_wedding_style: 'Un look elegante con ondas suaves o un recogido romántico',
+      cg_wedding_why: 'El volumen suave y el movimiento fotografían de maravilla en el gran día.',
+      cg_vacation_style: 'Un estilo natural fácil, ligero y de bajo mantenimiento',
+      cg_vacation_why: 'Una forma relajada de lavar y listo se mantiene sin esfuerzo en viajes y humedad.',
+      cg_confidence_style: 'Un corte diario equilibrado y favorecedor, a la medida de tu rostro',
+      cg_confidence_why: 'Una forma que encaja con tus rasgos hace el peinado diario rápido y seguro.',
+      cg_fuller_style: 'Un corte en capas con volumen, con un refuerzo natural opcional',
+      cg_fuller_why: 'Las capas estratégicas y una opción de volumen natural añaden densidad creíble.',
+      cg_thinning_style: 'Una forma favorecedora que da apariencia de densidad donde importa',
+      cg_thinning_why: 'El corte adecuado, y un sistema capilar opcional, restauran un look lleno y natural.',
+      cg_executive_style: 'Un corte preciso, refinado e imponente con líneas limpias',
+      cg_executive_why: 'Las líneas nítidas y un acabado refinado proyectan autoridad y presencia.',
+      lifestyleTitle: 'Colecciones de Estilo de Vida', lifestyleSub: 'Looks seleccionados para cada momento — con colores, densidad y largos recomendados.',
+      lc_colors: 'Colores', lc_density: 'Densidad', lc_lengths: 'Largos', lifestyleTry: 'Probar este estilo',
+      lc_professional: 'Profesional', lc_executive: 'Ejecutivo', lc_elegant: 'Elegante', lc_wedding: 'Boda', lc_vacation: 'Vacaciones', lc_casual: 'Casual', lc_youthful: 'Juvenil', lc_natural: 'Natural',
+      lc_professional_d: 'Pulido y arreglado para el trabajo.',
+      lc_executive_d: 'Presencia imponente y refinada para líderes.',
+      lc_elegant_d: 'Glamour suave para noches y momentos especiales.',
+      lc_wedding_d: 'Looks románticos y listos para la foto del gran día.',
+      lc_vacation_d: 'Estilos ligeros y sin esfuerzo para la escapada.',
+      lc_casual_d: 'Looks diarios fáciles que siempre funcionan.',
+      lc_youthful_d: 'Fresco, moderno y luminoso.',
+      lc_natural_d: 'Sano, auténtico, bellamente tú.',
+      inspoTitle: 'Inspiración de Estilo', inspoSub: 'Direcciones inspiradas — nunca una copia. Diseñamos un look original para ti.',
+      inspoBadge: 'Inspirado en', inspoTry: 'Probar un look inspirado',
+      inspoDisclaimer: 'Solo inspiración — Style Studio crea un look original diseñado para tu rostro, nunca una copia de una persona real.',
+      insp_korean_actor: 'Actor Coreano', insp_viet_celebrity: 'Estrella Vietnamita', insp_executive: 'Estilo Ejecutivo', insp_classic_gentleman: 'Caballero Clásico', insp_elegant_woman: 'Mujer Elegante', insp_modern_asian: 'Moda Asiática Moderna',
+      insp_korean_actor_d: 'Flequillo suave con textura, estilo de protagonista.',
+      insp_viet_celebrity_d: 'Volumen glamoroso y brillo de alfombra roja.',
+      insp_executive_d: 'Limpio, clásico, listo para la sala de juntas.',
+      insp_classic_gentleman_d: 'Raya al lado atemporal y arreglo refinado.',
+      insp_elegant_woman_d: 'Pulido, elegante, sofisticado sin esfuerzo.',
+      insp_modern_asian_d: 'Audaz, editorial, moderno de pasarela.',
+      dashTitle: 'Mi Estudio',
+      dash_saved: 'Looks Guardados', dash_history: 'Historial', dash_wishlist: 'Lista de deseos', dash_shoplater: 'Comprar después', dash_compare: 'Comparar', dash_collections: 'Colecciones', dash_family: 'Familia', dash_membership: 'Membresía',
+      collectionsPrivacy: 'Guardado solo en este dispositivo y tu cuenta — nunca se comparte con nadie.',
+      wishlistEmpty: 'Toca el corazón en cualquier producto para añadirlo a tu lista de deseos.',
+      shopLaterEmpty: 'Marca productos para comprar después.', shopLaterAdd: 'Comprar después', shopLaterSaved: 'Guardado para después',
+      compareEmpty: 'Añade 2 o más looks para compararlos lado a lado.', compareAdd: 'Comparar', compareAdded: 'En comparación', compareClear: 'Limpiar', compareTitle: 'Comparar looks',
+      collectionsBrowseHint: 'Explora colecciones de estilo de vida e inspiración de estilo.',
+      goToLifestyle: 'Colecciones de Estilo de Vida', goToInspo: 'Inspiración de Estilo',
+      profilesTitle: 'Perfiles Familiares', profilesSub: 'Una cuenta, un perfil para cada quien — cada uno guarda sus looks, favoritos e historial.',
+      profileAdd: 'Añadir perfil', profileNameLabel: 'Nombre', profileRelationLabel: 'Relación',
+      rel_me: 'Yo', rel_husband: 'Esposo', rel_wife: 'Esposa', rel_child: 'Hijo/a', rel_parent: 'Padre/Madre',
+      profileSave: 'Guardar perfil', profileCancel: 'Cancelar', profileRemove: 'Quitar', profileActiveBadge: 'Activo', profileSwitch: 'Cambiar',
+      profileViewing: 'Viendo', profileNamePlaceholder: 'ej. Mamá', profileDefaultName: 'Yo',
+      membershipStatusGuest: 'Invitado — vistas previas gratis en el lanzamiento', membershipStatusMember: 'Miembro — tus looks te acompañan',
     },
   };
 
@@ -628,6 +835,15 @@
   var FAV_KEY = 'ss_public_favorites';
   var HISTORY_KEY = 'ss_recent_looks';
   var HISTORY_MAX = 24;
+  // SP-10 — additional local collections (per-profile, see nsKey). Shop Later =
+  // bookmarked products; Compare = a small selection of looks shown side by side.
+  var SHOP_LATER_KEY = 'ss_shop_later';
+  var COMPARE_KEY = 'ss_compare_looks';
+  var COMPARE_MAX = 4;
+  // SP-10D — family profiles (account-global; NOT namespaced). The active
+  // profile id namespaces every per-profile store below via nsKey().
+  var PROFILES_KEY = 'ss_profiles_v1';
+  var PROFILED_KEYS = { 'ss_public_favorites': 1, 'ss_recent_looks': 1, 'ss_saved_products': 1, 'ss_shop_later': 1, 'ss_compare_looks': 1 };
 
   var state = {
     lang: 'en', consent: false, selfieDataUrl: '',
@@ -741,6 +957,9 @@
     buildWow();
     buildWigExamples();
     buildTestimonials();
+    buildConcierge();      // SP-10B
+    buildLifestyle();      // SP-10E
+    buildInspiration();    // SP-10F
     refreshWigUi();
     syncLangButtons();
     renderAccount();
@@ -1357,6 +1576,24 @@
         if (ap && !ap.hidden) renderAccountPanel();
       });
       actions.appendChild(fav);
+
+      // SP-10C — Compare toggle: add this look to the side-by-side compare set.
+      var cmp = elt('button', 'ss-action-btn ss-action-btn--cmp');
+      cmp.type = 'button';
+      var paintCmp = function () {
+        var on = isInCompare(lookRec);
+        cmp.classList.toggle('ss-action-btn--cmp-on', on);
+        cmp.setAttribute('aria-pressed', String(on));
+        cmp.innerHTML = icon('compare') + '<span>' + t(on ? 'compareAdded' : 'compareAdd') + '</span>';
+      };
+      paintCmp();
+      cmp.addEventListener('click', function () {
+        toggleCompare(lookRec);
+        paintCmp();
+        var ap = doc.getElementById('ssAccountPanel');
+        if (ap && !ap.hidden) renderAccountPanel();
+      });
+      actions.appendChild(cmp);
     }
 
     var save = elt('button', 'ss-action-btn');
@@ -1456,6 +1693,8 @@
       expand: '<path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/>',
       heart: '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/>',
       compare: '<rect x="3" y="5" width="18" height="14" rx="2"/><line x1="12" y1="5" x2="12" y2="19"/>',
+      bookmark: '<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>',
+      sparkle: '<path d="M12 3 9.5 9.5 3 12l6.5 2.5L12 21l2.5-6.5L21 12l-6.5-2.5Z"/>',
       x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
     };
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (P[name] || '') + '</svg>';
@@ -1540,15 +1779,77 @@
   // Each record stores a text reference (title + mode) and a pointer to the
   // on-device image cache (sessionId + styleId) — NOT the image bytes inline.
   // The image is read back from MobileBarberAIPreview.readLocalCopy on demand.
+  // ── SP-10D — family profiles + per-profile namespacing ──────────────────
+  // One account, many profiles (Husband/Wife/Child/Parent). Profiles are
+  // LOCAL only (privacy-first; no Firestore). The active profile id namespaces
+  // every per-profile store, so each family member keeps their own looks,
+  // favorites, history, wishlist, shop-later and compare set.
+  function loadProfilesRaw() {
+    try {
+      var raw = root.localStorage.getItem(PROFILES_KEY);
+      var o = raw ? JSON.parse(raw) : null;
+      if (o && Array.isArray(o.profiles) && o.profiles.length) return o;
+    } catch (e) {}
+    return { profiles: [{ id: 'me', name: '', relation: 'me' }], activeId: 'me' };
+  }
+  function saveProfilesRaw(o) { try { root.localStorage.setItem(PROFILES_KEY, JSON.stringify(o)); } catch (e) {} }
+  function getProfiles() { return loadProfilesRaw().profiles; }
+  function activeProfileId() {
+    var o = loadProfilesRaw();
+    var found = o.profiles.some(function (p) { return p.id === o.activeId; });
+    return found ? o.activeId : ((o.profiles[0] && o.profiles[0].id) || 'me');
+  }
+  function activeProfile() {
+    var id = activeProfileId();
+    return getProfiles().filter(function (p) { return p.id === id; })[0] || { id: 'me', name: '', relation: 'me' };
+  }
+  function profileDisplayName(p) { return (p && p.name) || t('rel_' + ((p && p.relation) || 'me')) || t('profileDefaultName'); }
+  function setActiveProfile(id) {
+    var o = loadProfilesRaw();
+    if (o.profiles.some(function (p) { return p.id === id; })) { o.activeId = id; saveProfilesRaw(o); }
+  }
+  function addProfile(name, relation) {
+    var o = loadProfilesRaw();
+    var id = 'p_' + Math.random().toString(36).slice(2, 9);
+    o.profiles.push({ id: id, name: String(name || '').slice(0, 40), relation: relation || 'me' });
+    o.activeId = id; saveProfilesRaw(o);
+    return id;
+  }
+  function removeProfile(id) {
+    if (id === 'me') return; // the default profile is permanent
+    var o = loadProfilesRaw();
+    o.profiles = o.profiles.filter(function (p) { return p.id !== id; });
+    if (!o.profiles.length) o.profiles = [{ id: 'me', name: '', relation: 'me' }];
+    if (o.activeId === id) o.activeId = o.profiles[0].id;
+    saveProfilesRaw(o);
+    // Wipe that profile's namespaced stores (privacy + tidiness).
+    try { Object.keys(PROFILED_KEYS).forEach(function (k) { root.localStorage.removeItem(k + '__p_' + id); }); } catch (e) {}
+  }
+  function nsKey(key) { return PROFILED_KEYS[key] ? (key + '__p_' + activeProfileId()) : key; }
+  // One-time migration: move any legacy global stores into the default 'me'
+  // profile so existing favorites/history/saved products are never lost.
+  function migrateLegacyStores() {
+    try {
+      Object.keys(PROFILED_KEYS).forEach(function (k) {
+        var legacy = root.localStorage.getItem(k);
+        var nsk = k + '__p_me';
+        if (legacy != null && root.localStorage.getItem(nsk) == null) {
+          root.localStorage.setItem(nsk, legacy);
+          root.localStorage.removeItem(k);
+        }
+      });
+    } catch (e) {}
+  }
+
   function loadStore(key) {
     try {
-      var raw = root.localStorage.getItem(key);
+      var raw = root.localStorage.getItem(nsKey(key));
       var arr = raw ? JSON.parse(raw) : [];
       return Array.isArray(arr) ? arr : [];
     } catch (e) { return []; }
   }
   function saveStore(key, arr) {
-    try { root.localStorage.setItem(key, JSON.stringify(arr || [])); } catch (e) {}
+    try { root.localStorage.setItem(nsKey(key), JSON.stringify(arr || [])); } catch (e) {}
   }
   function lookKey(rec) { return (rec.sessionId || '') + '__' + (rec.styleId || '') + '__' + (rec.title || ''); }
 
@@ -1583,6 +1884,31 @@
   function removeFavorite(rec) {
     var k = lookKey(rec);
     saveStore(FAV_KEY, loadStore(FAV_KEY).filter(function (r) { return lookKey(r) !== k; }));
+  }
+  // SP-10C — Compare set: a small (≤COMPARE_MAX) selection of looks the user
+  // wants to view side by side. Local + per-profile, text reference + cache key.
+  function isInCompare(rec) { var k = lookKey(rec); return loadStore(COMPARE_KEY).some(function (r) { return lookKey(r) === k; }); }
+  function toggleCompare(rec) {
+    var list = loadStore(COMPARE_KEY);
+    var k = lookKey(rec);
+    if (list.some(function (r) { return lookKey(r) === k; })) { list = list.filter(function (r) { return lookKey(r) !== k; }); }
+    else {
+      list.unshift({ mode: rec.mode || '', title: rec.title || '', why: rec.why || '',
+                     sessionId: rec.sessionId || '', styleId: rec.styleId || '', savedAt: Date.now() });
+      if (list.length > COMPARE_MAX) list = list.slice(0, COMPARE_MAX);
+    }
+    saveStore(COMPARE_KEY, list);
+    return isInCompare(rec);
+  }
+  function removeCompare(rec) { var k = lookKey(rec); saveStore(COMPARE_KEY, loadStore(COMPARE_KEY).filter(function (r) { return lookKey(r) !== k; })); }
+  // SP-10C — Shop Later: products bookmarked to revisit. Text-only (id/provider/
+  // name) — never an image. Distinct from Wishlist (the product heart).
+  function isShopLater(id) { return loadStore(SHOP_LATER_KEY).some(function (r) { return r.id === id; }); }
+  function toggleShopLater(p) {
+    var l = loadStore(SHOP_LATER_KEY);
+    if (l.some(function (r) { return r.id === p.id; })) l = l.filter(function (r) { return r.id !== p.id; });
+    else l.unshift({ id: p.id, provider: p.provider, productName: p.productName, ts: Date.now() });
+    saveStore(SHOP_LATER_KEY, l.slice(0, 60));
   }
 
   // ── Self-contained full-screen VIEWER (pinch / swipe / close) ──────────
@@ -2050,8 +2376,14 @@
     var save = elt('button', 'ss-prod__save'); save.type = 'button';
     var paint = function () { var on = isProductSaved(p.id); save.classList.toggle('ss-prod__save--on', on); save.innerHTML = on ? heartFilledIcon() : icon('heart'); save.setAttribute('aria-label', t(on ? 'unsave' : 'saveProduct')); };
     paint();
-    save.addEventListener('click', function () { toggleSavedProduct(p); paint(); trackCommerce('save_product', { productId: p.id, provider: p.provider, saved: isProductSaved(p.id) }); });
+    save.addEventListener('click', function () { toggleSavedProduct(p); paint(); trackCommerce('save_product', { productId: p.id, provider: p.provider, saved: isProductSaved(p.id) }); var ap0 = doc.getElementById('ssAccountPanel'); if (ap0 && !ap0.hidden) renderAccountPanel(); });
     acts.appendChild(save);
+    // SP-10C — Shop Later bookmark (distinct from the Wishlist heart).
+    var later = elt('button', 'ss-prod__save'); later.type = 'button';
+    var paintL = function () { var on = isShopLater(p.id); later.classList.toggle('ss-prod__save--later-on', on); later.innerHTML = icon('bookmark'); later.setAttribute('aria-label', t(on ? 'shopLaterSaved' : 'shopLaterAdd')); later.setAttribute('aria-pressed', String(on)); };
+    paintL();
+    later.addEventListener('click', function () { toggleShopLater(p); paintL(); trackCommerce('shop_later', { productId: p.id, provider: p.provider, saved: isShopLater(p.id) }); var ap1 = doc.getElementById('ssAccountPanel'); if (ap1 && !ap1.hidden) renderAccountPanel(); });
+    acts.appendChild(later);
     body.appendChild(acts);
     card.appendChild(body);
     return card;
@@ -2065,20 +2397,77 @@
     if (note) note.textContent = t('demoProductNote');
   }
   // Fitting consultation — routes to the existing DuLichCali contact (no payment,
-  // no images shared). Reveals an inline consult block under the shop section.
-  function openConsult(wrap, best) {
+  // no images shared). SP-10A: pick fitting service(s) (wig / hair system /
+  // trimming / styling / maintenance) + a stylist (Michael today; config-driven),
+  // then Call / Email — the selection rides in the subject/body as TEXT only.
+  // Reuses the existing booking/contact channel — NO scheduling change.
+  function openConsult(wrap, best, fromLabel) {
     if (wrap.querySelector('.ss-consult')) { wrap.querySelector('.ss-consult').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); return; }
+    var from = fromLabel || 'wig';
     var styleText = (best && best.title) || '';
+    var selServices = {};   // serviceId -> true
+    var selProvider = '';   // provider id ('' = first available)
+
     var box = elt('div', 'ss-consult');
     box.appendChild(elt('strong', 'ss-consult__title', t('consultTitle')));
     box.appendChild(elt('p', 'ss-consult__intro', t('consultIntro')));
     if (styleText) box.appendChild(elt('p', 'ss-consult__style', t('consultStyle') + ' ' + styleText));
+
+    // Service picker (multi-select chips).
+    box.appendChild(elt('span', 'ss-consult__pick-label', t('consultServicesLabel')));
+    var svcWrap = elt('div', 'ss-consult__chips');
+    FITTING_SERVICES.forEach(function (sid) {
+      var chip = elt('button', 'ss-consult__chip', t('svc_' + sid));
+      chip.type = 'button'; chip.setAttribute('aria-pressed', 'false');
+      chip.addEventListener('click', function () {
+        if (selServices[sid]) { delete selServices[sid]; chip.classList.remove('ss-consult__chip--on'); chip.setAttribute('aria-pressed', 'false'); }
+        else { selServices[sid] = true; chip.classList.add('ss-consult__chip--on'); chip.setAttribute('aria-pressed', 'true'); }
+        syncLinks();
+      });
+      svcWrap.appendChild(chip);
+    });
+    box.appendChild(svcWrap);
+    box.appendChild(elt('p', 'ss-consult__hint', t('consultPickHint')));
+
+    // Provider picker (PROVIDERS config; "first available" default).
+    box.appendChild(elt('span', 'ss-consult__pick-label', t('consultProviderLabel')));
+    var provWrap = elt('div', 'ss-consult__chips');
+    [{ id: '', name: t('consultAnyProvider') }].concat(PROVIDERS.map(function (p) { return { id: p.id, name: p.name }; }))
+      .forEach(function (opt, oi) {
+        var chip = elt('button', 'ss-consult__chip ss-consult__chip--prov', opt.name);
+        chip.type = 'button';
+        var on = oi === 0; chip.setAttribute('aria-pressed', String(on)); if (on) chip.classList.add('ss-consult__chip--on');
+        chip.addEventListener('click', function () {
+          selProvider = opt.id;
+          provWrap.querySelectorAll('.ss-consult__chip').forEach(function (c) { c.classList.remove('ss-consult__chip--on'); c.setAttribute('aria-pressed', 'false'); });
+          chip.classList.add('ss-consult__chip--on'); chip.setAttribute('aria-pressed', 'true');
+          syncLinks();
+        });
+        provWrap.appendChild(chip);
+      });
+    box.appendChild(provWrap);
+
     var row = elt('div', 'ss-consult__row');
     var tel = elt('a', 'ss-consult__btn', t('consultCall')); tel.href = 'tel:+14089163439';
-    tel.addEventListener('click', function () { trackCommerce('consultation_call', { from: 'wig' }); });
-    var subject = encodeURIComponent('Wig fitting consultation' + (styleText ? ' — ' + styleText : ''));
-    var mail = elt('a', 'ss-consult__btn', t('consultEmail')); mail.href = 'mailto:dulichcali21@gmail.com?subject=' + subject;
-    mail.addEventListener('click', function () { trackCommerce('consultation_email', { from: 'wig' }); });
+    tel.addEventListener('click', function () { trackCommerce('consultation_call', { from: from, services: Object.keys(selServices), provider: selProvider || 'any' }); });
+    var mail = elt('a', 'ss-consult__btn', t('consultEmail'));
+    function buildMailHref() {
+      var svcNames = Object.keys(selServices).map(function (s) { return t('svc_' + s); });
+      var provName = '';
+      if (selProvider) { var pp = PROVIDERS.filter(function (p) { return p.id === selProvider; })[0]; provName = pp ? pp.name : ''; }
+      var subjBits = [t('bookConsult')];
+      if (svcNames.length) subjBits.push(svcNames.join(', '));
+      if (styleText) subjBits.push(styleText);
+      var subject = encodeURIComponent(subjBits.join(' — '));
+      var bodyLines = [];
+      if (svcNames.length) bodyLines.push(t('consultServicesLabel') + ' ' + svcNames.join(', '));
+      if (provName) bodyLines.push(t('consultProviderLabel') + ': ' + provName);
+      if (styleText) bodyLines.push(t('consultStyle') + ' ' + styleText);
+      return 'mailto:dulichcali21@gmail.com?subject=' + subject + (bodyLines.length ? ('&body=' + encodeURIComponent(bodyLines.join('\n'))) : '');
+    }
+    function syncLinks() { mail.href = buildMailHref(); }
+    syncLinks();
+    mail.addEventListener('click', function () { trackCommerce('consultation_email', { from: from, services: Object.keys(selServices), provider: selProvider || 'any' }); });
     row.appendChild(tel); row.appendChild(mail);
     box.appendChild(row);
     box.appendChild(elt('p', 'ss-consult__privacy', t('consultPrivacy')));
@@ -2276,6 +2665,11 @@
       chip.textContent = t('quotaTrial');
       host.appendChild(chip);
     }
+    // SP-10: guests can still reach My Studio (their local saved looks, compare,
+    // collections and family profiles all work on-device before sign-up).
+    var dash = elt('button', 'ss-quota__link', t('dashTitle')); dash.type = 'button';
+    dash.addEventListener('click', openAccountPanel);
+    host.appendChild(dash);
   }
 
   // Upgrade-ready Premium tier PLACEHOLDER — clearly "coming soon", never charges.
@@ -2356,23 +2750,30 @@
     var panel = doc.getElementById('ssAccountPanel');
     if (panel) { panel.hidden = true; panel.innerHTML = ''; }
   }
+  // ── SP-10G — customer dashboard (My Studio) ─────────────────────────────
+  // Sections: Saved Looks (favorites), History, Wishlist, Shop Later, Compare,
+  // Collections, Family Profiles, Membership (+ Premium coming soon). The profile
+  // switcher scopes every list to the active family profile. ALL local — no
+  // Firestore reads/writes, no image uploads. Privacy-first.
+  var DASH_TABS = ['saved', 'history', 'wishlist', 'shoplater', 'compare', 'collections', 'family', 'membership'];
   function renderAccountPanel() {
     var panel = doc.getElementById('ssAccountPanel');
     if (!panel) return;
     panel.innerHTML = '';
-    var tab = state.acctTab === 'favorites' ? 'favorites' : 'history';
+    if (DASH_TABS.indexOf(state.acctTab) === -1) state.acctTab = 'history';
+    var tab = state.acctTab;
 
     var card = elt('div', 'ss-acct__card');
     card.setAttribute('role', 'group');
-    card.setAttribute('aria-label', t('accountTitle'));
+    card.setAttribute('aria-label', t('dashTitle'));
 
     var head = elt('div', 'ss-acct__head');
     var who = elt('div', 'ss-acct__who');
     var av = elt('span', 'ss-acct__avatar'); av.innerHTML = profileIcon();
     who.appendChild(av);
     var meta = elt('div', 'ss-acct__meta');
-    meta.appendChild(elt('strong', 'ss-acct__name', state.account.name || t('myAccount')));
-    if (state.account.phone) meta.appendChild(elt('span', 'ss-acct__phone', state.account.phone));
+    meta.appendChild(elt('strong', 'ss-acct__name', state.isCustomer ? (state.account.name || t('myAccount')) : t('dashTitle')));
+    if (state.isCustomer && state.account.phone) meta.appendChild(elt('span', 'ss-acct__phone', state.account.phone));
     who.appendChild(meta);
     head.appendChild(who);
     var close = elt('button', 'ss-auth__close', '×');
@@ -2381,9 +2782,12 @@
     head.appendChild(close);
     card.appendChild(head);
 
-    // Tabs (segmented, never a select).
-    var tabs = elt('div', 'ss-acct__tabs'); tabs.setAttribute('role', 'group');
-    [['history', 'tabHistory'], ['favorites', 'tabFavorites']].forEach(function (pair) {
+    // Family-profile switcher (SP-10D).
+    card.appendChild(buildProfileSwitcher());
+
+    // Section nav (horizontally scrollable on mobile, never a native select).
+    var tabs = elt('div', 'ss-acct__tabs ss-acct__tabs--scroll'); tabs.setAttribute('role', 'group');
+    [['saved', 'dash_saved'], ['history', 'dash_history'], ['wishlist', 'dash_wishlist'], ['shoplater', 'dash_shoplater'], ['compare', 'dash_compare'], ['collections', 'dash_collections'], ['family', 'dash_family'], ['membership', 'dash_membership']].forEach(function (pair) {
       var b = elt('button', 'ss-acct__tab', t(pair[1]));
       b.type = 'button';
       var on = pair[0] === tab;
@@ -2394,20 +2798,59 @@
     });
     card.appendChild(tabs);
 
-    var list = loadStore(tab === 'favorites' ? FAV_KEY : HISTORY_KEY);
-    if (!list.length) {
-      card.appendChild(elt('p', 'ss-acct__empty', t(tab === 'favorites' ? 'noFavorites' : 'noHistory')));
-    } else {
-      var grid = elt('div', 'ss-acct__grid');
-      list.forEach(function (rec) {
-        grid.appendChild(buildAccountLook(rec, tab));
-      });
-      card.appendChild(grid);
-      if (tab === 'favorites') card.appendChild(elt('p', 'ss-acct__hint', t('favoritesHint')));
-    }
-    // SP-8: upgrade-ready Premium tier placeholder in the member dashboard.
-    card.appendChild(buildPremiumCard());
+    var bodyHost = elt('div', 'ss-acct__section');
+    renderDashSection(bodyHost, tab);
+    card.appendChild(bodyHost);
+
+    card.appendChild(elt('p', 'ss-acct__priv', t('collectionsPrivacy')));
     panel.appendChild(card);
+  }
+  function renderDashSection(host, tab) {
+    host.innerHTML = '';
+    if (tab === 'saved' || tab === 'history') {
+      var list = loadStore(tab === 'saved' ? FAV_KEY : HISTORY_KEY);
+      if (!list.length) { host.appendChild(elt('p', 'ss-acct__empty', t(tab === 'saved' ? 'noFavorites' : 'noHistory'))); return; }
+      var grid = elt('div', 'ss-acct__grid');
+      list.forEach(function (rec) { grid.appendChild(buildAccountLook(rec, tab === 'saved' ? 'favorites' : 'history')); });
+      host.appendChild(grid);
+      if (tab === 'saved') host.appendChild(elt('p', 'ss-acct__hint', t('favoritesHint')));
+      return;
+    }
+    if (tab === 'wishlist' || tab === 'shoplater') {
+      var plist = loadStore(tab === 'wishlist' ? SAVED_PRODUCTS_KEY : SHOP_LATER_KEY);
+      if (!plist.length) { host.appendChild(elt('p', 'ss-acct__empty', t(tab === 'wishlist' ? 'wishlistEmpty' : 'shopLaterEmpty'))); return; }
+      var pgrid = elt('div', 'ss-acct__plist');
+      plist.forEach(function (rec) { pgrid.appendChild(buildSavedProductTile(rec, tab)); });
+      host.appendChild(pgrid);
+      return;
+    }
+    if (tab === 'compare') { buildCompareView(host); return; }
+    if (tab === 'collections') {
+      host.appendChild(elt('p', 'ss-acct__sub', t('collectionsBrowseHint')));
+      var row = elt('div', 'ss-acct__links');
+      var a1 = elt('button', 'ss-acct__link-btn', t('goToLifestyle')); a1.type = 'button';
+      a1.addEventListener('click', function () { closeAccountPanel(); var el = doc.getElementById('ssLifestyleWrap'); if (el) try { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} });
+      var a2 = elt('button', 'ss-acct__link-btn', t('goToInspo')); a2.type = 'button';
+      a2.addEventListener('click', function () { closeAccountPanel(); var el = doc.getElementById('ssInspirationWrap'); if (el) try { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} });
+      row.appendChild(a1); row.appendChild(a2);
+      host.appendChild(row);
+      return;
+    }
+    if (tab === 'family') { buildFamilyManager(host); return; }
+    if (tab === 'membership') {
+      var st = elt('div', 'ss-acct__member');
+      var chip = elt('span', 'ss-quota__chip ' + (state.isCustomer ? 'ss-quota__chip--member' : 'ss-quota__chip--free'));
+      chip.textContent = state.isCustomer ? t('membershipStatusMember') : t('membershipStatusGuest');
+      st.appendChild(chip);
+      host.appendChild(st);
+      if (!state.isCustomer) {
+        var cta = elt('button', 'ss-cta', t('membershipCta')); cta.type = 'button';
+        cta.addEventListener('click', function () { closeAccountPanel(); openAuthPanel('signup'); });
+        host.appendChild(cta);
+      }
+      host.appendChild(buildPremiumCard());
+      return;
+    }
   }
   // A saved/favorited look tile. The image is read back from the on-device
   // cache (MobileBarberAIPreview) — text reference only is persisted in the store.
@@ -2746,6 +3189,7 @@
   function init() {
     state.lang = detectLang();
     doc.documentElement.setAttribute('lang', state.lang);
+    migrateLegacyStores(); // SP-10D: move legacy global stores into the default profile
     doc.querySelectorAll('#ssLang .ss-lang__btn').forEach(function (btn) {
       btn.addEventListener('click', function () { setLang(btn.getAttribute('data-lang')); });
     });
@@ -2793,6 +3237,9 @@
     buildWow();
     buildWigExamples();
     buildTestimonials();
+    buildConcierge();      // SP-10B
+    buildLifestyle();      // SP-10E
+    buildInspiration();    // SP-10F
     initStickyCta();
     syncLangButtons();
     renderAccount();
@@ -2936,7 +3383,322 @@
     onScroll();
   }
 
-  root.StyleStudioPublic = { init: init, setLang: setLang, _t: t, _state: state, _strings: SS_STRINGS, _openViewer: openViewer, _closeViewer: closeViewer, _onWigGenerate: onWigGenerate, _buildShowcase: buildShowcase, _buildGallery: buildGallery, _buildWigExamples: buildWigExamples, _buildTestimonials: buildTestimonials, _renderMasterpiece: renderMasterpiece, _renderWigResult: renderWigResult, _openAuthPanel: openAuthPanel, _closeAuthPanel: closeAuthPanel, _openAccountPanel: openAccountPanel, _closeAccountPanel: closeAccountPanel, _customerEmailForPhone: customerEmailForPhone, _normalizePhone: normalizePhone, _isCustomerUser: isCustomerUser };
+  // ════════════════ SP-10 — AI Concierge + Local Services + Collections ════════════════
+  // SP-10A — fitting services + providers. Config-driven: Michael today, future
+  // providers are added by editing PROVIDERS (never a hardcoded count elsewhere).
+  var FITTING_SERVICES = ['wig_fitting', 'hairsystem_fitting', 'trimming', 'styling', 'maintenance'];
+  var PROVIDERS = [
+    { id: 'michael', name: 'Michael' },
+  ];
+
+  // SP-10B — AI Concierge knowledge base. Each goal → a tailored plan built from
+  // the shared style vocabulary (col_*/den_*/tex_*) + a wig recommendation + a
+  // fitting service + a generation goal to pre-fill. This is transparent stylist
+  // GUIDANCE — it does NOT call any new AI model; the AI Master Stylist still
+  // does the real image generation when the user taps "Generate this look".
+  var CONCIERGE_GOALS = [
+    { key: 'younger',      genGoal: 'youthful',     color: 'col_soft',    density: 'den_medium', texture: 'tex_layered',  wig: 'cg_wig_optional',    service: 'styling' },
+    { key: 'professional', genGoal: 'professional', color: 'col_natural', density: 'den_medium', texture: 'tex_straight', wig: 'cg_wig_none',        service: 'trimming' },
+    { key: 'wedding',      genGoal: 'wedding',      color: 'col_warm',    density: 'den_full',   texture: 'tex_wavy',     wig: 'cg_wig_optional',    service: 'styling' },
+    { key: 'vacation',     genGoal: 'vacation',     color: 'col_natural', density: 'den_medium', texture: 'tex_wavy',     wig: 'cg_wig_none',        service: 'trimming' },
+    { key: 'confidence',   genGoal: 'confident',    color: 'col_natural', density: 'den_medium', texture: 'tex_natural',  wig: 'cg_wig_none',        service: 'styling' },
+    { key: 'fuller',       genGoal: 'natural',      color: 'col_rich',    density: 'den_full',   texture: 'tex_layered',  wig: 'cg_wig_recommended', service: 'hairsystem_fitting' },
+    { key: 'thinning',     genGoal: 'natural',      color: 'col_natural', density: 'den_full',   texture: 'tex_natural',  wig: 'cg_wig_recommended', service: 'hairsystem_fitting' },
+    { key: 'executive',    genGoal: 'executive',    color: 'col_cool',    density: 'den_medium', texture: 'tex_straight', wig: 'cg_wig_none',        service: 'trimming' },
+  ];
+
+  // SP-10E — lifestyle collections (curated browse). Cover art + recommended
+  // colors / density / lengths + a generation goal to pre-fill.
+  var LC_IMG = '/assets/style-studio/collections/';
+  var LIFESTYLE_COLLECTIONS = [
+    { key: 'professional', genGoal: 'professional', colors: ['col_natural', 'col_cool'], density: 'den_medium', lengths: ['len_short', 'len_medium'] },
+    { key: 'executive',    genGoal: 'executive',    colors: ['col_cool', 'col_rich'],    density: 'den_medium', lengths: ['len_short'] },
+    { key: 'elegant',      genGoal: 'elegant',      colors: ['col_warm', 'col_soft'],    density: 'den_full',   lengths: ['len_medium', 'len_long'] },
+    { key: 'wedding',      genGoal: 'wedding',      colors: ['col_warm', 'col_soft'],    density: 'den_full',   lengths: ['len_medium', 'len_long'] },
+    { key: 'vacation',     genGoal: 'vacation',     colors: ['col_natural', 'col_warm'], density: 'den_medium', lengths: ['len_medium', 'len_long'] },
+    { key: 'casual',       genGoal: 'casual',       colors: ['col_natural'],             density: 'den_medium', lengths: ['len_short', 'len_medium'] },
+    { key: 'youthful',     genGoal: 'youthful',     colors: ['col_soft', 'col_warm'],    density: 'den_medium', lengths: ['len_medium', 'len_long'] },
+    { key: 'natural',      genGoal: 'natural',      colors: ['col_natural'],             density: 'den_medium', lengths: ['len_medium'] },
+  ];
+
+  // SP-10F — style inspiration (inspired-by ONLY; generic categories, never a
+  // real or named person). The cover art is an ORIGINAL generic model — not a
+  // celebrity likeness — and "Try" generates a NEW original look for the user.
+  var INSP_IMG = '/assets/style-studio/inspiration/';
+  var INSPIRATION = [
+    { key: 'korean_actor',      genGoal: 'youthful' },
+    { key: 'viet_celebrity',    genGoal: 'glamorous' },
+    { key: 'executive',         genGoal: 'executive' },
+    { key: 'classic_gentleman', genGoal: 'masculine' },
+    { key: 'elegant_woman',     genGoal: 'elegant' },
+    { key: 'modern_asian',      genGoal: 'party' },
+  ];
+
+  // Apply a chosen goal to the flagship generator: set the goal, reflect it in
+  // the goal chips, then generate if a selfie is ready (queues through the normal
+  // path if mid-auth) or scroll to the uploader. Quota-safe — never double-spends.
+  function applyStyleIntent(genGoal) {
+    state.goal = (GOALS.indexOf(genGoal) !== -1) ? genGoal : '';
+    buildGoalChips();
+    if (canSubmit()) { scrollToFlagship(); onGenerateBest(); return; }
+    var up = doc.getElementById('ssUploadBtn') || doc.getElementById('ssGenerateBest');
+    if (up) { try { up.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {} }
+    if (!state.consent) setStatus(t('consentRequired'), true);
+    else if (!state.selfieDataUrl) setStatus(t('needSelfie'), true);
+  }
+
+  // ── SP-10B — AI Concierge ───────────────────────────────────────────────
+  function buildConcierge() {
+    var host = doc.getElementById('ssConcierge');
+    if (!host) return;
+    host.innerHTML = '';
+    host.appendChild(elt('p', 'ss-cg__q', t('conciergeQ')));
+    var grid = elt('div', 'ss-cg__goals'); grid.setAttribute('role', 'list');
+    CONCIERGE_GOALS.forEach(function (g) {
+      var btn = elt('button', 'ss-cg__goal'); btn.type = 'button'; btn.setAttribute('role', 'listitem');
+      var ic = elt('span', 'ss-cg__goal-ic'); ic.setAttribute('aria-hidden', 'true'); ic.innerHTML = icon('sparkle');
+      btn.appendChild(ic);
+      btn.appendChild(elt('span', 'ss-cg__goal-lbl', t('cg_' + g.key)));
+      btn.addEventListener('click', function () { renderConciergePlan(g); });
+      grid.appendChild(btn);
+    });
+    host.appendChild(grid);
+    var plan = elt('div', 'ss-cg__plan'); plan.id = 'ssConciergePlan'; plan.hidden = true;
+    host.appendChild(plan);
+  }
+  function renderConciergePlan(g) {
+    var host = doc.getElementById('ssConciergePlan');
+    if (!host) return;
+    host.hidden = false; host.innerHTML = '';
+    var card = elt('div', 'ss-cg__card');
+    var head = elt('div', 'ss-cg__plan-head');
+    head.appendChild(elt('span', 'ss-cg__plan-kicker', t('conciergeFor') + ' · ' + t('cg_' + g.key)));
+    head.appendChild(elt('h3', 'ss-cg__plan-title', t('conciergePlanTitle')));
+    card.appendChild(head);
+    var rows = [
+      ['cg_f_style',    t('cg_' + g.key + '_style')],
+      ['cg_f_color',    t(g.color)],
+      ['cg_f_density',  t(g.density)],
+      ['cg_f_texture',  t(g.texture)],
+      ['cg_f_wig',      t(g.wig)],
+      ['cg_f_provider', ((PROVIDERS[0] && PROVIDERS[0].name) || '') + ' · ' + t('svc_' + g.service)],
+    ];
+    var dl = elt('div', 'ss-cg__rows');
+    rows.forEach(function (r) {
+      var row = elt('div', 'ss-cg__row');
+      row.appendChild(elt('span', 'ss-cg__row-k', t(r[0])));
+      row.appendChild(elt('span', 'ss-cg__row-v', r[1]));
+      dl.appendChild(row);
+    });
+    card.appendChild(dl);
+    var why = elt('p', 'ss-cg__why');
+    why.appendChild(elt('span', 'ss-cg__why-k', t('cg_f_why') + ': '));
+    why.appendChild(doc.createTextNode(t('cg_' + g.key + '_why')));
+    card.appendChild(why);
+    var acts = elt('div', 'ss-cg__acts');
+    var gen = elt('button', 'ss-cta ss-cg__gen', t('conciergeTry')); gen.type = 'button';
+    gen.addEventListener('click', function () { applyStyleIntent(g.genGoal); });
+    acts.appendChild(gen);
+    var consult = elt('button', 'ss-cg__consult', t('conciergeConsult')); consult.type = 'button';
+    consult.addEventListener('click', function () { trackCommerce('consultation_click', { from: 'concierge', goal: g.key }); openConsult(card, { title: t('cg_' + g.key) }, 'concierge'); });
+    acts.appendChild(consult);
+    var reset = elt('button', 'ss-cg__reset', t('conciergeReset')); reset.type = 'button';
+    reset.addEventListener('click', function () { host.hidden = true; host.innerHTML = ''; var h = doc.getElementById('ssConcierge'); if (h) try { h.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} });
+    acts.appendChild(reset);
+    card.appendChild(acts);
+    host.appendChild(card);
+    try { card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
+  }
+
+  // ── SP-10E — lifestyle collections ──────────────────────────────────────
+  function lcSpec(labelKey, val) {
+    var s = elt('div', 'ss-lc__spec');
+    s.appendChild(elt('span', 'ss-lc__spec-k', t(labelKey)));
+    s.appendChild(elt('span', 'ss-lc__spec-v', val));
+    return s;
+  }
+  function buildLifestyle() {
+    var host = doc.getElementById('ssLifestyle');
+    if (!host) return;
+    host.innerHTML = '';
+    LIFESTYLE_COLLECTIONS.forEach(function (c) {
+      var card = elt('article', 'ss-lc'); card.setAttribute('role', 'listitem');
+      var media = elt('div', 'ss-lc__media');
+      var img = doc.createElement('img'); img.className = 'ss-lc__img'; img.src = LC_IMG + c.key + '.webp'; img.alt = t('lc_' + c.key); img.loading = 'lazy';
+      img.addEventListener('error', function () { media.classList.add('ss-lc__media--ph'); if (img.parentNode) img.parentNode.removeChild(img); });
+      media.appendChild(img);
+      media.appendChild(elt('span', 'ss-lc__name', t('lc_' + c.key)));
+      card.appendChild(media);
+      var body = elt('div', 'ss-lc__body');
+      body.appendChild(elt('p', 'ss-lc__desc', t('lc_' + c.key + '_d')));
+      var specs = elt('div', 'ss-lc__specs');
+      specs.appendChild(lcSpec('lc_colors', c.colors.map(function (k) { return t(k); }).join(', ')));
+      specs.appendChild(lcSpec('lc_density', t(c.density)));
+      specs.appendChild(lcSpec('lc_lengths', c.lengths.map(function (k) { return t(k); }).join(', ')));
+      body.appendChild(specs);
+      var cta = elt('button', 'ss-lc__cta', t('lifestyleTry')); cta.type = 'button';
+      cta.addEventListener('click', function () { applyStyleIntent(c.genGoal); });
+      body.appendChild(cta);
+      card.appendChild(body);
+      host.appendChild(card);
+    });
+  }
+
+  // ── SP-10F — style inspiration (inspired-by only) ───────────────────────
+  function buildInspiration() {
+    var host = doc.getElementById('ssInspiration');
+    if (!host) return;
+    host.innerHTML = '';
+    INSPIRATION.forEach(function (c) {
+      var card = elt('article', 'ss-insp'); card.setAttribute('role', 'listitem');
+      var media = elt('div', 'ss-insp__media');
+      var img = doc.createElement('img'); img.className = 'ss-insp__img'; img.src = INSP_IMG + c.key + '.webp'; img.alt = t('insp_' + c.key); img.loading = 'lazy';
+      img.addEventListener('error', function () { media.classList.add('ss-insp__media--ph'); if (img.parentNode) img.parentNode.removeChild(img); });
+      media.appendChild(img);
+      media.appendChild(elt('span', 'ss-insp__badge', t('inspoBadge')));
+      card.appendChild(media);
+      var body = elt('div', 'ss-insp__body');
+      body.appendChild(elt('strong', 'ss-insp__name', t('insp_' + c.key)));
+      body.appendChild(elt('p', 'ss-insp__desc', t('insp_' + c.key + '_d')));
+      var cta = elt('button', 'ss-insp__cta', t('inspoTry')); cta.type = 'button';
+      cta.addEventListener('click', function () { applyStyleIntent(c.genGoal); });
+      body.appendChild(cta);
+      card.appendChild(body);
+      host.appendChild(card);
+    });
+  }
+
+  // ── SP-10C/D/G — dashboard helper renderers ─────────────────────────────
+  function buildProfileSwitcher() {
+    var wrap = elt('div', 'ss-prof');
+    wrap.appendChild(elt('span', 'ss-prof__label', t('profileViewing')));
+    var row = elt('div', 'ss-prof__chips');
+    var activeId = activeProfileId();
+    getProfiles().forEach(function (p) {
+      var chip = elt('button', 'ss-prof__chip', profileDisplayName(p)); chip.type = 'button';
+      var on = p.id === activeId;
+      chip.classList.toggle('ss-prof__chip--on', on);
+      chip.setAttribute('aria-pressed', String(on));
+      chip.addEventListener('click', function () { setActiveProfile(p.id); renderAccountPanel(); renderAccount(); });
+      row.appendChild(chip);
+    });
+    var add = elt('button', 'ss-prof__add', '+'); add.type = 'button';
+    add.setAttribute('aria-label', t('profileAdd'));
+    add.addEventListener('click', function () { state.acctTab = 'family'; renderAccountPanel(); });
+    row.appendChild(add);
+    wrap.appendChild(row);
+    return wrap;
+  }
+  function buildFamilyManager(host) {
+    host.appendChild(elt('p', 'ss-acct__sub', t('profilesSub')));
+    var activeId = activeProfileId();
+    var listEl = elt('div', 'ss-fam__list');
+    getProfiles().forEach(function (p) {
+      var rowEl = elt('div', 'ss-fam__row');
+      var nm = elt('div', 'ss-fam__who');
+      nm.appendChild(elt('strong', 'ss-fam__name', profileDisplayName(p)));
+      nm.appendChild(elt('span', 'ss-fam__rel', t('rel_' + (p.relation || 'me'))));
+      rowEl.appendChild(nm);
+      var acts = elt('div', 'ss-fam__acts');
+      if (p.id === activeId) acts.appendChild(elt('span', 'ss-fam__badge', t('profileActiveBadge')));
+      else {
+        var sw = elt('button', 'ss-fam__sw', t('profileSwitch')); sw.type = 'button';
+        sw.addEventListener('click', function () { setActiveProfile(p.id); renderAccountPanel(); renderAccount(); });
+        acts.appendChild(sw);
+      }
+      if (p.id !== 'me') {
+        var rm = elt('button', 'ss-fam__rm', t('profileRemove')); rm.type = 'button';
+        rm.addEventListener('click', function () { removeProfile(p.id); renderAccountPanel(); renderAccount(); });
+        acts.appendChild(rm);
+      }
+      rowEl.appendChild(acts);
+      listEl.appendChild(rowEl);
+    });
+    host.appendChild(listEl);
+
+    var form = elt('div', 'ss-fam__form');
+    var nameWrap = elt('label', 'ss-fam__field');
+    nameWrap.appendChild(elt('span', 'ss-fam__flabel', t('profileNameLabel')));
+    var nameIn = doc.createElement('input'); nameIn.className = 'ss-auth__input'; nameIn.type = 'text'; nameIn.placeholder = t('profileNamePlaceholder'); nameIn.maxLength = 40;
+    nameWrap.appendChild(nameIn);
+    form.appendChild(nameWrap);
+    var relWrap = elt('div', 'ss-fam__field');
+    relWrap.appendChild(elt('span', 'ss-fam__flabel', t('profileRelationLabel')));
+    var relRow = elt('div', 'ss-fam__rels');
+    var chosenRel = 'child';
+    ['husband', 'wife', 'child', 'parent'].forEach(function (r) {
+      var rc = elt('button', 'ss-fam__relchip', t('rel_' + r)); rc.type = 'button';
+      var on = r === chosenRel; rc.classList.toggle('ss-fam__relchip--on', on); rc.setAttribute('aria-pressed', String(on));
+      rc.addEventListener('click', function () { chosenRel = r; relRow.querySelectorAll('.ss-fam__relchip').forEach(function (c) { c.classList.remove('ss-fam__relchip--on'); c.setAttribute('aria-pressed', 'false'); }); rc.classList.add('ss-fam__relchip--on'); rc.setAttribute('aria-pressed', 'true'); });
+      relRow.appendChild(rc);
+    });
+    relWrap.appendChild(relRow);
+    form.appendChild(relWrap);
+    var addBtn = elt('button', 'ss-cta ss-fam__add', t('profileAdd')); addBtn.type = 'button';
+    addBtn.addEventListener('click', function () { addProfile(nameIn.value, chosenRel); renderAccountPanel(); renderAccount(); });
+    form.appendChild(addBtn);
+    host.appendChild(form);
+  }
+  function buildSavedProductTile(rec, tab) {
+    var prod = WIG_CATALOG.filter(function (p) { return p.id === rec.id; })[0];
+    var tile = elt('article', 'ss-acct__prod');
+    var media = elt('div', 'ss-acct__prod-media');
+    if (prod && prod.imageUrl) {
+      var img = doc.createElement('img'); img.className = 'ss-acct__prod-img'; img.src = prod.imageUrl; img.alt = rec.productName || ''; img.loading = 'lazy';
+      img.addEventListener('error', function () { media.classList.add('ss-acct__prod-media--ph'); if (img.parentNode) img.parentNode.removeChild(img); });
+      media.appendChild(img);
+    } else { media.classList.add('ss-acct__prod-media--ph'); }
+    tile.appendChild(media);
+    var body = elt('div', 'ss-acct__prod-body');
+    body.appendChild(elt('span', 'ss-acct__prod-provider', (WIG_PARTNERS[rec.provider] || {}).name || rec.provider || ''));
+    body.appendChild(elt('strong', 'ss-acct__prod-name', rec.productName || ''));
+    var rm = elt('button', 'ss-acct__look-rm', t('removeFavorite')); rm.type = 'button';
+    rm.addEventListener('click', function () {
+      var k = tab === 'wishlist' ? SAVED_PRODUCTS_KEY : SHOP_LATER_KEY;
+      saveStore(k, loadStore(k).filter(function (r) { return r.id !== rec.id; }));
+      renderAccountPanel();
+    });
+    body.appendChild(rm);
+    tile.appendChild(body);
+    return tile;
+  }
+  function buildCompareView(host) {
+    var list = loadStore(COMPARE_KEY);
+    if (!list.length) { host.appendChild(elt('p', 'ss-acct__empty', t('compareEmpty'))); return; }
+    var bar = elt('div', 'ss-cmp__bar');
+    bar.appendChild(elt('strong', 'ss-cmp__title', t('compareTitle')));
+    var clr = elt('button', 'ss-cmp__clear', t('compareClear')); clr.type = 'button';
+    clr.addEventListener('click', function () { saveStore(COMPARE_KEY, []); renderAccountPanel(); });
+    bar.appendChild(clr);
+    host.appendChild(bar);
+    var grid = elt('div', 'ss-cmp__grid');
+    list.forEach(function (rec) {
+      var cell = elt('article', 'ss-cmp__cell');
+      var cached = readCachedImage(rec.sessionId, rec.styleId);
+      if (cached) {
+        var fig = elt('button', 'ss-cmp__fig'); fig.type = 'button'; fig.setAttribute('aria-label', t('expand'));
+        var img = doc.createElement('img'); img.className = 'ss-cmp__img'; img.src = cached; img.alt = rec.title || ''; img.loading = 'lazy';
+        fig.appendChild(img);
+        fig.addEventListener('click', (function (r) { return function () { openViewer([{ src: readCachedImage(r.sessionId, r.styleId), before: state.selfieDataUrl || '', title: r.title || '', why: r.why || '' }], 0); }; })(rec));
+        cell.appendChild(fig);
+      } else { var ph = elt('div', 'ss-cmp__ph'); ph.innerHTML = showcaseIcon('stylist'); cell.appendChild(ph); }
+      if (rec.title) cell.appendChild(elt('strong', 'ss-cmp__name', rec.title));
+      var rm = elt('button', 'ss-cmp__rm', '×'); rm.type = 'button'; rm.setAttribute('aria-label', t('compareClear'));
+      rm.addEventListener('click', (function (r) { return function () { removeCompare(r); renderAccountPanel(); }; })(rec));
+      cell.appendChild(rm);
+      grid.appendChild(cell);
+    });
+    host.appendChild(grid);
+    if (list.length < 2) host.appendChild(elt('p', 'ss-acct__hint', t('compareEmpty')));
+  }
+
+  root.StyleStudioPublic = { init: init, setLang: setLang, _t: t, _state: state, _strings: SS_STRINGS, _openViewer: openViewer, _closeViewer: closeViewer, _onWigGenerate: onWigGenerate, _buildShowcase: buildShowcase, _buildGallery: buildGallery, _buildWigExamples: buildWigExamples, _buildTestimonials: buildTestimonials, _renderMasterpiece: renderMasterpiece, _renderWigResult: renderWigResult, _openAuthPanel: openAuthPanel, _closeAuthPanel: closeAuthPanel, _openAccountPanel: openAccountPanel, _closeAccountPanel: closeAccountPanel, _customerEmailForPhone: customerEmailForPhone, _normalizePhone: normalizePhone, _isCustomerUser: isCustomerUser,
+    // SP-10 hooks (testing + future):
+    _buildConcierge: buildConcierge, _buildLifestyle: buildLifestyle, _buildInspiration: buildInspiration,
+    _renderAccountPanel: renderAccountPanel, _applyStyleIntent: applyStyleIntent,
+    _getProfiles: getProfiles, _activeProfileId: activeProfileId, _setActiveProfile: setActiveProfile, _addProfile: addProfile, _removeProfile: removeProfile,
+    _toggleCompare: toggleCompare, _isInCompare: isInCompare, _toggleShopLater: toggleShopLater, _isShopLater: isShopLater,
+    _CONCIERGE_GOALS: CONCIERGE_GOALS, _LIFESTYLE_COLLECTIONS: LIFESTYLE_COLLECTIONS, _INSPIRATION: INSPIRATION, _FITTING_SERVICES: FITTING_SERVICES, _PROVIDERS: PROVIDERS };
 
   if (doc.readyState === 'loading') {
     doc.addEventListener('DOMContentLoaded', init);

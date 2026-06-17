@@ -1,0 +1,666 @@
+/* ============================================================
+   VENDOR ONBOARDING — vendor-onboarding.css
+   Prefix: vob-
+   Mobile-first, navy/gold brand palette.
+   ============================================================ */
+
+/* ── Reset / base ────────────────────────────────────────── */
+html, body {
+  margin: 0; padding: 0;
+  height: 100%;
+  background: var(--navy-900, #0d2f50);
+  color: var(--cream, #f5f0e8);
+  font-family: 'Jost', sans-serif;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Auth gate (full-screen loading/redirect spinner) ─────── */
+.vob-auth-gate {
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--navy-900, #0d2f50);
+  z-index: 100;
+}
+
+.vob-auth-gate__inner {
+  text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 1rem;
+}
+
+.vob-auth-gate__logo {
+  font-family: 'Bodoni Moda', serif;
+  font-size: 1.8rem;
+  color: var(--gold, #f5a623);
+}
+
+/* ── App shell ───────────────────────────────────────────── */
+.vob-app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.vob-app[hidden] { display: none !important; }
+
+/* ── Header ─────────────────────────────────────────────── */
+.vob-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1rem;
+  background: var(--navy-800, #112d4e);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.vob-back {
+  color: var(--sky-lt, #7ec8e3);
+  text-decoration: none;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.vob-back:hover { color: var(--gold, #f5a623); }
+
+.vob-header__title {
+  font-family: 'Bodoni Moda', serif;
+  font-size: 1.05rem;
+  font-weight: 400;
+  margin: 0;
+  color: var(--cream, #f5f0e8);
+}
+
+/* ── Progress ────────────────────────────────────────────── */
+.vob-progress {
+  padding: 1rem 1rem 0;
+  background: var(--navy-900, #0d2f50);
+}
+
+.vob-progress__track {
+  height: 3px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.vob-progress__fill {
+  height: 100%;
+  background: var(--gold, #f5a623);
+  border-radius: 2px;
+  transition: width 0.35s ease;
+}
+
+.vob-steps {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.vob-step-dot {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border: 2px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.3);
+  transition: all 0.25s;
+  cursor: default;
+}
+
+.vob-step-dot--done {
+  background: var(--gold, #f5a623);
+  border-color: var(--gold, #f5a623);
+  color: var(--navy-900, #0d2f50);
+}
+
+.vob-step-dot--active {
+  border-color: var(--gold, #f5a623);
+  color: var(--gold, #f5a623);
+  box-shadow: 0 0 0 3px rgba(245,166,35,0.2);
+}
+
+/* ── Main content area ───────────────────────────────────── */
+.vob-main {
+  flex: 1;
+  padding: 1.25rem 1rem;
+  overflow-y: auto;
+}
+
+/* ── Step wrapper ────────────────────────────────────────── */
+.vob-step { display: flex; flex-direction: column; gap: 1.25rem; }
+
+.vob-step__title {
+  font-family: 'Bodoni Moda', serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.vob-step__sub {
+  font-size: 0.88rem;
+  color: rgba(245,240,232,0.6);
+  margin: -0.75rem 0 0;
+  line-height: 1.5;
+}
+
+/* ── Form fields ─────────────────────────────────────────── */
+.vob-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.vob-field--row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.vob-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(245,240,232,0.6);
+}
+
+.vob-label span { color: var(--gold, #f5a623); margin-left: 2px; }
+
+.vob-input,
+.vob-select,
+.vob-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  padding: 0.7rem 0.85rem;
+  color: var(--cream, #f5f0e8);
+  font-family: 'Jost', sans-serif;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.vob-input:focus,
+.vob-select:focus,
+.vob-textarea:focus {
+  border-color: var(--gold, #f5a623);
+  background: rgba(255,255,255,0.09);
+}
+
+.vob-input::placeholder,
+.vob-textarea::placeholder {
+  color: rgba(245,240,232,0.3);
+}
+
+.vob-select option { background: #112d4e; }
+
+.vob-textarea {
+  resize: vertical;
+  min-height: 100px;
+  line-height: 1.5;
+}
+
+/* ── Category picker ─────────────────────────────────────── */
+.vob-cat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.vob-cat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 1.25rem 0.5rem;
+  background: rgba(255,255,255,0.05);
+  border: 2px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.vob-cat-card:hover {
+  border-color: rgba(245,166,35,0.4);
+  background: rgba(245,166,35,0.05);
+}
+
+.vob-cat-card--selected {
+  border-color: var(--gold, #f5a623);
+  background: rgba(245,166,35,0.1);
+  box-shadow: 0 0 0 3px rgba(245,166,35,0.15);
+}
+
+.vob-cat-card__icon {
+  font-size: 2.25rem;
+  line-height: 1;
+}
+
+.vob-cat-card__label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--cream, #f5f0e8);
+}
+
+/* ── Hours grid ──────────────────────────────────────────── */
+.vob-hours-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.vob-hours-row {
+  display: grid;
+  grid-template-columns: 70px 1fr;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.vob-hours-row__day {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(245,240,232,0.7);
+}
+
+.vob-hours-row__times {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.vob-hours-row__sep {
+  font-size: 0.8rem;
+  color: rgba(245,240,232,0.4);
+}
+
+.vob-hours-closed {
+  font-size: 0.8rem;
+  color: rgba(245,240,232,0.35);
+  font-style: italic;
+}
+
+.vob-time-input {
+  width: 100px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 6px;
+  padding: 0.4rem 0.5rem;
+  color: var(--cream, #f5f0e8);
+  font-size: 0.85rem;
+  font-family: 'Jost', sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.vob-time-input:focus { border-color: var(--gold, #f5a623); }
+
+.vob-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+}
+
+.vob-toggle input[type="checkbox"] {
+  width: 36px; height: 20px;
+  appearance: none;
+  background: rgba(255,255,255,0.15);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.vob-toggle input[type="checkbox"]:checked {
+  background: var(--gold, #f5a623);
+}
+
+.vob-toggle input[type="checkbox"]::after {
+  content: '';
+  position: absolute;
+  width: 14px; height: 14px;
+  background: #fff;
+  border-radius: 50%;
+  top: 3px; left: 3px;
+  transition: transform 0.2s;
+}
+
+.vob-toggle input[type="checkbox"]:checked::after {
+  transform: translateX(16px);
+}
+
+/* ── Services list ───────────────────────────────────────── */
+.vob-services-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.vob-svc-row {
+  display: grid;
+  grid-template-columns: 1fr 70px 70px 28px;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.vob-svc-row--food {
+  grid-template-columns: 1fr 70px 28px;
+}
+
+.vob-svc-del {
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(239,68,68,0.15);
+  border: 1px solid rgba(239,68,68,0.3);
+  border-radius: 6px;
+  color: #ef4444;
+  font-size: 1rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.vob-svc-del:hover { background: rgba(239,68,68,0.3); }
+
+.vob-svc-headers {
+  display: grid;
+  grid-template-columns: 1fr 70px 70px 28px;
+  gap: 0.4rem;
+  margin-bottom: 0.25rem;
+}
+
+.vob-svc-headers--food {
+  grid-template-columns: 1fr 70px 28px;
+}
+
+.vob-svc-hdr {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba(245,240,232,0.4);
+}
+
+.vob-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1rem;
+  background: rgba(245,166,35,0.1);
+  border: 1px dashed rgba(245,166,35,0.4);
+  border-radius: 8px;
+  color: var(--gold, #f5a623);
+  font-size: 0.85rem;
+  font-family: 'Jost', sans-serif;
+  cursor: pointer;
+  transition: background 0.2s;
+  width: 100%;
+  justify-content: center;
+  margin-top: 0.25rem;
+}
+
+.vob-add-btn:hover { background: rgba(245,166,35,0.18); }
+
+/* ── Region radio group ──────────────────────────────────── */
+.vob-region-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.vob-region-card {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.8rem;
+  background: rgba(255,255,255,0.05);
+  border: 2px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.vob-region-card:has(input:checked) {
+  border-color: var(--gold, #f5a623);
+  background: rgba(245,166,35,0.08);
+}
+
+.vob-region-card input { accent-color: var(--gold, #f5a623); }
+
+.vob-region-card__label {
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+/* ── Preview section ─────────────────────────────────────── */
+.vob-preview-wrap {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.vob-preview-head {
+  padding: 0.75rem 1rem;
+  background: rgba(245,166,35,0.08);
+  border-bottom: 1px solid rgba(245,166,35,0.2);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--gold, #f5a623);
+}
+
+.vob-preview-body {
+  padding: 1rem;
+  max-height: 420px;
+  overflow-y: auto;
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+/* preview builder output styles */
+.vob-preview-body .vob-prev-section { margin-bottom: 1.25rem; }
+.vob-preview-body h2 {
+  font-family: 'Bodoni Moda', serif;
+  font-size: 1.15rem;
+  font-weight: 400;
+  margin: 0 0 0.25rem;
+  color: var(--gold, #f5a623);
+}
+.vob-preview-body h3 {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(245,240,232,0.5);
+  margin: 0 0 0.5rem;
+}
+.vob-preview-body table { border-collapse: collapse; width: 100%; }
+.vob-preview-body td {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.82rem;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+/* ── Validation badge row ────────────────────────────────── */
+.vob-validation {
+  display: flex; flex-direction: column; gap: 0.4rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+}
+
+.vob-validation--ok {
+  background: rgba(34,197,94,0.1);
+  border: 1px solid rgba(34,197,94,0.3);
+  color: #4ade80;
+}
+
+.vob-validation--warn {
+  background: rgba(234,179,8,0.1);
+  border: 1px solid rgba(234,179,8,0.3);
+  color: #fbbf24;
+}
+
+.vob-validation--err {
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.3);
+  color: #f87171;
+}
+
+/* ── AI status ───────────────────────────────────────────── */
+.vob-ai-status {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1rem;
+  background: rgba(255,255,255,0.04);
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.vob-ai-status__icon { font-size: 1.2rem; }
+
+/* ── Spinner ─────────────────────────────────────────────── */
+.vob-spinner {
+  width: 20px; height: 20px;
+  border: 2px solid rgba(245,166,35,0.3);
+  border-top-color: var(--gold, #f5a623);
+  border-radius: 50%;
+  animation: vob-spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+.vob-spinner--lg {
+  width: 40px; height: 40px;
+  border-width: 3px;
+}
+
+@keyframes vob-spin { to { transform: rotate(360deg); } }
+
+/* ── Publish result ──────────────────────────────────────── */
+.vob-result {
+  text-align: center;
+  padding: 2rem 1rem;
+  display: flex; flex-direction: column; align-items: center; gap: 1rem;
+}
+
+.vob-result__icon { font-size: 3rem; line-height: 1; }
+
+.vob-result__title {
+  font-family: 'Bodoni Moda', serif;
+  font-size: 1.4rem;
+  font-weight: 400;
+}
+
+.vob-result__sub {
+  font-size: 0.88rem;
+  color: rgba(245,240,232,0.6);
+  max-width: 320px;
+  line-height: 1.5;
+}
+
+.vob-result__id {
+  font-size: 0.75rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: rgba(245,240,232,0.4);
+  background: rgba(255,255,255,0.05);
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+}
+
+/* ── Buttons ─────────────────────────────────────────────── */
+.vob-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  height: 42px;
+  padding: 0 1.25rem;
+  border-radius: 8px;
+  font-family: 'Jost', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.vob-btn--gold {
+  background: var(--gold, #f5a623);
+  color: var(--navy-900, #0d2f50);
+}
+.vob-btn--gold:hover { filter: brightness(1.08); }
+.vob-btn--gold:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.vob-btn--ghost {
+  background: transparent;
+  color: rgba(245,240,232,0.6);
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.vob-btn--ghost:hover { border-color: rgba(255,255,255,0.3); color: var(--cream, #f5f0e8); }
+.vob-btn--ghost:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.vob-btn--danger {
+  background: rgba(239,68,68,0.15);
+  border: 1px solid rgba(239,68,68,0.3);
+  color: #f87171;
+}
+.vob-btn--danger:hover { background: rgba(239,68,68,0.25); }
+
+/* ── Footer nav ──────────────────────────────────────────── */
+.vob-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1rem;
+  background: var(--navy-800, #112d4e);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+}
+
+.vob-step-label {
+  font-size: 0.78rem;
+  color: rgba(245,240,232,0.4);
+  text-align: center;
+}
+
+/* ── Error inline ────────────────────────────────────────── */
+.vob-field-err {
+  font-size: 0.75rem;
+  color: #f87171;
+  margin-top: 0.1rem;
+}
+
+/* ── Divider ─────────────────────────────────────────────── */
+.vob-divider {
+  height: 1px;
+  background: rgba(255,255,255,0.08);
+  margin: 0.5rem 0;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (min-width: 640px) {
+  .vob-header__title { font-size: 1.15rem; }
+  .vob-step__title   { font-size: 1.75rem; }
+  .vob-hours-row     { grid-template-columns: 80px 1fr; }
+}

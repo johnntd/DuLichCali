@@ -495,12 +495,14 @@
 
           outputEl.textContent = '...';
 
-          var apiKey = localStorage.getItem('dlc_claude_key');
-          if (!apiKey) { _interpFallback(from, to, text, outputEl); return; }
+          var apiKey = '';
+          try { apiKey = localStorage.getItem('dlc_claude_key') || ''; } catch (e) {}
+          // AI translation runs server-side via aiProxy (CLAUDE_API_KEY secret) — no client
+          // key required; the .catch below falls back to _interpFallback on genuine failure.
 
           var labels = { en: 'English', vi: 'Vietnamese', es: 'Spanish' };
           // ── via unified dispatcher (model + retry from AIEngine.SERVICE_CONFIG.translation) ──
-          AIEngine.call('translation', apiKey, null, [{
+          AIEngine.call('translation', apiKey || '', null, [{
             role: 'user',
             content: 'Translate from ' + labels[from] + ' to ' + labels[to] +
               '. Return only the translated text, no explanation:\n\n' + text
@@ -4096,18 +4098,15 @@
       }
 
       capPromise.then(function (capInfo) {
-        if (apiKey) {
-          return Receptionist._askClaude(biz, text, apiKey, capInfo)
-            .catch(function () {
-              return Receptionist._ruleBasedReply(biz, text, capInfo);
-            });
-        } else {
-          return new Promise(function (resolve) {
-            setTimeout(function () {
-              resolve(Receptionist._ruleBasedReply(biz, text, capInfo));
-            }, capInfo ? 200 : 650);
+        // AI runs server-side via aiProxy (CLAUDE_API_KEY is a Functions secret), so NO
+        // client/Firestore key is required — mirrors the mobile-barber + nail receptionist
+        // fix. The old `if (apiKey)` gate forced EVERY food/hair turn to the rule-based
+        // reply once keys moved server-side ([[feedback_ai_keys_server_side_only]]).
+        // Genuine AI errors still fall back to the rule-based reply via .catch.
+        return Receptionist._askClaude(biz, text, apiKey || '', capInfo)
+          .catch(function () {
+            return Receptionist._ruleBasedReply(biz, text, capInfo);
           });
-        }
       }).then(function (reply) {
         // Detect escalation marker — strip it before storing/displaying
         var escalationType = EscalationEngine.parseMarker(reply);
@@ -4964,7 +4963,7 @@
       // ── API call via unified dispatcher (model + tokens from AIEngine.SERVICE_CONFIG) ──
       // 'food' → food order intake; 'appointment' → hair/nail salon booking
       var svcType = biz.vendorType === 'foodvendor' ? 'food' : 'appointment';
-      return AIEngine.call(svcType, apiKey, systemPrompt, messages)
+      return AIEngine.call(svcType, apiKey || '', systemPrompt, messages)
       .then(function (data) {
         return data.content && data.content[0] && data.content[0].text
           ? data.content[0].text

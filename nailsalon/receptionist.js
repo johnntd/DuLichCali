@@ -2031,7 +2031,14 @@
         _saveHistory(biz);
       }
 
-    if (!apiKey) {
+    // The AI runs via the server-side aiProxy (CLAUDE_API_KEY is a Functions secret),
+    // so NO client/Firestore API key is required — mirrors the working mobile-barber
+    // agent, which calls AIEngine.call('nails', '', …) with no key. AI keys were moved
+    // out of Firestore/frontend ([[feedback_ai_keys_server_side_only]]), so the old
+    // `if (!apiKey)` gate here forced EVERY turn into the canned "call us" fallback
+    // (aiProxy was never reached → booking broke). Only fall back to canned replies if
+    // the AI engine script itself failed to load; genuine API errors are caught in send().
+    if (!window.AIEngine || typeof window.AIEngine.call !== 'function') {
       return new Promise(function (resolve) {
         setTimeout(function () {
           var reply = _fallback(biz, text);
@@ -2055,7 +2062,7 @@
     // Informational intents (price_question, staff_availability, etc.) → Gemini when key set.
     // Safe fallback: Claude is always used if preferred provider key is absent or request fails.
     var _routeIntent = (biz._bookingState && biz._bookingState.intent) || null;
-    return AIEngine.call('nails', apiKey, systemPrompt,
+    return AIEngine.call('nails', apiKey || '', systemPrompt,
       biz._aiHistory.map(function (m) {
         return { role: m.role, content: m.content };
       }),
@@ -3272,7 +3279,7 @@
                     biz._offeredSlot = null;
                     var _rjLang1 = (biz._bookingState && biz._bookingState.lang) || 'en';
                     biz._aiHistory.push({ role: 'user', content: '[SYSTEM: ' + avail.message + ']' });
-                    AIEngine.call('nails', apiKey, _buildPrompt(biz, _rjLang1),
+                    AIEngine.call('nails', apiKey || '', _buildPrompt(biz, _rjLang1),
                         biz._aiHistory.map(function(m) { return { role: m.role, content: m.content }; }),
                         { intent: null }
                     ).then(function(_rd1) {
@@ -3459,7 +3466,7 @@
                     biz._offeredSlot = null;
                     var _rjLang2 = (biz._bookingState && biz._bookingState.lang) || 'en';
                     biz._aiHistory.push({ role: 'user', content: '[SYSTEM: ' + avail.message + ']' });
-                    AIEngine.call('nails', apiKey, _buildPrompt(biz, _rjLang2),
+                    AIEngine.call('nails', apiKey || '', _buildPrompt(biz, _rjLang2),
                         biz._aiHistory.map(function(m) { return { role: m.role, content: m.content }; }),
                         { intent: null }
                     ).then(function(_rd2) {

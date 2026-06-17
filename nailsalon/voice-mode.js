@@ -337,18 +337,19 @@
   }
 
   // ── Hands-free auto-restart ────────────────────────────────────────────────
-  // Called after every TTS completion. Waits a brief conversational pause,
-  // then restarts the microphone so the user can reply without tapping.
-  // 300ms: long enough to prevent audio bleed from TTS tail, short enough
-  // that users don't miss the first word of their response.
-  // Guards: only fires if overlay is still open and state is still idle.
+  // Called after every TTS completion (fired from the audio's onended, so the
+  // spoken question has fully finished). Restart the mic so the user can reply
+  // hands-free. Kept short (120ms) because users start answering the instant the
+  // question ends — a longer pause + the engine's own start latency was dropping
+  // the first words. The TTS audio is already done (onended), so there's no tail
+  // to bleed in. Guards: only fires if overlay is still open and state is idle.
   function _autoRestartListening() {
     setTimeout(function () {
       if (!_biz || !_overlay) return;    // overlay was closed
       if (_state !== 'idle') return;     // something else already started
       if (!hasSR) return;
       _startListening();
-    }, 300);
+    }, 120);
   }
 
   function _startListening() {
@@ -375,11 +376,22 @@
       _rec = new SR();
       _rec.lang            = LANG_TAG[_lang] || 'en-US';
       _rec.continuous      = false;
-      _rec.interimResults  = false;
+      // interimResults: stream partial transcripts as the user speaks. This makes
+      // recognition feel instant (live caption) AND captures speech from its onset,
+      // so the first words aren't lost while the engine warms up. We still only
+      // PROCESS once the engine marks a result final (end-of-utterance).
+      _rec.interimResults  = true;
       _rec.maxAlternatives = 1;
 
       _rec.onresult = function (e) {
-        var transcript = (e.results[0] && e.results[0][0].transcript || '').trim();
+        var interim = '', finalT = '';
+        for (var i = e.resultIndex; i < e.results.length; i++) {
+          var r = e.results[i];
+          if (r.isFinal) finalT += r[0].transcript; else interim += r[0].transcript;
+        }
+        // Partial only → show it live and keep listening.
+        if (!finalT) { if (interim) _setTranscript(interim.trim()); return; }
+        var transcript = (finalT || interim).trim();
         _rec = null;
         if (!transcript) { _setState('idle'); _autoRestartListening(); return; }
         _setTranscript(transcript);

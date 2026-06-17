@@ -703,7 +703,7 @@
     setState('idle');
     autoTimer = setTimeout(function() {
       if (overlay && overlay.classList.contains('mb-voice--open') && state === 'idle') startListening();
-    }, 300);
+    }, 120);
   }
 
   function stopRec() {
@@ -730,12 +730,21 @@
       rec = new SR();
       rec.lang = LANG_TAG[lang] || 'en-US';
       rec.continuous = false;
-      rec.interimResults = false;
+      // Live partial transcripts → responsive + capture speech from its onset so the
+      // first words aren't dropped while the engine warms up. Process only on the final.
+      rec.interimResults = true;
       rec.maxAlternatives = 1;
       rec.onresult = function(event) {
-        var alt = event.results[0] && event.results[0][0];
-        var transcript = (alt && alt.transcript || '').trim();
-        var confidence = alt && typeof alt.confidence === 'number' ? alt.confidence : null;
+        var interim = '', finalT = '', conf = null;
+        for (var i = event.resultIndex; i < event.results.length; i++) {
+          var res = event.results[i];
+          if (res.isFinal) { finalT += res[0].transcript; if (typeof res[0].confidence === 'number') conf = res[0].confidence; }
+          else interim += res[0].transcript;
+        }
+        // Partial only → show it live and keep listening.
+        if (!finalT) { if (interim) setTranscript(interim.trim()); return; }
+        var transcript = finalT.trim();
+        var confidence = conf;
         rec = null;
         if (!transcript) { setState('idle'); return; }
         if (maybeRepairLowConfidence(transcript, confidence)) return;

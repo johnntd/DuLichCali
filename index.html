@@ -35,6 +35,9 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <!-- Required for the AI chat: ai-engine.js / aiOrchestrator.js → aiProxy callable (server-side
+       CLAUDE_API_KEY). Without this, _callClaude rejects 'proxy not loaded' → chat is rule-based only. -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
 
   <!-- Google OAuth + API (for calendar) -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>

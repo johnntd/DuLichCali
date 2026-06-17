@@ -18,6 +18,9 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+  <!-- Required for the AI receptionist: ai-engine.js → aiProxy callable (server-side CLAUDE_API_KEY).
+       Without this, _callClaude rejects 'proxy not loaded' → chat is rule-based only. -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
   <script>
     (function () {
       var cfg = {

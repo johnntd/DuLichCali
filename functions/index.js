@@ -1999,7 +1999,7 @@ function buildGroupTripSystemPrompt(lang) {
     '  "days":[ { "date","title","theme","summary","estimatedDrivingTime","estimatedWalkingLevel","sections":[ { "timeOfDay"(morning|lunch|afternoon|dinner|night),"startTime","endTime","title","places":[ {',
     '    "id","name","category","address","latitude","longitude","imageUrl","videoUrl","websiteUrl","reservationUrl","googleMapsUrl","appleMapsUrl","phone","estimatedCost","estimatedDuration","bestTimeToVisit","parkingNotes","kidFriendlyScore"(0-5),"toddlerFriendlyScore","teenFriendlyScore","seniorFriendlyScore","walkingLevel"(low|medium|high),"whySelected","description","tips","backupPlace","dataSource" } ] } ] } ] }',
     'HARD RULES: Use REAL, well-known places with real approximate addresses + lat/lng. Build googleMapsUrl = "https://www.google.com/maps/search/?api=1&query=" + URL-encoded "<name>, <address>" and appleMapsUrl = "https://maps.apple.com/?q=" + URL-encoded "<name>, <address>". Set imageUrl=null and videoUrl=null (only set videoUrl to an official/allowed clip URL if you are certain it exists — never invent one). reservationUrl=null UNLESS a well-known official ticketing site. websiteUrl=official site if well-known else null. estimatedCost = ranges, NEVER fake exact prices. For plane/bus transportation, estimatedCost MUST be "pending verification" and use search links (Google Flights for plane; a search link for Vietnamese bus services like Xe Hoang / Hoang Express for bus). Set dataSource="ai_generated_pending_verification" on EVERY place. Pace around toddler naps and senior walking limits; honor budget, food prefs, interests, accessibility, walking tolerance, drive time, weather, holiday closures; ALWAYS include a synchronized meetupPoint + meetupTime every family can reach, and a backupPlan per family.',
-    'Write all human-readable text in ' + langName + '. 3 days unless the dates imply otherwise.',
+    'Write all human-readable text in ' + langName + '. EXACTLY 3 days. BE CONCISE so the plan returns quickly: at most 3 places per day TOTAL (spread across sections), descriptions 1–2 short sentences, tips one short line. Output valid compact JSON only.',
   ].join('\n');
 }
 exports.generateGroupTripPlan = onCall(
@@ -2024,7 +2024,11 @@ exports.generateGroupTripPlan = onCall(
       families: trip.families, preferences: trip.preferences,
     });
     try {
-      const text = await serverCallClaude(system, [{ role: 'user', content: userContent }], true, claudeKey, 8000, 'claude-sonnet-4-6');
+      // Fast model + enough tokens to finish the JSON, but bounded to stay under the
+      // ~60s request gateway. Sonnet/8k TIMED OUT; Haiku/4k finished in ~32s but the
+      // JSON was TRUNCATED (parse error). Haiku/7k + the concise prompt completes the
+      // full plan in ~40s and parses cleanly; the mock fallback still covers failures.
+      const text = await serverCallClaude(system, [{ role: 'user', content: userContent }], true, claudeKey, 7000, 'claude-haiku-4-5-20251001');
       let raw = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
       const start = raw.indexOf('{'); const end = raw.lastIndexOf('}');
       if (start > 0 || end > 0) raw = raw.slice(start, end + 1);

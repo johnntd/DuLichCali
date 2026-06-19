@@ -68,6 +68,8 @@
       pending: 'Pending verification', unverified: 'AI suggestion — verify details before booking',
       // Vote / booking
       vote: 'Vote', v_like: 'Like', v_maybe: 'Maybe', v_skip: 'Skip', save: 'Save', saved: 'Saved',
+      youAre: 'You are:', pickFamilyHint: 'Pick your family above to vote.',
+      suggestionsTitle: 'Group suggestions', addSuggestion: 'Suggest a place or activity', suggestionPh: 'e.g. Sunset dinner at the pier', suggest: 'Add', suggestedBy: 'by', noSuggestions: 'No suggestions yet — add one!',
       booking: 'Booking', b_not_needed: 'Not needed', b_needed: 'Needed', b_booked: 'Booked', b_skipped: 'Skipped',
       markBooked: 'Mark booked', markArrived: 'Mark arrived', completed: 'Done',
       // Arrival plan
@@ -116,6 +118,8 @@
       walk_low: 'Ít đi bộ', walk_medium: 'Đi bộ vừa', walk_high: 'Đi bộ nhiều',
       pending: 'Chờ xác minh', unverified: 'Gợi ý AI — hãy kiểm tra trước khi đặt',
       vote: 'Bình chọn', v_like: 'Thích', v_maybe: 'Có thể', v_skip: 'Bỏ qua', save: 'Lưu', saved: 'Đã lưu',
+      youAre: 'Bạn là:', pickFamilyHint: 'Chọn gia đình của bạn ở trên để bình chọn.',
+      suggestionsTitle: 'Đề xuất từ nhóm', addSuggestion: 'Đề xuất địa điểm hoặc hoạt động', suggestionPh: 'vd: Ăn tối ngắm hoàng hôn ở bến tàu', suggest: 'Thêm', suggestedBy: 'bởi', noSuggestions: 'Chưa có đề xuất — hãy thêm một cái!',
       booking: 'Đặt chỗ', b_not_needed: 'Không cần', b_needed: 'Cần', b_booked: 'Đã đặt', b_skipped: 'Bỏ qua',
       markBooked: 'Đánh dấu đã đặt', markArrived: 'Đánh dấu đã đến', completed: 'Xong',
       recDeparture: 'Giờ khởi hành đề xuất', eta: 'Giờ đến dự kiến', route: 'Lộ trình', restStops: 'Điểm dừng',
@@ -162,6 +166,8 @@
       walk_low: 'Poca caminata', walk_medium: 'Algo de caminata', walk_high: 'Mucha caminata',
       pending: 'Pendiente de verificación', unverified: 'Sugerencia AI — verifica antes de reservar',
       vote: 'Votar', v_like: 'Me gusta', v_maybe: 'Quizás', v_skip: 'Omitir', save: 'Guardar', saved: 'Guardado',
+      youAre: 'Eres:', pickFamilyHint: 'Elige tu familia arriba para votar.',
+      suggestionsTitle: 'Sugerencias del grupo', addSuggestion: 'Sugiere un lugar o actividad', suggestionPh: 'ej. Cena al atardecer en el muelle', suggest: 'Añadir', suggestedBy: 'por', noSuggestions: 'Aún no hay sugerencias — ¡añade una!',
       booking: 'Reserva', b_not_needed: 'No necesaria', b_needed: 'Necesaria', b_booked: 'Reservado', b_skipped: 'Omitido',
       markBooked: 'Marcar reservado', markArrived: 'Marcar llegada', completed: 'Listo',
       recDeparture: 'Salida recomendada', eta: 'Llegada estimada', route: 'Ruta', restStops: 'Paradas',
@@ -197,10 +203,59 @@
       return 'https://www.google.com/maps/dir/' + pts.map(encodeURIComponent).join('/');
     },
   };
+  // Real place photos: try the AI-provided imageUrl, then a REAL Wikipedia/Wikimedia
+  // photo of the actual place (free, no key, CORS via origin=*), then a relevant
+  // AI-generated category image (beach/restaurant/zoo/…), then a gradient. Every card
+  // ends up with a relevant picture; nothing fake is fabricated.
+  var CAT_IMG = '/assets/travel-concierge/cat/';
+  var CAT_KEYS = { beach:1, restaurant:1, nightlife:1, shopping:1, museum:1, theme_park:1, zoo:1, scenic:1, hotel:1, landmark:1 };
+  var _mediaCache = {};
+  function categoryKey(p) {
+    var s = (((p && p.category) || '') + ' ' + ((p && p.name) || '')).toLowerCase();
+    if (/zoo|safari|wildlife|aquarium|\banimal/.test(s)) return 'zoo';
+    if (/theme ?park|amusement|disney|legoland|seaworld|knott|universal|roller|water ?park/.test(s)) return 'theme_park';
+    if (/restaurant|food|dining|cafe|café|eatery|buffet|grill|kitchen|brunch|seafood|taco|pho|noodle|bbq/.test(s)) return 'restaurant';
+    if (/museum|gallery|science center|art|history|cultural|exhibit/.test(s)) return 'museum';
+    if (/shop|mall|outlet|market|store|boutique|plaza/.test(s)) return 'shopping';
+    if (/night|\bbar\b|club|casino|lounge|pub|cocktail|rooftop/.test(s)) return 'nightlife';
+    if (/beach|coast|pier|\bbay\b|shore|boardwalk|cove|harbor/.test(s)) return 'beach';
+    if (/hotel|resort|lodge|\binn\b|suites/.test(s)) return 'hotel';
+    if (/park|garden|trail|scenic|view|lookout|canyon|mountain|lake|nature|cliff|island/.test(s)) return 'scenic';
+    return 'landmark';
+  }
   var PlaceMediaProvider = {
-    // Safe placeholder (local gradient via data-uri-free CSS class). Real media plugs in later.
-    placeholder: function () { return ''; },
+    categoryImage: function (p) { return CAT_IMG + categoryKey(p) + '.webp'; },
+    // Resolve a real photo of the ACTUAL place from Wikipedia. Promise<url|null>, cached.
+    resolveReal: function (p) {
+      var name = ((p && p.name) || '').trim();
+      if (!name || typeof fetch !== 'function') return Promise.resolve(null);
+      var ck = 'w_' + name.toLowerCase();
+      if (_mediaCache[ck] !== undefined) return Promise.resolve(_mediaCache[ck]);
+      var u = 'https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&piprop=thumbnail&pithumbsize=640&redirects=1&titles=' + encodeURIComponent(name) + '&origin=*';
+      return fetch(u).then(function (r) { return r.json(); }).then(function (j) {
+        var pages = j && j.query && j.query.pages, thumb = null;
+        if (pages) for (var k in pages) { if (pages[k].thumbnail && pages[k].thumbnail.source) { thumb = pages[k].thumbnail.source; break; } }
+        _mediaCache[ck] = thumb; return thumb;
+      }).catch(function () { _mediaCache[ck] = null; return null; });
+    },
   };
+  // Build a media element that shows a relevant picture for the place (real → category → gradient).
+  function placeMedia(p, cls) {
+    var media = el('div', cls || 'tc-place__media');
+    var img = doc.createElement('img'); img.className = 'tc-place__img'; img.alt = (p && p.name) || ''; img.loading = 'lazy';
+    var catUrl = PlaceMediaProvider.categoryImage(p);
+    var stage = 0; // 0 = primary, 1 = category, 2 = gradient
+    img.addEventListener('error', function () {
+      if (stage === 0) { stage = 1; img.src = catUrl; }
+      else { stage = 2; media.classList.add('tc-place__media--ph'); if (img.parentNode) img.parentNode.removeChild(img); }
+    });
+    img.src = (p && p.imageUrl) || catUrl;
+    media.appendChild(img);
+    if (p && p.category) media.appendChild(el('span', 'tc-place__cat', p.category));
+    // Swap in the REAL place photo when Wikipedia resolves one.
+    PlaceMediaProvider.resolveReal(p).then(function (real) { if (real && stage < 2) { stage = 0; img.src = real; } });
+    return media;
+  }
   var TravelTicketProvider = { // plane — search links only, never fake prices
     flightSearch: function (origin, dest, date) { return 'https://www.google.com/travel/flights?q=' + encodeURIComponent('flights from ' + (origin || '') + ' to ' + (dest || '') + (date ? ' on ' + date : '')); },
   };
@@ -308,7 +363,7 @@
     state.trip = {
       id: uid('trip'), groupName: '', destination: '', dateRange: '', departureCity: '',
       tripStyle: 'balanced', budget: 'moderate', families: [newFamily()], preferences: defaultPrefs(),
-      plan: null, votes: {}, notes: [], booking: {}, transportStatus: {}, createdAt: Date.now(),
+      plan: null, votes: {}, notes: [], booking: {}, transportStatus: {}, suggestions: [], createdAt: Date.now(),
     };
     state.readonly = false;
   }
@@ -489,6 +544,8 @@
     hero.appendChild(meta);
     if (tr._fallback || (plan.dataSource && /pending/.test(plan.dataSource))) hero.appendChild(el('p', 'tc-unverified', t('unverified')));
     s.appendChild(hero);
+    // "You are this family" — attributes votes/suggestions per family (no login).
+    s.appendChild(familyPicker());
     // Tabs
     var tabs = el('div', 'tc-tabs');
     [['itinerary', 'tab_itinerary'], ['arrival', 'tab_arrival'], ['group', 'tab_group']].forEach(function (pair) {
@@ -544,11 +601,7 @@
   function scoreChip(label, score) { var lv = score >= 4 ? 'hi' : (score >= 2 ? 'mid' : 'lo'); return el('span', 'tc-chip tc-chip--score tc-chip--' + lv, label + ' ' + score + '/5'); }
   function placeCard(p) {
     var c = el('article', 'tc-place');
-    var media = el('div', 'tc-place__media');
-    if (p.imageUrl) { var im = doc.createElement('img'); im.className = 'tc-place__img'; im.src = p.imageUrl; im.alt = p.name; im.loading = 'lazy'; im.addEventListener('error', function () { media.classList.add('tc-place__media--ph'); if (im.parentNode) im.parentNode.removeChild(im); }); media.appendChild(im); }
-    else media.classList.add('tc-place__media--ph');
-    if (p.category) media.appendChild(el('span', 'tc-place__cat', p.category));
-    c.appendChild(media);
+    c.appendChild(placeMedia(p));
     var body = el('div', 'tc-place__body');
     body.appendChild(el('strong', 'tc-place__name', p.name));
     if (p.address) body.appendChild(el('p', 'tc-place__addr', p.address));
@@ -573,14 +626,44 @@
     return c;
   }
   function linkBtn(label, href, cls) { var a = el('a', 'tc-pbtn ' + (cls || ''), label); a.href = href || '#'; a.target = '_blank'; a.rel = 'noopener'; return a; }
+  // ── Per-family collaboration: "who am I" + family-attributed votes ──────
+  function tripFamilies() {
+    var out = [];
+    ((state.trip && state.trip.families) || []).forEach(function (f, i) { if (f && (f.name || '').trim()) out.push({ id: f.id || ('f' + i), name: f.name.trim() }); });
+    if (!out.length) ((state.trip && state.trip.plan && state.trip.plan.families) || []).forEach(function (n, i) { out.push({ id: 'pf' + i, name: String(n).split('(')[0].split('—')[0].trim() || ('#' + (i + 1)) }); });
+    if (!out.length) out.push({ id: 'me', name: 'Me' });
+    return out;
+  }
+  function meKey() { return 'tc_me_' + (state.trip && state.trip.id); }
+  function getMe() { try { return root.localStorage.getItem(meKey()) || ''; } catch (e) { return ''; } }
+  function setMe(id) { try { root.localStorage.setItem(meKey(), id); } catch (e) {} }
+  function familyPicker() {
+    var wrap = el('div', 'tc-famsel');
+    wrap.appendChild(el('span', 'tc-famsel__lbl', t('youAre')));
+    var me = getMe();
+    tripFamilies().forEach(function (f) {
+      var b = el('button', 'tc-famsel__btn' + (f.id === me ? ' tc-famsel__btn--on' : ''), f.name); b.type = 'button';
+      b.addEventListener('click', function () { setMe(f.id); render(); });
+      wrap.appendChild(b);
+    });
+    return wrap;
+  }
   function voteRow(p) {
     var pid = p.id || p.name;
+    var v = state.trip.votes[pid];
+    if (typeof v !== 'object' || v === null) { v = {}; state.trip.votes[pid] = v; } // per-family map {familyId: status}
+    var me = getMe();
+    var counts = { like: 0, maybe: 0, skip: 0 };
+    Object.keys(v).forEach(function (fid) { if (counts[v[fid]] != null) counts[v[fid]]++; });
     var row = el('div', 'tc-vote');
-    [['like', 'v_like', '👍'], ['maybe', 'v_maybe', '🤔'], ['skip', 'v_skip', '👎']].forEach(function (v) {
-      var on = state.trip.votes[pid] === v[0];
-      var b = el('button', 'tc-vbtn' + (on ? ' tc-vbtn--on' : ''), v[2] + ' ' + t(v[1])); b.type = 'button';
-      if (state.readonly && false) b.disabled = true;
-      b.addEventListener('click', function () { state.trip.votes[pid] = (state.trip.votes[pid] === v[0]) ? null : v[0]; saveTrip(state.trip); render(); });
+    [['like', '👍'], ['maybe', '🤔'], ['skip', '👎']].forEach(function (pair) {
+      var st = pair[0], mine = me && v[me] === st;
+      var b = el('button', 'tc-vbtn' + (mine ? ' tc-vbtn--on' : ''), pair[1] + ' ' + t('v_' + st) + (counts[st] ? ' ' + counts[st] : '')); b.type = 'button';
+      b.addEventListener('click', function () {
+        if (!me) { toast(t('pickFamilyHint')); return; }
+        if (v[me] === st) delete v[me]; else v[me] = st;
+        saveTrip(state.trip); render();
+      });
       row.appendChild(b);
     });
     var bk = state.trip.booking[pid] || 'not_needed';
@@ -589,6 +672,38 @@
     bsel.addEventListener('change', function () { state.trip.booking[pid] = bsel.value; saveTrip(state.trip); });
     row.appendChild(bsel);
     return row;
+  }
+  // Group suggestions: any family can propose a place/activity; others up-vote.
+  function suggestionsBlock() {
+    var b = el('div', 'tc-suggest');
+    b.appendChild(el('strong', 'tc-suggest__t', t('suggestionsTitle')));
+    var me = getMe();
+    var list = state.trip.suggestions || [];
+    if (!list.length) b.appendChild(el('p', 'tc-suggest__empty', t('noSuggestions')));
+    list.forEach(function (s) {
+      var c = el('div', 'tc-suggest__item');
+      var txt = el('div', 'tc-suggest__main');
+      txt.appendChild(el('p', 'tc-suggest__text', s.text));
+      txt.appendChild(el('span', 'tc-suggest__by', t('suggestedBy') + ' ' + (s.familyName || '—')));
+      c.appendChild(txt);
+      var likes = Object.keys(s.votes || {}).length;
+      var lb = el('button', 'tc-vbtn' + (me && s.votes && s.votes[me] ? ' tc-vbtn--on' : ''), '👍 ' + (likes || '')); lb.type = 'button';
+      lb.addEventListener('click', function () { if (!me) { toast(t('pickFamilyHint')); return; } s.votes = s.votes || {}; if (s.votes[me]) delete s.votes[me]; else s.votes[me] = 1; saveTrip(state.trip); render(); });
+      c.appendChild(lb);
+      b.appendChild(c);
+    });
+    var row = el('div', 'tc-suggest__row');
+    var ip = input('', t('suggestionPh')); row.appendChild(ip);
+    var add = el('button', 'tc-cta', t('suggest')); add.type = 'button';
+    add.addEventListener('click', function () {
+      if (!ip.value.trim()) return;
+      var fam = tripFamilies().filter(function (f) { return f.id === me; })[0];
+      state.trip.suggestions = state.trip.suggestions || [];
+      state.trip.suggestions.push({ id: uid('sug'), text: ip.value.trim(), familyId: me || '', familyName: fam ? fam.name : '', votes: {}, ts: Date.now() });
+      saveTrip(state.trip); render();
+    });
+    row.appendChild(add); b.appendChild(row);
+    return b;
   }
 
   function openPlaceModal(p) {
@@ -599,10 +714,7 @@
     head.appendChild(el('strong', 'tc-modal__title', p.name));
     var x = el('button', 'tc-modal__x', '×'); x.type = 'button'; x.addEventListener('click', closeModal); head.appendChild(x);
     card.appendChild(head);
-    var media = el('div', 'tc-modal__media' + (p.imageUrl ? '' : ' tc-place__media--ph'));
-    if (p.imageUrl) { var mim = doc.createElement('img'); mim.className = 'tc-place__img'; mim.src = p.imageUrl; mim.alt = p.name; mim.loading = 'lazy'; mim.addEventListener('error', function () { media.classList.add('tc-place__media--ph'); if (mim.parentNode) mim.parentNode.removeChild(mim); }); media.appendChild(mim); }
-    if (p.category) media.appendChild(el('span', 'tc-place__cat', p.category));
-    card.appendChild(media);
+    card.appendChild(placeMedia(p, 'tc-modal__media'));
     if (p.address) card.appendChild(row2('📍', p.address));
     if (p.description) card.appendChild(el('p', 'tc-modal__desc', p.description));
     if (p.whySelected) card.appendChild(kv(t('whySelected'), p.whySelected));
@@ -692,6 +804,8 @@
     // Assumptions / warnings
     if (plan.assumptions && plan.assumptions.length) wrap.appendChild(listBlock(t('assumptions'), plan.assumptions));
     if (plan.warnings && plan.warnings.length) wrap.appendChild(listBlock('⚠ ' + t('warnings'), plan.warnings));
+    // Group suggestions (add + vote)
+    wrap.appendChild(suggestionsBlock());
     // Notes
     var nb = el('div', 'tc-notes');
     nb.appendChild(el('strong', 'tc-notes__t', t('notes')));

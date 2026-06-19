@@ -1983,6 +1983,62 @@ function mbHaversineMiles(a, b) {
   const s = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
 }
+// ── AI Group Travel Concierge — structured trip-plan generator ──────────────
+// Public (anonymous) like the other customer-facing AI. Returns a TripPlan JSON
+// (days → sections → place cards + per-family transportation + synchronized
+// meetup). The frontend (/travel-concierge) falls back to a mock sample plan if
+// this is unavailable or returns invalid JSON, so it never crashes. No fake
+// prices/confirmations; every place is dataSource:"ai_generated_pending_verification".
+function buildGroupTripSystemPrompt(lang) {
+  var langName = lang === 'vi' ? 'Vietnamese' : (lang === 'es' ? 'Spanish' : 'English');
+  return [
+    'You are an expert California group-travel concierge for Du Lich Cali. Plan a shared trip for MULTIPLE families/groups with mixed ages (toddlers, kids, teens, adults, seniors).',
+    'Return ONLY valid JSON (no markdown, no commentary) matching this TripPlan shape:',
+    '{ "destination","groupName","dateRange","departureCity","summary","assumptions":[],"warnings":[],"totalEstimatedCostRange","meetupPoint","meetupTime","families":[],',
+    '  "transportation":[ { "familyName","method"(car|plane|bus|other),"origin","destination","recommendedDepartureTime","estimatedArrivalTime","estimatedCost","bookingStatus","providerName","providerPhone","providerWebsite","ticketSearchUrl","routeSummary","restStops":[],"notes","backupPlan" } ],',
+    '  "days":[ { "date","title","theme","summary","estimatedDrivingTime","estimatedWalkingLevel","sections":[ { "timeOfDay"(morning|lunch|afternoon|dinner|night),"startTime","endTime","title","places":[ {',
+    '    "id","name","category","address","latitude","longitude","imageUrl","websiteUrl","reservationUrl","googleMapsUrl","appleMapsUrl","phone","estimatedCost","estimatedDuration","bestTimeToVisit","parkingNotes","kidFriendlyScore"(0-5),"toddlerFriendlyScore","teenFriendlyScore","seniorFriendlyScore","walkingLevel"(low|medium|high),"whySelected","description","tips","backupPlace","dataSource" } ] } ] } ] }',
+    'HARD RULES: Use REAL, well-known places with real approximate addresses + lat/lng. Build googleMapsUrl = "https://www.google.com/maps/search/?api=1&query=" + URL-encoded "<name>, <address>" and appleMapsUrl = "https://maps.apple.com/?q=" + URL-encoded "<name>, <address>". Set imageUrl=null. reservationUrl=null UNLESS a well-known official ticketing site. websiteUrl=official site if well-known else null. estimatedCost = ranges, NEVER fake exact prices. For plane/bus transportation, estimatedCost MUST be "pending verification" and use search links (Google Flights for plane; a search link for Vietnamese bus services like Xe Hoang / Hoang Express for bus). Set dataSource="ai_generated_pending_verification" on EVERY place. Pace around toddler naps and senior walking limits; honor budget, food prefs, interests, accessibility, walking tolerance, drive time, weather, holiday closures; ALWAYS include a synchronized meetupPoint + meetupTime every family can reach, and a backupPlan per family.',
+    'Write all human-readable text in ' + langName + '. 3 days unless the dates imply otherwise.',
+  ].join('\n');
+}
+exports.generateGroupTripPlan = onCall(
+  {
+    region: 'us-central1',
+    secrets: [CLAUDE_API_KEY, GEMINI_API_KEY],
+    timeoutSeconds: 120,
+    memory: '512MiB',
+    cors: true,
+  },
+  async (request) => {
+    const data = request.data || {};
+    const trip = data.trip || {};
+    const lang = (data.lang === 'vi' || data.lang === 'es') ? data.lang : 'en';
+    if (!trip.destination) return { ok: false, debugCode: 'NO_DESTINATION' };
+    const claudeKey = await getAiKey('claude');
+    if (!claudeKey) return { ok: false, debugCode: 'NO_CLAUDE_KEY' };
+    const system = buildGroupTripSystemPrompt(lang);
+    const userContent = 'Plan this group trip. Input JSON:\n' + JSON.stringify({
+      groupName: trip.groupName, destination: trip.destination, dateRange: trip.dateRange,
+      departureCity: trip.departureCity, tripStyle: trip.tripStyle, budget: trip.budget,
+      families: trip.families, preferences: trip.preferences,
+    });
+    try {
+      const text = await serverCallClaude(system, [{ role: 'user', content: userContent }], true, claudeKey, 8000, 'claude-sonnet-4-6');
+      let raw = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
+      const start = raw.indexOf('{'); const end = raw.lastIndexOf('}');
+      if (start > 0 || end > 0) raw = raw.slice(start, end + 1);
+      const plan = JSON.parse(raw);
+      if (!plan || !Array.isArray(plan.days) || !plan.days.length) return { ok: false, debugCode: 'INVALID_PLAN' };
+      plan.dataSource = plan.dataSource || 'ai_generated_pending_verification';
+      return { ok: true, plan };
+    } catch (e) {
+      console.error('[generateGroupTripPlan] failed', e && e.message);
+      return { ok: false, debugCode: 'AI_ERROR' };
+    }
+  }
+);
+
 exports.validateAddressAndDistance = onCall(
   { region: 'us-central1', secrets: [GOOGLE_MAPS_API_KEY], timeoutSeconds: 30, cors: true },
   async (request) => {

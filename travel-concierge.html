@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a2344">
+  <title>AI Group Travel Concierge · Du Lich Cali</title>
+  <meta name="description" content="Plan a group trip with AI — multiple families, a shared day-by-day visual itinerary, maps, reservations, and a synchronized family arrival plan.">
+  <meta property="og:title" content="AI Group Travel Concierge · Du Lich Cali">
+  <meta property="og:description" content="Plan a group trip with AI — shared visual itinerary, maps, reservations, and per-family arrival plans.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,300;0,6..96,400;1,6..96,300;1,6..96,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/style.css?v=20260419m">
+  <link rel="stylesheet" href="/desktop.css">
+  <link rel="stylesheet" href="/travel-concierge.css?v=20260618a">
+
+  <!-- Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-5S0P4XMCJR"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-5S0P4XMCJR');
+  </script>
+  <script src="/analytics.js?v=20260420a"></script>
+</head>
+<body>
+<div class="tc-page">
+
+  <header class="app-bar">
+    <a href="/" class="app-bar__brand" style="text-decoration:none; color:var(--cream);">✦ Du Lich Cali</a>
+    <div class="tc-lang" id="tcLang" role="group" aria-label="Language">
+      <button class="tc-lang__btn" type="button" data-lang="en">EN</button>
+      <button class="tc-lang__btn" type="button" data-lang="vi">VI</button>
+      <button class="tc-lang__btn" type="button" data-lang="es">ES</button>
+    </div>
+  </header>
+
+  <!-- The entire concierge UI is rendered into #tcApp by travel-concierge.js -->
+  <main id="tcApp" class="tc-app" aria-live="polite"></main>
+
+  <a href="/" class="tc-back" data-tc-i18n="backHome">← Back to Du Lich Cali</a>
+</div>
+
+<!-- Firebase compat SDK (functions REQUIRED for the AI trip generator) -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
+<script>
+  var firebaseConfig = {
+    apiKey:            'AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ',
+    authDomain:        'dulichcali-booking-calendar.firebaseapp.com',
+    projectId:         'dulichcali-booking-calendar',
+    storageBucket:     'dulichcali-booking-calendar.appspot.com',
+    messagingSenderId: '623460884698',
+    appId:             '1:623460884698:web:a08bd435c453a7b4db05e3'
+  };
+  if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+  window.dlcDb = firebase.firestore();
+</script>
+<script src="/travel-concierge-samples.js?v=20260618a"></script>
+<script src="/travel-concierge.js?v=20260618a"></script>
+</body>
+</html>

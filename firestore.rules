@@ -585,6 +585,19 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // ── AI Group Travel Concierge: shared group trips ───────────────────────────────
+    // Capability model: the document id (tripId) is an unguessable random token that
+    // acts as the share/collaborate capability (no login required, like the
+    // style-studio anonymous flow). Anyone with the link + an anonymous session can
+    // read the trip and collaborate (vote / notes / booking status). Only the trip
+    // details the group enters are stored; deletes are disabled.
+    match /groupTrips/{tripId} {
+      allow read:   if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null;
+      allow delete: if false;
+    }
+
     // ── Default deny ──────────────────────────────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;

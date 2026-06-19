@@ -29,7 +29,7 @@
       backHome: '← Back to Du Lich Cali',
       heroChip: 'AI Group Travel Concierge', heroTitle: 'Plan a Group Trip with AI',
       heroSub: 'Two families or ten friends — one shared, visual, day-by-day plan with maps, reservations, and a synchronized arrival plan for every family.',
-      start: 'Start planning', step: 'Step', of: 'of',
+      start: 'Start planning', step: 'Step', of: 'of', day: 'Day', watchClip: 'Watch clip',
       // Create
       createTitle: 'Create your group trip', groupName: 'Trip / group name', destination: 'Destination',
       dates: 'Travel dates', departureCity: 'Main departure area', numFamilies: 'How many families / groups?',
@@ -84,7 +84,7 @@
       backHome: '← Quay lại Du Lich Cali',
       heroChip: 'Trợ Lý Du Lịch Nhóm AI', heroTitle: 'Lên Kế Hoạch Chuyến Đi Nhóm Bằng AI',
       heroSub: 'Hai gia đình hay mười người bạn — một kế hoạch chung, trực quan, theo từng ngày, kèm bản đồ, đặt chỗ và lịch trình đến nơi đồng bộ cho từng gia đình.',
-      start: 'Bắt đầu lên kế hoạch', step: 'Bước', of: 'trên',
+      start: 'Bắt đầu lên kế hoạch', step: 'Bước', of: 'trên', day: 'Ngày', watchClip: 'Xem clip',
       createTitle: 'Tạo chuyến đi nhóm', groupName: 'Tên chuyến đi / nhóm', destination: 'Điểm đến',
       dates: 'Ngày đi', departureCity: 'Khu vực khởi hành chính', numFamilies: 'Bao nhiêu gia đình / nhóm?',
       tripStyle: 'Nhịp độ', budget: 'Ngân sách tổng', createBtn: 'Tiếp: thêm gia đình',
@@ -130,7 +130,7 @@
       backHome: '← Volver a Du Lich Cali',
       heroChip: 'Concierge de Viajes Grupales AI', heroTitle: 'Planea un Viaje Grupal con AI',
       heroSub: 'Dos familias o diez amigos — un plan compartido, visual, día a día, con mapas, reservas y un plan de llegada sincronizado para cada familia.',
-      start: 'Empezar a planear', step: 'Paso', of: 'de',
+      start: 'Empezar a planear', step: 'Paso', of: 'de', day: 'Día', watchClip: 'Ver clip',
       createTitle: 'Crea tu viaje grupal', groupName: 'Nombre del viaje / grupo', destination: 'Destino',
       dates: 'Fechas de viaje', departureCity: 'Zona principal de salida', numFamilies: '¿Cuántas familias / grupos?',
       tripStyle: 'Ritmo del viaje', budget: 'Presupuesto general', createBtn: 'Siguiente: añadir familias',
@@ -510,7 +510,7 @@
     var daytabs = el('div', 'tc-daytabs');
     days.forEach(function (d, i) {
       var b = el('button', 'tc-daytab' + (i === state.activeDay ? ' tc-daytab--on' : '')); b.type = 'button';
-      b.innerHTML = '<strong>' + (t('step') === 'Step' ? 'Day ' : '') + (i + 1) + '</strong><span>' + (d.title || '') + '</span>';
+      b.innerHTML = '<strong>' + t('day') + ' ' + (i + 1) + '</strong><span>' + (d.title || '') + '</span>';
       b.addEventListener('click', function () { state.activeDay = i; render(); });
       daytabs.appendChild(b);
     });
@@ -565,6 +565,7 @@
     acts.appendChild(linkBtn(t('mapA'), p.appleMapsUrl || MapLinkProvider.apple(p.name, p.address)));
     if (p.websiteUrl) acts.appendChild(linkBtn(t('website'), p.websiteUrl));
     if (p.reservationUrl) acts.appendChild(linkBtn('🎟 ' + t('reserve'), p.reservationUrl, 'tc-pbtn--accent'));
+    if (p.videoUrl) acts.appendChild(linkBtn('▶ ' + t('watchClip'), p.videoUrl, 'tc-pbtn--accent'));
     var det = el('button', 'tc-pbtn', t('details')); det.type = 'button'; det.addEventListener('click', function () { openPlaceModal(p); }); acts.appendChild(det);
     body.appendChild(acts);
     body.appendChild(voteRow(p));
@@ -598,7 +599,8 @@
     head.appendChild(el('strong', 'tc-modal__title', p.name));
     var x = el('button', 'tc-modal__x', '×'); x.type = 'button'; x.addEventListener('click', closeModal); head.appendChild(x);
     card.appendChild(head);
-    var media = el('div', 'tc-modal__media tc-place__media--ph');
+    var media = el('div', 'tc-modal__media' + (p.imageUrl ? '' : ' tc-place__media--ph'));
+    if (p.imageUrl) { var mim = doc.createElement('img'); mim.className = 'tc-place__img'; mim.src = p.imageUrl; mim.alt = p.name; mim.loading = 'lazy'; mim.addEventListener('error', function () { media.classList.add('tc-place__media--ph'); if (mim.parentNode) mim.parentNode.removeChild(mim); }); media.appendChild(mim); }
     if (p.category) media.appendChild(el('span', 'tc-place__cat', p.category));
     card.appendChild(media);
     if (p.address) card.appendChild(row2('📍', p.address));
@@ -615,6 +617,7 @@
     acts.appendChild(linkBtn(t('mapA'), p.appleMapsUrl || MapLinkProvider.apple(p.name, p.address)));
     if (p.websiteUrl) acts.appendChild(linkBtn(t('website'), p.websiteUrl));
     if (p.reservationUrl) acts.appendChild(linkBtn('🎟 ' + t('reserve'), p.reservationUrl, 'tc-pbtn--accent'));
+    if (p.videoUrl) acts.appendChild(linkBtn('▶ ' + t('watchClip'), p.videoUrl, 'tc-pbtn--accent'));
     card.appendChild(acts);
     card.appendChild(el('p', 'tc-unverified', t('unverified')));
     ov.appendChild(card);
@@ -727,21 +730,42 @@
   function setLang(l) { if (!T[l]) return; state.lang = l; try { root.localStorage.setItem('dlc_lang', l); } catch (e) {} doc.documentElement.setAttribute('lang', l); syncLangBtns(); render(); }
   function syncLangBtns() { doc.querySelectorAll('#tcLang .tc-lang__btn').forEach(function (b) { b.classList.toggle('tc-lang__btn--on', b.getAttribute('data-lang') === state.lang); }); }
 
+  // Resolve when anonymous auth is ready (so Firestore reads pass the rules), with
+  // a hard timeout so the UI never hangs if auth is unavailable.
+  function ensureAuth() {
+    return new Promise(function (resolve) {
+      try {
+        if (!root.firebase || !root.firebase.auth) return resolve();
+        var a = root.firebase.auth();
+        if (a.currentUser) return resolve();
+        var done = false; function fin() { if (!done) { done = true; resolve(); } }
+        try { a.onAuthStateChanged(function (u) { if (u) fin(); }); } catch (e) {}
+        a.signInAnonymously().catch(function () { fin(); });
+        root.setTimeout(fin, 3000);
+      } catch (e) { resolve(); }
+    });
+  }
   function init() {
     state.lang = detectLang(); doc.documentElement.setAttribute('lang', state.lang);
     doc.querySelectorAll('#tcLang .tc-lang__btn').forEach(function (b) { b.addEventListener('click', function () { setLang(b.getAttribute('data-lang')); }); });
     syncLangBtns();
-    // Anonymous auth (best-effort, enables Firestore share). Never blocks the UI.
-    try { if (root.firebase && root.firebase.auth) { root.firebase.auth().signInAnonymously().catch(function () {}); } } catch (e) {}
-    // Shared trip?
     var tripId = null; try { tripId = new URLSearchParams(root.location.search).get('trip'); } catch (e) {}
     if (tripId) {
-      loadTrip(tripId).then(function (tr) {
-        if (tr && tr.plan) { state.trip = tr; state.readonly = false; state.screen = 'plan'; state.activeTab = 'itinerary'; }
-        else { newTrip(); state.screen = 'hero'; }
-        render();
+      // Recipient of a shared link: WAIT for anonymous auth before the Firestore
+      // read (rules require request.auth != null), so the shared plan loads reliably
+      // on a device with no local copy.
+      ensureAuth().then(function () {
+        loadTrip(tripId).then(function (tr) {
+          if (tr && tr.plan) { state.trip = tr; state.readonly = false; state.screen = 'plan'; state.activeTab = 'itinerary'; }
+          else { newTrip(); state.screen = 'hero'; }
+          render();
+        });
       });
-    } else { newTrip(); state.screen = 'hero'; render(); }
+    } else {
+      // Normal entry — render immediately; anon auth in the background enables save/share.
+      ensureAuth();
+      newTrip(); state.screen = 'hero'; render();
+    }
   }
 
   root.TravelConcierge = { init: init, setLang: setLang, _state: state, _strings: T, _mockPlan: mockPlan, _generatePlan: generatePlan, _MapLinkProvider: MapLinkProvider, _TravelTicketProvider: TravelTicketProvider, _BusTicketProvider: BusTicketProvider };

@@ -77,6 +77,9 @@ async function denied(name, p) { try { await assertFails(p); rec(name, true); } 
     await setDoc(doc(adb, 'config/styleStudioPromo'), { active: true, startDate: '2026-06-13', endDate: '2026-06-27', freeGenerationsPerUser: 5 });
     await setDoc(doc(adb, 'styleStudioUsage/cust-1'), { lastDay: '2026-06-13' });
     await setDoc(doc(adb, 'styleStudioUsage/cust-1/days/2026-06-13'), { count: 2 });
+
+    // Cross-trip personal travel memory (Travel Concierge Step 6) — one doc per uid.
+    await setDoc(doc(adb, 'travelMemory/tripper-1'), { uid: 'tripper-1', cuisines: ['vietnamese'], pace: 'relaxed', updatedAt: 1 });
   });
 
   const cust1 = testEnv.authenticatedContext('cust-1').firestore();
@@ -279,6 +282,17 @@ async function denied(name, p) { try { await assertFails(p); rec(name, true); } 
   await denied('other member CANNOT edit someone else media', updateDoc(doc(tripMember2, 'groupTrips/trip-1/media/m-group'), { caption: 'x' }));
   await allowed('owner CAN moderate (delete) any media', deleteDoc(doc(tripper, 'groupTrips/trip-1/media/m-m2')));
   await allowed('author CAN delete own media', deleteDoc(doc(tripMember, 'groupTrips/trip-1/media/m-new')));
+
+  // ── Cross-trip travel memory (Step 6): strictly own-only, non-anonymous, no cross-member reads ──
+  await allowed('user CAN read OWN travel memory', getDoc(doc(tripper, 'travelMemory/tripper-1')));
+  await allowed('user CAN update OWN travel memory', updateDoc(doc(tripper, 'travelMemory/tripper-1'), { pace: 'fast', cuisines: ['vietnamese', 'seafood'] }));
+  await allowed('user CAN create OWN fresh travel memory', setDoc(doc(tripMember, 'travelMemory/member-1'), { uid: 'member-1', cuisines: ['mexican'], pace: 'moderate' }));
+  await allowed('user CAN clear (delete) OWN travel memory', deleteDoc(doc(tripMember, 'travelMemory/member-1')));
+  await denied('user CANNOT read ANOTHER user\'s travel memory', getDoc(doc(stranger, 'travelMemory/tripper-1')));
+  await denied('user CANNOT write ANOTHER user\'s travel memory', setDoc(doc(stranger, 'travelMemory/tripper-1'), { uid: 'tripper-1', pace: 'hacked' }));
+  await denied('user CANNOT delete ANOTHER user\'s travel memory', deleteDoc(doc(stranger, 'travelMemory/tripper-1')));
+  await denied('anonymous CANNOT read travel memory', getDoc(doc(anon, 'travelMemory/anon-customer')));
+  await denied('anonymous CANNOT write OWN travel memory (needs real account)', setDoc(doc(anon, 'travelMemory/anon-customer'), { uid: 'anon-customer', pace: 'relaxed' }));
   await denied('stranger CANNOT delete media', deleteDoc(doc(stranger, 'groupTrips/trip-1/media/m-private')));
 
   await testEnv.cleanup();

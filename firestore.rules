@@ -690,6 +690,16 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Cross-trip personal travel memory (Travel Concierge Step 6). One doc per signed-in
+    // user, keyed by their own uid. Holds learned preferences (cuisines, rejected places,
+    // transport/hotel leanings, budget/pace, past-trip refs) so future trips start smarter.
+    // STRICTLY private: read+write ONLY by the owner — never another member, never
+    // anonymous (memory needs a stable account identity). The client owns this doc fully
+    // (it both learns into and reads from it), so there is no Admin-SDK gate here.
+    match /travelMemory/{uid} {
+      allow read, write: if isSignedInUser() && request.auth.uid == uid;
+    }
+
     // ── Default deny ──────────────────────────────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;

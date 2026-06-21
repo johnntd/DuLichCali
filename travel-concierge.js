@@ -287,6 +287,7 @@
       // Experience Optimizer
       improveTitle: 'Improve this trip with AI', improveSub: 'AI optimizes using your group\'s votes, favorites & preferences — then suggests concrete changes you can add.', improveWorking: 'Looking for ways to make this trip better…', improveNone: 'No suggestions right now — try another goal.',
       optimizeTrip: 'Optimize Trip', optimizing: 'Rebuilding your trip from the group\'s votes…', optimizeDone: 'Trip rebuilt from your group\'s votes', optimizeNudge: 'Your group\'s votes changed — re-optimize the whole trip.', optimizeRebuildHint: 'Regenerates the itinerary, food, stays, events, stopovers, transport, costs & bookings from all your votes. Your pins & skips are kept.',
+      mem_title: 'What we remember', mem_sub: 'Preferences learned from your past trips — used to start new ones smarter.', mem_cuisines: 'Cuisines you like', mem_liked: 'Places you liked', mem_never: 'Never suggest again', mem_transport: 'Preferred transport', mem_budget: 'Usual budget', mem_pace: 'Usual pace', mem_trips: 'Trips remembered', mem_clear: 'Clear memory', mem_cleared: 'Travel memory cleared',
       impGeneral: '✨ Improve this trip', impDiscoveries: '💎 Find more discoveries', impLowerCost: '💲 Lower cost', impKidsFun: '🧒 More fun for kids', impFoodFocused: '🍽 More food-focused',
       impSelected: '{n} selected', impRun: 'Run AI Improvement', impClear: 'Clear all',
       rejVote: 'Removed — the group voted to skip this', rejMajority: 'Removed — most families voted to skip this', rejNotNeeded: 'Removed — marked not needed',
@@ -535,6 +536,7 @@
       // Trình tối ưu trải nghiệm
       improveTitle: 'Cải thiện chuyến đi bằng AI', improveSub: 'AI tối ưu dựa trên bình chọn, yêu thích & sở thích của nhóm — rồi gợi ý thay đổi cụ thể để bạn thêm.', improveWorking: 'Đang tìm cách làm chuyến đi tốt hơn…', improveNone: 'Hiện chưa có gợi ý — thử mục tiêu khác.',
       optimizeTrip: 'Tối ưu chuyến đi', optimizing: 'Đang dựng lại chuyến đi theo bình chọn của nhóm…', optimizeDone: 'Đã dựng lại chuyến đi theo bình chọn của nhóm', optimizeNudge: 'Bình chọn của nhóm đã thay đổi — tối ưu lại toàn bộ chuyến đi.', optimizeRebuildHint: 'Tạo lại lịch trình, ẩm thực, nơi ở, sự kiện, điểm dừng, di chuyển, chi phí & đặt chỗ theo tất cả bình chọn. Mục ghim & bỏ qua được giữ lại.',
+      mem_title: 'Những gì chúng tôi ghi nhớ', mem_sub: 'Sở thích học được từ các chuyến đi trước — dùng để bắt đầu chuyến mới thông minh hơn.', mem_cuisines: 'Ẩm thực bạn thích', mem_liked: 'Địa điểm bạn thích', mem_never: 'Không gợi ý lại', mem_transport: 'Phương tiện ưa thích', mem_budget: 'Ngân sách thường dùng', mem_pace: 'Nhịp độ thường dùng', mem_trips: 'Số chuyến đã ghi nhớ', mem_clear: 'Xóa bộ nhớ', mem_cleared: 'Đã xóa bộ nhớ du lịch',
       impGeneral: '✨ Cải thiện chuyến đi', impDiscoveries: '💎 Tìm thêm khám phá', impLowerCost: '💲 Giảm chi phí', impKidsFun: '🧒 Vui hơn cho trẻ', impFoodFocused: '🍽 Tập trung ẩm thực',
       impSelected: 'Đã chọn {n}', impRun: 'Chạy cải thiện AI', impClear: 'Xóa tất cả',
       rejVote: 'Đã bỏ — cả nhóm bình chọn bỏ qua', rejMajority: 'Đã bỏ — đa số gia đình bình chọn bỏ qua', rejNotNeeded: 'Đã bỏ — đánh dấu không cần',
@@ -783,6 +785,7 @@
       // Optimizador de experiencia
       improveTitle: 'Mejora este viaje con IA', improveSub: 'La IA optimiza con los votos, favoritos y preferencias de tu grupo — y sugiere cambios concretos para agregar.', improveWorking: 'Buscando formas de mejorar este viaje…', improveNone: 'No hay sugerencias ahora — prueba otro objetivo.',
       optimizeTrip: 'Optimizar viaje', optimizing: 'Reconstruyendo tu viaje según los votos del grupo…', optimizeDone: 'Viaje reconstruido según los votos del grupo', optimizeNudge: 'Los votos de tu grupo cambiaron — vuelve a optimizar todo el viaje.', optimizeRebuildHint: 'Regenera el itinerario, comida, alojamiento, eventos, paradas, transporte, costos y reservas usando todos tus votos. Tus fijados y omitidos se conservan.',
+      mem_title: 'Lo que recordamos', mem_sub: 'Preferencias aprendidas de tus viajes anteriores — para empezar los nuevos de forma más inteligente.', mem_cuisines: 'Cocinas que te gustan', mem_liked: 'Lugares que te gustaron', mem_never: 'No sugerir de nuevo', mem_transport: 'Transporte preferido', mem_budget: 'Presupuesto habitual', mem_pace: 'Ritmo habitual', mem_trips: 'Viajes recordados', mem_clear: 'Borrar memoria', mem_cleared: 'Memoria de viaje borrada',
       impGeneral: '✨ Mejorar este viaje', impDiscoveries: '💎 Más descubrimientos', impLowerCost: '💲 Reducir costo', impKidsFun: '🧒 Más diversión para niños', impFoodFocused: '🍽 Más enfocado en comida',
       impSelected: '{n} seleccionados', impRun: 'Ejecutar mejora con IA', impClear: 'Borrar todo',
       rejVote: 'Eliminado — el grupo votó por omitirlo', rejMajority: 'Eliminado — la mayoría votó por omitirlo', rejNotNeeded: 'Eliminado — marcado como no necesario',
@@ -1841,6 +1844,46 @@
     card.appendChild(acts);
     return card;
   }
+  // "What we remember" — the user's learned cross-trip preferences, with a privacy
+  // clear button. Shown on the dashboard only when there is something learned.
+  function memoryPanel() {
+    if (!realUser()) return null;
+    if (state._memory == null) { loadTravelMemory().then(function () { if (state.screen === 'dashboard') render(); }); return null; }
+    if (!hasTravelMemory()) return null;
+    var m = state._memory, card = el('section', 'tc-mem');
+    var head = el('div', 'tc-mem__head');
+    head.appendChild(el('h2', 'tc-mem__title', '🧠 ' + t('mem_title')));
+    head.appendChild(el('p', 'tc-mem__sub', t('mem_sub')));
+    card.appendChild(head);
+    var body = el('div', 'tc-mem__body');
+    function chips(label, arr, mapFn) {
+      arr = (arr || []).filter(Boolean); if (!arr.length) return;
+      var row = el('div', 'tc-mem__row');
+      row.appendChild(el('span', 'tc-mem__label', label));
+      var wrap = el('div', 'tc-mem__chips');
+      arr.slice(0, 12).forEach(function (x) { wrap.appendChild(el('span', 'tc-mem__chip', mapFn ? mapFn(x) : x)); });
+      row.appendChild(wrap); body.appendChild(row);
+    }
+    function line(label, val) {
+      if (!val) return;
+      var row = el('div', 'tc-mem__row');
+      row.appendChild(el('span', 'tc-mem__label', label));
+      row.appendChild(el('span', 'tc-mem__val', val));
+      body.appendChild(row);
+    }
+    line(t('mem_budget'), m.budget ? t('budget_' + m.budget) : '');
+    line(t('mem_pace'), m.pace ? t('style_' + m.pace) : '');
+    chips(t('mem_cuisines'), m.cuisines);
+    chips(t('mem_liked'), m.liked);
+    chips(t('mem_never'), m.rejected);
+    chips(t('mem_transport'), (m.transport && m.transport.liked) || [], tpModeLabel);
+    if (m.pastTrips && m.pastTrips.length) line(t('mem_trips'), String(m.pastTrips.length));
+    card.appendChild(body);
+    var clr = el('button', 'tc-mem__clear', '🗑 ' + t('mem_clear')); clr.type = 'button';
+    clr.addEventListener('click', function () { clearTravelMemory(); });
+    card.appendChild(clr);
+    return card;
+  }
   function renderDashboard() {
     var s = el('section', 'tc-dash');
     var bc = el('nav', 'tc-bc');
@@ -1859,6 +1902,7 @@
     var nt = el('button', 'tc-cta tc-dash__new', t('createNewTrip')); nt.type = 'button';
     nt.addEventListener('click', function () { newTrip(); state.screen = 'create'; pushTripUrl(null); render(); });
     s.appendChild(nt);
+    var mp = memoryPanel(); if (mp) s.appendChild(mp); // cross-trip "what we remember" + privacy clear
     if (state._myTrips == null) { loadMyTrips().then(function () { if (state.screen === 'dashboard') render(); }); }
     if (state._joinedTrips == null) { loadJoinedTrips().then(function () { if (state.screen === 'dashboard') render(); }); }
     var owned = state._myTrips || [], joined = state._joinedTrips || [];
@@ -2340,6 +2384,7 @@
     };
     normalizeDestinations(state.trip);
     state.readonly = false;
+    try { applyMemoryToNewTrip(state.trip); } catch (e) {} // seed budget/pace + carry "never suggest" places from cross-trip memory
   }
   var ROLE_KEYS = ['main_destination', 'overnight_destination', 'stopover', 'meal_stop', 'airport_arrival', 'pass_through', 'optional_attraction'];
   // Per-destination hotel PREFERENCES (the AI recommends the actual stay — no manual entry).
@@ -2700,6 +2745,7 @@
       finalizePlanDays(plan, state.trip); // guarantee day count + return day + day types
       state.screen = 'plan'; state.activeDay = 0; state.activeTab = 'itinerary';
       saveTrip(state.trip); pushTripUrl(state.trip.id);
+      try { learnFromTrip(state.trip); } catch (e) {} // cross-trip memory: learn budget/pace/cuisines/group shape from this plan
       resolveMyRole().then(function () { render(); runConciergeResearch(state.trip); });
     });
   }
@@ -4508,7 +4554,8 @@
   // Names the group voted UP (favorited + loved/liked) — passed to generation as "PREFER".
   function preferredNames(tr) {
     var seen = {}, out = [];
-    favoritedNames().concat(likedNames()).forEach(function (n) { var k = String(n || '').trim().toLowerCase(); if (k && !seen[k]) { seen[k] = 1; out.push(n); } });
+    var seed = ((tr || state.trip) || {})._memorySeed || {}; // cross-trip "places you liked before"
+    favoritedNames().concat(likedNames()).concat(seed.likedPlaces || []).forEach(function (n) { var k = String(n || '').trim().toLowerCase(); if (k && !seen[k]) { seen[k] = 1; out.push(n); } });
     return out;
   }
   function transportModePrefs() {
@@ -4529,16 +4576,120 @@
     });
     var kids = ages.filter(function (a) { return a <= 12; }).length, teens = ages.filter(function (a) { return a >= 13 && a <= 17; }).length;
     var tm = transportModePrefs();
+    // Fold in cross-trip memory seeds (liked cuisines + stay leanings carried from past trips).
+    var seed = (trip && trip._memorySeed) || {};
+    var likedCuisines = memUnion(Object.keys(foodPrefs), seed.likedCuisines || []);
+    var stayPrefList = memUnion(Object.keys(stayPrefs), seed.hotel || []);
     return {
       travelers: adults + seniors + ages.length, adults: adults, seniors: seniors, kids: kids, teens: teens,
       budget: trip.budget || 'moderate', pace: trip.tripStyle || 'balanced',
-      foodPriority: Object.keys(foodPrefs).length > 0, likedCuisines: Object.keys(foodPrefs), stayPrefs: Object.keys(stayPrefs),
+      foodPriority: likedCuisines.length > 0, likedCuisines: likedCuisines, stayPrefs: stayPrefList,
       oceanPreference: !!(stayPrefs.ocean_view || stayPrefs.near_beach), themeParkPreference: (kids > 0 || teens > 0),
       walkingTolerance: (accessibility || seniors > 0) ? 'low' : ((trip.tripStyle === 'relaxed') ? 'medium' : 'high'), accessibilityNeeds: accessibility,
       likedPlaces: likedNames(), favoritePlaces: favoritedNames(), skippedPlaces: rejectedNames(trip),
       likedTransport: tm.liked, skippedTransport: tm.skipped,
     };
   }
+
+  // ════════════════════════════════════════════════════════════════════════
+  //  CROSS-TRIP TRAVEL MEMORY (Step 6) — the concierge gets smarter every trip.
+  //  One PRIVATE doc per signed-in user at travelMemory/{uid} (own-only rules).
+  //  We LEARN from the user's own trips (liked cuisines, places to never suggest
+  //  again, favored places, stay & transport leanings, budget/pace, group shape)
+  //  and APPLY them to brand-new trips so they start personalized. Additive merge
+  //  only — never clobber what was learned, never override a choice the user set on
+  //  the current trip. Nothing is hardcoded to a city/cuisine/mode; all derived.
+  // ════════════════════════════════════════════════════════════════════════
+  function emptyMemory() {
+    return { uid: '', cuisines: [], rejected: [], liked: [], hotel: [], transport: { liked: [], skipped: [] }, budget: '', pace: '', kids: 0, seniors: 0, pastTrips: [], tripCount: 0, updatedAt: 0 };
+  }
+  // Case-insensitive de-duped union, preserving first-seen casing.
+  function memUnion(a, b) {
+    var seen = {}, out = [];
+    (a || []).concat(b || []).forEach(function (x) { var k = String(x == null ? '' : x).trim(); var lk = k.toLowerCase(); if (k && !seen[lk]) { seen[lk] = 1; out.push(k); } });
+    return out;
+  }
+  function normalizeMemory(m) {
+    m = m || {};
+    return {
+      uid: m.uid || '', cuisines: memUnion(m.cuisines, []), rejected: memUnion(m.rejected, []), liked: memUnion(m.liked, []), hotel: memUnion(m.hotel, []),
+      transport: { liked: memUnion((m.transport || {}).liked, []), skipped: memUnion((m.transport || {}).skipped, []) },
+      budget: m.budget || '', pace: m.pace || '', kids: m.kids || 0, seniors: m.seniors || 0,
+      pastTrips: Array.isArray(m.pastTrips) ? m.pastTrips.slice(0, 30) : [], tripCount: m.tripCount || 0, updatedAt: m.updatedAt || 0,
+    };
+  }
+  // Read the signed-in user's memory once and cache it (per uid). Anonymous → empty.
+  function loadTravelMemory(force) {
+    var u = realUser();
+    if (!u || !root.dlcDb) { state._memory = state._memory || emptyMemory(); return Promise.resolve(state._memory); }
+    if (state._memory && state._memoryUid === u.uid && !force) return Promise.resolve(state._memory);
+    return root.dlcDb.collection('travelMemory').doc(u.uid).get()
+      .then(function (snap) { state._memory = (snap && snap.exists) ? normalizeMemory(snap.data()) : emptyMemory(); state._memoryUid = u.uid; return state._memory; })
+      .catch(function () { state._memory = state._memory || emptyMemory(); return state._memory; });
+  }
+  function saveTravelMemory(mem) {
+    var u = realUser(); if (!u || !root.dlcDb) { state._memory = mem; return Promise.resolve(mem); }
+    mem.uid = u.uid; mem.updatedAt = Date.now();
+    state._memory = mem; state._memoryUid = u.uid;
+    return root.dlcDb.collection('travelMemory').doc(u.uid).set(mem, { merge: true }).then(function () { return mem; }).catch(function () { return mem; });
+  }
+  // Privacy: wipe everything we remember about this user.
+  function clearTravelMemory() {
+    var u = realUser(); state._memory = emptyMemory(); if (u) { state._memory.uid = u.uid; state._memoryUid = u.uid; }
+    if (u && root.dlcDb) { try { root.dlcDb.collection('travelMemory').doc(u.uid).delete().catch(function () {}); } catch (e) {} }
+    toast(t('mem_cleared')); render();
+  }
+  // LEARN: fold THIS trip's signals into the user's memory (additive). Owner-only —
+  // a joined member's votes shape the owner's plan, not the member's personal memory.
+  function learnFromTrip(tr) {
+    tr = tr || state.trip;
+    var u = realUser();
+    if (!tr || tr._demo || !u || !root.dlcDb || tr.ownerUid !== u.uid) return Promise.resolve(null);
+    return loadTravelMemory().then(function (cur) {
+      var mem = normalizeMemory(cur), prof = buildPreferenceProfile(tr), tm = transportModePrefs();
+      mem.cuisines = memUnion(mem.cuisines, prof.likedCuisines);
+      mem.rejected = memUnion(mem.rejected, rejectedNames(tr));
+      mem.liked = memUnion(mem.liked, preferredNames(tr));
+      mem.hotel = memUnion(mem.hotel, prof.stayPrefs);
+      mem.transport = { liked: memUnion(mem.transport.liked, tm.liked), skipped: memUnion(mem.transport.skipped, tm.skipped) };
+      // a mode that became liked must drop out of skipped
+      mem.transport.skipped = mem.transport.skipped.filter(function (mode) { return mem.transport.liked.indexOf(mode) < 0; });
+      if (tr.budget) mem.budget = tr.budget;
+      if (tr.tripStyle) mem.pace = tr.tripStyle;
+      mem.kids = Math.max(mem.kids, prof.kids || 0);
+      mem.seniors = Math.max(mem.seniors, prof.seniors || 0);
+      var dests = (Array.isArray(tr.destinations) ? tr.destinations.map(function (d) { return ((d && d.city) || '').trim(); }) : []).filter(Boolean);
+      if (!dests.length && tr.destination) dests = [String(tr.destination).trim()];
+      var entry = { id: tr.id, name: tr.groupName || '', destinations: dests, dateRange: tr.dateRange || '', at: Date.now() };
+      var past = (mem.pastTrips || []).filter(function (p) { return p && p.id !== tr.id; });
+      past.unshift(entry); mem.pastTrips = past.slice(0, 30); mem.tripCount = mem.pastTrips.length;
+      return saveTravelMemory(mem);
+    });
+  }
+  // APPLY: seed a brand-new trip from memory so it starts personalized. Seeds ONLY
+  // values the user hasn't set yet (defaults), carries forward "never suggest" places
+  // so disliked spots don't reappear, and stashes soft prefs for the AI. Idempotent.
+  function applyMemoryToNewTrip(tr) {
+    tr = tr || state.trip;
+    if (!tr || tr._memoryApplied) return tr;
+    var mem = state._memory;
+    if (!mem || (!mem.cuisines.length && !mem.rejected.length && !mem.liked.length && !mem.budget && !mem.pace)) return tr;
+    tr._memoryApplied = true;
+    if (mem.budget && (tr.budget === 'moderate' || !tr.budget)) tr.budget = mem.budget;
+    if (mem.pace && (tr.tripStyle === 'balanced' || !tr.tripStyle)) tr.tripStyle = mem.pace;
+    tr.placeOverrides = tr.placeOverrides || {};
+    (mem.rejected || []).forEach(function (name) {
+      var k = String(name || '').trim().toLowerCase(); if (!k || tr.placeOverrides[k]) return;
+      tr.placeOverrides[k] = { name: name, action: 'skipped', createdBy: curUid() || '', createdAt: new Date().toISOString(), source: 'memory' };
+    });
+    tr._memorySeed = { likedCuisines: (mem.cuisines || []).slice(0, 12), likedPlaces: (mem.liked || []).slice(0, 20), hotel: (mem.hotel || []).slice(0, 8), transport: mem.transport || { liked: [], skipped: [] } };
+    return tr;
+  }
+  // True when this user has any learned memory worth surfacing.
+  function hasTravelMemory() {
+    var m = state._memory; return !!(m && (m.cuisines.length || m.rejected.length || m.liked.length || m.hotel.length || m.budget || m.pace || (m.pastTrips && m.pastTrips.length)));
+  }
+
   function votesSummaryText(trip) {
     var fav = favoritedNames().slice(0, 8), liked = likedNames().slice(0, 12), skip = rejectedNames(trip).slice(0, 12), bits = [];
     if (fav.length) bits.push('favorited: ' + fav.join(', '));
@@ -6288,8 +6439,9 @@
   function onAuth(u) {
     var prevUid = state.user && state.user.uid;
     state.user = (u && !u.isAnonymous) ? u : null;
-    if ((state.user && state.user.uid) !== prevUid) state._myTrips = null; // reload "Your trips" on account change
+    if ((state.user && state.user.uid) !== prevUid) { state._myTrips = null; state._memory = null; state._memoryUid = null; } // reload "Your trips" + memory on account change
     if (state.user) {
+      loadTravelMemory().then(function () { if (state.screen === 'dashboard' || state.screen === 'create') render(); }); // warm cross-trip memory cache
       if (state._pendingTripId) { var id = state._pendingTripId; state._pendingTripId = null; loadSharedTrip(id); return; }
       if (state._afterLogin) { var fn = state._afterLogin; state._afterLogin = null; fn(); return; }
     }
@@ -6312,7 +6464,7 @@
   function loadSharedTrip(id) {
     loadTrip(id).then(function (tr) {
       if (tr && tr.deleted === true) { toast(t('tripDeleted')); goDashboard(); return; }
-      if (tr && tr.plan) { state.trip = tr; normalizeDestinations(state.trip); state.trip._demo = false; state.readonly = false; state.screen = 'plan'; state.activeTab = 'itinerary'; try { reconcileRideResult(state.trip); } catch (e) {} resolveMyRole().then(function (role) { if (role && role !== 'owner') rememberJoinedTrip(id); render(); }); }
+      if (tr && tr.plan) { state.trip = tr; normalizeDestinations(state.trip); state.trip._demo = false; state.readonly = false; state.screen = 'plan'; state.activeTab = 'itinerary'; try { reconcileRideResult(state.trip); } catch (e) {} resolveMyRole().then(function (role) { if (role && role !== 'owner') rememberJoinedTrip(id); else { try { learnFromTrip(state.trip); } catch (e) {} } render(); }); }
       else { newTrip(); state.screen = 'hero'; render(); }
     });
   }
@@ -6369,7 +6521,8 @@
     _heroCinematic: heroCinematic, _destinationStoryBand: destinationStoryBand, _caHeroScene: caHeroScene, _destScene: destScene, _discoversRail: discoversRail,
     _buildTripGraph: buildTripGraph, _materializeDay: materializeDay, _replanRange: replanRange, _lockNode: lockNode, _unlockNode: unlockNode, _isNodeLocked: isNodeLocked, _isPlaceNodeLocked: isPlaceNodeLocked, _nodeVotes: nodeVotes, _placeNodeId: placeNodeId,
     _renderJourney: renderJourney, _journeyNodeCard: journeyNodeCard, _nodeIcon: nodeIcon,
-    _interpretCommand: interpretCommand, _applyEditPlan: applyEditPlan, _commandBar: commandBar, _editPlanPreview: editPlanPreview, _resolveNodeByName: resolveNodeByName, _opLine: opLine };
+    _interpretCommand: interpretCommand, _applyEditPlan: applyEditPlan, _commandBar: commandBar, _editPlanPreview: editPlanPreview, _resolveNodeByName: resolveNodeByName, _opLine: opLine,
+    _emptyMemory: emptyMemory, _memUnion: memUnion, _normalizeMemory: normalizeMemory, _loadTravelMemory: loadTravelMemory, _saveTravelMemory: saveTravelMemory, _clearTravelMemory: clearTravelMemory, _learnFromTrip: learnFromTrip, _applyMemoryToNewTrip: applyMemoryToNewTrip, _hasTravelMemory: hasTravelMemory, _memoryPanel: memoryPanel };
 
   if (doc.readyState === 'loading') doc.addEventListener('DOMContentLoaded', init); else init();
 })(typeof window !== 'undefined' ? window : this);

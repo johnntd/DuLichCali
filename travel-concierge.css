@@ -571,6 +571,21 @@ select.tc-input { appearance: none; background-image: linear-gradient(45deg, tra
 .tc-dash__login { color: var(--muted); font-family: var(--font-b); font-size: .9rem; margin: .4rem 0 .2rem; }
 .tc-dash__new { max-width: 340px; }
 .tc-dash__section { font-family: var(--font-d); font-size: 1.15rem; color: var(--cream); margin: 1.3rem 0 .6rem; }
+/* ── Cross-trip travel memory (Step 6) — "what we remember" ── */
+.tc-mem { border: 1px solid var(--tc-gold-deep); background: var(--tc-gold-soft); border-radius: 16px; padding: 1rem 1.05rem 1.1rem; margin: 1rem 0 1.4rem; box-shadow: var(--tc-shadow-sm); }
+.tc-mem__head { margin: 0 0 .7rem; }
+.tc-mem__title { font-family: var(--font-d); font-size: 1.12rem; color: var(--cream); margin: 0; }
+.tc-mem__sub { font-family: var(--font-b); font-size: .82rem; color: var(--muted); margin: .25rem 0 0; line-height: 1.5; }
+.tc-mem__body { display: flex; flex-direction: column; gap: .55rem; }
+.tc-mem__row { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem .6rem; }
+.tc-mem__label { font-family: var(--font-b); font-weight: 600; font-size: .78rem; color: var(--tc-gold); flex: 0 0 auto; min-width: 7.5rem; }
+.tc-mem__val { font-family: var(--font-b); font-size: .85rem; color: var(--cream); }
+.tc-mem__chips { display: flex; flex-wrap: wrap; gap: .35rem; }
+.tc-mem__chip { font-family: var(--font-b); font-size: .76rem; color: var(--cream); background: var(--tc-glass); border: 1px solid var(--tc-glass-brd); border-radius: 999px; padding: .18rem .6rem; }
+.tc-mem__clear { margin-top: .9rem; font-family: var(--font-b); font-size: .8rem; color: var(--muted); background: transparent; border: 1px solid var(--tc-glass-brd); border-radius: 10px; padding: .45rem .8rem; cursor: pointer; transition: color .2s, border-color .2s; }
+.tc-mem__clear:hover { color: var(--cream); border-color: var(--tc-gold-deep); }
+@media (min-width: 768px) { .tc-mem { padding: 1.2rem 1.3rem 1.3rem; } .tc-mem__label { min-width: 9rem; } }
+@media (prefers-reduced-motion: reduce) { .tc-mem__clear { transition: none; } }
 .tc-tripgrid { display: grid; grid-template-columns: 1fr; gap: .8rem; }
 .tc-tripcard { border: 1px solid var(--border); border-radius: 16px; background: var(--navy-800); overflow: hidden; }
 .tc-tripcard__main { display: flex; flex-direction: column; gap: .25rem; width: 100%; text-align: left; padding: .9rem 1rem; background: none; border: 0; cursor: pointer; color: var(--cream); }

@@ -46,6 +46,7 @@ window.RideIntake = (function () {
       bookingPendingReviewTitle: 'Booking Received',
       bookingPendingReviewMsg: 'Your booking is pending provider confirmation.<br>We will contact you with the final details.',
       closeBtn:     'Close',
+      backToTrip:   '← Back to your trip',
       // ── Picker, labels, placeholders, validation ──
       pickerTitle:      'Book a Ride',
       pickerSubPfx:     'Professional driver · ',
@@ -155,6 +156,7 @@ window.RideIntake = (function () {
       bookingPendingReviewTitle: 'Đã Nhận Đặt Xe',
       bookingPendingReviewMsg: 'Đặt xe của bạn đang chờ nhà cung cấp xác nhận.<br>Chúng tôi sẽ liên hệ với thông tin cuối cùng.',
       closeBtn:     'Đóng',
+      backToTrip:   '← Quay lại chuyến đi',
       // ── Picker, labels, placeholders, validation ──
       pickerTitle:      'Đặt Xe Đưa Đón',
       pickerSubPfx:     'Tài xế chuyên nghiệp · ',
@@ -264,6 +266,7 @@ window.RideIntake = (function () {
       bookingPendingReviewTitle: 'Reserva Recibida',
       bookingPendingReviewMsg: 'Tu reserva está pendiente de confirmación del proveedor.<br>Te contactaremos con los detalles finales.',
       closeBtn:     'Cerrar',
+      backToTrip:   '← Volver a tu viaje',
       // ── Picker, labels, placeholders, validation ──
       pickerTitle:      'Reservar un Viaje',
       pickerSubPfx:     'Conductor profesional · ',
@@ -1757,6 +1760,28 @@ window.RideIntake = (function () {
       var btn = document.getElementById('riSubmit');
       if (btn) { btn.textContent = _T.closeBtn; btn.disabled = false; btn.onclick = close; }
     }
+    // ── Travel Concierge handoff: emit a result + return to the exact trip page ──
+    var h = window._tcRideHandoff;
+    if (h && h.tripId && h.returnUrl) {
+      window._tcRideHandoff = null; // one-shot
+      try {
+        var fromL = (_lastOrigin || h.pickup || ''), toL = (_lastDest || h.dropoff || '');
+        var result = {
+          tripId: h.tripId, legKey: h.legKey || '', legRef: h.legRef || '',
+          bookingId: bookingId, confirmationId: bookingId,
+          status: pendingReview ? 'requested' : 'booked', vendor: 'DuLichCali',
+          mode: h.transportMode || 'dlc_ride', pickup: fromL, dropoff: toL,
+          route: (fromL && toL) ? (fromL + ' → ' + toL) : (h.legRef || ''),
+          priceEstimate: (_quote && _quote.dlcPrice != null) ? ('$' + _quote.dlcPrice) : '', ts: Date.now(),
+        };
+        window.sessionStorage.setItem('dlc_ride_result', JSON.stringify(result));
+      } catch (e) {}
+      // Return the user to the same Travel Concierge trip (the close button also returns).
+      var goBack = function () { try { window.location.href = h.returnUrl; } catch (e) {} };
+      var bt = document.getElementById('riSubmit');
+      if (bt) { bt.textContent = (_T.backToTrip || '← Back to your trip'); bt.onclick = goBack; }
+      window.setTimeout(goBack, 3200);
+    }
   }
 
   function onError() {
@@ -1886,6 +1911,8 @@ window.RideIntake = (function () {
     if (!raw) return;
     try { window.sessionStorage.removeItem('dlc_ride_prefill'); } catch (e) {}
     var draft; try { draft = JSON.parse(raw); } catch (e) { return; }
+    // Remember the Travel Concierge handoff context so onSuccess can emit a result + return.
+    if (draft && draft.source === 'travel_concierge' && draft.tripId) { window._tcRideHandoff = draft; }
     if (draft && window.RideIntake && window.RideIntake.openWithPrefill) {
       try { window.RideIntake.openWithPrefill(draft); } catch (e) {}
     }

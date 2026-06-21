@@ -3003,6 +3003,65 @@ exports.generateTripClipPackage = onCall(
     }
   }
 );
+// ── Phase X Step 5 — Natural-language trip EDIT INTERPRETER ───────────────────
+// Maps a user's plain-language request ("return to OC July 3 by 4 PM, keep Bus Hoang";
+// "skip SeaWorld"; "find another Vietnamese restaurant"; "stay another night") into a
+// STRUCTURED EDIT PLAN over the existing node graph. It returns INTENTS only — which
+// nodes/days to change and how — and NEVER invents new place names, prices, or schedules
+// (a real place comes from the research/replan agents, not from here). The client previews
+// the plan, then applies + scoped-replans (preserving locked nodes).
+function buildInterpretPrompt(lang) {
+  const langName = lang === 'vi' ? 'Vietnamese' : (lang === 'es' ? 'Spanish' : 'English');
+  return [
+    'You are the edit interpreter for an AI travel concierge. You are given the trip\'s NODE GRAPH (each node: name, type(activity|meal|stay|transport), day (1-based), locked) and a user REQUEST in natural language. Output a STRUCTURED EDIT PLAN of operations over those nodes. You do the parsing/reasoning; you do NOT invent places, prices, times, or schedules.',
+    'ALLOWED ops: "skip" (remove an existing node — reference it by its exact node name), "lock" / "unlock" (an existing node), "replace" (swap an existing node for a same-kind alternative — name the node to replace + optionally a cuisine/category hint; do NOT name the replacement, the research agent finds it), "add" (add something — if the user named a REAL specific place use it as "name", else give "category"/"cuisine" only), "retime" (change a node/day timing — give "time"), "replan_day" (regenerate a day around locked items — for vague "make day 2 better / find another X on day 2"), "stay_extra_night" / "leave_earlier" / "change_return" (structural date/return change — give the day + a short note; the app handles the date logic).',
+    'RULES: Reference existing items by their EXACT node name from the graph (so the app can find them). Respect locked nodes — if the user\'s change would touch a locked node, keep it and note it. Compute "affectedDays" = the 1-based day numbers that actually change (keep it minimal — do NOT include unaffected days). NEVER fabricate a restaurant/hotel/attraction name the user didn\'t say, and NEVER invent prices/times/schedules. If the request is unclear or out of scope, return ops:[] with a short clarifying "summary".',
+    'Return ONLY valid JSON (no markdown): { "summary"(one short sentence describing what will change, in the user\'s language), "affectedDays":[ints], "ops":[ { "op","targetName"(existing node name or ""),"day"(1-based or null),"slot"(morning|lunch|afternoon|dinner|evening or ""),"name"(only if the user named a real place, else ""),"category"(activity|meal|stay or ""),"cuisine"(if relevant, else ""),"time"(if relevant, else ""),"note"(one short phrase),"why"(one short phrase) } ] }',
+    'Write "summary"/"note"/"why" in ' + langName + '. Output ONE compact valid JSON object only.',
+  ].join('\n');
+}
+exports.interpretTripCommand = onCall(
+  { region: 'us-central1', secrets: [CLAUDE_API_KEY], timeoutSeconds: 30, memory: '256MiB', cors: true },
+  async (request) => {
+    const data = request.data || {};
+    const lang = (data.lang === 'vi' || data.lang === 'es') ? data.lang : 'en';
+    const utterance = String(data.utterance || '').trim().slice(0, 400);
+    if (!utterance) return { ok: false, debugCode: 'NO_UTTERANCE' };
+    const graph = (Array.isArray(data.graph) ? data.graph : []).slice(0, 80).map((n) => ({
+      name: String((n && n.name) || '').slice(0, 80), type: String((n && n.type) || '').slice(0, 16),
+      day: (n && n.day != null) ? (parseInt(n.day, 10) + 1) : null, locked: !!(n && n.locked),
+    })).filter((n) => n.name);
+    if (!graph.length) return { ok: false, debugCode: 'NO_GRAPH' };
+    const claudeKey = await getAiKey('claude');
+    if (!claudeKey) return { ok: false, debugCode: 'NO_CLAUDE_KEY' };
+    const userContent = 'Interpret this edit. Input JSON:\n' + JSON.stringify({ dateRange: data.dateRange || '', nodes: graph, request: utterance });
+    try {
+      const text = await serverCallClaude(buildInterpretPrompt(lang), [{ role: 'user', content: userContent }], true, claudeKey, 1400, 'claude-haiku-4-5-20251001');
+      let raw = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
+      const s = raw.indexOf('{'); const e = raw.lastIndexOf('}');
+      if (s > 0 || e > 0) raw = raw.slice(s, e + 1);
+      const parsed = tripSalvageJson(raw);
+      if (!parsed || typeof parsed !== 'object') { console.error('[interpretTripCommand] unparseable, len=' + raw.length); return { ok: false, debugCode: 'INTERPRET_ERROR' }; }
+      const OPS = ['skip', 'delete', 'lock', 'unlock', 'replace', 'add', 'retime', 'replan_day', 'stay_extra_night', 'leave_earlier', 'change_return'];
+      const clamp = (x, n) => String(x == null ? '' : x).slice(0, n);
+      const ops = (Array.isArray(parsed.ops) ? parsed.ops : []).slice(0, 12).map((o) => {
+        o = o || {};
+        return {
+          op: OPS.indexOf(String(o.op)) >= 0 ? o.op : '',
+          targetName: clamp(o.targetName, 80), day: (o.day === '' || o.day == null) ? null : (parseInt(o.day, 10) || null),
+          slot: ['morning', 'lunch', 'afternoon', 'dinner', 'evening'].indexOf(String(o.slot)) >= 0 ? o.slot : '',
+          name: clamp(o.name, 80), category: ['activity', 'meal', 'stay'].indexOf(String(o.category)) >= 0 ? o.category : '',
+          cuisine: clamp(o.cuisine, 40), time: clamp(o.time, 24), note: clamp(o.note, 120), why: clamp(o.why, 140),
+        };
+      }).filter((o) => o.op);
+      const affectedDays = (Array.isArray(parsed.affectedDays) ? parsed.affectedDays : []).map((x) => parseInt(x, 10)).filter((x) => x > 0).slice(0, 30);
+      return { ok: true, summary: clamp(parsed.summary, 200), affectedDays: affectedDays, ops: ops, dataSource: 'ai_interpreted_intent' };
+    } catch (e2) {
+      console.error('[interpretTripCommand] failed', e2 && e2.message);
+      return { ok: false, debugCode: 'INTERPRET_ERROR' };
+    }
+  }
+);
 // ── Experience Optimizer Agent — "How can this trip be better?" ──────────────
 // Suggests CONCRETE improvements toward a goal (general/discoveries/lower_cost/kids/food),
 // reasoning over weather, current events, group makeup, budget, route, crowds, hours, votes,

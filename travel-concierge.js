@@ -63,11 +63,13 @@
       moreOptional: 'More details (optional)', moreOptionalHint: 'AI uses smart defaults — Moderate budget, balanced pace. Change these anytime.',
       // Immersive hero showcase — floating "AI discovers…" chips
       heroShowcaseLead: 'AI discovers…', disc_attractions: 'Attractions', disc_beaches: 'Beaches', disc_restaurants: 'Restaurants', disc_gems: 'Hidden gems', disc_events: 'Local events', disc_themeparks: 'Theme parks', disc_hotels: 'Hotels', disc_transport: 'Transport options', disc_voting: 'Group voting', disc_livemap: 'Live maps', disc_clips: 'AI clips',
+      disc_sealife: 'Wildlife & sea lions', disc_nature: 'Nature & parks', disc_nightlife: 'Nightlife & shows', disc_icons: 'Iconic sights', discoverTitle: 'AI discovers your trip', discoverSub: 'Real places, real experiences — surfaced for your group.',
       // Capability card examples (animated preview)
       cap_family_ex: 'e.g. balances Disneyland for the 6-year-olds with a teen-friendly kayak tour', cap_experiences_ex: 'e.g. a harbor cruise the whole family remembers', cap_discover_ex: 'e.g. a Little Saigon phở spot you’d never find alone', cap_transport_ex: 'e.g. Hoàng Bus + a DuLichCali ride beats a 7-hour drive', cap_stay_ex: 'e.g. a family suite near the beach vs. by the parks', cap_vote_ex: 'e.g. the group skips the museum, so AI swaps in the zoo', cap_optimize_ex: 'e.g. “make it cheaper” trims $300 without losing the highlights', cap_live_ex: 'e.g. everyone sees who has arrived at the hotel', cap_album_ex: 'e.g. a ready-to-post recap reel of the trip', cap_costs_ex: 'e.g. each family sees their share, by category',
       // Popular destination showcase
       showcaseTitle: 'Popular trips to plan', showcaseSub: 'Tap one and the AI researches the real trip for your group — these are just ideas, nothing is forced.', bestForLabel: 'Best for', planThisTrip: 'Plan this trip', showcaseNote: 'Examples only — the AI plans every trip fresh from who’s traveling, when, and what you enjoy.',
       dest_sandiego_best: 'Families, beaches & animals', dest_oc_best: 'Theme parks & Little Saigon food', dest_sf_best: 'Icons, bay views & culture', dest_vegas_best: 'Shows, the Strip & day trips', dest_la_best: 'Movies, stars & the coast', dest_yosemite_best: 'Nature, hikes & big views',
+      ctaBandTitle: 'Your next trip, designed by AI', ctaBandSub: 'Tell us who, where and what you love — get a shared, bookable plan in about a minute.',
       // Create
       createTitle: 'Create your group trip', groupName: 'Trip / group name', destination: 'Destination',
       dates: 'Travel dates', departureCity: 'Main departure area', numFamilies: 'How many families / groups?',
@@ -96,6 +98,10 @@
       // Generating / plan
       generating: 'Designing your group trip…', genFail: 'AI is busy — here is a sample plan you can edit.',
       tab_itinerary: 'Itinerary', tab_arrival: 'Family Arrival Plan', tab_group: 'Group',
+      tab_journey: 'Journey', journeyTitle: 'Your journey', journeySub: 'Every stop, stay and ride as a node. Lock what you love 🔒 — the AI only replans around it.', jnNoPlan: 'Generate the trip first — your journey timeline appears here.', jnLock: 'Lock', jnUnlock: 'Unlock', jnLocked: 'Locked', jnImprove: 'Improve around this', jnImproving: 'Replanning this day (keeping locked items)…', jnAddAfter: 'Add after', jnReplanDay: 'Replan this day', jnReplanKeep: 'keeps 🔒 locked', jnReplanned: 'Day replanned — locked items kept', jnTransportNode: 'Transport', jnViewTransport: 'Compare transport', jnNodeMenu: 'Options', jnAddPh: 'Add a place / activity', jnAdd: 'Add',
+      cmdPh: 'Tell the concierge what to change…', cmdGo: 'Ask AI', cmdBusy: 'Understanding your request…', cmdPlanTitle: 'Here’s what I’ll change', cmdNone: 'I couldn’t turn that into an edit — try rephrasing (e.g. “skip the zoo”, “add Disneyland day 2”, “find another Vietnamese dinner”).', cmdFail: 'Couldn’t interpret that right now — try again.', cmdDays: 'Replans day {d}', cmdApply: 'Apply changes', cmdApplied: 'Trip updated', cmdCancel: 'Cancel',
+      cmdop_skip: 'Skip', cmdop_delete: 'Remove', cmdop_lock: 'Lock', cmdop_unlock: 'Unlock', cmdop_replace: 'Replace', cmdop_add: 'Add', cmdop_retime: 'Re-time', cmdop_replan_day: 'Replan', cmdop_stay_extra_night: 'Stay an extra night', cmdop_leave_earlier: 'Leave earlier', cmdop_change_return: 'Change return',
+      rideBookingTitle: 'DuLichCali ride', rideBookedToast: 'Ride booked and added to your trip', rideRequestedToast: 'Ride requested — pending confirmation', rideNotCompleted: 'Ride booking not completed — nothing was added. You can try again.', rideBookedNote: 'DuLichCali ride booked', rideRequestedNote: 'DuLichCali ride requested',
       groupTravelersTitle: 'Who\'s travelling', travelersAdults: 'adults', travelersEdit: 'Edit travelers',
       summary: 'Trip summary', assumptions: 'Assumptions', warnings: 'Good to know',
       costRange: 'Estimated cost', meetup: 'Meetup', regenDay: 'Regenerate day',
@@ -315,11 +321,13 @@
       moreOptional: 'Thêm chi tiết (tùy chọn)', moreOptionalHint: 'AI dùng mặc định thông minh — ngân sách Vừa, nhịp độ cân bằng. Thay đổi bất cứ lúc nào.',
       // Immersive hero showcase
       heroShowcaseLead: 'AI khám phá…', disc_attractions: 'Điểm tham quan', disc_beaches: 'Bãi biển', disc_restaurants: 'Nhà hàng', disc_gems: 'Điểm độc đáo', disc_events: 'Sự kiện địa phương', disc_themeparks: 'Công viên giải trí', disc_hotels: 'Khách sạn', disc_transport: 'Lựa chọn di chuyển', disc_voting: 'Bình chọn nhóm', disc_livemap: 'Bản đồ trực tiếp', disc_clips: 'Clip AI',
+      disc_sealife: 'Động vật & sư tử biển', disc_nature: 'Thiên nhiên & công viên', disc_nightlife: 'Về đêm & biểu diễn', disc_icons: 'Cảnh biểu tượng', discoverTitle: 'AI khám phá chuyến đi của bạn', discoverSub: 'Địa điểm thật, trải nghiệm thật — chọn riêng cho nhóm bạn.',
       // Capability card examples
       cap_family_ex: 'vd: cân bằng Disneyland cho bé 6 tuổi với tour chèo thuyền hợp tuổi teen', cap_experiences_ex: 'vd: một chuyến du thuyền cả nhà đều nhớ mãi', cap_discover_ex: 'vd: quán phở Little Saigon mà tự bạn khó tìm', cap_transport_ex: 'vd: Xe Đò Hoàng + xe Du Lịch Cali tốt hơn lái 7 tiếng', cap_stay_ex: 'vd: phòng gia đình gần biển hay gần công viên', cap_vote_ex: 'vd: nhóm bỏ qua bảo tàng, AI thay bằng sở thú', cap_optimize_ex: 'vd: “rẻ hơn” giảm $300 mà không mất điểm nổi bật', cap_live_ex: 'vd: mọi người thấy ai đã đến khách sạn', cap_album_ex: 'vd: clip tóm tắt chuyến đi sẵn sàng đăng', cap_costs_ex: 'vd: mỗi gia đình thấy phần của mình theo hạng mục',
       // Popular destination showcase
       showcaseTitle: 'Chuyến đi phổ biến để lên kế hoạch', showcaseSub: 'Chạm một cái và AI nghiên cứu chuyến đi thật cho nhóm bạn — đây chỉ là gợi ý, không ép buộc gì.', bestForLabel: 'Hợp với', planThisTrip: 'Lên kế hoạch chuyến này', showcaseNote: 'Chỉ là ví dụ — AI lên kế hoạch mỗi chuyến đi mới từ ai cùng đi, khi nào và bạn thích gì.',
       dest_sandiego_best: 'Gia đình, bãi biển & động vật', dest_oc_best: 'Công viên giải trí & ẩm thực Little Saigon', dest_sf_best: 'Biểu tượng, cảnh vịnh & văn hóa', dest_vegas_best: 'Biểu diễn, Đại lộ & chuyến đi trong ngày', dest_la_best: 'Phim ảnh, ngôi sao & bờ biển', dest_yosemite_best: 'Thiên nhiên, leo núi & cảnh hùng vĩ',
+      ctaBandTitle: 'Chuyến đi tiếp theo, do AI thiết kế', ctaBandSub: 'Cho biết ai, ở đâu và bạn thích gì — nhận kế hoạch chung, đặt được, trong khoảng một phút.',
       createTitle: 'Tạo chuyến đi nhóm', groupName: 'Tên chuyến đi / nhóm', destination: 'Điểm đến',
       dates: 'Ngày đi', departureCity: 'Khu vực khởi hành chính', numFamilies: 'Bao nhiêu gia đình / nhóm?',
       tripStyle: 'Nhịp độ', budget: 'Ngân sách tổng', createBtn: 'Tiếp: thêm gia đình',
@@ -343,6 +351,10 @@
       backupPlans: 'Gồm phương án dự phòng', generate: 'Tạo kế hoạch bằng AI',
       generating: 'Đang thiết kế chuyến đi nhóm…', genFail: 'AI đang bận — đây là kế hoạch mẫu bạn có thể chỉnh.',
       tab_itinerary: 'Lịch trình', tab_arrival: 'Kế Hoạch Đến Nơi', tab_group: 'Nhóm',
+      tab_journey: 'Hành trình', journeyTitle: 'Hành trình của bạn', journeySub: 'Mỗi điểm dừng, nơi ở và chuyến xe là một nút. Khóa thứ bạn thích 🔒 — AI chỉ tối ưu xung quanh.', jnNoPlan: 'Hãy tạo chuyến đi trước — dòng thời gian hành trình sẽ hiện ở đây.', jnLock: 'Khóa', jnUnlock: 'Mở khóa', jnLocked: 'Đã khóa', jnImprove: 'Cải thiện quanh mục này', jnImproving: 'Đang lên lại ngày này (giữ mục đã khóa)…', jnAddAfter: 'Thêm sau', jnReplanDay: 'Lên lại ngày này', jnReplanKeep: 'giữ 🔒 đã khóa', jnReplanned: 'Đã lên lại ngày — giữ mục đã khóa', jnTransportNode: 'Di chuyển', jnViewTransport: 'So sánh di chuyển', jnNodeMenu: 'Tùy chọn', jnAddPh: 'Thêm địa điểm / hoạt động', jnAdd: 'Thêm',
+      cmdPh: 'Nói cho trợ lý biết bạn muốn đổi gì…', cmdGo: 'Hỏi AI', cmdBusy: 'Đang hiểu yêu cầu của bạn…', cmdPlanTitle: 'Đây là những thay đổi tôi sẽ làm', cmdNone: 'Tôi chưa chuyển được thành chỉnh sửa — hãy thử diễn đạt lại (vd: “bỏ sở thú”, “thêm Disneyland ngày 2”, “tìm bữa tối Việt khác”).', cmdFail: 'Hiện chưa hiểu được — vui lòng thử lại.', cmdDays: 'Lên lại ngày {d}', cmdApply: 'Áp dụng thay đổi', cmdApplied: 'Đã cập nhật chuyến đi', cmdCancel: 'Hủy',
+      cmdop_skip: 'Bỏ qua', cmdop_delete: 'Xóa', cmdop_lock: 'Khóa', cmdop_unlock: 'Mở khóa', cmdop_replace: 'Thay thế', cmdop_add: 'Thêm', cmdop_retime: 'Đổi giờ', cmdop_replan_day: 'Lên lại', cmdop_stay_extra_night: 'Ở thêm một đêm', cmdop_leave_earlier: 'Về sớm hơn', cmdop_change_return: 'Đổi chuyến về',
+      rideBookingTitle: 'Xe Du Lịch Cali', rideBookedToast: 'Đã đặt xe và thêm vào chuyến đi', rideRequestedToast: 'Đã yêu cầu xe — chờ xác nhận', rideNotCompleted: 'Chưa hoàn tất đặt xe — không có gì được thêm. Bạn có thể thử lại.', rideBookedNote: 'Đã đặt xe Du Lịch Cali', rideRequestedNote: 'Đã yêu cầu xe Du Lịch Cali',
       groupTravelersTitle: 'Ai cùng đi', travelersAdults: 'người lớn', travelersEdit: 'Sửa người đi',
       summary: 'Tóm tắt chuyến đi', assumptions: 'Giả định', warnings: 'Cần lưu ý',
       costRange: 'Chi phí ước tính', meetup: 'Điểm hẹn', regenDay: 'Tạo lại ngày',
@@ -557,11 +569,13 @@
       moreOptional: 'Más detalles (opcional)', moreOptionalHint: 'La IA usa valores predeterminados inteligentes — presupuesto Moderado, ritmo equilibrado. Cámbialos cuando quieras.',
       // Immersive hero showcase
       heroShowcaseLead: 'La IA descubre…', disc_attractions: 'Atracciones', disc_beaches: 'Playas', disc_restaurants: 'Restaurantes', disc_gems: 'Joyas ocultas', disc_events: 'Eventos locales', disc_themeparks: 'Parques temáticos', disc_hotels: 'Hoteles', disc_transport: 'Opciones de transporte', disc_voting: 'Votación grupal', disc_livemap: 'Mapas en vivo', disc_clips: 'Clips IA',
+      disc_sealife: 'Fauna y lobos marinos', disc_nature: 'Naturaleza y parques', disc_nightlife: 'Vida nocturna y shows', disc_icons: 'Lugares icónicos', discoverTitle: 'La IA descubre tu viaje', discoverSub: 'Lugares reales, experiencias reales — para tu grupo.',
       // Capability card examples
       cap_family_ex: 'ej. equilibra Disneyland para los de 6 años con un tour en kayak para adolescentes', cap_experiences_ex: 'ej. un crucero por la bahía que toda la familia recuerda', cap_discover_ex: 'ej. un sitio de phở en Little Saigon que no hallarías solo', cap_transport_ex: 'ej. Hoàng Bus + un viaje DuLichCali gana a 7 horas de auto', cap_stay_ex: 'ej. una suite familiar cerca de la playa o de los parques', cap_vote_ex: 'ej. el grupo omite el museo y la IA pone el zoológico', cap_optimize_ex: 'ej. “más barato” recorta $300 sin perder lo mejor', cap_live_ex: 'ej. todos ven quién llegó al hotel', cap_album_ex: 'ej. un reel resumen del viaje listo para publicar', cap_costs_ex: 'ej. cada familia ve su parte, por categoría',
       // Popular destination showcase
       showcaseTitle: 'Viajes populares para planear', showcaseSub: 'Toca uno y la IA investiga el viaje real para tu grupo — son solo ideas, nada se impone.', bestForLabel: 'Ideal para', planThisTrip: 'Planear este viaje', showcaseNote: 'Solo ejemplos — la IA planea cada viaje desde cero según quién viaja, cuándo y qué disfrutan.',
       dest_sandiego_best: 'Familias, playas y animales', dest_oc_best: 'Parques temáticos y comida de Little Saigon', dest_sf_best: 'Íconos, vistas de la bahía y cultura', dest_vegas_best: 'Espectáculos, el Strip y excursiones', dest_la_best: 'Cine, estrellas y la costa', dest_yosemite_best: 'Naturaleza, senderos y grandes vistas',
+      ctaBandTitle: 'Tu próximo viaje, diseñado por IA', ctaBandSub: 'Dinos quién, dónde y qué te encanta — recibe un plan compartido y reservable en aproximadamente un minuto.',
       createTitle: 'Crea tu viaje grupal', groupName: 'Nombre del viaje / grupo', destination: 'Destino',
       dates: 'Fechas de viaje', departureCity: 'Zona principal de salida', numFamilies: '¿Cuántas familias / grupos?',
       tripStyle: 'Ritmo del viaje', budget: 'Presupuesto general', createBtn: 'Siguiente: añadir familias',
@@ -585,6 +599,10 @@
       backupPlans: 'Incluir planes de respaldo', generate: 'Generar plan con AI',
       generating: 'Diseñando tu viaje grupal…', genFail: 'La AI está ocupada — aquí tienes un plan de muestra editable.',
       tab_itinerary: 'Itinerario', tab_arrival: 'Plan de Llegada', tab_group: 'Grupo',
+      tab_journey: 'Recorrido', journeyTitle: 'Tu recorrido', journeySub: 'Cada parada, alojamiento y viaje como un nodo. Bloquea lo que te gusta 🔒 — la IA solo replanifica alrededor.', jnNoPlan: 'Genera el viaje primero — tu línea de tiempo aparecerá aquí.', jnLock: 'Bloquear', jnUnlock: 'Desbloquear', jnLocked: 'Bloqueado', jnImprove: 'Mejorar alrededor de esto', jnImproving: 'Replanificando este día (manteniendo lo bloqueado)…', jnAddAfter: 'Agregar después', jnReplanDay: 'Replanificar este día', jnReplanKeep: 'mantiene 🔒 bloqueado', jnReplanned: 'Día replanificado — se mantuvo lo bloqueado', jnTransportNode: 'Transporte', jnViewTransport: 'Comparar transporte', jnNodeMenu: 'Opciones', jnAddPh: 'Agregar un lugar / actividad', jnAdd: 'Agregar',
+      cmdPh: 'Dile al concierge qué cambiar…', cmdGo: 'Preguntar a la IA', cmdBusy: 'Entendiendo tu solicitud…', cmdPlanTitle: 'Esto es lo que cambiaré', cmdNone: 'No pude convertirlo en una edición — reformula (ej. “omite el zoológico”, “agrega Disneyland día 2”, “busca otra cena vietnamita”).', cmdFail: 'No se pudo interpretar ahora — inténtalo de nuevo.', cmdDays: 'Replanifica el día {d}', cmdApply: 'Aplicar cambios', cmdApplied: 'Viaje actualizado', cmdCancel: 'Cancelar',
+      cmdop_skip: 'Omitir', cmdop_delete: 'Quitar', cmdop_lock: 'Bloquear', cmdop_unlock: 'Desbloquear', cmdop_replace: 'Reemplazar', cmdop_add: 'Agregar', cmdop_retime: 'Reprogramar', cmdop_replan_day: 'Replanificar', cmdop_stay_extra_night: 'Quedarse otra noche', cmdop_leave_earlier: 'Salir antes', cmdop_change_return: 'Cambiar regreso',
+      rideBookingTitle: 'Viaje DuLichCali', rideBookedToast: 'Viaje reservado y agregado a tu trip', rideRequestedToast: 'Viaje solicitado — pendiente de confirmación', rideNotCompleted: 'Reserva de viaje no completada — no se agregó nada. Puedes intentarlo de nuevo.', rideBookedNote: 'Viaje DuLichCali reservado', rideRequestedNote: 'Viaje DuLichCali solicitado',
       groupTravelersTitle: 'Quiénes viajan', travelersAdults: 'adultos', travelersEdit: 'Editar viajeros',
       summary: 'Resumen del viaje', assumptions: 'Supuestos', warnings: 'Bueno saber',
       costRange: 'Costo estimado', meetup: 'Punto de encuentro', regenDay: 'Regenerar día',
@@ -803,7 +821,7 @@
     readonly: false, generating: false, user: null, authMode: 'login',
     _pendingTripId: null, _afterLogin: null,
     myRole: null, _shareToken: null, _shareInfo: null, _members: null, _myTrips: null, _joinedTrips: null, _contacts: null, _sharePreview: null, _cResearch: null, _altOpen: null, _alts: null, _photosUnavailable: false,
-    _media: null, _mediaLoadedFor: null, _addMediaOpen: false, _clip: null, _clipConsent: false, _clipPlatform: 'tiktok', _clipMood: 'fun', _clipLen: 'short', _liveMapTried: null, _createMoreOpen: false, _stratLoading: false, _stratLoadedFor: null, _stratModesOpen: false,
+    _media: null, _mediaLoadedFor: null, _addMediaOpen: false, _clip: null, _clipConsent: false, _clipPlatform: 'tiktok', _clipMood: 'fun', _clipLen: 'short', _liveMapTried: null, _createMoreOpen: false, _stratLoading: false, _stratLoadedFor: null, _stratModesOpen: false, _replanBusy: null, _cmdBusy: false, _editPlan: null,
     _cardMenu: null, _replanDay: null, _regenDay: null, _addOpen: null, _why: null, _tpOpen: null,
     _routeTriedTrip: null, _tpRouteTriedTrip: null,
     _liveShare: null, _liveLocations: null, _liveSubFor: null, _liveUnsub: null, _liveExpiryTimer: null, _liveLastCoords: null, _liveManual: false,
@@ -2075,12 +2093,20 @@
   }
   function destinationCard(d, i) {
     var card = el('article', 'tc-dcard tc-cap--in'); card.style.animationDelay = (i * 0.05) + 's';
-    var tile = el('div', 'tc-dcard__tile'); tile.style.background = 'linear-gradient(135deg, ' + d.accent + '33, ' + d.accent + '11), radial-gradient(120% 120% at 80% 0%, ' + d.accent + '44, transparent 60%)';
+    card.style.setProperty('--acc', d.accent);
+    // Travel-card "scene" tile: decorative mesh gradient (CSS, via --acc) + emoji montage +
+    // bottom scrim + destination name over it. NO photo — clearly a decorative graphic.
+    var tile = el('div', 'tc-dcard__tile');
+    tile.appendChild(el('span', 'tc-dcard__glow'));
     tile.appendChild(el('span', 'tc-dcard__icons', d.icons));
+    tile.appendChild(el('span', 'tc-dcard__scrim'));
     tile.appendChild(el('span', 'tc-dcard__name', d.name));
     card.appendChild(tile);
     var body = el('div', 'tc-dcard__body');
-    body.appendChild(el('span', 'tc-dcard__best', '⭐ ' + t('bestForLabel') + ': ' + t('dest_' + d.key + '_best')));
+    var best = el('span', 'tc-dcard__best');
+    best.appendChild(el('span', 'tc-dcard__best-k', t('bestForLabel')));
+    best.appendChild(doc.createTextNode(' ' + t('dest_' + d.key + '_best')));
+    body.appendChild(best);
     var chips = el('div', 'tc-dcard__exp'); d.exp.forEach(function (x) { chips.appendChild(el('span', 'tc-dcard__chip', x)); }); body.appendChild(chips);
     var btn = el('button', 'tc-dcard__cta', t('planThisTrip') + ' →'); btn.type = 'button';
     btn.addEventListener('click', function () { planLandingDestination(d.name); });
@@ -2090,11 +2116,12 @@
   }
   function destinationShowcase() {
     var sec = el('section', 'tc-dshow');
-    sec.appendChild(el('strong', 'tc-dshow__t', '🗺 ' + t('showcaseTitle')));
+    sec.appendChild(el('strong', 'tc-dshow__t', t('showcaseTitle')));
     sec.appendChild(el('p', 'tc-dshow__sub', t('showcaseSub')));
-    var grid = el('div', 'tc-dshow__grid');
-    LANDING_DESTS.forEach(function (d, i) { grid.appendChild(destinationCard(d, i)); });
-    sec.appendChild(grid);
+    // Full-width alternating "story" panels (magazine layout) — not a grid of small cards.
+    var stories = el('div', 'tc-dshow__stories');
+    LANDING_DESTS.forEach(function (d, i) { stories.appendChild(destinationStoryBand(d, i)); });
+    sec.appendChild(stories);
     sec.appendChild(el('p', 'tc-dshow__note', '🔎 ' + t('showcaseNote')));
     return sec;
   }
@@ -2111,22 +2138,158 @@
     sec.appendChild(el('p', 'tc-trust__note', t('trustNote')));
     return sec;
   }
+  // Premium closing CTA band — aurora panel + display headline + the gold CTA.
+  function finalCtaBand() {
+    var band = el('section', 'tc-finalcta');
+    band.appendChild(el('div', 'tc-finalcta__aurora'));
+    var inner = el('div', 'tc-finalcta__inner');
+    inner.appendChild(el('strong', 'tc-finalcta__t', t('ctaBandTitle')));
+    inner.appendChild(el('p', 'tc-finalcta__sub', t('ctaBandSub')));
+    inner.appendChild(heroCtaBtn());
+    band.appendChild(inner);
+    return band;
+  }
+  // ── Cinematic landing (magazine / travel-brochure feel) — decorative SVG scenes only
+  // (NO fake photos): a full-bleed California sunset-coast hero + alternating full-width
+  // destination "story" panels. All art is clearly decorative; motion respects reduced-motion. ──
+  function prefersReducedMotion() { try { return !!(root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) { return false; } }
+  function palmSvg(x, y, s) {
+    s = s || 1;
+    return '<g transform="translate(' + x + ' ' + y + ') scale(' + s + ')" stroke="#0a1626" stroke-width="7" fill="none" stroke-linecap="round">'
+      + '<path d="M0 0 q -5 -80 7 -132"/>'
+      + '<g stroke-width="6"><path d="M7 -132 q -54 -12 -92 7"/><path d="M7 -132 q 54 -12 92 7"/><path d="M7 -132 q -40 -38 -70 -58"/><path d="M7 -132 q 40 -38 70 -58"/><path d="M7 -132 q 0 -44 3 -70"/></g></g>';
+  }
+  // Full-bleed hero backdrop: layered sunset coast. `anim` adds the AI route traveler (SMIL).
+  function caHeroScene(anim) {
+    var route = 'M120 880 C 380 760, 560 720, 800 640 S 1040 520, 1040 430';
+    var traveler = anim ? ('<circle r="8" fill="#fff"><animateMotion dur="7s" repeatCount="indefinite" path="' + route + '"/></circle>') : '';
+    return '<svg class="tc-cine__svg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">'
+      + '<defs>'
+      + '<linearGradient id="cineSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#07182f"/><stop offset="0.42" stop-color="#21487c"/><stop offset="0.7" stop-color="#d2774d"/><stop offset="0.88" stop-color="#f2b15f"/><stop offset="1" stop-color="#ffdc93"/></linearGradient>'
+      + '<radialGradient id="cineSun" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff6e0"/><stop offset="0.35" stop-color="#ffd687" stop-opacity="0.95"/><stop offset="1" stop-color="#ffbf63" stop-opacity="0"/></radialGradient>'
+      + '<linearGradient id="cineSea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6bd76"/><stop offset="0.45" stop-color="#9a7ba6"/><stop offset="1" stop-color="#243a5e"/></linearGradient>'
+      + '</defs>'
+      + '<rect width="1440" height="900" fill="url(#cineSky)"/>'
+      + '<g class="tc-cine__sun"><circle cx="1040" cy="430" r="250" fill="url(#cineSun)"/><circle cx="1040" cy="430" r="74" fill="#fff1cf"/></g>'
+      + '<rect y="470" width="1440" height="220" fill="url(#cineSea)" opacity="0.92"/>'
+      + '<g stroke="#ffe6b8" stroke-opacity="0.28" stroke-width="3" stroke-linecap="round"><line x1="950" y1="525" x2="1130" y2="525"/><line x1="985" y1="570" x2="1095" y2="570"/><line x1="1005" y1="615" x2="1075" y2="615"/></g>'
+      + '<path class="tc-cine__hill" d="M0 560 C 240 500, 520 545, 760 525 S 1180 505, 1440 545 L1440 900 L0 900 Z" fill="#143560"/>'
+      + '<path class="tc-cine__hill" d="M0 670 C 300 605, 600 655, 900 645 S 1280 655, 1440 668 L1440 900 L0 900 Z" fill="#0b2143"/>'
+      + palmSvg(170, 700, 1.05) + palmSvg(1290, 720, 0.85)
+      + '<path class="tc-cine__route" d="' + route + '" fill="none" stroke="#ffe2a6" stroke-width="4" stroke-dasharray="2 16" stroke-linecap="round" opacity="0.9"/>'
+      + traveler
+      + '</svg>';
+  }
+  var TC_IMG = '/assets/travel-concierge/';
+  // Real, licensed California photos (Wikimedia Commons — see assets/travel-concierge/CREDITS.md).
+  var HERO_PHOTOS = ['hero-coast.jpg', 'hero-goldengate.jpg'];
+  function heroCinematic(loggedIn) {
+    var hero = el('section', 'tc-cine');
+    // Rotating real-photo background (crossfade + slow Ken-Burns), with a gradient poster as the
+    // instant paint + fallback. First photo loads eager (LCP); the rest are decorative.
+    var bg = el('div', 'tc-cine__bg'); bg.setAttribute('aria-hidden', 'true');
+    HERO_PHOTOS.forEach(function (src, i) {
+      var layer = el('div', 'tc-cine__photo' + (i === 0 ? ' is-first' : ''));
+      layer.style.backgroundImage = "url('" + TC_IMG + src + "')";
+      bg.appendChild(layer);
+    });
+    hero.appendChild(bg);
+    hero.appendChild(el('div', 'tc-cine__scrim'));
+    // Floating decorative "AI picks" cards over the visual.
+    var floats = el('div', 'tc-cine__floats'); floats.setAttribute('aria-hidden', 'true');
+    [['🏖️', 'disc_beaches'], ['🎢', 'disc_themeparks'], ['🍜', 'disc_restaurants']].forEach(function (c, i) {
+      var f = el('div', 'tc-cine__float tc-cine__float--' + (i + 1));
+      f.appendChild(el('span', 'tc-cine__float-tag', '✨ ' + t('heroShowcaseLead')));
+      f.appendChild(el('span', 'tc-cine__float-txt', c[0] + ' ' + t(c[1])));
+      floats.appendChild(f);
+    });
+    hero.appendChild(floats);
+    var inner = el('div', 'tc-cine__inner');
+    inner.appendChild(el('span', 'tc-hero__chip', '✦ ' + t('heroChip')));
+    inner.appendChild(el('h1', 'tc-hero__title', t('heroTitle')));
+    inner.appendChild(el('p', 'tc-hero__sub', t('heroSub')));
+    inner.appendChild(heroCtaBtn());
+    if (!loggedIn) inner.appendChild(el('p', 'tc-hero__free', t('heroFreeNote')));
+    var chips = el('div', 'tc-cine__chips');
+    ['disc_beaches', 'disc_themeparks', 'disc_gems', 'disc_restaurants', 'disc_hotels', 'tm_hoang_bus', 'tm_dlc_ride', 'disc_livemap', 'disc_clips'].forEach(function (k) { chips.appendChild(el('span', 'tc-cine__chip', t(k))); });
+    inner.appendChild(chips);
+    hero.appendChild(inner);
+    return hero;
+  }
+  // Decorative destination scene (clearly an illustration, never a photo). Unique gradient id per
+  // destination so multiple inline SVGs don't share defs. arch ∈ beach/themepark/bridge/hills/mountains/neon.
+  function destScene(arch, acc, key) {
+    var g = 'ds_' + key;
+    var sky = '<defs><linearGradient id="' + g + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a1d38"/><stop offset="0.5" stop-color="' + acc + '" stop-opacity="0.5"/><stop offset="1" stop-color="#f4b86a"/></linearGradient></defs>';
+    var base = '<rect width="600" height="400" fill="url(#' + g + ')"/>';
+    var sun = '<circle cx="455" cy="150" r="135" fill="#ffd98a" opacity="0.45"/><circle cx="455" cy="150" r="52" fill="#fff1cf"/>';
+    var ground = '<rect y="330" width="600" height="70" fill="#0b1f3c"/>';
+    var art;
+    if (arch === 'beach') art = sun + '<rect y="270" width="600" height="130" fill="#274a73" opacity="0.9"/><g stroke="#ffe6b8" stroke-opacity="0.3" stroke-width="3"><line x1="380" y1="300" x2="520" y2="300"/><line x1="410" y1="330" x2="500" y2="330"/></g>' + palmSvg(80, 320, 0.9) + palmSvg(520, 335, 0.7);
+    else if (arch === 'themepark') art = sun + '<g stroke="#0b1f3c" stroke-width="5" fill="none"><circle cx="190" cy="190" r="92"/><circle cx="190" cy="190" r="14" fill="#0b1f3c"/>' + (function () { var sp = ''; for (var a = 0; a < 12; a++) { var r = a * Math.PI / 6; sp += '<line x1="190" y1="190" x2="' + (190 + 92 * Math.cos(r)).toFixed(0) + '" y2="' + (190 + 92 * Math.sin(r)).toFixed(0) + '"/>'; } return sp; })() + '</g>' + '<g fill="#0b1f3c"><path d="M380 330 L380 220 L405 195 L430 220 L430 330 Z"/><path d="M440 330 L440 200 L470 165 L500 200 L500 330 Z"/><path d="M510 330 L510 230 L532 205 L554 230 L554 330 Z"/></g>' + ground;
+    else if (arch === 'bridge') art = '<rect y="250" width="600" height="150" fill="#2a4068" opacity="0.85"/><g stroke="' + acc + '" stroke-width="10" fill="none" stroke-linecap="round"><line x1="170" y1="70" x2="170" y2="330"/><line x1="430" y1="70" x2="430" y2="330"/><path d="M20 250 Q 300 60 580 250"/><path d="M20 300 L580 300"/></g><g stroke="' + acc + '" stroke-width="3" opacity="0.7">' + (function () { var c = ''; for (var x = 60; x <= 560; x += 40) { c += '<line x1="' + x + '" y1="300" x2="' + x + '" y2="' + (250 + Math.abs(x - 300) * 0.55).toFixed(0) + '"/>'; } return c; })() + '</g>';
+    else if (arch === 'hills') art = sun + '<g fill="#fff" opacity="0.8"><circle cx="120" cy="90" r="2.5"/><circle cx="200" cy="60" r="2"/><circle cx="300" cy="100" r="2.5"/><circle cx="380" cy="70" r="2"/><circle cx="90" cy="150" r="2"/></g><path d="M0 300 C 150 240 300 300 600 250 L600 400 L0 400 Z" fill="#13325a"/><path d="M0 340 C 200 300 420 350 600 320 L600 400 L0 400 Z" fill="#0b1f3c"/>' + palmSvg(70, 360, 0.7) + palmSvg(540, 370, 0.6);
+    else if (arch === 'mountains') art = '<g fill="#13325a"><path d="M-20 360 L160 130 L330 360 Z"/><path d="M230 360 L430 160 L600 360 Z"/></g><g fill="#eaf2ff" opacity="0.9"><path d="M120 195 L160 130 L205 195 L175 180 L150 192 Z"/><path d="M390 220 L430 160 L470 220 L445 205 L415 215 Z"/></g><line x1="300" y1="200" x2="300" y2="360" stroke="#bfe3ff" stroke-width="6" opacity="0.7"/><g fill="#0b2a1e"><path d="M70 360 L100 285 L130 360 Z"/><path d="M95 360 L125 300 L155 360 Z"/><path d="M470 360 L500 295 L530 360 Z"/></g>' + ground;
+    else art = '<g>' + (function () { var bars = '', xs = [60, 130, 220, 300, 380, 470, 540], hs = [120, 200, 90, 240, 150, 210, 110]; for (var i = 0; i < xs.length; i++) { bars += '<rect x="' + xs[i] + '" y="' + (360 - hs[i]) + '" width="44" height="' + hs[i] + '" rx="4" fill="#10254a"/>'; bars += '<rect x="' + (xs[i] + 10) + '" y="' + (360 - hs[i] + 14) + '" width="24" height="6" rx="3" fill="' + acc + '"/>'; } return bars; })() + '</g><g fill="' + acc + '" opacity="0.9"><circle cx="455" cy="120" r="6"/><circle cx="120" cy="150" r="5"/><circle cx="300" cy="90" r="5"/></g>' + ground;
+    return '<svg class="tc-story__svg" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">' + sky + base + art + '</svg>';
+  }
+  // key → real licensed destination photo (Wikimedia Commons; CREDITS.md).
+  var DEST_PHOTO = { sandiego: 'sandiego.jpg', oc: 'oc.jpg', sf: 'bayarea.jpg', la: 'la.jpg', yosemite: 'yosemite.jpg', vegas: 'vegas.jpg' };
+  // Full-width alternating destination "story" panel (magazine layout — NOT a small-card grid).
+  function destinationStoryBand(d, i) {
+    var band = el('article', 'tc-story tc-story--' + (i % 2 ? 'right' : 'left'));
+    band.style.setProperty('--acc', d.accent);
+    var media = el('div', 'tc-story__media');
+    var img = el('img', 'tc-story__img'); img.src = TC_IMG + (DEST_PHOTO[d.key] || 'hero-coast.jpg');
+    img.setAttribute('loading', 'lazy'); img.setAttribute('decoding', 'async'); img.setAttribute('alt', d.name);
+    media.appendChild(img);
+    media.appendChild(el('span', 'tc-story__mscrim'));
+    media.appendChild(el('strong', 'tc-story__medianame', d.name));
+    band.appendChild(media);
+    var body = el('div', 'tc-story__body');
+    body.appendChild(el('span', 'tc-story__eyebrow', '✦ ' + t('bestForLabel')));
+    body.appendChild(el('p', 'tc-story__best', t('dest_' + d.key + '_best')));
+    var chips = el('div', 'tc-story__exp'); d.exp.forEach(function (x) { chips.appendChild(el('span', 'tc-story__chip', x)); }); body.appendChild(chips);
+    var btn = el('button', 'tc-story__cta', t('planThisTrip') + ' →'); btn.type = 'button';
+    btn.addEventListener('click', function () { planLandingDestination(d.name); });
+    body.appendChild(btn);
+    band.appendChild(body);
+    return band;
+  }
+  // "AI Discovers" — horizontal real-photo rail (verified licensed CA photos).
+  var DISCOVERS = [
+    ['🌅', 'disc_beaches', 'hero-coast.jpg'], ['🦭', 'disc_sealife', 'sandiego.jpg'], ['🎡', 'disc_themeparks', 'oc.jpg'],
+    ['🌉', 'disc_icons', 'bayarea.jpg'], ['🏔', 'disc_nature', 'yosemite.jpg'], ['🎰', 'disc_nightlife', 'vegas.jpg'],
+  ];
+  function discoversRail() {
+    var sec = el('section', 'tc-disc');
+    var head = el('div', 'tc-disc__head');
+    head.appendChild(el('span', 'tc-eyebrow', '✦ ' + t('heroShowcaseLead')));
+    head.appendChild(el('strong', 'tc-disc__t', t('discoverTitle')));
+    head.appendChild(el('p', 'tc-disc__sub', t('discoverSub')));
+    sec.appendChild(head);
+    var rail = el('div', 'tc-disc__rail');
+    DISCOVERS.forEach(function (c) {
+      var card = el('div', 'tc-disc__card');
+      var img = el('img', 'tc-disc__img'); img.src = TC_IMG + c[2]; img.setAttribute('loading', 'lazy'); img.setAttribute('decoding', 'async'); img.setAttribute('alt', t(c[1]));
+      card.appendChild(img);
+      card.appendChild(el('span', 'tc-disc__lbl', c[0] + ' ' + t(c[1])));
+      rail.appendChild(card);
+    });
+    sec.appendChild(rail);
+    return sec;
+  }
   function renderHero() {
-    var s = el('section', 'tc-hero');
+    var s = el('section', 'tc-hero tc-hero--cine');
     var loggedIn = !!realUser();
     var samples = root.TC_SAMPLES || {};
     var featuredKey = samples.san_diego ? 'san_diego' : Object.keys(samples)[0];
-    // Value proposition leads (login moved to the bottom — the header already has one).
-    s.appendChild(el('span', 'tc-hero__chip', t('heroChip')));
-    s.appendChild(el('h1', 'tc-hero__title', t('heroTitle')));
-    s.appendChild(el('p', 'tc-hero__sub', t('heroSub')));
-    // Immersive visual showcase (CSS/SVG — aurora + route + floating "AI discovers…" chips).
-    s.appendChild(heroShowcase());
-    s.appendChild(heroCtaBtn());
-    // Friction reducer (answers "is it free / do I need an account?") — cold visitors only.
-    if (!loggedIn) s.appendChild(el('p', 'tc-hero__free', t('heroFreeNote')));
-    // Returning users: their trips right under the CTA.
+    // Cinematic full-bleed hero (rotating real CA photos + scrim + headline/CTA/chips).
+    s.appendChild(heroCinematic(loggedIn));
+    // Returning users: their trips right under the hero.
     if (loggedIn) s.appendChild(heroMyTrips());
+    // AI Discovers — real-photo rail.
+    s.appendChild(discoversRail());
     // Differentiator: tell us 3 things → AI does the homework.
     s.appendChild(whoWhereWhatBand());
     // Show the magic: a LIVE preview of a real sample plan (no login to view it in full).
@@ -2149,8 +2312,8 @@
     s.appendChild(howItWorksSection());
     s.appendChild(capabilityCards());
     s.appendChild(trustSection());
-    // Repeat CTA after the full story (cold visitors who scrolled the whole page).
-    s.appendChild(heroCtaBtn());
+    // Premium closing CTA band after the full story.
+    s.appendChild(finalCtaBand());
     // No hero login row: the persistent header account control (tcHeaderAcct) handles login
     // on every screen — a second hero login button was redundant (the "two logins").
     return s;
@@ -2912,7 +3075,7 @@
     // One streamlined pipeline of tabs. The old "Family Arrival Plan" tab was removed (it
     // duplicated Stay's hotels + Transport's logistics); arrival logistics live in Transport,
     // hotels in Stay, and travelers + live coordination in Group. Stopovers reads as Discoveries.
-    var TAB_PAIRS = [['itinerary', 'tab_itinerary'], ['transport', 'tab_transport'], ['stay', 'tab_stay'], ['food', 'tab_food'], ['events', 'tab_events'], ['stopovers', 'tab_stopovers'], ['costs', 'tab_costs'], ['bookings', 'tab_bookings'], ['album', 'tab_album'], ['clips', 'tab_clips'], ['group', 'tab_group']];
+    var TAB_PAIRS = [['itinerary', 'tab_itinerary'], ['journey', 'tab_journey'], ['transport', 'tab_transport'], ['stay', 'tab_stay'], ['food', 'tab_food'], ['events', 'tab_events'], ['stopovers', 'tab_stopovers'], ['costs', 'tab_costs'], ['bookings', 'tab_bookings'], ['album', 'tab_album'], ['clips', 'tab_clips'], ['group', 'tab_group']];
     if (!TAB_PAIRS.some(function (p) { return p[0] === state.activeTab; })) state.activeTab = 'itinerary'; // heal stale 'arrival'/'live'
     var tabs = el('div', 'tc-tabs');
     TAB_PAIRS.forEach(function (pair) {
@@ -2922,6 +3085,7 @@
     });
     s.appendChild(tabs);
     if (state.activeTab === 'itinerary') s.appendChild(renderItinerary(plan));
+    else if (state.activeTab === 'journey') s.appendChild(renderJourney(plan));
     else if (state.activeTab === 'transport') s.appendChild(renderTransport(plan));
     else if (state.activeTab === 'stay') s.appendChild(renderStays(plan));
     else if (state.activeTab === 'food') s.appendChild(renderFood(plan));
@@ -3777,6 +3941,227 @@
       } else { toast(t('genFail')); }
       render();
     }).catch(function () { state._regenDay = null; toast(t('genFail')); render(); });
+  }
+  // ════════════════════════════════════════════════════════════════════════════
+  // PHASE X — Adaptive AI Travel Agent: Trip Journey Graph (Steps 1-3).
+  // DERIVE-ONLY FOUNDATION — ships dark: pure functions exported for the upcoming
+  // timeline UI (Step 4). Nothing in the live render/edit flow calls them yet, so
+  // there is ZERO behavior change. Backward-compatible (plan.days untouched).
+  // ════════════════════════════════════════════════════════════════════════════
+  function nodeSlug(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40); }
+  function placeNodeId(p, day, slot, order) { return (p && p.id) ? ('n_' + p.id) : ('n_' + day + '_' + (slot || '') + '_' + nodeSlug(p && p.name) + (order != null ? ('_' + order) : '')); }
+  function lockedNodeSet(tr) { tr.lockedNodes = tr.lockedNodes || {}; return tr.lockedNodes; }
+  function isNodeLocked(tr, id) { return !!lockedNodeSet(tr)[id]; }
+  function lockNode(tr, id) { if (!id) return; lockedNodeSet(tr)[id] = 1; saveTrip(tr); }
+  function unlockNode(tr, id) { delete lockedNodeSet(tr)[id]; saveTrip(tr); }
+  function isPlaceNodeLocked(tr, node) {
+    if (isNodeLocked(tr, node.id)) return true;
+    var nm = (node.name || '').trim().toLowerCase();
+    return (tr.pinnedActivities || []).some(function (pin) { return (pin.title || '').trim().toLowerCase() === nm; });
+  }
+  function nodeVotes(tr, node) {
+    var v = (tr.votes || {});
+    if (v[node.id] && typeof v[node.id] === 'object') return v[node.id];
+    if (node.name && v[node.name] && typeof v[node.name] === 'object') return v[node.name];
+    return {};
+  }
+  // Step 1 — derive the typed node graph from the EFFECTIVE plan (buildDayView applies overrides/
+  // added/skips) + transport legs. Pure/read-only; stable ids; locked + votes resolved per node.
+  function buildTripGraph(tr) {
+    var plan = (tr && tr.plan) || {}, days = plan.days || [], nodes = [];
+    var dv = buildDayView(plan);
+    dv.forEach(function (dayView, di) {
+      (dayView.lanes || []).forEach(function (lane) {
+        (lane.items || []).forEach(function (it) {
+          var p = it.p || {};
+          var type = (p.category === 'restaurant' || p.category === 'food' || p.cuisine) ? 'meal' : (p.category === 'lodging' ? 'stay' : 'activity');
+          var node = { id: placeNodeId(p, di, lane.slot, it.order), type: type, day: di, slot: lane.slot, order: it.order, status: 'planned', name: p.name || '', category: p.category || '', time: lane.startTime || '', source: it.added ? 'user' : 'ai' };
+          node.locked = isPlaceNodeLocked(tr, node);
+          node.votes = nodeVotes(tr, node);
+          nodes.push(node);
+        });
+      });
+    });
+    (tr.transport || []).forEach(function (lg, li) {
+      var id = 'tr_' + li;
+      nodes.push({ id: id, type: 'transport', day: (lg.legType === 'return' ? Math.max(0, days.length - 1) : (li === 0 ? 0 : null)), order: li, status: 'planned', name: ((lg.fromCity || '').split(',')[0]) + ' → ' + ((lg.toCity || '').split(',')[0]), from: lg.fromCity || '', to: lg.toCity || '', legType: lg.legType || '', source: 'ai', locked: isNodeLocked(tr, id), votes: {} });
+    });
+    return { version: 1, nodes: nodes };
+  }
+  function materializeDay(tr, dayIdx, newDay) {
+    var plan = tr.plan; if (!plan || !plan.days[dayIdx] || !newDay) return false;
+    var d = plan.days[dayIdx];
+    if (newDay.destinationIndex == null) newDay.destinationIndex = d.destinationIndex || 0;
+    newDay.isReturnDay = !!d.isReturnDay; if (!newDay.date) newDay.date = d.date; if (newDay.dayType == null) newDay.dayType = d.dayType;
+    plan.days[dayIdx] = newDay; return true;
+  }
+  // Step 3 — scoped, lock-aware replan: regenerate ONLY affectedDays, preserving locked nodes
+  // (+ existing pins) verbatim and optimizing around them. Reuses the proven generateLegDays
+  // callable per leg; everything outside affectedDays is untouched. ("change one node, keep the rest")
+  function replanRange(tr, affectedDays) {
+    var plan = tr && tr.plan;
+    if (!plan || !Array.isArray(plan.days) || !affectedDays || !affectedDays.length) return Promise.resolve({ ok: false });
+    var legFn = mkCallable('generateLegDays', 90000); if (!legFn) return Promise.resolve({ ok: false });
+    var byLeg = {};
+    affectedDays.forEach(function (di) { var d = plan.days[di]; if (!d || d.isTravelDay) return; var li = d.destinationIndex || 0; (byLeg[li] = byLeg[li] || []).push(di); });
+    var graph = buildTripGraph(tr);
+    var lockedPins = graph.nodes.filter(function (n) { return n.locked && n.type !== 'transport'; }).map(function (n) { return { title: n.name, destination: '', preferredDayNumber: String(n.day + 1), preferredTimeOfDay: n.slot || 'flexible', priority: 'required' }; });
+    var pins = (tr.pinnedActivities || []).slice().concat(lockedPins);
+    var jobs = Object.keys(byLeg).map(function (liKey) {
+      var li = parseInt(liKey, 10), daysForLeg = byLeg[li];
+      var td = (tr.destinations || [])[li] || {}, pdest = (plan.destinations || [])[li] || {};
+      var daySpecs = daysForLeg.map(function (di) { var d = plan.days[di]; return { dayNumber: di + 1, date: d.date || '', destinationIndex: li, isTravelDay: false, isReturnDay: !!d.isReturnDay, title: d.title || '', theme: d.theme || '', summary: d.summary || '' }; });
+      return legFn({
+        trip: { tripStyle: tr.tripStyle, budget: tr.budget, families: tr.families, preferences: tr.preferences, departureCity: tr.departureCity, lastDayFull: !!tr.lastDayFull, finalDayMode: finalDayMode(tr) }, lang: state.lang,
+        leg: { index: li, city: td.city || pdest.city || destNameFromTrip(tr, li), startDate: td.startDate || '', endDate: td.endDate || '', hotelSuggestion: pdest.hotelSuggestion || null, role: td.role || 'main_destination', hotelNeeded: td.hotelNeeded !== false, mealOnly: !!td.mealOnly, suggestFood: td.suggestFood !== false, suggestActivities: td.suggestActivities !== false, hoursToSpend: td.hoursToSpend || '', priority: td.priority || 'required' },
+        daySpecs: daySpecs, liveHighlights: tr.liveHighlights || [], avoidPlaces: rejectedNames(tr), preferredPlaces: preferredNames(tr), pinnedActivities: pins,
+      }).then(function (rr) {
+        var dd = (rr && rr.data) || {}; var touched = [];
+        if (dd.ok && Array.isArray(dd.days)) dd.days.forEach(function (nd) { var di = (nd.dayNumber || 0) - 1; if (daysForLeg.indexOf(di) >= 0 && materializeDay(tr, di, nd)) touched.push(di); });
+        return touched;
+      }).catch(function () { return []; });
+    });
+    return Promise.all(jobs).then(function (res) {
+      var touched = res.reduce(function (a, b) { return a.concat(b); }, []);
+      if (touched.length) saveTrip(tr);
+      return { ok: touched.length > 0, days: touched };
+    });
+  }
+  // ── Step 4 — Journey Timeline UI (wires the node graph: lock toggles + scoped replan) ──
+  function nodeIcon(node) {
+    if (node.type === 'transport') return (typeof tpIcon === 'function' ? tpIcon(node.mode) : '🚌');
+    if (node.type === 'meal') return '🍜';
+    if (node.type === 'stay') return '🏨';
+    return ({ attraction: '🎡', beach: '🏖️', museum: '🏛', park: '🌳', shopping: '🛍', nightlife: '🎶', nature: '🏞', show: '🎭' })[node.category] || '📍';
+  }
+  // Replan ONLY this day, preserving locked nodes (the visible "change one node, keep the rest").
+  function runReplanDay(tr, dayIdx) {
+    if (state._replanBusy != null) return;
+    state._replanBusy = dayIdx; render();
+    replanRange(tr, [dayIdx]).then(function (r) { state._replanBusy = null; toast(r && r.ok ? t('jnReplanned') : t('genFail')); render(); })
+      .catch(function () { state._replanBusy = null; toast(t('genFail')); render(); });
+  }
+  function journeyNodeCard(tr, node) {
+    var card = el('article', 'tc-jn' + (node.locked ? ' tc-jn--lock' : '') + (node.type === 'transport' ? ' tc-jn--t' : ''));
+    card.appendChild(el('span', 'tc-jn__ic', nodeIcon(node)));
+    var body = el('div', 'tc-jn__body');
+    var top = el('div', 'tc-jn__top');
+    var kindLbl = node.type === 'transport' ? t('jnTransportNode') : (t('ts_' + (node.slot || '')) !== ('ts_' + (node.slot || '')) ? t('ts_' + node.slot) : node.type);
+    top.appendChild(el('span', 'tc-jn__kind', kindLbl));
+    if (node.time) top.appendChild(el('span', 'tc-jn__time', node.time));
+    if (node.locked) top.appendChild(el('span', 'tc-jn__lockbadge', '🔒 ' + t('jnLocked')));
+    body.appendChild(top);
+    body.appendChild(el('strong', 'tc-jn__name', node.name));
+    if (node.type === 'transport') {
+      body.appendChild(pbtn('🧭 ' + t('jnViewTransport'), 'tc-pbtn--ghost', function () { state.activeTab = 'transport'; render(); }));
+    } else if (!tr._demo) {
+      body.appendChild(voteRow({ name: node.name }, { favorite: true }));
+    }
+    if (!state.readonly && !tr._demo) {
+      var acts = el('div', 'tc-jn__acts');
+      acts.appendChild(pbtn((node.locked ? '🔓 ' + t('jnUnlock') : '🔒 ' + t('jnLock')), 'tc-pbtn--ghost' + (node.locked ? ' tc-pbtn--on' : ''), function () { if (node.locked) unlockNode(tr, node.id); else lockNode(tr, node.id); render(); }));
+      if (node.type !== 'transport') acts.appendChild(pbtn('✨ ' + t('jnImprove'), 'tc-pbtn--accent', function () { runReplanDay(tr, node.day); }));
+      body.appendChild(acts);
+    }
+    card.appendChild(body);
+    return card;
+  }
+  // ── Step 5 — Natural-language edit: interpret → preview → apply (scoped, lock-aware) ──
+  function interpretCommand(tr, utterance) {
+    var c = mkCallable('interpretTripCommand', 30000);
+    if (!c) return Promise.resolve({ ok: false });
+    var graph = buildTripGraph(tr).nodes.map(function (n) { return { name: n.name, type: n.type, day: n.day, locked: n.locked }; });
+    return callWithRetry(c, { graph: graph, utterance: utterance, dateRange: tr.dateRange || '', lang: state.lang })
+      .then(function (r) { return (r && r.data) || { ok: false }; }).catch(function () { return { ok: false }; });
+  }
+  function resolveNodeByName(tr, name) {
+    var nm = (name || '').trim().toLowerCase(); if (!nm) return null;
+    return buildTripGraph(tr).nodes.filter(function (n) { return (n.name || '').trim().toLowerCase() === nm; })[0] || null;
+  }
+  // Map the AI edit plan to real, SAFE mutations on the existing systems, then scoped-replan.
+  function applyEditPlan(tr, plan) {
+    (plan.ops || []).forEach(function (o) {
+      if (o.op === 'lock') { var n = resolveNodeByName(tr, o.targetName); if (n) lockNode(tr, n.id); }
+      else if (o.op === 'unlock') { var n2 = resolveNodeByName(tr, o.targetName); if (n2) unlockNode(tr, n2.id); }
+      else if (o.op === 'skip' || o.op === 'delete' || o.op === 'replace') { if (o.targetName) { var ov = ensureOverride({ name: o.targetName }); if (ov) ov.action = 'skipped'; } }
+      else if (o.op === 'add') { if ((o.name || '').trim()) addPlaceToDay(o.day ? (o.day - 1) : 0, o.slot || 'afternoon', o.name.trim(), o.category === 'meal' ? 'food' : 'activity'); }
+      // retime / replan_day / structural ops are realized by the scoped replan below.
+    });
+    saveTrip(tr);
+    var days = (plan.affectedDays || []).map(function (d) { return d - 1; }).filter(function (d) { return d >= 0 && tr.plan && tr.plan.days[d] && !tr.plan.days[d].isTravelDay; });
+    return days.length ? replanRange(tr, days) : Promise.resolve({ ok: true, days: [] });
+  }
+  function opVerb(op) { var k = 'cmdop_' + op; var l = t(k); return (l && l !== k) ? l : op.replace(/_/g, ' '); }
+  function opLine(o) {
+    var bits = [opVerb(o.op)];
+    if (o.targetName) bits.push('“' + o.targetName + '”');
+    else if (o.name) bits.push('“' + o.name + '”');
+    else if (o.cuisine) bits.push(o.cuisine);
+    if (o.day) bits.push(t('day') + ' ' + o.day);
+    if (o.time) bits.push('· ' + o.time);
+    return bits.join(' ');
+  }
+  function editPlanPreview(tr) {
+    var pl = state._editPlan, box = el('div', 'tc-editplan');
+    if (pl.error) { box.appendChild(el('p', 'tc-hint', t('cmdFail'))); box.appendChild(pbtn('✕ ' + t('cmdCancel'), 'tc-pbtn--ghost', function () { state._editPlan = null; render(); })); return box; }
+    if (!pl.ops || !pl.ops.length) { box.appendChild(el('p', 'tc-hint', pl.summary || t('cmdNone'))); box.appendChild(pbtn('✕ ' + t('cmdCancel'), 'tc-pbtn--ghost', function () { state._editPlan = null; render(); })); return box; }
+    box.appendChild(el('strong', 'tc-editplan__t', '✨ ' + t('cmdPlanTitle')));
+    if (pl.summary) box.appendChild(el('p', 'tc-editplan__sum', pl.summary));
+    var ops = el('div', 'tc-editplan__ops'); pl.ops.forEach(function (o) { ops.appendChild(el('div', 'tc-editplan__op', opLine(o))); }); box.appendChild(ops);
+    if ((pl.affectedDays || []).length) box.appendChild(el('p', 'tc-hint', t('cmdDays').replace('{d}', pl.affectedDays.join(', ')) + ' · ' + t('jnReplanKeep')));
+    var row = el('div', 'tc-editplan__btns');
+    var apply = el('button', 'tc-cta', t('cmdApply')); apply.type = 'button';
+    apply.addEventListener('click', function () { var pp = state._editPlan; state._editPlan = null; state._cmdBusy = true; render(); applyEditPlan(tr, pp).then(function () { state._cmdBusy = false; toast(t('cmdApplied')); render(); }).catch(function () { state._cmdBusy = false; toast(t('genFail')); render(); }); });
+    row.appendChild(apply); row.appendChild(pbtn('✕ ' + t('cmdCancel'), 'tc-pbtn--ghost', function () { state._editPlan = null; render(); }));
+    box.appendChild(row);
+    return box;
+  }
+  function commandBar(tr) {
+    var wrap = el('div', 'tc-cmd');
+    var ci = input('', t('cmdPh')); ci.className = 'tc-input tc-cmd__in';
+    var go = el('button', 'tc-cmd__go', '✨ ' + t('cmdGo')); go.type = 'button';
+    function run() { var u = (ci.value || '').trim(); if (!u || state._cmdBusy) return; state._cmdBusy = true; state._editPlan = null; render(); interpretCommand(tr, u).then(function (pl) { state._cmdBusy = false; state._editPlan = (pl && pl.ok) ? pl : { error: true }; render(); }); }
+    go.addEventListener('click', run);
+    ci.addEventListener('keydown', function (e) { if (e.key === 'Enter') run(); });
+    wrap.appendChild(ci); wrap.appendChild(go);
+    return wrap;
+  }
+  function renderJourney(plan) {
+    var tr = state.trip, wrap = el('div', 'tc-journey');
+    wrap.appendChild(el('strong', 'tc-journey__t', '🧭 ' + t('journeyTitle')));
+    wrap.appendChild(el('p', 'tc-journey__sub', t('journeySub')));
+    // Natural-language command bar (interpret → preview diff → apply + scoped replan).
+    if (!state.readonly && !tr._demo && plan && Array.isArray(plan.days) && plan.days.length) {
+      wrap.appendChild(commandBar(tr));
+      if (state._cmdBusy && !state._editPlan) wrap.appendChild(researchBanner('cmdBusy'));
+      if (state._editPlan) wrap.appendChild(editPlanPreview(tr));
+    }
+    if (!plan || !Array.isArray(plan.days) || !plan.days.length) { wrap.appendChild(el('p', 'tc-empty', t('jnNoPlan'))); return wrap; }
+    var g = buildTripGraph(tr), days = plan.days;
+    days.forEach(function (d, di) {
+      var dayNodes = g.nodes.filter(function (n) { return n.day === di; }).sort(function (a, b) { return (a.type === 'transport' ? 0 : 1) - (b.type === 'transport' ? 0 : 1) || (a.order || 0) - (b.order || 0); });
+      if (!dayNodes.length) return;
+      var head = el('div', 'tc-journey__day');
+      head.appendChild(el('strong', null, t('day') + ' ' + (di + 1) + (d.title ? (' · ' + d.title) : '')));
+      if (!state.readonly && !tr._demo) {
+        var rb = el('button', 'tc-journey__replan', '✨ ' + t('jnReplanDay') + ' · ' + t('jnReplanKeep')); rb.type = 'button';
+        if (state._replanBusy != null) rb.disabled = true;
+        rb.addEventListener('click', function () { runReplanDay(tr, di); });
+        head.appendChild(rb);
+      }
+      wrap.appendChild(head);
+      if (state._replanBusy === di) { wrap.appendChild(researchBanner('jnImproving')); }
+      dayNodes.forEach(function (n, i) { if (i) wrap.appendChild(el('div', 'tc-jn__conn')); wrap.appendChild(journeyNodeCard(tr, n)); });
+      if (!state.readonly && !tr._demo) {
+        var addRow = el('div', 'tc-journey__add');
+        var inp = input('', t('jnAddPh')); addRow.appendChild(inp);
+        var ab = el('button', 'tc-pbtn', '＋ ' + t('jnAdd')); ab.type = 'button';
+        ab.addEventListener('click', function () { var v = (inp.value || '').trim(); if (v) { addPlaceToDay(di, (dayNodes[dayNodes.length - 1] || {}).slot || 'afternoon', v); } });
+        addRow.appendChild(ab); wrap.appendChild(addRow);
+      }
+    });
+    wrap.appendChild(el('p', 'tc-unverified', t('stratUnverified')));
+    return wrap;
   }
   // AI "Why this day/time?" — generic reasoning (weather/hours/crowds/route/family mix).
   // Cached per place key as { text, open } so a second click just toggles visibility.
@@ -4767,16 +5152,48 @@
     if (pickup || dropoff) noteBits.push((pickup || '') + ' → ' + (dropoff || ''));
     if (ks.kids) noteBits.push(ks.kids + ' ' + t('childrenLabel').toLowerCase());
     if (ks.seniors) noteBits.push(ks.seniors + ' ' + t('seniors').toLowerCase());
+    var legRef = opts.legRef || ((pickup || '') + '→' + (dropoff || ''));
+    var returnUrl = '/travel-concierge?trip=' + encodeURIComponent(tr.id || '');
+    try { returnUrl = root.location.origin + returnUrl; } catch (e) {}
     var draft = {
       serviceType: (kind === 'airport_pickup' ? 'pickup' : 'ride'), inquiryKind: kind,
       pickup: pickup, dropoff: dropoff,
       date: '', time: '', dateHint: firstDate,
       passengers: totalTravelers(), customerName: '', customerPhone: '',
       notes: noteBits.join(' · '),
-      tripId: tr.id || '', legRef: (pickup || '') + '→' + (dropoff || ''), source: 'travel_concierge',
+      // Clean handoff contract → ride-intake emits a result + returns to returnUrl; TC reconciles it.
+      tripId: tr.id || '', tripName: tr.groupName || '', legRef: legRef, legKey: opts.legKey || '',
+      transportMode: opts.mode || (kind === 'van_transfer' ? 'dlc_ride' : 'ride'), luggage: opts.luggage || '',
+      familyId: (typeof getMe === 'function' ? (getMe() || '') : ''), returnUrl: returnUrl, source: 'travel_concierge',
     };
     try { root.sessionStorage.setItem('dlc_ride_prefill', JSON.stringify(draft)); } catch (e) {}
     try { root.location.href = '/airport'; } catch (e) {}
+  }
+  // After the ride flow returns to /travel-concierge?trip=<id>, attach the booking to THIS trip
+  // (Bookings + Transport + Costs + a group note). Idempotent; clears the one-shot stash.
+  function reconcileRideResult(tr) {
+    if (!tr || !tr.id) return;
+    var raw; try { raw = root.sessionStorage.getItem('dlc_ride_result'); } catch (e) { return; }
+    if (!raw) return;
+    var res; try { res = JSON.parse(raw); } catch (e) { try { root.sessionStorage.removeItem('dlc_ride_result'); } catch (_) {} return; }
+    if (!res || res.tripId !== tr.id) return; // result belongs to a different trip — leave it
+    try { root.sessionStorage.removeItem('dlc_ride_result'); } catch (e) {}
+    if (res.status === 'cancelled' || !res.bookingId) { toast(t('rideNotCompleted')); return; }
+    tr.bookings = tr.bookings || [];
+    if (tr.bookings.some(function (b) { return b.confirmationNumber && b.confirmationNumber === res.bookingId; })) return; // already attached
+    var requested = res.status === 'requested';
+    tr.bookings.push(newBooking('ride', t('rideBookingTitle') + (res.route ? (' · ' + res.route) : ''), {
+      provider: 'DuLichCali', bookingStatus: requested ? 'user_approval_needed' : 'booked', confirmationNumber: res.bookingId,
+      priceRange: res.priceEstimate || '', recommendedOption: res.route || '', selectedOption: res.mode || 'dlc_ride',
+      notes: res.route || '', bookedBy: (typeof getMe === 'function' ? (getMe() || '') : ''), dataSource: 'dlc_ride_booking',
+    }));
+    if (res.legKey) { tr.transportStatus = tr.transportStatus || {}; tr.transportStatus[res.legKey] = requested ? 'planning' : 'booked'; }
+    var amt = parseInt(String(res.priceEstimate || '').replace(/[^\d]/g, ''), 10) || 0;
+    if (amt) costLedger(tr).push({ id: uid('cl'), familyId: (typeof getMe === 'function' ? (getMe() || '') : ''), title: t('rideBookingTitle') + (res.route ? (' (' + res.route + ')') : ''), amount: amt, paid: false, notes: 'DuLichCali', createdAt: new Date().toISOString() });
+    tr.notes = tr.notes || [];
+    tr.notes.push({ id: uid('note'), text: '🚐 ' + (requested ? t('rideRequestedNote') : t('rideBookedNote')) + (res.route ? (': ' + res.route) : '') + (res.bookingId ? (' · #' + res.bookingId) : ''), ts: Date.now() });
+    saveTrip(tr);
+    toast(requested ? t('rideRequestedToast') : t('rideBookedToast'));
   }
   function requestDlcRide(leg) { requestDlcInquiry({ kind: 'ride', pickup: leg.fromCity || '', dropoff: leg.toCity || '' }); }
   function transportOptionCard(o, leg, i, isChosen) {
@@ -5895,7 +6312,7 @@
   function loadSharedTrip(id) {
     loadTrip(id).then(function (tr) {
       if (tr && tr.deleted === true) { toast(t('tripDeleted')); goDashboard(); return; }
-      if (tr && tr.plan) { state.trip = tr; normalizeDestinations(state.trip); state.trip._demo = false; state.readonly = false; state.screen = 'plan'; state.activeTab = 'itinerary'; resolveMyRole().then(function (role) { if (role && role !== 'owner') rememberJoinedTrip(id); render(); }); }
+      if (tr && tr.plan) { state.trip = tr; normalizeDestinations(state.trip); state.trip._demo = false; state.readonly = false; state.screen = 'plan'; state.activeTab = 'itinerary'; try { reconcileRideResult(state.trip); } catch (e) {} resolveMyRole().then(function (role) { if (role && role !== 'owner') rememberJoinedTrip(id); render(); }); }
       else { newTrip(); state.screen = 'hero'; render(); }
     });
   }
@@ -5943,12 +6360,16 @@
     _voteVerdict: voteVerdict, _recomputeAutoReject: recomputeAutoReject, _reconcileAutoRejections: reconcileAutoRejections, _rejectedNames: rejectedNames, _rejectedNameSet: rejectedNameSet, _unrejectPlace: unrejectPlace, _skippedNames: skippedNames,
     _consensusFor: consensusFor, _familyWeight: familyWeight, _buildPreferenceProfile: buildPreferenceProfile, _likedNames: likedNames, _favoritedNames: favoritedNames, _votesSummaryText: votesSummaryText, _voteRow: voteRow,
     _preferredNames: preferredNames, _votesSignature: votesSignature, _votesChangedSinceOptimize: votesChangedSinceOptimize, _optimizeRebuild: optimizeRebuild, _consensusSort: consensusSort, _hotelVoteName: hotelVoteName,
-    _researchTours: researchTours, _requestDlcInquiry: requestDlcInquiry, _toursPanel: toursPanel,
+    _researchTours: researchTours, _requestDlcInquiry: requestDlcInquiry, _reconcileRideResult: reconcileRideResult, _toursPanel: toursPanel,
     _loadMedia: loadMedia, _addMedia: addMedia, _updateMedia: updateMedia, _deleteMedia: deleteMedia, _visibleMedia: visibleMedia, _mediaCol: mediaCol, _isImageUrl: isImageUrl, _dayOptionsForAlbum: dayOptionsForAlbum,
     _generateClipPackage: generateClipPackage, _mountLiveMap: mountLiveMap, _renderAlbum: renderAlbum, _renderClips: renderClips, _albumCard: albumCard, _clipExportPanel: clipExportPanel, _addMediaPanel: addMediaPanel,
     _renderHero: renderHero, _renderCreate: renderCreate, _whoWhereWhatBand: whoWhereWhatBand, _howItWorksSection: howItWorksSection, _capabilityCards: capabilityCards, _trustSection: trustSection, _tripActivityFeed: tripActivityFeed, _renderLiveLocation: renderLiveLocation, _callWithRetry: callWithRetry,
     _researchTransportStrategies: researchTransportStrategies, _transportStrategiesPanel: transportStrategiesPanel, _stratCard: stratCard, _modeDetailRow: modeDetailRow, _returnIntelCard: returnIntelCard, _tpModeLabel: tpModeLabel, _tpRiskLevel: tpRiskLevel, _connectionPlanCard: connectionPlanCard,
-    _heroShowcase: heroShowcase, _destinationShowcase: destinationShowcase, _destinationCard: destinationCard, _planLandingDestination: planLandingDestination, _LANDING_DESTS: LANDING_DESTS };
+    _heroShowcase: heroShowcase, _destinationShowcase: destinationShowcase, _destinationCard: destinationCard, _planLandingDestination: planLandingDestination, _LANDING_DESTS: LANDING_DESTS, _finalCtaBand: finalCtaBand,
+    _heroCinematic: heroCinematic, _destinationStoryBand: destinationStoryBand, _caHeroScene: caHeroScene, _destScene: destScene, _discoversRail: discoversRail,
+    _buildTripGraph: buildTripGraph, _materializeDay: materializeDay, _replanRange: replanRange, _lockNode: lockNode, _unlockNode: unlockNode, _isNodeLocked: isNodeLocked, _isPlaceNodeLocked: isPlaceNodeLocked, _nodeVotes: nodeVotes, _placeNodeId: placeNodeId,
+    _renderJourney: renderJourney, _journeyNodeCard: journeyNodeCard, _nodeIcon: nodeIcon,
+    _interpretCommand: interpretCommand, _applyEditPlan: applyEditPlan, _commandBar: commandBar, _editPlanPreview: editPlanPreview, _resolveNodeByName: resolveNodeByName, _opLine: opLine };
 
   if (doc.readyState === 'loading') doc.addEventListener('DOMContentLoaded', init); else init();
 })(typeof window !== 'undefined' ? window : this);

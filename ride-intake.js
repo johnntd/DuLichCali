@@ -1838,8 +1838,27 @@ window.RideIntake = (function () {
     );
   }
 
+  // Travel Concierge handoff: open the EXISTING ride form prefilled from trip data.
+  // The form inputs are static in the modal, so we fill them after goForm() renders.
+  // Purely additive — submission still goes through the normal validate/guard/notify flow
+  // (NEVER auto-submitted here).
+  function openWithPrefill(p) {
+    if (!p) { open(); return; }
+    var type = (p.serviceType === 'pickup') ? 'pickup' : (p.serviceType === 'dropoff') ? 'dropoff' : 'ride';
+    open(type);
+    setTimeout(function () {
+      function setv(id, v) { var e = document.getElementById(id); if (e && v != null && v !== '') { e.value = v; try { e.dispatchEvent(new Event('input', { bubbles: true })); } catch (_) {} } }
+      var pre = (type === 'pickup') ? 'ri_p_' : (type === 'dropoff') ? 'ri_d_' : 'ri_r_';
+      setv(pre + 'name', p.customerName); setv(pre + 'phone', p.customerPhone);
+      setv(pre + 'passengers', p.passengers); setv(pre + 'notes', p.notes);
+      if (type === 'ride') { setv('ri_from_addr', p.pickup); setv('ri_to_addr', p.dropoff); setv('ri_ride_date', p.date); setv('ri_ride_time', p.time); }
+      else if (type === 'pickup') { setv('ri_dropoff_addr', p.dropoff); setv('ri_arrival_date', p.date); setv('ri_arrival_time', p.time); }
+      else { setv('ri_pickup_addr', p.pickup); setv('ri_depart_date', p.date); setv('ri_depart_time', p.time); }
+    }, 80);
+  }
   return {
     open:               open,
+    openWithPrefill:    openWithPrefill,
     close:              close,
     goForm:             goForm,
     backToPicker:       backToPicker,
@@ -1856,4 +1875,23 @@ window.RideIntake = (function () {
     },
   };
 
+}());
+
+// Travel Concierge → ride handoff consumer. When the concierge stashes a draft ride request
+// and navigates here, open the EXISTING ride intake prefilled. The user reviews and submits
+// through the normal flow (guard + notifications + dispatch) — nothing is auto-confirmed.
+(function () {
+  function consume() {
+    var raw; try { raw = window.sessionStorage.getItem('dlc_ride_prefill'); } catch (e) { return; }
+    if (!raw) return;
+    try { window.sessionStorage.removeItem('dlc_ride_prefill'); } catch (e) {}
+    var draft; try { draft = JSON.parse(raw); } catch (e) { return; }
+    if (draft && window.RideIntake && window.RideIntake.openWithPrefill) {
+      try { window.RideIntake.openWithPrefill(draft); } catch (e) {}
+    }
+  }
+  try {
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { window.setTimeout(consume, 300); });
+    else window.setTimeout(consume, 300);
+  } catch (e) {}
 }());

@@ -15,7 +15,7 @@
 const fs = require('fs');
 const path = require('path');
 const { initializeTestEnvironment, assertFails, assertSucceeds } = require('@firebase/rules-unit-testing');
-const { collection, doc, getDoc, getDocs, query, setDoc, updateDoc, where } = require('firebase/firestore');
+const { collection, deleteDoc, doc, getDoc, getDocs, query, setDoc, updateDoc, where } = require('firebase/firestore');
 
 const PROJECT = process.env.GCLOUD_PROJECT || 'demo-dulichcali';
 const RULES = fs.readFileSync(path.join(__dirname, '../../firestore.rules'), 'utf8');
@@ -52,6 +52,24 @@ async function denied(name, p) { try { await assertFails(p); rec(name, true); } 
     await setDoc(doc(adb, 'travel_bookings/tourA'), { ownerId: 'michael-nguyen', status: 'confirmed' });
     await setDoc(doc(adb, 'travelAssignments/taA'), { travel_driver_id: 'driverA' });
     await setDoc(doc(adb, 'travelAssignments/taB'), { travel_driver_id: 'driverB' });
+    // AI Group Travel Concierge seed trip (collaboration requires a real account).
+    await setDoc(doc(adb, 'groupTrips/trip-1'), { id: 'trip-1', groupName: 'Seed Trip', destination: 'San Diego', ownerUid: 'tripper-1', liveSharingEnabled: true });
+    // trip-2: same owner, live sharing DISABLED (for the "cannot share when off" test).
+    await setDoc(doc(adb, 'groupTrips/trip-2'), { id: 'trip-2', groupName: 'No-Share Trip', destination: 'LA', ownerUid: 'tripper-1', liveSharingEnabled: false });
+    // tripMember-1 is a joined member of trip-1 (membership written by Admin SDK only).
+    await setDoc(doc(adb, 'tripMembers/trip-1/members/member-1'), { displayName: 'Mia', familyId: 'f1', role: 'member' });
+    await setDoc(doc(adb, 'tripMembers/trip-1/members/member-2'), { displayName: 'Bo', familyId: 'f2', role: 'member' });
+    // Trip Album media (V2): a group item + a PRIVATE item (both by member-1) + a group item by member-2.
+    await setDoc(doc(adb, 'groupTrips/trip-1/media/m-group'), { id: 'm-group', uploadedBy: 'member-1', familyId: 'f1', mediaType: 'link', visibility: 'group', caption: 'beach', url: 'https://x' });
+    await setDoc(doc(adb, 'groupTrips/trip-1/media/m-private'), { id: 'm-private', uploadedBy: 'member-1', familyId: 'f1', mediaType: 'link', visibility: 'private', url: 'https://y' });
+    await setDoc(doc(adb, 'groupTrips/trip-1/media/m-m2'), { id: 'm-m2', uploadedBy: 'member-2', familyId: 'f2', mediaType: 'photo', visibility: 'group', url: 'https://z' });
+    // Seed live-location docs (latest-only, per uid) for read/delete tests.
+    await setDoc(doc(adb, 'groupTrips/trip-1/liveLocations/member-1'), { memberId: 'member-1', familyId: 'f1', latitude: 32.71, longitude: -117.16, expiresAt: 9999999999999 });
+    await setDoc(doc(adb, 'groupTrips/trip-1/liveLocations/member-2'), { memberId: 'member-2', latitude: 33.0, longitude: -117.2, expiresAt: 9999999999999 });
+    await setDoc(doc(adb, 'tripShareAccess/tok-1'), { tripId: 'trip-1', passcodeHash: 'x', enabled: true });
+    // Owner-only member contact info (phone/email) — must NOT be readable by other members.
+    await setDoc(doc(adb, 'tripMemberContacts/trip-1/members/member-1'), { phone: '4085550009', email: 'm1@x' });
+    await setDoc(doc(adb, 'tripMemberContacts/trip-1/members/member-2'), { phone: '4085550010' });
     // Driver profile doc — for admin-enable + driver-self-write tests.
     await setDoc(doc(adb, 'drivers/driverA'), { fullName: 'Driver A', phone: '4080000001', adminStatus: 'active', complianceStatus: 'approved', active: false, rideServiceEnabled: false, regions: ['bayarea'] });
 
@@ -181,6 +199,87 @@ async function denied(name, p) { try { await assertFails(p); rec(name, true); } 
   await denied('other uid CANNOT read another user daily counter', getDoc(doc(cust2, 'styleStudioUsage/cust-1/days/2026-06-13')));
   await denied('owner CANNOT write OWN daily usage counter (no self-reset)', setDoc(doc(cust1, 'styleStudioUsage/cust-1/days/2026-06-13'), { count: 0 }));
   await denied('owner CANNOT write OWN usage parent doc', setDoc(doc(cust1, 'styleStudioUsage/cust-1'), { lastDay: '2026-06-14' }));
+
+  // ── AI Group Travel Concierge: groupTrips require a real (non-anonymous) account ──
+  // The /travel-concierge view is login-gated in the UI; these rules must enforce it
+  // server-side so an anonymous session can neither read nor write any trip.
+  const tripper = testEnv.authenticatedContext('tripper-1', nonAnonToken).firestore();
+  const tripMember = testEnv.authenticatedContext('member-1', nonAnonToken).firestore();
+  const tripMember2 = testEnv.authenticatedContext('member-2', nonAnonToken).firestore();
+  const stranger = testEnv.authenticatedContext('stranger-1', nonAnonToken).firestore();
+  // Owner (ownerUid) — full access to own trip.
+  await allowed('trip OWNER CAN read own trip', getDoc(doc(tripper, 'groupTrips/trip-1')));
+  await allowed('trip OWNER CAN update own trip', updateDoc(doc(tripper, 'groupTrips/trip-1'), { notes: [{ text: 'hi' }] }));
+  await allowed('signed-in user CAN create a trip they own', setDoc(doc(tripper, 'groupTrips/trip-new'), { id: 'trip-new', groupName: 'New', destination: 'Vegas', ownerUid: 'tripper-1' }));
+  await denied('CANNOT create a trip owned by someone else', setDoc(doc(stranger, 'groupTrips/trip-evil'), { id: 'trip-evil', destination: 'X', ownerUid: 'tripper-1' }));
+  // Joined member — access via server-written membership.
+  await allowed('joined MEMBER CAN read the trip', getDoc(doc(tripMember, 'groupTrips/trip-1')));
+  await allowed('joined MEMBER CAN collaborate (update)', updateDoc(doc(tripMember, 'groupTrips/trip-1'), { notes: [{ text: 'yo' }] }));
+  await allowed('member CAN read own membership doc', getDoc(doc(tripMember, 'tripMembers/trip-1/members/member-1')));
+  await allowed('member CAN read another member (member list)', getDoc(doc(tripMember, 'tripMembers/trip-1/members/member-1')));
+  // Non-member, non-owner stranger — scoped OUT even though signed in.
+  await denied('non-member stranger CANNOT read the trip', getDoc(doc(stranger, 'groupTrips/trip-1')));
+  await denied('non-member stranger CANNOT update the trip', updateDoc(doc(stranger, 'groupTrips/trip-1'), { notes: [{ text: 'x' }] }));
+  await denied('non-member CANNOT read someone\'s membership', getDoc(doc(stranger, 'tripMembers/trip-1/members/member-1')));
+  // Membership + share-access are server-written only (no self-promotion).
+  await denied('client CANNOT write membership (self-add)', setDoc(doc(stranger, 'tripMembers/trip-1/members/stranger-1'), { role: 'owner' }));
+  await denied('member CANNOT promote self via membership write', setDoc(doc(tripMember, 'tripMembers/trip-1/members/member-1'), { role: 'owner' }));
+  await denied('client CANNOT read tripShareAccess (passcode hash)', getDoc(doc(tripper, 'tripShareAccess/tok-1')));
+  await denied('client CANNOT write tripShareAccess', setDoc(doc(tripper, 'tripShareAccess/tok-evil'), { tripId: 'trip-1', enabled: true }));
+  // Anonymous — locked out entirely.
+  await denied('anonymous session CANNOT read a group trip', getDoc(doc(anon, 'groupTrips/trip-1')));
+  await denied('anonymous session CANNOT update a group trip', updateDoc(doc(anon, 'groupTrips/trip-1'), { notes: [{ text: 'x' }] }));
+  await denied('anonymous session CANNOT create a group trip', setDoc(doc(anon, 'groupTrips/trip-anon'), { id: 'trip-anon', destination: 'X', ownerUid: 'anon-customer' }));
+  await denied('group trips cannot be deleted by anyone', deleteDoc(doc(tripper, 'groupTrips/trip-1')));
+  // "Your trips" list: owner may query their own trips; nobody can scrape all trips.
+  await allowed('owner CAN query OWN trips (ownerUid==uid)', getDocs(query(collection(tripper, 'groupTrips'), where('ownerUid', '==', 'tripper-1'))));
+  await denied('CANNOT query ALL group trips unfiltered', getDocs(collection(stranger, 'groupTrips')));
+  await denied('CANNOT query another owner\'s trips', getDocs(query(collection(stranger, 'groupTrips'), where('ownerUid', '==', 'tripper-1'))));
+  // Member CONTACT info (phone/email): owner + self only, never other members.
+  await allowed('owner CAN read member contact (phone)', getDoc(doc(tripper, 'tripMemberContacts/trip-1/members/member-1')));
+  await allowed('member CAN read OWN contact', getDoc(doc(tripMember, 'tripMemberContacts/trip-1/members/member-1')));
+  await denied('member CANNOT read ANOTHER member\'s contact (phone privacy)', getDoc(doc(tripMember, 'tripMemberContacts/trip-1/members/member-2')));
+  await denied('stranger CANNOT read member contact', getDoc(doc(stranger, 'tripMemberContacts/trip-1/members/member-1')));
+  await denied('client CANNOT write member contact', setDoc(doc(tripper, 'tripMemberContacts/trip-1/members/member-9'), { phone: '4080000000' }));
+
+  // ── Live trip location sharing: members-only, self-write, organizer-gated, self/owner delete ──
+  var liveLoc = { memberId: 'member-1', familyId: 'f1', latitude: 32.72, longitude: -117.15, accuracy: 20, sharingStatus: 'on_the_way', expiresAt: 9999999999999 };
+  // Read: owner + members only; strangers/anon never.
+  await allowed('owner CAN read a member live location', getDoc(doc(tripper, 'groupTrips/trip-1/liveLocations/member-1')));
+  await allowed('member CAN read a live location (group map)', getDoc(doc(tripMember, 'groupTrips/trip-1/liveLocations/member-2')));
+  await denied('stranger CANNOT read a live location', getDoc(doc(stranger, 'groupTrips/trip-1/liveLocations/member-1')));
+  await denied('anonymous CANNOT read a live location', getDoc(doc(anon, 'groupTrips/trip-1/liveLocations/member-1')));
+  // Write: only your OWN doc, only while organizer enabled sharing, memberId must == uid.
+  await allowed('member CAN write OWN live location (sharing on)', setDoc(doc(tripMember, 'groupTrips/trip-1/liveLocations/member-1'), liveLoc));
+  await denied('member CANNOT write ANOTHER member location', setDoc(doc(tripMember, 'groupTrips/trip-1/liveLocations/member-2'), { memberId: 'member-2', latitude: 1, longitude: 2 }));
+  await denied('member CANNOT spoof memberId != uid', setDoc(doc(tripMember, 'groupTrips/trip-1/liveLocations/member-1'), { memberId: 'someone-else', latitude: 1, longitude: 2 }));
+  await denied('write DENIED when organizer sharing is OFF', setDoc(doc(tripper, 'groupTrips/trip-2/liveLocations/tripper-1'), { memberId: 'tripper-1', latitude: 1, longitude: 2 }));
+  await denied('stranger CANNOT write a live location', setDoc(doc(stranger, 'groupTrips/trip-1/liveLocations/stranger-1'), { memberId: 'stranger-1', latitude: 1, longitude: 2 }));
+  await denied('non-number coords rejected', setDoc(doc(tripMember, 'groupTrips/trip-1/liveLocations/member-1'), { memberId: 'member-1', latitude: 'x', longitude: 'y' }));
+  // Delete: own (stop sharing) or owner (clear); never strangers.
+  await denied('stranger CANNOT delete a live location', deleteDoc(doc(stranger, 'groupTrips/trip-1/liveLocations/member-1')));
+  await allowed('owner CAN clear a member live location', deleteDoc(doc(tripper, 'groupTrips/trip-1/liveLocations/member-2')));
+  await allowed('member CAN stop sharing (delete own)', deleteDoc(doc(tripMember, 'groupTrips/trip-1/liveLocations/member-1')));
+
+  // ── Trip Album media (V2): members-only read, PRIVATE hidden from other members, author/owner moderation ──
+  await allowed('owner CAN read group media', getDoc(doc(tripper, 'groupTrips/trip-1/media/m-group')));
+  await allowed('member CAN read group media', getDoc(doc(tripMember, 'groupTrips/trip-1/media/m-group')));
+  await denied('stranger CANNOT read media', getDoc(doc(stranger, 'groupTrips/trip-1/media/m-group')));
+  await denied('anonymous CANNOT read media', getDoc(doc(anon, 'groupTrips/trip-1/media/m-group')));
+  await allowed('author CAN read OWN private media', getDoc(doc(tripMember, 'groupTrips/trip-1/media/m-private')));
+  await allowed('owner CAN read a private media (moderation)', getDoc(doc(tripper, 'groupTrips/trip-1/media/m-private')));
+  await denied('another member CANNOT read a PRIVATE media (privacy)', getDoc(doc(tripMember2, 'groupTrips/trip-1/media/m-private')));
+  await allowed('member CAN add own media', setDoc(doc(tripMember, 'groupTrips/trip-1/media/m-new'), { id: 'm-new', uploadedBy: 'member-1', mediaType: 'link', visibility: 'group', url: 'https://n' }));
+  await denied('member CANNOT add media as someone else', setDoc(doc(tripMember, 'groupTrips/trip-1/media/m-evil'), { id: 'm-evil', uploadedBy: 'member-2', mediaType: 'link', visibility: 'group' }));
+  await denied('invalid mediaType rejected', setDoc(doc(tripMember, 'groupTrips/trip-1/media/m-bad'), { id: 'm-bad', uploadedBy: 'member-1', mediaType: 'exe', visibility: 'group' }));
+  await denied('invalid visibility rejected', setDoc(doc(tripMember, 'groupTrips/trip-1/media/m-bad2'), { id: 'm-bad2', uploadedBy: 'member-1', mediaType: 'link', visibility: 'public' }));
+  await denied('stranger CANNOT add media', setDoc(doc(stranger, 'groupTrips/trip-1/media/m-strg'), { id: 'm-strg', uploadedBy: 'stranger-1', mediaType: 'link', visibility: 'group' }));
+  await allowed('author CAN update own media', updateDoc(doc(tripMember, 'groupTrips/trip-1/media/m-group'), { caption: 'edited' }));
+  await denied('member CANNOT reassign author', updateDoc(doc(tripMember, 'groupTrips/trip-1/media/m-group'), { uploadedBy: 'member-2' }));
+  await denied('other member CANNOT edit someone else media', updateDoc(doc(tripMember2, 'groupTrips/trip-1/media/m-group'), { caption: 'x' }));
+  await allowed('owner CAN moderate (delete) any media', deleteDoc(doc(tripper, 'groupTrips/trip-1/media/m-m2')));
+  await allowed('author CAN delete own media', deleteDoc(doc(tripMember, 'groupTrips/trip-1/media/m-new')));
+  await denied('stranger CANNOT delete media', deleteDoc(doc(stranger, 'groupTrips/trip-1/media/m-private')));
 
   await testEnv.cleanup();
   console.log(`\n  RESULT: ${pass} passed, ${fail} failed\n`);

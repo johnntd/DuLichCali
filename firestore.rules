@@ -28,6 +28,30 @@ service cloud.firestore {
           && request.auth.token.email in ['johnntd@gmail.com', 'johnntd21@icloud.com'];
     }
 
+    // isSignedInUser: any real (non-anonymous) signed-in account. Group-trip access
+    // requires this — the /travel-concierge frontend login-gates viewing/collaboration
+    // and these rules enforce it server-side, so an anonymous session can neither read
+    // nor write any trip (closes the prior anonymous-permissive groupTrips access).
+    function isSignedInUser() {
+      return request.auth != null
+          && request.auth.token.firebase.sign_in_provider != 'anonymous';
+    }
+
+    // gtTripMember: caller has a server-written membership doc for this trip. Membership
+    // is created ONLY by Admin-SDK callables after a correct passcode (clients can never
+    // write tripMembers), so this is a trustworthy "is a joined member of this trip" gate.
+    function gtTripMember(tripId) {
+      return isSignedInUser()
+          && exists(/databases/$(database)/documents/tripMembers/$(tripId)/members/$(request.auth.uid));
+    }
+    // gtTripOwner: caller owns this trip (groupTrips.ownerUid). Used to gate the
+    // owner-only member-contact records (phone/email), which other members must NOT see.
+    function gtTripOwner(tripId) {
+      return isSignedInUser()
+          && exists(/databases/$(database)/documents/groupTrips/$(tripId))
+          && get(/databases/$(database)/documents/groupTrips/$(tripId)).data.get('ownerUid', '') == request.auth.uid;
+    }
+
     function isAssignedDriver() {
       return request.auth != null
           && 'driver' in resource.data
@@ -586,16 +610,84 @@ service cloud.firestore {
     }
 
     // ── AI Group Travel Concierge: shared group trips ───────────────────────────────
-    // Capability model: the document id (tripId) is an unguessable random token that
-    // acts as the share/collaborate capability (no login required, like the
-    // style-studio anonymous flow). Anyone with the link + an anonymous session can
-    // read the trip and collaborate (vote / notes / booking status). Only the trip
-    // details the group enters are stored; deletes are disabled.
+    // Access is scoped to the TRIP and gated to a real (non-anonymous) account that is
+    // either the owner (ownerUid) or a joined MEMBER. Membership is created only by an
+    // Admin-SDK callable after a correct share passcode, so a random signed-in user who
+    // merely guesses/holds a trip id can no longer read it. Privileged actions (approve
+    // suggestions, set roles, reset/disable the share passcode) run through Admin-SDK
+    // callables that check the caller's role — not via direct client writes. Deletes are
+    // disabled here (owner deletes go through an authorized callable, future).
     match /groupTrips/{tripId} {
-      allow read:   if request.auth != null;
-      allow create: if request.auth != null;
-      allow update: if request.auth != null;
+      allow read:   if isSignedInUser() && (resource.data.get('ownerUid', '') == request.auth.uid || gtTripMember(tripId));
+      // The creator must stamp themselves as ownerUid so they retain access.
+      allow create: if isSignedInUser() && request.resource.data.get('ownerUid', '') == request.auth.uid;
+      allow update: if isSignedInUser() && (resource.data.get('ownerUid', '') == request.auth.uid || gtTripMember(tripId));
       allow delete: if false;
+
+      // ── Live trip location sharing (opt-in, members-only, latest-only, auto-expiring) ──
+      // Privacy: ONLY the trip owner or a joined member can READ locations (never public /
+      // non-members). A member can WRITE only their OWN location doc (id == their uid) and
+      // ONLY while the organizer has enabled trip sharing (groupTrips.liveSharingEnabled). One
+      // doc per uid = latest only. Stop sharing = delete own (owner may clear anyone). An
+      // expiresAt field + a scheduled cleanup (cleanupExpiredLiveLocations) auto-delete stale
+      // locations so nothing persists past the trip.
+      match /liveLocations/{memberUid} {
+        allow read: if isSignedInUser() && (gtTripOwner(tripId) || gtTripMember(tripId));
+        allow create, update: if isSignedInUser()
+                          && request.auth.uid == memberUid
+                          && (gtTripOwner(tripId) || gtTripMember(tripId))
+                          && get(/databases/$(database)/documents/groupTrips/$(tripId)).data.get('liveSharingEnabled', false) == true
+                          && request.resource.data.get('memberId', '') == request.auth.uid
+                          && request.resource.data.latitude is number
+                          && request.resource.data.longitude is number;
+        allow delete: if isSignedInUser() && (request.auth.uid == memberUid || gtTripOwner(tripId));
+      }
+
+      // ── Trip Album media (V2) — member-uploaded photos/videos/links, privacy-first ──
+      // Read: the trip OWNER, the item's AUTHOR, OR any joined member EXCEPT when the item is
+      // marked "private" (private items are visible only to their author + the owner). Create:
+      // a member may add only items stamped with their OWN uploadedBy, a valid mediaType and a
+      // valid visibility. Update/Delete: the AUTHOR or the OWNER (owner = moderation); the author
+      // can never be reassigned. No public access ever; default-deny covers everything else.
+      match /media/{mediaId} {
+        allow read: if isSignedInUser()
+                      && (gtTripOwner(tripId)
+                          || resource.data.get('uploadedBy', '') == request.auth.uid
+                          || (gtTripMember(tripId) && resource.data.get('visibility', 'group') != 'private'));
+        allow create: if isSignedInUser()
+                      && (gtTripOwner(tripId) || gtTripMember(tripId))
+                      && request.resource.data.get('uploadedBy', '') == request.auth.uid
+                      && (request.resource.data.get('mediaType', '') in ['photo', 'video', 'link'])
+                      && (request.resource.data.get('visibility', 'group') in ['group', 'private', 'selected_only']);
+        allow update: if isSignedInUser()
+                      && (gtTripOwner(tripId) || resource.data.get('uploadedBy', '') == request.auth.uid)
+                      && request.resource.data.get('uploadedBy', '') == resource.data.get('uploadedBy', '')
+                      && (request.resource.data.get('visibility', 'group') in ['group', 'private', 'selected_only']);
+        allow delete: if isSignedInUser() && (gtTripOwner(tripId) || resource.data.get('uploadedBy', '') == request.auth.uid);
+      }
+    }
+
+    // Share access (random token → trip id, hashed passcode, rate-limit counters):
+    // server-only. Clients never read or write it; the join/share callables use the
+    // Admin SDK. Keeps the passcode hash and counters off the client entirely.
+    match /tripShareAccess/{shareToken} {
+      allow read, write: if false;
+    }
+
+    // Trip membership (role per uid): readable by the member themselves and by other
+    // members of the same trip (for the member list); written ONLY by the Admin-SDK
+    // join/role callables, so a member can never self-promote or add themselves.
+    match /tripMembers/{tripId}/members/{memberUid} {
+      allow read:  if isSignedInUser() && (request.auth.uid == memberUid || gtTripMember(tripId));
+      allow write: if false;
+    }
+
+    // Member CONTACT info (phone/email) — privacy-sensitive. Readable ONLY by the trip
+    // owner (and the member themselves); never by other members. Written only by the
+    // Admin-SDK join/invite callables. Keeps phone numbers off normal participants.
+    match /tripMemberContacts/{tripId}/members/{memberUid} {
+      allow read:  if isSignedInUser() && (request.auth.uid == memberUid || gtTripOwner(tripId));
+      allow write: if false;
     }
 
     // ── Default deny ──────────────────────────────────────────────────────────────

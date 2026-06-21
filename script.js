@@ -747,22 +747,32 @@ window.DLCRouteMatrix = async function(origin, destination) {
   if (!RouteMatrix) throw new Error('RouteMatrix not available');
   // Routes library TravelMode uses DRIVING (same as legacy maps TravelMode)
   const travelMode = (lib.TravelMode && lib.TravelMode.DRIVING) || 'DRIVING';
+  // New Routes API requires WAYPOINT OBJECTS — plain strings silently fail and fall back to the
+  // deprecated google.maps.DistanceMatrix. Wrap as { waypoint: { address } }.
   const result = await RouteMatrix.computeRouteMatrix({
-    origins:      [origin],
-    destinations: [destination],
+    origins:      [{ waypoint: { address: origin } }],
+    destinations: [{ waypoint: { address: destination } }],
     travelMode,
-    fields: ['distanceMeters', 'condition', 'localizedValues', 'originIndex', 'destinationIndex'],
+    fields: ['distanceMeters', 'duration', 'condition', 'localizedValues', 'originIndex', 'destinationIndex'],
   });
-  // Response shape: { matrix: { rows: [ { items: [ RouteMatrixElement ] } ] } }
-  const el = result && result.matrix && result.matrix.rows &&
-             result.matrix.rows[0] && result.matrix.rows[0].items &&
-             result.matrix.rows[0].items[0];
-  if (!el || el.condition !== 'ROUTE_EXISTS' || !el.distanceMeters) throw new Error('no-route');
-  // Parse localized duration string e.g. "14 mins" or "1 hr 5 mins"
-  const durStr = (el.localizedValues && el.localizedValues.duration) || '';
-  const hrM    = durStr.match(/(\d+)\s*hr/i);
-  const minM   = durStr.match(/(\d+)\s*min/i);
-  const durMins = (hrM ? parseInt(hrM[1]) * 60 : 0) + (minM ? parseInt(minM[1]) : 0);
+  // Response shape can vary across loader versions — find the first element robustly.
+  const m = (result && result.matrix) || result;
+  const el = (m && m.rows && m.rows[0] && m.rows[0].items && m.rows[0].items[0]) ||
+             (Array.isArray(result) && result[0]) || (Array.isArray(m) && m[0]) || null;
+  if (!el || !el.distanceMeters || (el.condition && el.condition !== 'ROUTE_EXISTS')) throw new Error('no-route');
+  // Duration from the NUMERIC `duration` field (seconds) — NEVER parse the localized string for
+  // the value: it varies ("7 hr 14 min" vs "7 hours 14 mins"), which broke an hr/min regex →
+  // a 459-mile drive showed as "14m". Localized parse only as a last resort (handles hr|hour|hours).
+  let durMins = 0;
+  const d = el.duration;
+  if (typeof d === 'number') durMins = Math.round(d / 60);
+  else if (typeof d === 'string') { const mm = d.match(/[\d.]+/); if (mm) durMins = Math.round(parseFloat(mm[0]) / 60); }
+  else if (d && d.seconds != null) durMins = Math.round((+d.seconds) / 60);
+  if (!durMins) {
+    const s = (el.localizedValues && el.localizedValues.duration) || '';
+    const hrM = s.match(/(\d+)\s*h(?:ou)?r/i), minM = s.match(/(\d+)\s*min/i);
+    durMins = (hrM ? parseInt(hrM[1]) * 60 : 0) + (minM ? parseInt(minM[1]) : 0);
+  }
   return {
     distMiles: el.distanceMeters / 1609.34,
     durMins,

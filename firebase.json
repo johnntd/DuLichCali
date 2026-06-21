@@ -66,6 +66,8 @@
       { "source": "/security-alerts",       "destination": "/security-alerts.html" },
       { "source": "/style-studio",          "destination": "/style-studio.html" },
       { "source": "/travel-concierge",      "destination": "/travel-concierge.html" },
+      { "source": "/travel-concierge/my-trips", "destination": "/travel-concierge.html" },
+      { "source": "/travel-concierge/trip/**", "destination": "/travel-concierge.html" },
       { "source": "/driver",                "destination": "/driver/dashboard.html" },
       { "source": "/driver/login",          "destination": "/driver/login.html" },
       { "source": "/mobile-barber",         "destination": "/mobile-barber/index.html" },

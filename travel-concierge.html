@@ -15,7 +15,7 @@
 
   <link rel="stylesheet" href="/style.css?v=20260419m">
   <link rel="stylesheet" href="/desktop.css">
-  <link rel="stylesheet" href="/travel-concierge.css?v=20260619a">
+  <link rel="stylesheet" href="/travel-concierge.css?v=20260620zz">
 
   <!-- Google Analytics 4 -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-5S0P4XMCJR"></script>
@@ -32,10 +32,13 @@
 
   <header class="app-bar">
     <a href="/" class="app-bar__brand" style="text-decoration:none; color:var(--cream);">✦ Du Lich Cali</a>
-    <div class="tc-lang" id="tcLang" role="group" aria-label="Language">
-      <button class="tc-lang__btn" type="button" data-lang="en">EN</button>
-      <button class="tc-lang__btn" type="button" data-lang="vi">VI</button>
-      <button class="tc-lang__btn" type="button" data-lang="es">ES</button>
+    <div class="tc-hdrright">
+      <div class="tc-hdracct" id="tcHeaderAcct"></div>
+      <div class="tc-lang" id="tcLang" role="group" aria-label="Language">
+        <button class="tc-lang__btn" type="button" data-lang="en">EN</button>
+        <button class="tc-lang__btn" type="button" data-lang="vi">VI</button>
+        <button class="tc-lang__btn" type="button" data-lang="es">ES</button>
+      </div>
     </div>
   </header>
 
@@ -62,7 +65,11 @@
   if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
   window.dlcDb = firebase.firestore();
 </script>
+<!-- Google Maps JS (client key, referrer-restricted — SAME key/approach as the ride-share
+     service). Enables real Google Places photos + client-side distances in the browser, the
+     way that already works for rides (the server secret is referrer-denied for server calls). -->
+<script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCo1FzDthSCXINRHlyJkqdcVKq_inM71SQ&libraries=places&loading=async"></script>
 <script src="/travel-concierge-samples.js?v=20260618a"></script>
-<script src="/travel-concierge.js?v=20260619a"></script>
+<script src="/travel-concierge.js?v=20260620zz"></script>
 </body>
 </html>

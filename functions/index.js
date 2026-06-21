@@ -1778,6 +1778,26 @@ async function serverCallGemini(prompt, geminiKey) {
   return d.candidates[0].content.parts[0].text;
 }
 
+// Gemini 2.5 Flash WITH Google Search grounding — returns up-to-date, web-grounded
+// text (used for live/seasonal/trending travel research). No new paid dependency;
+// grounding is built into the Gemini API. Concatenates all returned text parts.
+async function serverCallGeminiGrounded(prompt, geminiKey, maxOutputTokens) {
+  const raw = await httpsPost(
+    'generativelanguage.googleapis.com',
+    `/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
+    {},
+    {
+      contents: [{ parts: [{ text: prompt }] }],
+      tools: [{ google_search: {} }],
+      generationConfig: { temperature: 0.4, maxOutputTokens: maxOutputTokens || 900 },
+    }
+  );
+  const d = JSON.parse(raw);
+  const cand = d && d.candidates && d.candidates[0];
+  const parts = (cand && cand.content && cand.content.parts) || [];
+  return parts.map(p => (p && p.text) || '').join('').trim();
+}
+
 exports.aiOrchestrate = onCall(
   {
     region: 'us-central1',
@@ -1983,6 +2003,21 @@ function mbHaversineMiles(a, b) {
   const s = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
 }
+// Travel-Concierge city coordinates — ONLY for the haversine fallback when the Google
+// Maps key is absent (the primary path is Google Distance Matrix). Broader CA/SW coverage
+// than MB_CITY_CENTROIDS (which is Bay Area + OC service areas).
+const TC_CITY_CENTROIDS = {
+  'san diego': { lat: 32.7157, lng: -117.1611 }, 'los angeles': { lat: 34.0522, lng: -118.2437 }, 'long beach': { lat: 33.7701, lng: -118.1937 },
+  'san francisco': { lat: 37.7749, lng: -122.4194 }, 'sacramento': { lat: 38.5816, lng: -121.4944 }, 'fresno': { lat: 36.7378, lng: -119.7871 },
+  'bakersfield': { lat: 35.3733, lng: -119.0187 }, 'santa barbara': { lat: 34.4208, lng: -119.6982 }, 'san luis obispo': { lat: 35.2828, lng: -120.6596 },
+  'monterey': { lat: 36.6002, lng: -121.8947 }, 'santa cruz': { lat: 36.9741, lng: -122.0308 }, 'palm springs': { lat: 33.8303, lng: -116.5453 },
+  'las vegas': { lat: 36.1699, lng: -115.1398 }, 'oakland': { lat: 37.8044, lng: -122.2712 }, 'orange county': { lat: 33.7175, lng: -117.8311 },
+  'carlsbad': { lat: 33.1581, lng: -117.3506 }, 'oceanside': { lat: 33.1959, lng: -117.3795 }, 'pasadena': { lat: 34.1478, lng: -118.1445 },
+  'riverside': { lat: 33.9806, lng: -117.3755 }, 'san bernardino': { lat: 34.1083, lng: -117.2898 }, 'ventura': { lat: 34.2746, lng: -119.2290 },
+  'napa': { lat: 38.2975, lng: -122.2869 }, 'solvang': { lat: 34.5958, lng: -120.1377 }, 'temecula': { lat: 33.4936, lng: -117.1484 },
+};
+function tcCityName(s) { return String(s || '').replace(/\(.*?\)/g, '').split(',')[0].trim().toLowerCase(); }
+function tcCentroid(s) { var n = tcCityName(s); return TC_CITY_CENTROIDS[n] || mbCityCentroid(n, '') || null; }
 // ── AI Group Travel Concierge — structured trip-plan generator ──────────────
 // Public (anonymous) like the other customer-facing AI. Returns a TripPlan JSON
 // (days → sections → place cards + per-family transportation + synchronized
@@ -1994,15 +2029,79 @@ function buildGroupTripSystemPrompt(lang) {
   return [
     'You are an expert California group-travel concierge for Du Lich Cali. Plan a shared trip for MULTIPLE families/groups with mixed ages (toddlers, kids, teens, adults, seniors).',
     'Return ONLY valid JSON (no markdown, no commentary) matching this TripPlan shape:',
-    '{ "destination","groupName","dateRange","departureCity","summary","assumptions":[],"warnings":[],"totalEstimatedCostRange","meetupPoint","meetupTime","families":[],',
+    '{ "destination","groupName","dateRange","departureCity","summary","assumptions":[],"warnings":[],"totalEstimatedCostRange","meetupPoint","meetupTime","families":[],"liveHighlights":[{ "name","category","note","whenRelevant" }],',
+    '  "destinations":[ { "index","city","startDate","endDate","hotelSuggestion":{ "name","area","searchUrl","notes" }|null,"dataSource" } ], "routeOverview":{ "legs":[ { "fromCity","toCity","estimatedDriveTime","estimatedDistance" } ],"totalDriveTime","totalDistance","dataSource" },',
     '  "transportation":[ { "familyName","method"(car|plane|bus|other),"origin","destination","recommendedDepartureTime","estimatedArrivalTime","estimatedCost","bookingStatus","providerName","providerPhone","providerWebsite","ticketSearchUrl","routeSummary","restStops":[],"notes","backupPlan" } ],',
-    '  "days":[ { "date","title","theme","summary","estimatedDrivingTime","estimatedWalkingLevel","sections":[ { "timeOfDay"(morning|lunch|afternoon|dinner|night),"startTime","endTime","title","places":[ {',
+    '  "days":[ { "date","title","theme","summary","destinationIndex"(0-based index into destinations[]),"isTravelDay"(true for a drive/transfer day, else false),"travelLeg":{ "fromCity","toCity","estimatedDriveTime","estimatedDistance","suggestedDepartureTime","suggestedArrivalTime","routeSummary","fatigueNote","toddlerNapNote","seniorNote","mealStops":[ {PlaceCard} ],"restStops":[ { "name","city","note","googleMapsUrl" } ],"backupPlan","dataSource" }|null,"estimatedDrivingTime","estimatedWalkingLevel","sections":[ { "timeOfDay"(morning|lunch|afternoon|dinner|night),"startTime","endTime","title","places":[ {',
     '    "id","name","category","address","latitude","longitude","imageUrl","videoUrl","websiteUrl","reservationUrl","googleMapsUrl","appleMapsUrl","phone","estimatedCost","estimatedDuration","bestTimeToVisit","parkingNotes","kidFriendlyScore"(0-5),"toddlerFriendlyScore","teenFriendlyScore","seniorFriendlyScore","walkingLevel"(low|medium|high),"whySelected","description","tips","backupPlace","dataSource" } ] } ] } ] }',
     'HARD RULES: Use REAL, well-known places with real approximate addresses + lat/lng. Build googleMapsUrl = "https://www.google.com/maps/search/?api=1&query=" + URL-encoded "<name>, <address>" and appleMapsUrl = "https://maps.apple.com/?q=" + URL-encoded "<name>, <address>". Set imageUrl=null and videoUrl=null (only set videoUrl to an official/allowed clip URL if you are certain it exists — never invent one). reservationUrl=null UNLESS a well-known official ticketing site. websiteUrl=official site if well-known else null. estimatedCost = ranges, NEVER fake exact prices. For plane/bus transportation, estimatedCost MUST be "pending verification" and use search links (Google Flights for plane; a search link for Vietnamese bus services like Xe Hoang / Hoang Express for bus). Set dataSource="ai_generated_pending_verification" on EVERY place. Pace around toddler naps and senior walking limits; honor budget, food prefs, interests, accessibility, walking tolerance, drive time, weather, holiday closures; ALWAYS include a synchronized meetupPoint + meetupTime every family can reach, and a backupPlan per family.',
     'OPTIMIZE like an expert planner: produce the BEST balanced plan for ALL families together — minimize total driving and cost while still hitting each family\'s must-haves and interests; CLUSTER nearby places each day to cut transit time; time activities intelligently (toddler-nap downtime in early afternoon, higher-energy/teen activities while toddlers rest, low-walking/seated options for seniors, marquee spots early to beat crowds/heat/traffic); FAIRLY balance every family\'s stated interests across the 3 days (never favor one family); respect the chosen pace and budget. In assumptions/warnings, briefly explain the key time/cost tradeoffs and how the plan fits the whole group.',
-    'Write all human-readable text in ' + langName + '. EXACTLY 3 days. BE CONCISE so the plan returns quickly: at most 3 places per day TOTAL (spread across sections), descriptions 1–2 short sentences, tips one short line. Output valid compact JSON only.',
+    'LIVE / SEASONAL / TRENDING: If the input includes a "liveHighlights" list (current local events/festivals, seasonal natural sightseeing such as flower blooms or whale watching tied to the travel dates, and newly opened or currently highly-rated/trending spots — gathered from live web research), PRIORITIZE weaving the most group-relevant, in-season ones into the daily itinerary where they fit. Reflect the ones you actually used (plus any other current/seasonal picks you are confident about) in the top-level "liveHighlights" array, each with a short "note" and "whenRelevant" (month/season/date). Clearly favor what is in-season and popular right now. NEVER invent events, dates, or prices.',
+    'HONOR EACH FAMILY\'S DETAILED PREFERENCES (provided per family in the input): interests[] (beach/aquarium/zoo/theme_park/museums/nature/casino/shopping/food/nightlife/photography/hiking/shows/sports/fishing/cruises/scenic_drives/hidden_gems), foodPrefsKeys[] (vietnamese/japanese/korean/seafood/steakhouse/mexican/vegetarian/fine_dining) plus free-text foodPrefs, kidPrefs[] (arcades/water_parks/roller_coasters/animal_encounters), teenInterests[] (escape_rooms/vr/anime/teen_shopping), seniorNeeds[] (limited_walking/wheelchair_accessible/frequent_breaks) plus free-text accessibility, hotelPrefs[] (resort/airbnb/suites/kitchen/pool/free_breakfast/ocean_view) plus free-text roomNeeds. Match cuisines per family; pick kid/teen activities for the right ages; respect senior mobility (limited_walking/wheelchair → low-walking/seated/accessible picks; frequent_breaks → build in rest stops). Reflect hotelPrefs in any lodging suggestion. tripStyle is relaxed/balanced/packed/luxury/budget (the VIBE/PACE) and is DISTINCT from budget (the SPEND tier) — do not double-count them: luxury vibe = premium picks, budget vibe/tier = free or low-cost first. Continue to FAIRLY balance every family.',
+    'MULTI-DESTINATION: The input may include a "destinations" array (ordered cities, each with a "role" and flags). If it has MORE THAN ONE city you MUST plan each destination as a REAL distinct place per its role — never collapse the trip into a single destination. Set every day\'s "destinationIndex"; mark each drive/transfer day "isTravelDay":true with a filled "travelLeg" (fromCity→toCity, realistic drive time/distance, depart/arrive, routeSummary, fatigue/nap/senior notes, real mealStops/restStops); emit the top-level "destinations" array (echo each city; include hotelSuggestion = AREA only, NEVER a price, ONLY when that destination\'s hotelNeeded is true) and a "routeOverview" with one entry per leg.',
+    'HONOR EACH DESTINATION ROLE: main_destination → a full day (or more) of activities + dining there. overnight_destination → evening + next-morning activities + a hotel there, then travel onward. stopover → a short activity/visit then continue (no hotel unless hotelNeeded). meal_stop → ONLY a food/rest stop (one restaurant or two; no hotel, no full day). airport_arrival → arrival logistics: pickup/meetup point, nearby food if useful, then the transfer to the next city (no hotel unless hotelNeeded). pass_through → only a brief rest/gas/coffee stop. optional_attraction → include it but clearly mark optional (whySelected notes it is optional) and reflect the time/cost tradeoff (e.g. a full theme-park day vs. continuing). Respect each destination\'s hotelNeeded (suggest lodging ONLY where true), suggestFood/suggestActivities flags, and "hoursToSpend". priority:"optional" stops may be lighter. Example: "Orange County (meal_stop) → San Diego (main)" = Day 1: arrive/meet + an OC dinner, drive to San Diego, check in; then full San Diego days — and NO Orange County hotel.',
+    'Write all human-readable text in ' + langName + '. Produce EXACTLY 3 days. BE CONCISE so the plan returns quickly: at most 3 places per day TOTAL (spread across sections), descriptions 1–2 short sentences, tips one short line, liveHighlights at most 5 items. Always set destinationIndex and isTravelDay on every day. Output valid compact JSON only.',
   ].join('\n');
 }
+// ── Live travel research (Gemini + Google Search grounding) ────────────────
+// Surfaces what is POPULAR / SEASONAL / TRENDING right now for the destination
+// during the trip dates: local events & festivals, seasonal nature sightseeing
+// (flower blooms, whale watching, fall colors…), and newly opened / currently
+// top-rated attractions, restaurants, bars, beaches, nightlife, shopping.
+// The frontend calls this FIRST, shows the highlights, and passes them into
+// generateGroupTripPlan so the AI weaves the in-season/trending picks into the
+// itinerary. Web-grounded → no fabricated names/dates; all marked unverified.
+function buildTripResearchPrompt(trip, lang) {
+  var langName = lang === 'vi' ? 'Vietnamese' : (lang === 'es' ? 'Spanish' : 'English');
+  var interests = [];
+  try {
+    (trip.families || []).forEach(function (f) {
+      (f && f.interests || []).forEach(function (i) { if (interests.indexOf(i) < 0) interests.push(i); });
+    });
+  } catch (e) {}
+  return [
+    'You are a live travel researcher. Using current web search, find what is POPULAR, SEASONAL, or TRENDING RIGHT NOW for a group trip to ' + (trip.destination || '') + (trip.dateRange ? ' during ' + trip.dateRange : '') + '.',
+    'Cover three buckets: (1) local events / festivals / shows / markets happening during those dates; (2) seasonal natural sightseeing tied to that time of year (e.g. wildflower or flower blooms, whale watching, fall foliage, seasonal harvests); (3) newly opened or currently highly-rated / trending attractions, restaurants, bars, beaches, nightlife, and shopping.' + (interests.length ? ' Bias toward these group interests: ' + interests.join(', ') + '.' : ''),
+    'Return ONLY valid compact JSON: { "highlights":[ { "name","category"(event|seasonal|attraction|restaurant|bar|beach|nightlife|shopping|other),"note"(one short sentence on why it is notable NOW),"whenRelevant"(month/season/specific dates if time-bound, else "") } ], "sourceNote"(one short line noting recency) }',
+    'Rules: ONLY include items you can ground in current search results — do NOT invent names, dates, venues, or prices. No prices. At most 8 highlights; prioritize the most current, in-season, and group-friendly. Write all human-readable text in ' + langName + '. Output valid JSON only, no markdown.',
+  ].join('\n');
+}
+exports.researchTripHighlights = onCall(
+  {
+    region: 'us-central1',
+    secrets: [GEMINI_API_KEY],
+    timeoutSeconds: 45,
+    memory: '256MiB',
+    cors: true,
+  },
+  async (request) => {
+    const data = request.data || {};
+    const trip = data.trip || {};
+    const lang = (data.lang === 'vi' || data.lang === 'es') ? data.lang : 'en';
+    if (!trip.destination) return { ok: false, debugCode: 'NO_DESTINATION', highlights: [] };
+    const geminiKey = await getAiKey('gemini');
+    if (!geminiKey) return { ok: false, debugCode: 'NO_GEMINI_KEY', highlights: [] };
+    try {
+      const text = await serverCallGeminiGrounded(buildTripResearchPrompt(trip, lang), geminiKey, 1100);
+      let raw = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').replace(/[\u0000-\u001F]+/g, ' ');
+      const start = raw.indexOf('{'); const end = raw.lastIndexOf('}');
+      if (start > 0 || end > 0) raw = raw.slice(start, end + 1);
+      const parsed = tripSalvageJson(raw);
+      if (!parsed) { console.error('[researchTripHighlights] unparseable JSON, len=' + raw.length); return { ok: false, debugCode: 'RESEARCH_ERROR', highlights: [] }; }
+      let highlights = Array.isArray(parsed.highlights) ? parsed.highlights : [];
+      highlights = highlights.filter(h => h && h.name).slice(0, 8).map(h => ({
+        name: String(h.name).slice(0, 120),
+        category: String(h.category || 'other').slice(0, 24),
+        note: String(h.note || '').slice(0, 220),
+        whenRelevant: String(h.whenRelevant || '').slice(0, 60),
+      }));
+      return { ok: true, highlights, sourceNote: String(parsed.sourceNote || '').slice(0, 160), dataSource: 'live_research_pending_verification' };
+    } catch (e) {
+      console.error('[researchTripHighlights] failed', e && e.message);
+      return { ok: false, debugCode: 'RESEARCH_ERROR', highlights: [] };
+    }
+  }
+);
 exports.generateGroupTripPlan = onCall(
   {
     region: 'us-central1',
@@ -2022,7 +2121,9 @@ exports.generateGroupTripPlan = onCall(
     const userContent = 'Plan this group trip. Input JSON:\n' + JSON.stringify({
       groupName: trip.groupName, destination: trip.destination, dateRange: trip.dateRange,
       departureCity: trip.departureCity, tripStyle: trip.tripStyle, budget: trip.budget,
+      destinations: Array.isArray(trip.destinations) ? trip.destinations.slice(0, 8) : [],
       families: trip.families, preferences: trip.preferences,
+      liveHighlights: Array.isArray(trip.liveHighlights) ? trip.liveHighlights.slice(0, 8) : [],
     });
     try {
       // Fast model + enough tokens to finish the JSON, but bounded to stay under the
@@ -2030,7 +2131,7 @@ exports.generateGroupTripPlan = onCall(
       // JSON was TRUNCATED (parse error). Haiku/7k + the concise prompt completes the
       // full plan in ~40s and parses cleanly; the mock fallback still covers failures.
       const text = await serverCallClaude(system, [{ role: 'user', content: userContent }], true, claudeKey, 7000, 'claude-haiku-4-5-20251001');
-      let raw = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
+      let raw = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').replace(/[\u0000-\u001F]+/g, ' ');
       const start = raw.indexOf('{'); const end = raw.lastIndexOf('}');
       if (start > 0 || end > 0) raw = raw.slice(start, end + 1);
       const plan = JSON.parse(raw);
@@ -2044,6 +2145,1268 @@ exports.generateGroupTripPlan = onCall(
   }
 );
 
+// ── Multi-destination orchestration: skeleton + per-leg detail ─────────────
+// For trips with 3+ destinations a single generateGroupTripPlan call would blow the
+// ~60s request gateway (the Sonnet/8k-timeout / Haiku/4k-truncation noted above), so
+// the frontend calls generateTripSkeleton ONCE (outline only, no PlaceCards → fast)
+// then generateLegDays PER LEG (bounded concurrency) and stitches days back together.
+// Both reuse serverCallClaude(haiku)/getAiKey; no new secrets; same anti-fabrication
+// rules (imageUrl/videoUrl null, real Maps URLs, cost ranges only, dataSource pending).
+function summarizeFamiliesForTrip(families) {
+  if (!Array.isArray(families)) return [];
+  return families.slice(0, 12).map(function (f) {
+    f = f || {};
+    return {
+      name: f.name || '', adults: f.adults || 0, seniors: f.seniors || 0, childrenAges: f.childrenAges || '',
+      interests: Array.isArray(f.interests) ? f.interests.slice(0, 18) : [],
+      foodPrefsKeys: Array.isArray(f.foodPrefsKeys) ? f.foodPrefsKeys : [], foodPrefs: typeof f.foodPrefs === 'string' ? f.foodPrefs : '',
+      kidPrefs: Array.isArray(f.kidPrefs) ? f.kidPrefs : [], teenInterests: Array.isArray(f.teenInterests) ? f.teenInterests : [],
+      seniorNeeds: Array.isArray(f.seniorNeeds) ? f.seniorNeeds : [], hotelPrefs: Array.isArray(f.hotelPrefs) ? f.hotelPrefs : [],
+      // V2 stay atmosphere (ocean_view/near_beach/quiet/family_friendly/resort/airbnb/luxury/budget/near_attractions/walkable)
+      // — the AI hotel agent maps these to REAL areas/hotels (it is never given hotel names/areas).
+      stayPrefs: Array.isArray(f.stayPrefs) ? f.stayPrefs : [],
+      // Travelers = adults + seniors + #children-ages (the AI no longer asks for a count).
+      travelers: (f.adults || 0) + (f.seniors || 0) + String(f.childrenAges || '').split(/[,\s]+/).filter(function (x) { return /\d/.test(x); }).length,
+      // Return-trip logistics: how this family travels + where they head home to.
+      transportMethod: (f.transport && f.transport.method) || 'car', origin: (f.transport && f.transport.origin) || '',
+    };
+  });
+}
+// Family Analysis Agent (deterministic) — derives GROUP TRAITS (not attractions) from ages +
+// seniors + budget + pace, so the AI can score the right signature attractions for THIS group.
+function tcGroupProfile(families, budget, pace) {
+  families = Array.isArray(families) ? families : [];
+  var adults = 0, seniors = 0, ages = [];
+  families.forEach(function (f) {
+    f = f || {}; adults += (f.adults || 0); seniors += (f.seniors || 0);
+    String(f.childrenAges || '').split(/[,\s]+/).forEach(function (x) { var n = parseInt(x, 10); if (!isNaN(n)) ages.push(n); });
+  });
+  var kids = ages.filter(function (a) { return a <= 12; }).length;
+  var teens = ages.filter(function (a) { return a >= 13 && a <= 17; }).length;
+  var toddlers = ages.filter(function (a) { return a <= 3; }).length;
+  var relaxed = (pace === 'relaxed'), packed = (pace === 'packed'), lowBudget = (budget === 'budget');
+  return {
+    travelers: adults + seniors + ages.length, adults: adults, seniors: seniors, kids: kids, teens: teens, toddlers: toddlers,
+    childFocused: kids > 0, teenFocused: teens > 0, seniorSensitive: seniors > 0, multiGen: seniors > 0 && (kids > 0 || teens > 0),
+    thrillSeeking: teens > 0 && !relaxed,
+    themeParkAffinity: (kids || teens) ? (lowBudget ? 'medium' : 'high') : (relaxed ? 'low' : 'medium'),
+    walkingTolerance: (seniors > 0 || toddlers > 0) ? (seniors > adults ? 'low' : 'medium') : (relaxed ? 'medium' : 'high'),
+    energyLevel: packed ? 'high' : (relaxed ? 'low' : 'medium'), budget: budget || 'moderate', pace: pace || 'balanced',
+  };
+}
+// SIGNATURE ATTRACTION INTELLIGENCE — shared reasoning block (teaching examples, NOT a
+// hardcoded city→attraction table). Makes the AI reason like a local expert about each
+// destination's iconic attractions, scored against the group + constraints.
+function signatureAttractionIntel() {
+  return 'SIGNATURE ATTRACTION INTELLIGENCE — reason like a LOCAL travel EXPERT, never a generic itinerary generator and NEVER a hardcoded city→attraction rule. For EACH destination: (1) identify its SIGNATURE / iconic attractions — the marquee places people actually travel there FOR; (2) SCORE each against THIS group (use the provided groupProfile) and the constraints; (3) prioritize the high-scoring ones into the plan, dedicating prominent time (often a FULL day) to a top theme-park/zoo. These are ILLUSTRATIVE examples of the KIND of iconic attraction to recognize for ANY destination (apply the SAME reasoning everywhere — do not limit to this list, do not force these exact names): Orange County/Anaheim → Disneyland + Disney California Adventure (very high), Knott’s Berry Farm (high), Little Saigon food + beaches (medium); Hollywood/Los Angeles → Universal Studios Hollywood (very high), Griffith Observatory + Hollywood Walk of Fame (high); San Diego → San Diego Zoo (very high), LEGOLAND + SeaWorld (high), USS Midway + Balboa Park + beaches (medium); Las Vegas → The Strip (very high), Sphere + Fremont Street (high), Hoover Dam (medium); Grand Canyon → South Rim (very high), sunrise/sunset viewpoints (high). SCORE = destination importance × family fit (young kids → zoo / LEGOLAND / theme parks / aquariums; teens → thrill rides / Universal / interactive; seniors → lower-walking, seated, cultural such as Balboa Park / observatories; multi-generation → all-day venues that suit every age, e.g. a zoo) × constraints. LOWER the score (and possibly DROP it) when: budget is very low (theme-park ticket cost dominates), the stop is only a partial/single day, the group dislikes theme parks, weather is poor for an outdoor venue, or walking tolerance is low. NEVER force a low-scoring attraction. For each high-scoring signature attraction, EXPLAIN in one short phrase WHY it fits this group (e.g. "all-day, multi-age venue for two 6-year-olds and two teens"), and if it is TICKETED, note tickets in tips/bookings. The plan must feel like a knowledgeable local chose it for THIS family.';
+}
+// Phase 3 — group-consensus signals shared by the research prompts: the group's accumulated
+// votes become AVOID (skipped → never re-suggest) + PREFER (liked/favorited → feature if it fits).
+function tcConsensusPromptLine() {
+  return 'GROUP VOTES: if the input has an "avoidPlaces" list, the group SKIPPED those — NEVER suggest any of them (or an obvious rename); pick a different real option instead. If it has a "preferredPlaces" list, the group VOTED THOSE UP — feature or keep them when they genuinely fit (never force an ill-fitting one, never duplicate).';
+}
+function tcConsensusArrays(data) {
+  data = data || {};
+  return {
+    avoidPlaces: Array.isArray(data.avoidPlaces) ? data.avoidPlaces.slice(0, 40).map((x) => String(x).slice(0, 120)) : [],
+    preferredPlaces: Array.isArray(data.preferredPlaces) ? data.preferredPlaces.slice(0, 30).map((x) => String(x).slice(0, 120)) : [],
+  };
+}
+function tcAvoidSet(arr) { const s = {}; (arr || []).forEach((n) => { s[String(n).trim().toLowerCase()] = 1; }); return s; }
+function buildTripSkeletonPrompt(lang) {
+  var langName = lang === 'vi' ? 'Vietnamese' : (lang === 'es' ? 'Spanish' : 'English');
+  return [
+    'You are an expert California multi-destination group-travel planner for Du Lich Cali. Produce a high-level TRIP SKELETON (OUTLINE ONLY — NO place cards, NO addresses) for a road trip across several cities for multiple families with mixed ages.',
+    'Return ONLY valid JSON (no markdown): { "destinations":[ { "index","city","role","hotelNeeded"(true|false),"startDate","endDate","hotelSuggestion":{ "area","note" }|null } ], "routeOverview":{ "legs":[ { "fromCity","toCity","estimatedDriveTime","estimatedDistance" } ],"totalDriveTime","totalDistance" }, "days":[ { "dayNumber"(1-based),"date","destinationIndex"(0-based into destinations[]),"isTravelDay"(true on a drive/transfer day),"isReturnDay"(true ONLY on the final departure-home day),"title","theme","summary" } ] }',
+    'CRITICAL: The "destinations" you output MUST be EXACTLY the input "destinations" cities, same order, and the SAME "index" value on each (echo the cities back). Do NOT add the departureCity or any city not in the input as a destination. Every day\'s "destinationIndex" must be one of those input indices. The departure city is only the trip START — it is NOT a destination.',
+    'YOU DETERMINE EACH DESTINATION\'S ROLE (the user does NOT specify it). Classify each input city into exactly one "role" from the geography, the trip dates, the route order and the group: main_destination (a city worth one or more full days), overnight_destination (worth ~a day incl. an overnight), stopover (a brief activity/visit en route), meal_stop (only good for a meal/rest en route), airport_arrival (an airport/arrival gateway), pass_through (just a gas/coffee/rest break). Set "hotelNeeded" true ONLY for cities where the group actually sleeps (main/overnight, or a stopover that clearly needs a night); false for meal_stop/pass_through/airport_arrival and same-day stops. NEVER ask the user — infer it.',
+    'RULES: Order days chronologically across all destinations. Insert an isTravelDay:true day for each inter-city drive (its destinationIndex = the ARRIVING city). Leave estimatedDriveTime and estimatedDistance EMPTY (""): VERIFIED distances and drive times come from Google Maps — NEVER estimate or invent them. hotelSuggestion is an AREA/neighborhood only (NEVER a price/exact property) and ONLY for a destination whose hotelNeeded you set true (null otherwise). NO prices, NO fake URLs. Keep each summary to one short sentence.',
+    'ALLOCATE DAYS BY THE ROLE YOU ASSIGNED: main_destination → 1+ full day(s). overnight_destination → about a day there (incl. an overnight). stopover → usually fold into a travel day or a short partial day (not a full overnight day) unless it needs a night. meal_stop / airport_arrival / pass_through → do NOT give a full standalone day; fold them into the adjacent travel/arrival day (the arriving day\'s summary mentions the stop). ~2 days per main/overnight city when dates allow; lighter coverage for minor stops. Never give a meal_stop or pass_through its own hotel or full day. Match the day count to the trip dates (see DAY COUNT rule).',
+    'DAY COUNT = ACTUAL TRIP LENGTH: if a "dateList" is provided, output EXACTLY one day per entry, in order, using those dates — NEVER omit any, including the final (return) date. Otherwise produce one day per calendar date in dateRange (e.g. "July 2–5" → 4 days: Jul 2,3,4,5). Do NOT hard-cap at 3 days and do NOT pad beyond the real dates. Applies even to a SINGLE-destination trip. The FINAL day MUST be present even though it is the return day.',
+    signatureAttractionIntel() + ' At the SKELETON level: when a destination has a high-scoring signature attraction that fits the group, DEDICATE a day (or a major block) to it and NAME it in that day\'s title/summary (e.g. a "San Diego Zoo day"), so the detailed pass builds it out. Use the provided groupProfile (childFocused/teenFocused/seniorSensitive/themeParkAffinity/walkingTolerance) to choose which icons lead.',
+    'PINNED MUST-DO ACTIVITIES: if "pinnedActivities" is provided, schedule each one. For a pin with a preferredDayNumber, that day MUST cover it (its destinationIndex should match the pin\'s destination); reflect required pins in that day\'s title/summary. Never silently drop a required pin.',
+    'AVOID: if the input includes an "avoidPlaces" list, the group has REJECTED those places — do NOT name any of them in a day title/theme/summary or build the outline around them; centre rejected days on different real attractions instead.',
+    'PREFER: if the input includes a "preferredPlaces" list, the group VOTED THOSE UP (liked/favorited) — favour featuring them in the relevant city\'s days/titles when they genuinely fit; never force an ill-fitting one and never duplicate.',
+    'DAY ROLES: Day 1 is the ARRIVAL / travel-in day (lighter — get there, check in, an easy evening). Middle days are the main activity days. Its destinationIndex stays the last destination on the final day (the day starts there before driving/flying home).',
+    'FINAL-DAY MODE (generic — applies to ANY trip, never hardcoded to a city/date): the input "finalDayMode" controls the LAST day\'s shape. "return_day" → the final day is the return/departure day (set isReturnDay:true; title/theme/summary about checkout + heading home, NOT a full day of attractions). "half_day" → a HALF day: a short morning of light, nearby activity THEN checkout + travel home that afternoon (set isReturnDay:true — it is still a mixed return day). "full_day" → a normal full activity day (do NOT set isReturnDay). "ai_decide" or empty → YOU decide based on the distance/journey home, the hotel checkout time, whether young kids or seniors are in the group, and the overall pace: a long drive/flight home or tired travelers → lean return_day; a short hop home with energy to spare → half_day or full_day. WHICHEVER mode, the final dated day MUST still exist (never drop it). (Legacy: if "lastDayFull" is true treat it as "full_day".)',
+    'Write all human-readable text in ' + langName + '. Output compact JSON only.',
+  ].join('\n');
+}
+exports.generateTripSkeleton = onCall(
+  { region: 'us-central1', secrets: [CLAUDE_API_KEY], timeoutSeconds: 45, memory: '256MiB', cors: true },
+  async (request) => {
+    const data = request.data || {};
+    const trip = data.trip || {};
+    const lang = (data.lang === 'vi' || data.lang === 'es') ? data.lang : 'en';
+    const dests = Array.isArray(trip.destinations) ? trip.destinations : [];
+    if (!dests.length) return { ok: false, debugCode: 'NO_DESTINATIONS' };
+    const claudeKey = await getAiKey('claude');
+    if (!claudeKey) return { ok: false, debugCode: 'NO_CLAUDE_KEY' };
+    const userContent = 'Outline this multi-destination group trip. Input JSON:\n' + JSON.stringify({
+      groupName: trip.groupName, departureCity: trip.departureCity, dateRange: trip.dateRange,
+      dateList: Array.isArray(request.data && request.data.dateList) ? request.data.dateList.slice(0, 30) : [],
+      tripStyle: trip.tripStyle, budget: trip.budget, destinations: dests.slice(0, 8),
+      lastDayFull: !!trip.lastDayFull, finalDayMode: trip.finalDayMode || (trip.lastDayFull ? 'full_day' : 'ai_decide'),
+      pinnedActivities: Array.isArray(trip.pinnedActivities) ? trip.pinnedActivities.slice(0, 12) : [],
+      avoidPlaces: Array.isArray(data.avoidPlaces) ? data.avoidPlaces.slice(0, 40).map(x => String(x).slice(0, 120)) : [],
+      preferredPlaces: Array.isArray(data.preferredPlaces) ? data.preferredPlaces.slice(0, 30).map(x => String(x).slice(0, 120)) : [],
+      familiesSummary: summarizeFamiliesForTrip(trip.families), groupProfile: tcGroupProfile(trip.families, trip.budget, trip.tripStyle), preferences: trip.preferences,
+      liveHighlights: Array.isArray(trip.liveHighlights) ? trip.liveHighlights.slice(0, 8) : [],
+    });
+    try {
+      const text = await serverCallClaude(buildTripSkeletonPrompt(lang), [{ role: 'user', content: userContent }], true, claudeKey, 2500, 'claude-haiku-4-5-20251001');
+      let raw = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').replace(/[\u0000-\u001F]+/g, ' ');
+      const s = raw.indexOf('{'); const e = raw.lastIndexOf('}');
+      if (s > 0 || e > 0) raw = raw.slice(s, e + 1);
+      const skeleton = JSON.parse(raw);
+      if (!skeleton || !Array.isArray(skeleton.days) || !skeleton.days.length) return { ok: false, debugCode: 'INVALID_SKELETON' };
+      skeleton.dataSource = 'ai_generated_pending_verification';
+      if (skeleton.routeOverview) skeleton.routeOverview.dataSource = 'ai_generated_pending_verification';
+      return { ok: true, skeleton };
+    } catch (e2) {
+      console.error('[generateTripSkeleton] failed', e2 && e2.message);
+      return { ok: false, debugCode: 'AI_ERROR' };
+    }
+  }
+);
+// Bound a richer leg day so one runaway day can't bloat the trip doc: cap sections,
+// places/section, popularDishes, and normalize alternatives to short strings.
+function clampLegDay(d) {
+  if (!d || typeof d !== 'object') return;
+  const s = (v, n) => (v == null ? '' : String(v).slice(0, n));
+  if (Array.isArray(d.sections)) {
+    d.sections = d.sections.slice(0, 6).map((sec) => {
+      if (sec && Array.isArray(sec.places)) sec.places = sec.places.slice(0, 6).map((p) => {
+        if (p && Array.isArray(p.popularDishes)) p.popularDishes = p.popularDishes.slice(0, 4).map((x) => s(x, 60));
+        return p;
+      });
+      return sec;
+    });
+  }
+  if (d.alternatives && typeof d.alternatives === 'object') {
+    ['kidFriendly', 'toddlerLowEnergy', 'teenOption', 'seniorLowWalking', 'rainyDay', 'foodBackup'].forEach((k) => {
+      const v = d.alternatives[k];
+      d.alternatives[k] = Array.isArray(v) ? v.slice(0, 3).map((x) => s(x, 160)).join(' · ') : s(v, 200);
+    });
+  }
+}
+function buildLegDaysPrompt(lang) {
+  var langName = lang === 'vi' ? 'Vietnamese' : (lang === 'es' ? 'Spanish' : 'English');
+  return [
+    'You are an expert California group-travel concierge for Du Lich Cali. Fill in the FULL daily detail for ONE LEG (one city, possibly preceded by an inbound travel day) of a larger multi-destination group trip for multiple families with mixed ages.',
+    'You are given the leg city, its dates, and the specific day stubs to detail. Return ONLY valid JSON: { "days":[ { "date","title","theme","summary","destinationIndex","isTravelDay","isReturnDay"(echo the stub\'s value),"travelLeg":{ "fromCity","toCity","estimatedDriveTime","estimatedDistance","suggestedDepartureTime","suggestedArrivalTime","routeSummary","fatigueNote","toddlerNapNote","seniorNote","mealStops":[ {PlaceCard} ],"restStops":[ { "name","city","note","googleMapsUrl" } ],"backupPlan","dataSource" }|null,"estimatedDrivingTime","estimatedWalkingLevel","sections":[ { "timeOfDay"(morning|lunch|afternoon|dinner|evening),"startTime","endTime","title","places":[ {PlaceCard} ] } ],"alternatives":{ "kidFriendly","toddlerLowEnergy","teenOption","seniorLowWalking","rainyDay","foodBackup" } } ] }',
+    'PlaceCard = { "id","name","category","address","latitude","longitude","imageUrl":null,"videoUrl":null,"websiteUrl","reservationUrl","googleMapsUrl","appleMapsUrl","phone","estimatedCost","estimatedDuration","bestTimeToVisit","parkingNotes","popularDishes":[](1-2 well-known signature dishes for restaurant/food cards, else []),"kidFriendlyScore"(0-5),"toddlerFriendlyScore"(0-5),"teenFriendlyScore"(0-5),"seniorFriendlyScore"(0-5),"walkingLevel"(low|medium|high),"whySelected","description","tips","backupPlace","dataSource" }.',
+    'HARD RULES: Use REAL, well-known places in the leg city with real approximate addresses + lat/lng. Build googleMapsUrl = "https://www.google.com/maps/search/?api=1&query=" + URL-encoded "<name>, <address>" and appleMapsUrl = "https://maps.apple.com/?q=" + URL-encoded "<name>, <address>". imageUrl=null, videoUrl=null. reservationUrl=null unless a well-known official ticketing site; websiteUrl=official site if well-known else null. estimatedCost = ranges, NEVER fake exact prices. popularDishes = real signature dishes only (no prices). Set dataSource="ai_generated_pending_verification" everywhere. For a day with isTravelDay:true, fill ONLY the travelLeg NARRATIVE (routeSummary, fatigueNote, toddlerNapNote, seniorNote, optional REAL mealStops/restStops along the route, backupPlan) and keep that day\'s sections minimal. LEAVE estimatedDriveTime, estimatedDistance, suggestedDepartureTime and suggestedArrivalTime as "" — VERIFIED distance/time/ETA come from Google Maps, NEVER from you (you may still describe traffic in routeSummary, e.g. "expect heavy traffic around LA"). Honor each family\'s interests/food/kid/teen/senior/hotel preferences; pace around toddler naps + senior mobility.',
+    'HONOR THIS LEG\'S "role" (given in the input leg): main_destination → a full, balanced day. overnight_destination → evening + next-morning highlights. stopover → one short activity/visit. meal_stop → ONLY restaurant(s)/a rest stop (no all-day plan). airport_arrival → arrival logistics: a meetup point near the airport, nearby food if useful, then the onward transfer (use the travelLeg). pass_through → just a brief rest/gas/coffee stop. optional_attraction → include it but set whySelected to note it is OPTIONAL and mention the time/cost tradeoff (and a ticket/reservation reminder for ticketed attractions). Respect the leg\'s suggestFood/suggestActivities flags (skip the category if false) and "hoursToSpend". Do NOT propose lodging for this leg unless its hotelNeeded is true.',
+    'DEPTH (no fixed cap): a FULL day at a main_destination or overnight_destination must be RICH — build morning + lunch + afternoon + dinner + evening sections with 4–6 meaningful place/restaurant cards TOTAL across the day, clustered geographically to minimise transit, and timed around toddler naps (quieter early-afternoon) and senior mobility. The lunch and dinner sections MUST be REAL restaurants matched to the families\' cuisine preferences, each with 1–2 popularDishes. THINK LIKE A LOCAL: if the leg city has a famous food community matching those cuisines, pick REAL neighborhood favorites there, never generic chains (e.g. Orange County\'s Little Saigon for Vietnamese — Pho 79 / Phoholic, Brodard, bun bo hue at Ngu Binh, oc/seafood at Oc & Lau, coffee/dessert at 7 Leaves / Che Cali). Lighter days carry fewer cards: stopover 1–2, meal_stop 1–2 (food only), airport_arrival 1–2 + transfer, pass_through 1, isTravelDay → mostly the travelLeg + optional mealStops.',
+    'RETURN / DEPARTURE DAY: if a day stub has isReturnDay:true, plan it as the journey HOME, NOT a full activity day. Sections: a relaxed breakfast near the hotel, hotel checkout + packing, then AT MOST ONE short, nearby, optional, low-risk stop ONLY if time clearly allows (a quick photo spot — never a water park, theme park, marquee attraction or all-day outing), then a "Heading home" section covering the return to the departure city by each family\'s transportMethod: car → a realistic drive home with rest/meal/gas (or charging) stops and toddler-nap + senior-comfort timing; plane → airport arrival time, baggage, rental-car return, and a TSA/security buffer; bus → the pickup station and a buffer. Mention traffic if relevant. Keep it calm and low-stress.',
+    'FINAL-DAY MODE override (generic — never hardcoded): if the input "finalDayMode" is "full_day", ignore the return-day rule for the final day and plan a normal full activity day. If it is "half_day" and the day stub is the final/return day, plan a SHORT morning of light, nearby activity (1–2 low-risk stops) FIRST, THEN checkout + the "Heading home" journey in the afternoon — a calm mixed day, not a full day and not a pure travel day. "return_day" → follow the return-day rule above. "ai_decide"/empty → respect the stub\'s isReturnDay flag as given.',
+    'For EACH day also fill "alternatives" with ONE short, concrete suggestion per category: kidFriendly (a fun swap for younger kids), toddlerLowEnergy (a calm/nap-friendly option), teenOption (something teens prefer), seniorLowWalking (a low-walking/seated/accessible option), rainyDay (an indoor backup), foodBackup (an alternative restaurant). Use REAL place names where possible; NO fake prices/URLs; one short phrase each.',
+    signatureAttractionIntel() + ' At the DETAIL level: if a day\'s title/theme/summary centers on a signature attraction (or one scores high for this group on this leg), BUILD it as a real, prominent PlaceCard with the right time block (often most of the day for a theme park/zoo), age-appropriate pacing, and a "whySelected" that states WHY it ranks for this group; if it is ticketed, put a tickets reminder in "tips". MULTI-GENERATION: when the group has both young kids/teens AND seniors, you may SPLIT a block (e.g. morning whole-family at the zoo; afternoon teens to thrill rides while grandparents rest / adults get coffee) and describe both in the section. Do NOT force a low-scoring attraction.',
+    'AVOID: if the input includes an "avoidPlaces" list, NEVER include any place whose name matches one of them — the user explicitly skipped those; pick different real places instead.',
+    'PREFER: if the input includes a "preferredPlaces" list, the group VOTED THOSE UP (liked/favorited) — include the ones that genuinely fit THIS leg/day as real PlaceCards (the group will be happiest seeing them kept); never force an ill-fitting one and never duplicate.',
+    'PINNED MUST-DO: if "pinnedActivities" is provided, for any pin whose preferredDayNumber matches a day you are detailing (or whose destination matches THIS leg and it has no preferred day), you MUST include that EXACT activity in that day at its preferredTimeOfDay (else flexible), as a real PlaceCard with a ticket/reservation reminder in "tips" and kid/toddler/senior pacing around it. A "required" pin must NOT be dropped or moved away; if truly impossible, place it on the closest day and explain why in whySelected.',
+    'Write all human-readable text in ' + langName + '. Detail ONLY the given day stubs for THIS leg, in order, returning exactly that many day objects. Be concrete but concise (descriptions 1–2 sentences, tips one line). Output compact JSON only.',
+  ].join('\n');
+}
+exports.generateLegDays = onCall(
+  { region: 'us-central1', secrets: [CLAUDE_API_KEY], timeoutSeconds: 90, memory: '512MiB', cors: true },
+  async (request) => {
+    const data = request.data || {};
+    const lang = (data.lang === 'vi' || data.lang === 'es') ? data.lang : 'en';
+    const leg = data.leg || {};
+    const daySpecs = Array.isArray(data.daySpecs) ? data.daySpecs : [];
+    if (!leg.city || !daySpecs.length) return { ok: false, debugCode: 'NO_LEG' };
+    const claudeKey = await getAiKey('claude');
+    if (!claudeKey) return { ok: false, debugCode: 'NO_CLAUDE_KEY' };
+    const trip = data.trip || {};
+    const userContent = 'Detail this leg. Input JSON:\n' + JSON.stringify({
+      tripStyle: trip.tripStyle, budget: trip.budget,
+      departureCity: trip.departureCity || '', lastDayFull: !!trip.lastDayFull, finalDayMode: trip.finalDayMode || (trip.lastDayFull ? 'full_day' : 'ai_decide'),
+      avoidPlaces: Array.isArray(data.avoidPlaces) ? data.avoidPlaces.slice(0, 40).map(x => String(x).slice(0, 120)) : [],
+      preferredPlaces: Array.isArray(data.preferredPlaces) ? data.preferredPlaces.slice(0, 30).map(x => String(x).slice(0, 120)) : [],
+      pinnedActivities: Array.isArray(data.pinnedActivities) ? data.pinnedActivities.slice(0, 12) : [],
+      familiesSummary: summarizeFamiliesForTrip(trip.families), groupProfile: tcGroupProfile(trip.families, trip.budget, trip.tripStyle), preferences: trip.preferences,
+      // Pass the leg's ROLE + flags so the prompt's role-handling has data to honor.
+      leg: {
+        index: leg.index, city: leg.city, startDate: leg.startDate, endDate: leg.endDate, hotelSuggestion: leg.hotelSuggestion || null,
+        role: leg.role || 'main_destination', hotelNeeded: leg.hotelNeeded !== false, mealOnly: !!leg.mealOnly,
+        suggestFood: leg.suggestFood !== false, suggestActivities: leg.suggestActivities !== false,
+        hoursToSpend: leg.hoursToSpend || '', priority: leg.priority || 'required',
+      },
+      daySpecs: daySpecs.slice(0, 3),
+      liveHighlights: Array.isArray(data.liveHighlights) ? data.liveHighlights.slice(0, 6) : [],
+    });
+    try {
+      // The frontend sends ONE day per call (server caps at 3 as a backstop); ~7k token
+      // ceiling + 90s function timeout leave headroom, and salvage recovers a truncated
+      // day into partial sections instead of failing the whole call.
+      const text = await serverCallClaude(buildLegDaysPrompt(lang), [{ role: 'user', content: userContent }], true, claudeKey, 7000, 'claude-haiku-4-5-20251001');
+      let raw = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').replace(/[\u0000-\u001F]+/g, ' ');
+      const s = raw.indexOf('{'); const e = raw.lastIndexOf('}');
+      if (s > 0 || e > 0) raw = raw.slice(s, e + 1);
+      const parsed = tripSalvageJson(raw);
+      if (!parsed || !Array.isArray(parsed.days) || !parsed.days.length) return { ok: false, debugCode: 'INVALID_LEG' };
+      parsed.days.forEach(function (d) { if (d) { d.dataSource = d.dataSource || 'ai_generated_pending_verification'; clampLegDay(d); } });
+      return { ok: true, days: parsed.days };
+    } catch (e2) {
+      console.error('[generateLegDays] failed', e2 && e2.message);
+      return { ok: false, debugCode: 'AI_ERROR' };
+    }
+  }
+);
+
+// ── Travel Booking Concierge — research WHAT to reserve (no purchasing) ─────
+// Given the trip, recommends which items the group should reserve/buy tickets for
+// (flights, hotels, rentals, theme-park/attraction tickets, restaurant reservations,
+// tours, parking, rental cars, bus) with a recommendation, a rough/labelled price
+// range, and general deadline/cancellation guidance. STRICT no-fake rules: NO exact
+// guaranteed prices, NO availability, NO confirmation numbers, NO URLs (the frontend
+// builds official/search links deterministically to avoid fabricated links). The AI
+// NEVER purchases anything — this only researches. Gemini + Google Search grounding.
+function buildBookingResearchPrompt(lang) {
+  var langName = lang === 'vi' ? 'Vietnamese' : (lang === 'es' ? 'Spanish' : 'English');
+  return [
+    'You are a travel-booking research assistant for Du Lich Cali. Given a group trip (cities, dates, families with ages, and key planned places), identify which items the group should RESERVE or buy tickets for, and recommend the best option for the group. You ONLY research and recommend — you NEVER purchase, reserve, or generate confirmations.',
+    'Return ONLY valid JSON (no markdown): { "items":[ { "type"(flight|hotel|airbnb|attraction|restaurant|tour|parking|rental_car|bus|ride),"title","city","provider"(a well-known booking provider or brand name, or ""),"priceRange"(a ROUGH range clearly labelled, or "pending verification" — NEVER an exact guaranteed price),"recommendedOption"(one short line: which category/option to pick and why for this group),"deadline"(RELATIVE guidance like "book 1–2 months ahead" — never a fabricated exact date),"cancellationNote"(general guidance to check the official refund policy),"dataSource":"ai_researched_pending_verification" } ] }',
+    'RULES: Include ONLY items that genuinely need a reservation or ticket for THIS trip (e.g. a theme-park day → tickets; a popular restaurant → reservation; a flight/hotel/rental per the families\' transport). At most 10 items, prioritised by importance and deadline. Do NOT invent venue names that would not plausibly exist in the destination. NEVER output exact prices, availability, confirmation numbers, or URLs. Honor family size, toddlers, seniors, and budget in the recommendation. Write all human-readable text in ' + langName + '. Output compact JSON only.',
+  ].join('\n');
+}
+exports.researchTripBookings = onCall(
+  { region: 'us-central1', secrets: [GEMINI_API_KEY], timeoutSeconds: 45, memory: '256MiB', cors: true },
+  async (request) => {
+    const data = request.data || {};
+    const trip = data.trip || {};
+    const lang = (data.lang === 'vi' || data.lang === 'es') ? data.lang : 'en';
+    if (!trip.destination && !(Array.isArray(trip.destinations) && trip.destinations.length)) return { ok: false, debugCode: 'NO_DESTINATION', items: [] };
+    const geminiKey = await getAiKey('gemini');
+    if (!geminiKey) return { ok: false, debugCode: 'NO_GEMINI_KEY', items: [] };
+    const userContent = 'Recommend what to reserve/buy tickets for this group trip. Input JSON:\n' + JSON.stringify({
+      destination: trip.destination,
+      destinations: Array.isArray(trip.destinations) ? trip.destinations.slice(0, 8) : [],
+      dateRange: trip.dateRange, budget: trip.budget, tripStyle: trip.tripStyle,
+      familiesSummary: summarizeFamiliesForTrip(trip.families),
+      keyPlaces: Array.isArray(trip.keyPlaces) ? trip.keyPlaces.slice(0, 24) : [],
+    });
+    try {
+      const text = await serverCallGeminiGrounded(buildBookingResearchPrompt(lang) + '\n\n' + userContent, geminiKey, 1400);
+      let raw = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').replace(/[\u0000-\u001F]+/g, ' ');
+      const s = raw.indexOf('{'); const e = raw.lastIndexOf('}');
+      if (s > 0 || e > 0) raw = raw.slice(s, e + 1);
+      const parsed = tripSalvageJson(raw);
+      if (!parsed) { console.error('[researchTripBookings] unparseable JSON, len=' + raw.length); return { ok: false, debugCode: 'RESEARCH_ERROR', items: [] }; }
+      let items = Array.isArray(parsed.items) ? parsed.items : [];
+      const TYPES = ['flight', 'hotel', 'airbnb', 'attraction', 'restaurant', 'tour', 'parking', 'rental_car', 'bus', 'ride'];
+      items = items.filter(it => it && it.title).slice(0, 10).map(it => ({
+        type: TYPES.indexOf(String(it.type)) !== -1 ? it.type : 'attraction',
+        title: String(it.title).slice(0, 140),
+        city: String(it.city || '').slice(0, 80),
+        provider: String(it.provider || '').slice(0, 80),
+        priceRange: String(it.priceRange || 'pending verification').slice(0, 80),
+        recommendedOption: String(it.recommendedOption || '').slice(0, 280),
+        deadline: String(it.deadline || '').slice(0, 80),
+        cancellationNote: String(it.cancellationNote || '').slice(0, 200),
+        dataSource: 'ai_researched_pending_verification',
+      }));
+      return { ok: true, items };
+    } catch (e2) {
+      console.error('[researchTripBookings] failed', e2 && e2.message);
+      return { ok: false, debugCode: 'RESEARCH_ERROR', items: [] };
+    }
+  }
+);
+// ── "Where to Stay": per-destination lodging research (hotels + Airbnb areas) ──
+// For each destination that needs lodging, recommends the best AREA + several hotel
+// options (budget / best-value / family / luxury / pool / breakfast / kitchen) and a
+// few Airbnb search areas, with amenities, parking/distance notes, and WHY — but NO
+// fabricated exact prices, availability, or booking URLs (the frontend builds official
+// /search links). Gemini + Google Search grounding. dataSource always pending.
+// Best-effort repair of a truncated JSON object from a (token-capped) model
+// response. Tries a straight parse first; on failure, rewinds to the last
+// fully-closed bracket at depth>=1, then re-closes the still-open ancestor
+// containers so the salvaged prefix is valid JSON. Returns the parsed object,
+// or null if nothing usable can be recovered. String state is tracked so
+// braces/brackets inside string values are never miscounted.
+function tripSalvageJson(raw) {
+  if (raw == null) return null;
+  // Gemini google_search grounding injects citation markers like "[cite: 3, 12]" /
+  // "[cite_start]" into the text — strip them so they don't break JSON.parse.
+  var s = String(raw).replace(/\[cite[^\]]*\]/gi, '');
+  try { return JSON.parse(s); } catch (_) {}
+  var stack = [], inStr = false, esc = false, safeLen = -1, safeStack = null;
+  for (var i = 0; i < s.length; i++) {
+    var c = s[i];
+    if (inStr) {
+      if (esc) esc = false;
+      else if (c === '\\') esc = true;
+      else if (c === '"') inStr = false;
+      continue;
+    }
+    if (c === '"') inStr = true;
+    else if (c === '{') stack.push('}');
+    else if (c === '[') stack.push(']');
+    else if (c === '}' || c === ']') {
+      stack.pop();
+      if (stack.length) { safeLen = i + 1; safeStack = stack.slice(); }
+    }
+  }
+  if (safeLen < 0 || !safeStack) return null;
+  var out = s.slice(0, safeLen).replace(/,\s*$/, '');
+  for (var j = safeStack.length - 1; j >= 0; j--) out += safeStack[j];
+  try { return JSON.parse(out); } catch (_) { return null; }
+}
+function buildStaysResearchPrompt(lang) {
+  var langName = lang === 'vi' ? 'Vietnamese' : (lang === 'es' ? 'Spanish' : 'English');
+  return [
+    'You are an expert lodging concierge for Du Lich Cali who acts like a PERSONAL TRAVEL AGENT. The group does NOT know the destination — so YOU decide the best AREA(s), the best HOTELS by category, and (across destinations) the smartest hotel STRATEGY, using current web knowledge. You ONLY research/recommend — never book or charge. The goal: the group thinks "wow, I never would have thought of staying there."',
+    'Return ONLY valid JSON (no markdown): { "stays":[ { "city","bestArea","whyArea"(one sentence),"bestAreas":[ { "area","why"(one short phrase),"reasons":[2-4 very short checkmark phrases e.g. "Close to the Zoo","Ocean view","Family friendly","Easy parking"] } ],"hotels":[ { "name"(a real, well-known hotel/brand if confident, else ""),"area","category"(best_overall|best_value|family|luxury|resort|ocean_view|food_area|theme_parks|disneyland|budget|pool|breakfast|kitchen|accessible),"starRating"(rough number like "4.5" ONLY if grounded in search, else ""),"reviewCount"(rough like "2k+" ONLY if grounded, else ""),"amenities":[≤4 short],"breakfast"(bool),"kitchen"(bool),"pool"(bool),"familySuite"(bool),"oceanDistance"(short phrase or ""),"attractionDistances":[ { "name","distance"(rough drive/walk) } ](≤2),"parkingNote","priceRange"("pending verification" or a rough range/$/$$/$$$ — NEVER an exact/guaranteed price),"why"(one short sentence),"dataSource":"ai_researched_pending_verification" } ],"airbnbAreas":[ { "area","bestFor"(family|budget|kitchen|space),"why" } ] } ], "strategies":[ { "name"(single_base|split_nights|cheapest|near_attraction),"label"(short),"nights":[ { "city","nights" } ],"costRange"(rough total "(est.)" or "pending verification"),"driving"(one phrase),"convenience"(one phrase),"kidsNote"(one phrase),"foodNote"(one phrase),"why"(one sentence),"recommended"(bool) } ] }',
+    'CATEGORIES: present a SPREAD of category-labelled picks across the trip — always Best Overall, Best Value and Best For Families, PLUS an Ocean View pick when the group likes the coast/ocean, a Best Food Area pick when food is a priority, and a Best For Theme Parks / Disneyland pick when those are relevant. 3–5 hotels per destination spanning budget→luxury, including a family suite/kitchen/pool option when there are kids/toddlers and a low-walking/accessible option when there are seniors. Recommend 1–3 best AREAS per city with concrete reasons.',
+    'You DETERMINE areas + hotels from the families\' "stayPrefs" atmosphere (ocean_view/near_beach/quiet/family_friendly/resort/airbnb/luxury/budget/near_attractions/walkable), budget and any destination "hotelPrefs" — map atmosphere words to REAL neighborhoods (e.g. "near_beach" → a real beachfront area; theme-park interest → the hotel district by the park). The user never gives hotel names or areas — YOU choose them. Optimise to minimise driving/traffic, maximise experience/safety/food/family-friendliness, and MINIMISE hotel changes. 2 Airbnb AREAS (not fake listings).',
+    'MULTI-DESTINATION STRATEGY (include "strategies" ONLY when there are 2+ lodging destinations; otherwise omit it or return []): compare realistic stay strategies and mark exactly ONE recommended:true — e.g. single_base (one central base + day trips), split_nights (X nights here, Y there), cheapest (lowest total), near_attraction (next to the big attraction first, then move). For each give rough cost, driving, convenience, a kids note, a food note and WHY. Favour fewer hotel changes for families with young kids/seniors.',
+    tcConsensusPromptLine(),
+    'NEVER output exact prices, availability, confirmation numbers, or URLs (priceRange/costRange = "pending verification" or a rough range; the app builds the booking links). BE CONCISE so the JSON stays small and valid: every text field ONE short phrase; amenities ≤4; no markdown, no commentary, no trailing commas. Write all human-readable text in ' + langName + '. Output ONE compact valid JSON object only.',
+  ].join('\n');
+}
+exports.researchTripStays = onCall(
+  { region: 'us-central1', secrets: [GEMINI_API_KEY], timeoutSeconds: 50, memory: '256MiB', cors: true },
+  async (request) => {
+    const data = request.data || {};
+    const trip = data.trip || {};
+    const lang = (data.lang === 'vi' || data.lang === 'es') ? data.lang : 'en';
+    const dests = (Array.isArray(trip.destinations) ? trip.destinations : []).filter(d => d && (d.city || '').trim() && d.hotelNeeded !== false);
+    if (!dests.length) return { ok: false, debugCode: 'NO_LODGING_DESTINATIONS', stays: [] };
+    const geminiKey = await getAiKey('gemini');
+    if (!geminiKey) return { ok: false, debugCode: 'NO_GEMINI_KEY', stays: [] };
+    const cons = tcConsensusArrays(data); const avoidSet = tcAvoidSet(cons.avoidPlaces);
+    const userContent = 'Recommend where to stay. Input JSON:\n' + JSON.stringify({
+      dateRange: trip.dateRange, budget: trip.budget, tripStyle: trip.tripStyle,
+      destinations: dests.slice(0, 6).map(d => ({ city: d.city, role: d.role, hotelNeeded: d.hotelNeeded !== false, notes: d.notes || '', hotelPrefs: Array.isArray(d.hotelPrefs) ? d.hotelPrefs : [] })),
+      avoidPlaces: cons.avoidPlaces, preferredPlaces: cons.preferredPlaces,
+      familiesSummary: summarizeFamiliesForTrip(trip.families),
+    });
+    try {
+      const text = await serverCallGeminiGrounded(buildStaysResearchPrompt(lang) + '\n\n' + userContent, geminiKey, 3600);
+      let raw = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').replace(/[\u0000-\u001F]+/g, ' ');
+      const s = raw.indexOf('{'); const e = raw.lastIndexOf('}');
+      if (s > 0 || e > 0) raw = raw.slice(s, e + 1);
+      const parsed = tripSalvageJson(raw);
+      if (!parsed) { console.error('[researchTripStays] unparseable JSON, len=' + raw.length); return { ok: false, debugCode: 'RESEARCH_ERROR', stays: [] }; }
+      // Category enum (back-compat: legacy "bestFor" is read when "category" is absent).
+      const CATS = ['best_overall', 'best_value', 'family', 'luxury', 'resort', 'ocean_view', 'food_area', 'theme_parks', 'disneyland', 'budget', 'pool', 'breakfast', 'kitchen', 'accessible'];
+      const catOf = (h) => CATS.indexOf(String(h.category || h.bestFor)) !== -1 ? (h.category || h.bestFor) : 'best_value';
+      let stays = Array.isArray(parsed.stays) ? parsed.stays : [];
+      stays.forEach(s2 => { if (s2 && Array.isArray(s2.hotels)) s2.hotels = s2.hotels.filter(h => h && !avoidSet[String(h.name || h.area || '').trim().toLowerCase()]); }); // drop any group-skipped hotel
+      stays = stays.filter(s2 => s2 && s2.city).slice(0, 6).map(s2 => ({
+        city: String(s2.city).slice(0, 80),
+        bestArea: String(s2.bestArea || '').slice(0, 100),
+        whyArea: String(s2.whyArea || '').slice(0, 240),
+        bestAreas: (Array.isArray(s2.bestAreas) ? s2.bestAreas : []).filter(a => a && a.area).slice(0, 3).map(a => ({
+          area: String(a.area).slice(0, 100), why: String(a.why || '').slice(0, 160),
+          reasons: (Array.isArray(a.reasons) ? a.reasons : []).slice(0, 4).map(x => String(x).slice(0, 48)),
+        })),
+        hotels: (Array.isArray(s2.hotels) ? s2.hotels : []).filter(h => h).slice(0, 6).map(h => ({
+          name: String(h.name || '').slice(0, 120),
+          area: String(h.area || '').slice(0, 100),
+          category: catOf(h), bestFor: catOf(h), // bestFor kept as a legacy alias
+          starRating: String(h.starRating || '').slice(0, 8), reviewCount: String(h.reviewCount || '').slice(0, 16),
+          amenities: (Array.isArray(h.amenities) ? h.amenities : []).slice(0, 6).map(x => String(x).slice(0, 40)),
+          breakfast: !!h.breakfast, kitchen: !!h.kitchen, pool: !!h.pool, familySuite: !!h.familySuite,
+          oceanDistance: String(h.oceanDistance || '').slice(0, 60),
+          attractionDistances: (Array.isArray(h.attractionDistances) ? h.attractionDistances : []).filter(a => a && a.name).slice(0, 2).map(a => ({ name: String(a.name).slice(0, 60), distance: String(a.distance || '').slice(0, 40) })),
+          parkingNote: String(h.parkingNote || '').slice(0, 120),
+          distanceNote: String(h.distanceNote || '').slice(0, 120),
+          priceRange: String(h.priceRange || 'pending verification').slice(0, 80),
+          why: String(h.why || '').slice(0, 200),
+          dataSource: 'ai_researched_pending_verification',
+        })),
+        airbnbAreas: (Array.isArray(s2.airbnbAreas) ? s2.airbnbAreas : []).filter(x => x).slice(0, 4).map(x => ({
+          area: String(x.area || '').slice(0, 100), bestFor: String(x.bestFor || '').slice(0, 40), why: String(x.why || '').slice(0, 200),
+        })),
+      }));
+      const SNAMES = ['single_base', 'split_nights', 'cheapest', 'near_attraction'];
+      let strategies = (Array.isArray(parsed.strategies) ? parsed.strategies : []).filter(x => x && (x.name || x.label)).slice(0, 4).map(x => ({
+        name: SNAMES.indexOf(String(x.name)) !== -1 ? x.name : 'single_base',
+        label: String(x.label || '').slice(0, 80),
+        nights: (Array.isArray(x.nights) ? x.nights : []).filter(n => n && n.city).slice(0, 6).map(n => ({ city: String(n.city).slice(0, 80), nights: (parseInt(n.nights, 10) || 0) })),
+        costRange: String(x.costRange || 'pending verification').slice(0, 80),
+        driving: String(x.driving || '').slice(0, 120), convenience: String(x.convenience || '').slice(0, 120),
+        kidsNote: String(x.kidsNote || '').slice(0, 120), foodNote: String(x.foodNote || '').slice(0, 120),
+        why: String(x.why || '').slice(0, 240), recommended: !!x.recommended,
+        dataSource: 'ai_researched_pending_verification',
+      }));
+      if (dests.length < 2) strategies = []; // strategies only matter with 2+ lodging stops
+      if (strategies.length && !strategies.some(s3 => s3.recommended)) strategies[0].recommended = true;
+      return { ok: true, stays, strategies };
+    } catch (e2) {
+      console.error('[researchTripStays] failed', e2 && e2.message);
+      return { ok: false, debugCode: 'RESEARCH_ERROR', stays: [] };
+    }
+  }
+);
+// ── Food Picks: food-first restaurant research per destination ─────────────
+// Recommends WHERE TO EAT for the group at each stop: a spread of real, well-known
+// spots spanning the group's cuisines, with a kid-friendly option when there are
+// kids and an easy/accessible option when there are seniors. Recommends only — it
+// NEVER reserves, charges, or invents prices, availability, or booking URLs (the
+// frontend builds official search links). Gemini + Google Search grounding.
+function buildRestaurantResearchPrompt(lang) {
+  var langName = lang === 'vi' ? 'Vietnamese' : (lang === 'es' ? 'Spanish' : 'English');
+  return [
+    'You are a LOCAL food concierge for Du Lich Cali who personally knows each California city\'s food scene. For a group trip (multiple families, mixed ages and cuisine tastes), recommend WHERE TO EAT at each stop using current web knowledge. You ONLY research/recommend — you never reserve or charge.',
+    'Return ONLY valid JSON (no markdown): { "food":[ { "city","note"(one phrase: this stop\'s food scene / what the group should prioritize),"picks":[ { "name"(a REAL, well-known restaurant — never invented),"cuisine","address"(approx street + city, no fake suite numbers),"bestFor"(family|groups|date_night|quick_bite|fine_dining|breakfast|vegetarian|seafood|local_specialty|kid_friendly),"dishes":[1-2 popular/signature dishes],"mustTry":[1-2 must-order items],"rating"(rough star rating ONLY if grounded in current search, e.g. "4.6★", else ""),"priceRange"("pending verification" or a rough $/$$/$$$ — NEVER an exact price),"kidSuitability"(one short phrase),"parkingNote"(one short phrase),"reservationNote"(walk-in ok / reserve ahead),"why"(one short sentence: why a local sends this group here),"dataSource":"ai_researched_pending_verification" } ] } ] }',
+    'THINK LIKE A LOCAL, NOT A DIRECTORY. If a destination has a famous ethnic food community matching the group\'s cuisine preferences, recommend the REAL, well-known neighborhood favorites there — never generic chains or a single safe pick. KEY EXAMPLE: Orange County (Westminster / Garden Grove) = LITTLE SAIGON; for Vietnamese fans suggest real local icons — pho (Pho 79, Phoholic, Pho 101, Sup Noodle Bar), bun bo hue (Ngu Binh, Bun Bo Hue Co Do), Vietnamese seafood/oc (Oc & Lau, Oc & Cua, Bien Hen), modern Vietnamese (Nep Cafe, Vox Kitchen, Garlic & Chives), spring rolls (Brodard / Brodard Chateau), coffee/dessert (Phin Smith, 7 Leaves, Bambu, Che Cali, Da Vien). Apply the same local-knowledge approach to every city/cuisine (e.g. San Gabriel Valley for Chinese, Japantown for Japanese, Koreatown for Korean).',
+    'ALWAYS GIVE A SPREAD per destination (never just one): cover best overall, best authentic, best seafood (if seafood is a preference or the city is known for it), a kid-friendly option (when the group has kids/toddlers), a budget option, a dessert/coffee option, and a backup. Honor each family\'s foodPrefsKeys + free-text foodPrefs and any destination "notes". For a meal_stop role, favor convenient en-route favorites. NEVER output exact prices, availability, confirmation numbers, phone numbers, or URLs.',
+    'GROUP TASTE: if the input has a "likedCuisines" list, lean the picks toward those cuisines. ' + tcConsensusPromptLine(),
+    'BE CONCISE so the JSON stays valid: 4-6 picks per destination; address = street + city only; every text field ONE short phrase; dishes/mustTry at most 2 each; no trailing commas. Write all human-readable text in ' + langName + '. Output ONE compact valid JSON object only.',
+  ].join('\n');
+}
+exports.researchTripRestaurants = onCall(
+  { region: 'us-central1', secrets: [GEMINI_API_KEY], timeoutSeconds: 50, memory: '256MiB', cors: true },
+  async (request) => {
+    const data = request.data || {};
+    const trip = data.trip || {};
+    const lang = (data.lang === 'vi' || data.lang === 'es') ? data.lang : 'en';
+    const dests = (Array.isArray(trip.destinations) ? trip.destinations : [])
+      .filter(d => d && (d.city || '').trim() && d.role !== 'pass_through');
+    const fallbackCity = (trip.destination || '').trim();
+    const cities = dests.length ? dests : (fallbackCity ? [{ city: fallbackCity, role: 'main_destination' }] : []);
+    if (!cities.length) return { ok: false, debugCode: 'NO_DESTINATION', food: [] };
+    const geminiKey = await getAiKey('gemini');
+    if (!geminiKey) return { ok: false, debugCode: 'NO_GEMINI_KEY', food: [] };
+    const cons = tcConsensusArrays(data); const avoidSet = tcAvoidSet(cons.avoidPlaces);
+    const userContent = 'Recommend where to eat. Input JSON:\n' + JSON.stringify({
+      dateRange: trip.dateRange, budget: trip.budget, tripStyle: trip.tripStyle,
+      destinations: cities.slice(0, 6).map(d => ({ city: d.city, role: d.role || 'main_destination', notes: d.notes || '' })),
+      avoidPlaces: cons.avoidPlaces, preferredPlaces: cons.preferredPlaces,
+      likedCuisines: Array.isArray(data.likedCuisines) ? data.likedCuisines.slice(0, 12).map(x => String(x).slice(0, 40)) : [],
+      familiesSummary: summarizeFamiliesForTrip(trip.families),
+    });
+    try {
+      const text = await serverCallGeminiGrounded(buildRestaurantResearchPrompt(lang) + '\n\n' + userContent, geminiKey, 3600);
+      let raw = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').replace(/[\u0000-\u001F]+/g, ' ');
+      const s = raw.indexOf('{'); const e = raw.lastIndexOf('}');
+      if (s > 0 || e > 0) raw = raw.slice(s, e + 1);
+      const parsed = tripSalvageJson(raw);
+      if (!parsed) { console.error('[researchTripRestaurants] unparseable JSON, len=' + raw.length); return { ok: false, debugCode: 'RESEARCH_ERROR', food: [] }; }
+      const BEST = ['family', 'groups', 'date_night', 'quick_bite', 'fine_dining', 'breakfast', 'vegetarian', 'seafood', 'local_specialty', 'kid_friendly'];
+      let food = Array.isArray(parsed.food) ? parsed.food : [];
+      food = food.filter(f => f && f.city).slice(0, 6).map(f => ({
+        city: String(f.city).slice(0, 80),
+        note: String(f.note || '').slice(0, 200),
+        picks: (Array.isArray(f.picks) ? f.picks : []).filter(p => p && !avoidSet[String(p.name || '').trim().toLowerCase()]).slice(0, 8).map(p => ({
+          name: String(p.name || '').slice(0, 120),
+          cuisine: String(p.cuisine || '').slice(0, 60),
+          address: String(p.address || '').slice(0, 140),
+          bestFor: BEST.indexOf(String(p.bestFor)) !== -1 ? p.bestFor : 'groups',
+          dishes: (Array.isArray(p.dishes) ? p.dishes : []).slice(0, 3).map(x => String(x).slice(0, 60)),
+          mustTry: (Array.isArray(p.mustTry) ? p.mustTry : []).slice(0, 3).map(x => String(x).slice(0, 60)),
+          rating: String(p.rating || '').slice(0, 24),
+          priceRange: String(p.priceRange || 'pending verification').slice(0, 60),
+          kidSuitability: String(p.kidSuitability || '').slice(0, 90),
+          parkingNote: String(p.parkingNote || '').slice(0, 100),
+          reservationNote: String(p.reservationNote || '').slice(0, 120),
+          why: String(p.why || '').slice(0, 200),
+          dataSource: 'ai_researched_pending_verification',
+        })),
+      }));
+      return { ok: true, food };
+    } catch (e2) {
+      console.error('[researchTripRestaurants] failed', e2 && e2.message);
+      return { ok: false, debugCode: 'RESEARCH_ERROR', food: [] };
+    }
+  }
+);
+// ── Destination Intelligence + Attraction Ranking Engine ─────────────────────
+// Ranks each destination's SIGNATURE attractions for THIS group (Family Analysis →
+// scoring), like a local expert. NOT a hardcoded table — the AI reasons; the examples
+// teach the concept. No fake prices/URLs; ticketed flag drives the booking checklist.
+function buildAttractionRankPrompt(lang) {
+  var langName = lang === 'vi' ? 'Vietnamese' : (lang === 'es' ? 'Spanish' : 'English');
+  return [
+    'You are a LOCAL travel EXPERT for Du Lich Cali. For each destination, RANK its real signature/iconic attractions for THIS specific group, using current web knowledge. Recommend only — never book or invent.',
+    signatureAttractionIntel(),
+    'Return ONLY valid JSON (no markdown): { "destinations":[ { "city","attractions":[ { "name"(a REAL attraction — never invented),"tier"(very_high|high|medium),"score"(0-100 for THIS group),"category"(theme_park|zoo|aquarium|museum|landmark|nature|beach|food|nightlife|show|other),"ticketed"(true|false),"ageFit"(kids|teens|seniors|all_ages|adults),"walkingLevel"(low|medium|high),"weatherSensitive"(true|false),"why"(one short sentence: why this rank for THIS group) } ] } ] }',
+    'AVOID: if the input includes an "avoidPlaces" list, the group has REJECTED those attractions — NEVER include any of them (or an obvious rename of them); rank different real attractions instead.',
+    'Rank 4-7 attractions per destination, sorted by score DESC. Use the provided groupProfile (childFocused/teenFocused/seniorSensitive/thrillSeeking/themeParkAffinity/walkingTolerance/budget/pace) to score: e.g. two 6-year-olds + two teens → a zoo and a big theme park/LEGOLAND rank highest (all-day, multi-age); seniors present → also surface a lower-walking cultural option. LOWER scores for very low budget, theme-park-averse groups, single-day stops, poor weather, or low walking tolerance — and you may omit a clearly-unfit icon. Mark "ticketed":true for paid attractions (theme parks, zoos, aquariums, observatories with paid entry). NEVER output exact prices, hours, availability, or URLs. Keep "why" to one short phrase. Write all human-readable text in ' + langName + '. Output ONE compact valid JSON object only.',
+  ].join('\n');
+}
+exports.rankDestinationAttractions = onCall(
+  { region: 'us-central1', secrets: [GEMINI_API_KEY], timeoutSeconds: 50, memory: '256MiB', cors: true },
+  async (request) => {
+    const data = request.data || {};
+    const trip = data.trip || {};
+    const lang = (data.lang === 'vi' || data.lang === 'es') ? data.lang : 'en';
+    const dests = (Array.isArray(trip.destinations) ? trip.destinations : []).map(d => String((d && d.city) || '').trim()).filter(Boolean);
+    if (!dests.length) return { ok: false, debugCode: 'NO_DESTINATIONS', destinations: [] };
+    const geminiKey = await getAiKey('gemini');
+    if (!geminiKey) return { ok: false, debugCode: 'NO_GEMINI_KEY', destinations: [] };
+    const avoid = Array.isArray(data.avoidPlaces) ? data.avoidPlaces.slice(0, 40).map(x => String(x).slice(0, 120)) : [];
+    const avoidSet = {}; avoid.forEach(n => { avoidSet[String(n).trim().toLowerCase()] = 1; });
+    const userContent = 'Rank signature attractions. Input JSON:\n' + JSON.stringify({
+      destinations: dests.slice(0, 8), dateRange: trip.dateRange, budget: trip.budget, pace: trip.tripStyle,
+      avoidPlaces: avoid,
+      groupProfile: tcGroupProfile(trip.families, trip.budget, trip.tripStyle), familiesSummary: summarizeFamiliesForTrip(trip.families),
+    });
+    try {
+      const text = await serverCallGeminiGrounded(buildAttractionRankPrompt(lang) + '\n\n' + userContent, geminiKey, 3200);
+      let raw = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').replace(/[\u0000-\u001F]+/g, ' ');
+      const s = raw.indexOf('{'); const e = raw.lastIndexOf('}');
+      if (s > 0 || e > 0) raw = raw.slice(s, e + 1);
+      const parsed = tripSalvageJson(raw);
+      if (!parsed || !Array.isArray(parsed.destinations)) { console.error('[rankDestinationAttractions] unparseable, len=' + raw.length); return { ok: false, debugCode: 'RESEARCH_ERROR', destinations: [] }; }
+      const TIERS = ['very_high', 'high', 'medium'];
+      const destinations = parsed.destinations.slice(0, 8).map(d => {
+        d = d || {};
+        const attractions = (Array.isArray(d.attractions) ? d.attractions : []).filter(a => a && a.name && !avoidSet[String(a.name).trim().toLowerCase()]).slice(0, 8).map(a => ({
+          name: String(a.name).slice(0, 120),
+          tier: TIERS.indexOf(a.tier) >= 0 ? a.tier : 'medium',
+          score: Math.max(0, Math.min(100, parseInt(a.score, 10) || 0)),
+          category: String(a.category || '').slice(0, 24),
+          ticketed: !!a.ticketed,
+          ageFit: String(a.ageFit || '').slice(0, 16),
+          walkingLevel: String(a.walkingLevel || '').slice(0, 8),
+          weatherSensitive: !!a.weatherSensitive,
+          why: String(a.why || '').slice(0, 200),
+          dataSource: 'ai_researched_pending_verification',
+        })).sort((x, y) => y.score - x.score);
+        return { city: String(d.city || '').slice(0, 80), attractions };
+      }).filter(d => d.city && d.attractions.length);
+      return { ok: true, destinations, groupProfile: tcGroupProfile(trip.families, trip.budget, trip.tripStyle), dataSource: 'ai_researched_pending_verification' };
+    } catch (e2) {
+      console.error('[rankDestinationAttractions] failed', e2 && e2.message);
+      return { ok: false, debugCode: 'RESEARCH_ERROR', destinations: [] };
+    }
+  }
+);
+// ── Event Discovery Agent — current/temporary events matching the trip DATES ──────
+// Festivals, concerts, markets, fireworks, seasonal/pop-up/family/kids/teen/free events.
+// NEVER invents events: when unsure, returns "pending verification" + a real search link.
+function buildEventsPrompt(lang) {
+  var langName = lang === 'vi' ? 'Vietnamese' : (lang === 'es' ? 'Spanish' : 'English');
+  return [
+    'You are a LOCAL events concierge for Du Lich Cali. For each destination, find REAL current/temporary events that fall WITHIN the trip dates and suit this group, using current web knowledge. Recommend only — never book.',
+    'Return ONLY valid JSON (no markdown): { "destinations":[ { "city","events":[ { "name","date"(within trip dates),"time","location","category"(festival|concert|farmers_market|night_market|food|fireworks|seasonal|popup|family|kids|teen|free|other),"priceRange"(rough or "free" or "pending verification"),"familySuitability"(kids|teens|all_ages|adults),"ticketRequired"(true|false),"eventUrl"(a REAL event/official or search URL),"whyRecommended"(one short phrase),"verificationStatus":"pending_verification" } ] } ] }',
+    'HARD RULES: NEVER invent an event, date, venue, or price. Only list events you are reasonably confident recur or are announced for these dates; if you are NOT sure a specific event runs on the trip dates, instead return ONE entry per destination with name "Local events (research pending)", category matching the group, eventUrl = a Google search like "https://www.google.com/search?q=" + URL-encoded "<city> events <dateRange>", and verificationStatus "pending_verification". Events MUST fall within the trip dates. NEVER output exact ticket prices as fact — use ranges or "pending verification". Prefer family/kids/teen-friendly and FREE local events for this group. 3-6 events per destination max.',
+    tcConsensusPromptLine(),
+    'Write all human-readable text in ' + langName + '. Output ONE compact valid JSON object only.',
+  ].join('\n');
+}
+exports.researchTripEvents = onCall(
+  { region: 'us-central1', secrets: [GEMINI_API_KEY], timeoutSeconds: 50, memory: '256MiB', cors: true },
+  async (request) => {
+    const data = request.data || {};
+    const trip = data.trip || {};
+    const lang = (data.lang === 'vi' || data.lang === 'es') ? data.lang : 'en';
+    const dests = (Array.isArray(trip.destinations) ? trip.destinations : []).map(d => String((d && d.city) || '').trim()).filter(Boolean);
+    if (!dests.length || !String(trip.dateRange || '').trim()) return { ok: false, debugCode: 'NO_DATES_OR_DEST', destinations: [] };
+    const geminiKey = await getAiKey('gemini');
+    if (!geminiKey) return { ok: false, debugCode: 'NO_GEMINI_KEY', destinations: [] };
+    const cons = tcConsensusArrays(data); const avoidSet = tcAvoidSet(cons.avoidPlaces);
+    const userContent = 'Find events. Input JSON:\n' + JSON.stringify({
+      destinations: dests.slice(0, 8), dateRange: trip.dateRange,
+      dateList: Array.isArray(data.dateList) ? data.dateList.slice(0, 30) : [],
+      avoidPlaces: cons.avoidPlaces, preferredPlaces: cons.preferredPlaces,
+      groupProfile: tcGroupProfile(trip.families, trip.budget, trip.tripStyle), familiesSummary: summarizeFamiliesForTrip(trip.families),
+    });
+    try {
+      const text = await serverCallGeminiGrounded(buildEventsPrompt(lang) + '\n\n' + userContent, geminiKey, 3000);
+      let raw = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').replace(/[\u0000-\u001F]+/g, ' ');
+      const s = raw.indexOf('{'); const e = raw.lastIndexOf('}');
+      if (s > 0 || e > 0) raw = raw.slice(s, e + 1);
+      const parsed = tripSalvageJson(raw);
+      if (!parsed || !Array.isArray(parsed.destinations)) { console.error('[researchTripEvents] unparseable, len=' + raw.length); return { ok: false, debugCode: 'RESEARCH_ERROR', destinations: [] }; }
+      const destinations = parsed.destinations.slice(0, 8).map(d => {
+        d = d || {};
+        const events = (Array.isArray(d.events) ? d.events : []).filter(ev => ev && ev.name && !avoidSet[String(ev.name).trim().toLowerCase()]).slice(0, 6).map(ev => ({
+          name: String(ev.name).slice(0, 120), date: String(ev.date || '').slice(0, 40), time: String(ev.time || '').slice(0, 40),
+          location: String(ev.location || '').slice(0, 140), category: String(ev.category || '').slice(0, 24),
+          priceRange: String(ev.priceRange || 'pending verification').slice(0, 60), familySuitability: String(ev.familySuitability || '').slice(0, 16),
+          ticketRequired: !!ev.ticketRequired, eventUrl: String(ev.eventUrl || '').slice(0, 300), whyRecommended: String(ev.whyRecommended || '').slice(0, 200),
+          source: 'ai_researched', verificationStatus: 'pending_verification',
+        }));
+        return { city: String(d.city || '').slice(0, 80), events };
+      }).filter(d => d.city);
+      return { ok: true, destinations, dataSource: 'ai_researched_pending_verification' };
+    } catch (e2) {
+      console.error('[researchTripEvents] failed', e2 && e2.message);
+      return { ok: false, debugCode: 'RESEARCH_ERROR', destinations: [] };
+    }
+  }
+);
+// ── Stopover Agent — smart stops on LONG drive legs (meal/rest/gas/coffee/scenic) ──
+// Considers meal timing, kids/seniors, Vietnamese-food preference, charging, route. Real
+// places + map links; no fake prices/route times.
+function buildStopoverPrompt(lang) {
+  var langName = lang === 'vi' ? 'Vietnamese' : (lang === 'es' ? 'Spanish' : 'English');
+  return [
+    'You are a road-trip concierge for Du Lich Cali. For each LONG drive leg, suggest smart REAL stopovers for THIS group, using current web knowledge. Recommend only — never book or invent.',
+    'Return ONLY valid JSON (no markdown): { "legs":[ { "fromCity","toCity","stopovers":[ { "name"(a REAL place near the route),"type"(meal|rest|gas|coffee|attraction|scenic|hotel),"location"(town/area near the highway),"estimatedStopDuration"(e.g. "30 min"),"estimatedCost"(rough or "" — NEVER a fake exact price),"whyRecommended"(one short phrase),"mapUrl"(Google Maps search URL),"alternatives"([1-2 real alternative names]),"verificationStatus":"pending_verification" } ] } ] }',
+    'Reason about meal timing (a lunch stop ~2-3h in), restroom/leg-stretch breaks for kids and seniors, the families\' food preferences (e.g. if they like Vietnamese food, suggest a real Vietnamese spot near the route when one exists), gas/EV charging, scenic stops worth a short break, and safe well-known rest areas — paced by the real drive time provided. 2-4 stopovers per long leg. Build mapUrl = "https://www.google.com/maps/search/?api=1&query=" + URL-encoded "<name>, <location>". NEVER invent a place or output a fake exact price/route time. Use REAL, well-known places along that corridor.',
+    tcConsensusPromptLine(),
+    'Write all human-readable text in ' + langName + '. Output ONE compact valid JSON object only.',
+  ].join('\n');
+}
+exports.researchTripStopovers = onCall(
+  { region: 'us-central1', secrets: [GEMINI_API_KEY, GOOGLE_MAPS_API_KEY], timeoutSeconds: 50, memory: '256MiB', cors: true },
+  async (request) => {
+    const data = request.data || {};
+    const trip = data.trip || {};
+    const lang = (data.lang === 'vi' || data.lang === 'es') ? data.lang : 'en';
+    const origin = String(trip.departureCity || '').trim();
+    const destCities = (Array.isArray(trip.destinations) ? trip.destinations : []).map(d => String((d && d.city) || '').trim()).filter(Boolean);
+    if (!destCities.length) return { ok: false, debugCode: 'NO_ROUTE', legs: [] };
+    const path = (origin ? [origin] : []).concat(destCities);
+    if (origin) path.push(origin);
+    const cities = path.filter((c, i) => i === 0 || c.toLowerCase() !== path[i - 1].toLowerCase());
+    if (cities.length < 2) return { ok: false, debugCode: 'NO_ROUTE', legs: [] };
+    const route = await tcComputeRouteLegs(cities.slice(0, 12), GOOGLE_MAPS_API_KEY.value());
+    // Only LONG legs (>= ~100 mi) get stopovers.
+    const longLegs = route.legs.filter(l => (l.distanceMiles || 0) >= 100).map(l => ({ fromCity: l.fromCity, toCity: l.toCity, driveDistanceText: l.distanceText, driveDurationText: l.durationTrafficText || l.durationText, driveSource: l.source }));
+    if (!longLegs.length) return { ok: true, legs: [], note: 'no_long_legs' };
+    const geminiKey = await getAiKey('gemini');
+    if (!geminiKey) return { ok: false, debugCode: 'NO_GEMINI_KEY', legs: [] };
+    const cons = tcConsensusArrays(data); const avoidSet = tcAvoidSet(cons.avoidPlaces);
+    const userContent = 'Suggest stopovers. Input JSON:\n' + JSON.stringify({
+      legs: longLegs, avoidPlaces: cons.avoidPlaces, preferredPlaces: cons.preferredPlaces,
+      groupProfile: tcGroupProfile(trip.families, trip.budget, trip.tripStyle), familiesSummary: summarizeFamiliesForTrip(trip.families),
+    });
+    try {
+      const text = await serverCallGeminiGrounded(buildStopoverPrompt(lang) + '\n\n' + userContent, geminiKey, 3000);
+      let raw = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').replace(/[\u0000-\u001F]+/g, ' ');
+      const s = raw.indexOf('{'); const e = raw.lastIndexOf('}');
+      if (s > 0 || e > 0) raw = raw.slice(s, e + 1);
+      const parsed = tripSalvageJson(raw);
+      if (!parsed || !Array.isArray(parsed.legs)) { console.error('[researchTripStopovers] unparseable, len=' + raw.length); return { ok: false, debugCode: 'RESEARCH_ERROR', legs: [] }; }
+      const TYPES = ['meal', 'rest', 'gas', 'coffee', 'attraction', 'scenic', 'hotel'];
+      const legs = parsed.legs.slice(0, 8).map((lg, i) => {
+        lg = lg || {}; const c = longLegs[i] || {};
+        const stopovers = (Array.isArray(lg.stopovers) ? lg.stopovers : []).filter(s2 => s2 && s2.name && !avoidSet[String(s2.name).trim().toLowerCase()]).slice(0, 5).map(s2 => ({
+          name: String(s2.name).slice(0, 120), type: TYPES.indexOf(s2.type) >= 0 ? s2.type : 'rest',
+          location: String(s2.location || '').slice(0, 120), estimatedStopDuration: String(s2.estimatedStopDuration || '').slice(0, 30),
+          estimatedCost: String(s2.estimatedCost || '').slice(0, 40), whyRecommended: String(s2.whyRecommended || '').slice(0, 200),
+          mapUrl: String(s2.mapUrl || '').slice(0, 300), alternatives: (Array.isArray(s2.alternatives) ? s2.alternatives : []).slice(0, 2).map(x => String(x).slice(0, 80)),
+          source: 'ai_researched', verificationStatus: 'pending_verification',
+        }));
+        return { fromCity: c.fromCity || String(lg.fromCity || '').slice(0, 80), toCity: c.toCity || String(lg.toCity || '').slice(0, 80), driveDistanceText: c.driveDistanceText || '', driveDurationText: c.driveDurationText || '', driveSource: c.driveSource || 'estimated', stopovers };
+      }).filter(l => l.stopovers.length);
+      return { ok: true, legs, source: route.source, dataSource: 'ai_researched_pending_verification' };
+    } catch (e2) {
+      console.error('[researchTripStopovers] failed', e2 && e2.message);
+      return { ok: false, debugCode: 'RESEARCH_ERROR', legs: [] };
+    }
+  }
+);
+// ── Travel-Day Route Opportunities Agent ──────────────────────────────────────
+// For EACH route leg (origin→dest, incl. the return), discover REAL, interesting things to
+// optionally insert ON a travel day — ethnic food districts, beaches, scenic viewpoints,
+// shopping, hidden gems, historic towns, museums, theme parks, photo spots — chosen for THIS
+// group (ages/prefs/budget/ocean/food/weather). Turns a plain A→B drive into a customizable
+// day. NEVER hardcodes a city/place; NEVER re-suggests a skipped place; builds around pins.
+// Recommend only (the user inserts) — no fake prices/URLs/confirmations.
+function buildRouteOpportunitiesPrompt(lang) {
+  var langName = lang === 'vi' ? 'Vietnamese' : (lang === 'es' ? 'Spanish' : 'English');
+  return [
+    'You are an expert California road-trip concierge for Du Lich Cali. For EACH driving leg given (origin → destination), discover REAL, interesting OPTIONAL stops the group could insert into that travel day, using current web knowledge. A travel day is one of the most flexible, fun days — surface a rich, varied set of opportunities so the family feels they can BUILD their own trip, not follow a fixed line from A to B. Recommend only — never book or invent.',
+    'Return ONLY valid JSON (no markdown): { "legs":[ { "fromCity","toCity","opportunities":[ { "place"(a REAL, well-known place near/along the route — never invented),"category"(food|beach|scenic|shopping|cultural|museum|theme_park|aquarium|nature|historic|photo|hidden_gem|other),"insertionType"(food_stop|short_stop|half_day|overnight|scenic_stop|shopping_stop|beach_stop|kid_stop|teen_stop|senior_stop|photo_stop),"detourMinutes"(rough extra minutes off the direct route, integer, or ""),"visitDuration"(e.g. "30 min","1–2h"),"costEstimate"(rough, "free", or "pending verification" — NEVER a fake exact price),"whyRecommended"(one short sentence for THIS group),"whoBenefits"(kids|teens|seniors|all_ages|foodies|adults),"weatherSuitability"(any|sunny|outdoor|indoor),"energyLevel"(low|medium|high),"priority"(must_see|recommended|optional),"mapQuery"(the place + town for a maps search),"verificationStatus":"pending_verification" } ] } ] }',
+    'DISCOVER A VARIED SPREAD per leg (6–9 opportunities): mix food districts/famous local eats, a beach or waterfront if the route is near the coast and the group likes the ocean, a scenic viewpoint/photo spot, a kid stop, a teen stop, a senior-friendly low-walking stop, a hidden gem, and an optional half-day attraction (theme park/aquarium/museum/historic town) when one is genuinely near the corridor. THINK LIKE A LOCAL: if the corridor passes a famous ethnic food community matching the group\'s cuisines, surface its real icons. Choose opportunities from the group\'s preferences, ages (kids/teens/seniors), budget, the ocean/food priorities, likely weather and the actual route — NOT a fixed template.',
+    'AVOID: if the input includes an "avoidPlaces" list, the group has REJECTED those — NEVER suggest any of them again. PINNED: if "pinnedActivities" is given, do not duplicate them; build complementary stops around them.',
+    'HARD RULES: Every place must be REAL and plausibly near that corridor. detourMinutes is a rough estimate of extra time vs. the direct drive (the app shows exact drive time separately). NEVER output exact prices, hours, availability, phone numbers, or URLs (costEstimate = rough/"free"/"pending verification"). Keep every text field to ONE short phrase. Write all human-readable text in ' + langName + '. Output ONE compact valid JSON object only.',
+  ].join('\n');
+}
+exports.researchTripRouteOpportunities = onCall(
+  { region: 'us-central1', secrets: [GEMINI_API_KEY], timeoutSeconds: 55, memory: '256MiB', cors: true },
+  async (request) => {
+    const data = request.data || {};
+    const trip = data.trip || {};
+    const lang = (data.lang === 'vi' || data.lang === 'es') ? data.lang : 'en';
+    const origin = String(trip.departureCity || '').trim();
+    const destCities = (Array.isArray(trip.destinations) ? trip.destinations : []).map((d) => String((d && d.city) || '').trim()).filter(Boolean);
+    if (!origin || !destCities.length) return { ok: false, debugCode: 'NO_ROUTE', legs: [] };
+    const path = [origin].concat(destCities); path.push(origin);
+    const seq = path.filter((c, i) => i === 0 || c.toLowerCase() !== path[i - 1].toLowerCase());
+    const legPairs = [];
+    for (let i = 0; i < seq.length - 1 && legPairs.length < 8; i++) legPairs.push({ fromCity: seq[i], toCity: seq[i + 1] });
+    if (!legPairs.length) return { ok: false, debugCode: 'NO_ROUTE', legs: [] };
+    const geminiKey = await getAiKey('gemini');
+    if (!geminiKey) return { ok: false, debugCode: 'NO_GEMINI_KEY', legs: [] };
+    const userContent = 'Discover travel-day route opportunities. Input JSON:\n' + JSON.stringify({
+      legs: legPairs, dateRange: trip.dateRange, budget: trip.budget, pace: trip.tripStyle,
+      groupProfile: tcGroupProfile(trip.families, trip.budget, trip.tripStyle), familiesSummary: summarizeFamiliesForTrip(trip.families),
+      avoidPlaces: Array.isArray(data.avoidPlaces) ? data.avoidPlaces.slice(0, 40).map((x) => String(x).slice(0, 120)) : [],
+      pinnedActivities: Array.isArray(trip.pinnedActivities) ? trip.pinnedActivities.slice(0, 12) : [],
+    });
+    try {
+      const text = await serverCallGeminiGrounded(buildRouteOpportunitiesPrompt(lang) + '\n\n' + userContent, geminiKey, 3600);
+      let raw = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').replace(/[\u0000-\u001F]+/g, ' ');
+      const s = raw.indexOf('{'); const e = raw.lastIndexOf('}');
+      if (s > 0 || e > 0) raw = raw.slice(s, e + 1);
+      const parsed = tripSalvageJson(raw);
+      if (!parsed || !Array.isArray(parsed.legs)) { console.error('[researchTripRouteOpportunities] unparseable, len=' + raw.length); return { ok: false, debugCode: 'RESEARCH_ERROR', legs: [] }; }
+      const avoid = {}; (Array.isArray(data.avoidPlaces) ? data.avoidPlaces : []).forEach((n) => { avoid[String(n).trim().toLowerCase()] = 1; });
+      const CATS = ['food', 'beach', 'scenic', 'shopping', 'cultural', 'museum', 'theme_park', 'aquarium', 'nature', 'historic', 'photo', 'hidden_gem', 'other'];
+      const INS = ['food_stop', 'short_stop', 'half_day', 'overnight', 'scenic_stop', 'shopping_stop', 'beach_stop', 'kid_stop', 'teen_stop', 'senior_stop', 'photo_stop'];
+      const ENERGY = ['low', 'medium', 'high']; const PRIO = ['must_see', 'recommended', 'optional'];
+      const legs = parsed.legs.slice(0, 8).map((lg, idx) => {
+        lg = lg || {}; const c = legPairs[idx] || {};
+        const opportunities = (Array.isArray(lg.opportunities) ? lg.opportunities : [])
+          .filter((o) => o && o.place && !avoid[String(o.place).trim().toLowerCase()])
+          .slice(0, 9).map((o) => ({
+            place: String(o.place).slice(0, 120),
+            category: CATS.indexOf(String(o.category)) >= 0 ? o.category : 'other',
+            insertionType: INS.indexOf(String(o.insertionType)) >= 0 ? o.insertionType : 'short_stop',
+            detourMinutes: (o.detourMinutes === '' || o.detourMinutes == null) ? '' : (parseInt(o.detourMinutes, 10) || ''),
+            visitDuration: String(o.visitDuration || '').slice(0, 30),
+            costEstimate: String(o.costEstimate || 'pending verification').slice(0, 50),
+            whyRecommended: String(o.whyRecommended || '').slice(0, 200),
+            whoBenefits: String(o.whoBenefits || '').slice(0, 40),
+            weatherSuitability: String(o.weatherSuitability || 'any').slice(0, 16),
+            energyLevel: ENERGY.indexOf(String(o.energyLevel)) >= 0 ? o.energyLevel : 'medium',
+            priority: PRIO.indexOf(String(o.priority)) >= 0 ? o.priority : 'optional',
+            mapQuery: String(o.mapQuery || o.place || '').slice(0, 140),
+            source: 'ai_researched', verificationStatus: 'pending_verification',
+          }));
+        return { fromCity: c.fromCity || String(lg.fromCity || '').slice(0, 80), toCity: c.toCity || String(lg.toCity || '').slice(0, 80), opportunities };
+      }).filter((l) => l.opportunities.length);
+      return { ok: true, legs, dataSource: 'ai_researched_pending_verification' };
+    } catch (e2) {
+      console.error('[researchTripRouteOpportunities] failed', e2 && e2.message);
+      return { ok: false, debugCode: 'RESEARCH_ERROR', legs: [] };
+    }
+  }
+);
+// ── Tour Discovery Agent — REAL tours & unique experiences per destination ────────
+// Harbor/whale-watching/hop-on-hop-off/food/kayak/brewery/amphibious/ghost/biking tours, etc.,
+// discovered for THIS group (ages/prefs/budget). Recommend only — NEVER invents an operator,
+// price, schedule, availability or URL (the frontend builds official search links). Honors the
+// group's votes (avoid skipped, prefer liked/favorited). Gemini + Google Search grounding.
+function buildToursPrompt(lang) {
+  var langName = lang === 'vi' ? 'Vietnamese' : (lang === 'es' ? 'Spanish' : 'English');
+  return [
+    'You are a LOCAL tours & experiences concierge for Du Lich Cali. For each destination, find REAL, well-known TOURS and UNIQUE EXPERIENCES that suit THIS group, using current web knowledge — the kinds of things a visitor books beyond a plain attraction ticket. Recommend only — never book, never invent.',
+    'Return ONLY valid JSON (no markdown): { "destinations":[ { "city","tours":[ { "name"(a REAL, well-known tour/operator or experience — never invented),"type"(harbor_cruise|whale_watching|hop_on_hop_off|food_tour|walking_tour|bike_tour|kayak|boat|amphibious|brewery|cultural|adventure|nature|seasonal|other),"duration"(rough, e.g. "2h","half-day"),"familySuitability"(kids|teens|seniors|all_ages|adults),"whoBenefits"(one short phrase),"priceRange"("pending verification" or a rough per-person range — NEVER a fake exact price),"bookingNote"(walk-in / reserve ahead / seasonal — general),"why"(one short sentence: why a local picks this for THIS group),"verificationStatus":"pending_verification" } ] } ] }',
+    'Give 3-6 tours per destination spanning the group: an all-ages signature experience, a kid-friendly one (when there are kids), a teen-oriented one (when there are teens), a low-walking/seated option (when there are seniors), and a food/cultural experience when food is a priority. THINK LIKE A LOCAL — surface the experiences that destination is actually known for. NEVER output exact prices, availability, confirmation numbers, phone numbers, or URLs (priceRange = "pending verification" or a rough range; the app builds the search/booking links).',
+    tcConsensusPromptLine(),
+    'BE CONCISE: every text field ONE short phrase; no trailing commas. Write all human-readable text in ' + langName + '. Output ONE compact valid JSON object only.',
+  ].join('\n');
+}
+exports.researchTripTours = onCall(
+  { region: 'us-central1', secrets: [GEMINI_API_KEY], timeoutSeconds: 50, memory: '256MiB', cors: true },
+  async (request) => {
+    const data = request.data || {};
+    const trip = data.trip || {};
+    const lang = (data.lang === 'vi' || data.lang === 'es') ? data.lang : 'en';
+    const dests = (Array.isArray(trip.destinations) ? trip.destinations : []).map(d => String((d && d.city) || '').trim()).filter(Boolean);
+    if (!dests.length) return { ok: false, debugCode: 'NO_DESTINATIONS', destinations: [] };
+    const geminiKey = await getAiKey('gemini');
+    if (!geminiKey) return { ok: false, debugCode: 'NO_GEMINI_KEY', destinations: [] };
+    const cons = tcConsensusArrays(data); const avoidSet = tcAvoidSet(cons.avoidPlaces);
+    const userContent = 'Find tours & unique experiences. Input JSON:\n' + JSON.stringify({
+      destinations: dests.slice(0, 8), dateRange: trip.dateRange, budget: trip.budget, pace: trip.tripStyle,
+      avoidPlaces: cons.avoidPlaces, preferredPlaces: cons.preferredPlaces,
+      groupProfile: tcGroupProfile(trip.families, trip.budget, trip.tripStyle), familiesSummary: summarizeFamiliesForTrip(trip.families),
+    });
+    try {
+      const text = await serverCallGeminiGrounded(buildToursPrompt(lang) + '\n\n' + userContent, geminiKey, 3200);
+      let raw = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').replace(/[\u0000-\u001F]+/g, ' ');
+      const s = raw.indexOf('{'); const e = raw.lastIndexOf('}');
+      if (s > 0 || e > 0) raw = raw.slice(s, e + 1);
+      const parsed = tripSalvageJson(raw);
+      if (!parsed || !Array.isArray(parsed.destinations)) { console.error('[researchTripTours] unparseable, len=' + raw.length); return { ok: false, debugCode: 'RESEARCH_ERROR', destinations: [] }; }
+      const TYPES = ['harbor_cruise', 'whale_watching', 'hop_on_hop_off', 'food_tour', 'walking_tour', 'bike_tour', 'kayak', 'boat', 'amphibious', 'brewery', 'cultural', 'adventure', 'nature', 'seasonal', 'other'];
+      const destinations = parsed.destinations.slice(0, 8).map(d => {
+        d = d || {};
+        const tours = (Array.isArray(d.tours) ? d.tours : []).filter(tr2 => tr2 && tr2.name && !avoidSet[String(tr2.name).trim().toLowerCase()]).slice(0, 6).map(tr2 => ({
+          name: String(tr2.name).slice(0, 120), type: TYPES.indexOf(String(tr2.type)) >= 0 ? tr2.type : 'other',
+          duration: String(tr2.duration || '').slice(0, 30), familySuitability: String(tr2.familySuitability || '').slice(0, 16),
+          whoBenefits: String(tr2.whoBenefits || '').slice(0, 60), priceRange: String(tr2.priceRange || 'pending verification').slice(0, 60),
+          bookingNote: String(tr2.bookingNote || '').slice(0, 80), why: String(tr2.why || '').slice(0, 200),
+          source: 'ai_researched', verificationStatus: 'pending_verification',
+        }));
+        return { city: String(d.city || '').slice(0, 80), tours };
+      }).filter(d => d.city && d.tours.length);
+      return { ok: true, destinations, dataSource: 'ai_researched_pending_verification' };
+    } catch (e2) {
+      console.error('[researchTripTours] failed', e2 && e2.message);
+      return { ok: false, debugCode: 'RESEARCH_ERROR', destinations: [] };
+    }
+  }
+);
+// ── AI Social Clip Package Agent (V2) — export PACKAGE only, NO render/post ───
+// Builds a ready-to-shoot social package (storyboard, captions, voiceover, overlays,
+// hashtags, per-platform posts) FROM the media the group already picked. It NEVER
+// renders or posts a video, NEVER invents footage/media that isn't in the provided
+// list, and NEVER fabricates stats/metrics/handles. Consent is gated on the client.
+function buildClipPackagePrompt(lang, platform, mood, length) {
+  var langName = lang === 'vi' ? 'Vietnamese' : (lang === 'es' ? 'Spanish' : 'English');
+  var PLAT = { tiktok: 'TikTok (vertical 9:16, fast hook in the first 2s, trend-friendly, casual)', instagram: 'Instagram Reels (vertical 9:16, aesthetic, tasteful captions)', youtube: 'YouTube Shorts (vertical 9:16, a clear hook + payoff)', facebook: 'Facebook (square/vertical, family-friendly, a little more text is OK)' };
+  var MOOD = { fun: 'fun, upbeat and playful', cinematic: 'cinematic and sweeping', heartfelt: 'warm, heartfelt and nostalgic', energetic: 'high-energy and exciting' };
+  var LEN = { short: 'about 15-30 seconds — keep it to 3-5 scenes', medium: 'about 30-60 seconds — 6-8 scenes', long: 'about 1-3 minutes — 9-12 scenes' };
+  return [
+    'You are a social-media producer for Du Lich Cali. Build a ready-to-shoot CLIP PACKAGE for a family trip, using ONLY the media items the group already selected (given as "media" with caption/place/day/type). This is an EXPORT package the user will assemble in their own editor — you do NOT render, generate, or post any video, and you do NOT create or imagine any footage that is not in the provided media list.',
+    'Target platform: ' + (PLAT[platform] || PLAT.tiktok) + '. Mood: ' + (MOOD[mood] || MOOD.fun) + '. Length: ' + (LEN[length] || LEN.short) + '.',
+    'Return ONLY valid JSON (no markdown): { "summary"(one short sentence describing the clip), "storyboard":[ { "scene"(short scene label e.g. "Opening hook"),"media"(the caption or place of the EXACT provided media item this scene uses — must match one of the inputs; use "" only for a pure text/title card),"text"(what happens / on-screen direction, one short phrase) } ], "voiceoverScript"(a short spoken-narration script matching the scene count; plain text, no stage directions), "textOverlays":[ short on-screen text lines, one per key scene ], "hashtags":[ 6-12 relevant hashtags WITHOUT spaces ], "posts": { "tiktok"(a ready caption for TikTok),"instagram"(caption),"youtube"(a short title + description),"facebook"(a short post) } }',
+    'HARD RULES: Every storyboard "media" value MUST correspond to one of the provided media items (by its caption or place) — never invent a new shot, location, or clip. If there are fewer media items than scenes, reuse items or add clearly-labeled text/title cards (media:""). Do NOT fabricate view counts, metrics, prices, dates, @handles, music track names, or any fact not given. Keep captions tasteful and family-appropriate. Write ALL human-readable text (summary, scene labels/text, voiceover, overlays, posts) in ' + langName + '; hashtags may stay in their natural language. Output ONE compact valid JSON object only.',
+  ].join('\n');
+}
+exports.generateTripClipPackage = onCall(
+  { region: 'us-central1', secrets: [CLAUDE_API_KEY], timeoutSeconds: 50, memory: '256MiB', cors: true },
+  async (request) => {
+    const data = request.data || {};
+    const trip = data.trip || {};
+    const lang = (data.lang === 'vi' || data.lang === 'es') ? data.lang : 'en';
+    const platform = ['tiktok', 'instagram', 'youtube', 'facebook'].indexOf(data.platform) >= 0 ? data.platform : 'tiktok';
+    const mood = ['fun', 'cinematic', 'heartfelt', 'energetic'].indexOf(data.mood) >= 0 ? data.mood : 'fun';
+    const length = ['short', 'medium', 'long'].indexOf(data.length) >= 0 ? data.length : 'short';
+    const media = (Array.isArray(data.media) ? data.media : []).slice(0, 30).map(m => ({
+      caption: String((m && m.caption) || '').slice(0, 160), place: String((m && m.place) || '').slice(0, 80),
+      day: (m && m.day != null) ? String(m.day).slice(0, 8) : '', mediaType: String((m && m.mediaType) || 'photo').slice(0, 12),
+    })).filter(m => m.caption || m.place);
+    if (!media.length) return { ok: false, debugCode: 'NO_MEDIA' };
+    const claudeKey = await getAiKey('claude');
+    if (!claudeKey) return { ok: false, debugCode: 'NO_CLAUDE_KEY' };
+    const dests = (Array.isArray(trip.destinations) ? trip.destinations : []).map(d => String((d && d.city) || '').trim()).filter(Boolean);
+    const userContent = 'Build the clip package. Input JSON:\n' + JSON.stringify({
+      groupName: String(trip.groupName || '').slice(0, 80), destinations: dests.slice(0, 8), dateRange: trip.dateRange || '',
+      platform, mood, length, media,
+    });
+    try {
+      const text = await serverCallClaude(buildClipPackagePrompt(lang, platform, mood, length), [{ role: 'user', content: userContent }], true, claudeKey, 2500, 'claude-haiku-4-5-20251001');
+      let raw = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
+      const s = raw.indexOf('{'); const e = raw.lastIndexOf('}');
+      if (s > 0 || e > 0) raw = raw.slice(s, e + 1);
+      const parsed = tripSalvageJson(raw);
+      if (!parsed || typeof parsed !== 'object') { console.error('[generateTripClipPackage] unparseable, len=' + raw.length); return { ok: false, debugCode: 'CLIP_ERROR' }; }
+      const allowed = {}; media.forEach(m => { if (m.caption) allowed[m.caption.toLowerCase()] = 1; if (m.place) allowed[m.place.toLowerCase()] = 1; });
+      const storyboard = (Array.isArray(parsed.storyboard) ? parsed.storyboard : []).slice(0, 12).map(sc => {
+        sc = sc || {};
+        let mediaRef = String(sc.media || '').slice(0, 160);
+        // Anti-fabrication: a scene may only reference provided media (or be a text/title card).
+        if (mediaRef && !allowed[mediaRef.toLowerCase()]) mediaRef = '';
+        return { scene: String(sc.scene || '').slice(0, 60), media: mediaRef, text: String(sc.text || '').slice(0, 200) };
+      }).filter(sc => sc.scene || sc.text);
+      const posts = (parsed.posts && typeof parsed.posts === 'object') ? parsed.posts : {};
+      const cleanPosts = {};
+      ['tiktok', 'instagram', 'youtube', 'facebook'].forEach(k => { if (posts[k]) cleanPosts[k] = String(posts[k]).slice(0, 600); });
+      return {
+        ok: true, platform, mood, length,
+        summary: String(parsed.summary || '').slice(0, 200),
+        storyboard,
+        voiceoverScript: String(parsed.voiceoverScript || '').slice(0, 1500),
+        textOverlays: (Array.isArray(parsed.textOverlays) ? parsed.textOverlays : []).slice(0, 14).map(x => String(x).slice(0, 120)).filter(Boolean),
+        hashtags: (Array.isArray(parsed.hashtags) ? parsed.hashtags : []).slice(0, 14).map(x => String(x).replace(/\s+/g, '').slice(0, 40)).filter(Boolean),
+        posts: cleanPosts,
+        note: 'export_package_only_no_render_no_post', dataSource: 'ai_generated_from_user_media',
+      };
+    } catch (e2) {
+      console.error('[generateTripClipPackage] failed', e2 && e2.message);
+      return { ok: false, debugCode: 'CLIP_ERROR' };
+    }
+  }
+);
+// ── Experience Optimizer Agent — "How can this trip be better?" ──────────────
+// Suggests CONCRETE improvements toward a goal (general/discoveries/lower_cost/kids/food),
+// reasoning over weather, current events, group makeup, budget, route, crowds, hours, votes,
+// skipped + pinned items. Suggestions only (the user applies) — NEVER fakes prices/URLs/events.
+function buildImprovePrompt(lang, goalList) {
+  var langName = lang === 'vi' ? 'Vietnamese' : (lang === 'es' ? 'Spanish' : 'English');
+  var GMAP = {
+    discoveries: 'surface MORE hidden gems, scenic spots, local food areas, photo spots and lesser-known discoveries near the existing plan',
+    lower_cost: 'LOWER the total cost — cheaper or free alternatives, value swaps, cost-saving timing/combos — WITHOUT gutting the experience',
+    kids_fun: 'make it MORE FUN and engaging for the kids/teens in this group (age-appropriate, high-energy or playful)',
+    food_focused: 'make it MORE FOOD-FOCUSED — standout local restaurants, food experiences, markets matched to the families\' cuisines',
+    relaxing: 'make it MORE RELAXING — fewer stops per day, a slower pace, built-in downtime, low-stress timing and calm spots',
+    scenic: 'make it MORE SCENIC — viewpoints, coastal/nature drives, photo spots and beautiful settings',
+    theme_park: 'focus on THEME PARKS & marquee attractions — prioritize the big parks/zoos/aquariums and time them well (tickets/lines)',
+    senior_friendly: 'make it MORE SENIOR-FRIENDLY — lower walking, seated/accessible options, rest breaks and easy pacing',
+    rainy_backup: 'add RAINY-DAY BACKUPS — indoor alternatives and weather-proof options for the at-risk days',
+    general: 'make the overall trip better and more memorable for THIS group (better activities, food, timing, backups, cheaper or more exciting swaps)',
+  };
+  var gl = (Array.isArray(goalList) && goalList.length) ? goalList : ['general'];
+  var lines = gl.map(function (g) { return GMAP[g] || GMAP.general; });
+  var multi = gl.length > 1;
+  return [
+    'You are an expert group-travel OPTIMIZER for Du Lich Cali. Given the CURRENT plan and this group, suggest 5-8 CONCRETE, actionable improvements toward the goal(s) below, using current web knowledge. Recommend only — the user decides; never book.',
+    (multi
+      ? ('GOALS (the user selected MULTIPLE — optimize for ALL of them TOGETHER, balancing the tradeoffs, not just one): ' + lines.map(function (x, i) { return (i + 1) + ') ' + x; }).join('; ') + '.')
+      : ('GOAL: ' + lines[0] + '.')),
+    (multi ? 'When goals conflict (e.g. lower cost vs. more fun for kids), prefer suggestions that serve SEVERAL goals at once; for any genuine tradeoff, state it briefly in that suggestion\'s "why", and have the "summary" describe how the suggestions balance the selected goals.' : ''),
+    'Reason about: weather/season, current or seasonal EVENTS during the dates, the group makeup (kids/teens/seniors — naps, energy, mobility), food preferences, BUDGET, route/driving, crowd timing, opening hours, local discoveries, cost, the group\'s VOTES, SKIPPED items (NEVER re-suggest a skipped place), and PINNED must-dos (keep them, build around them).',
+    'GROUP CONSENSUS IS THE PRIMARY SIGNAL: use the input "votesSummary" + "preferenceProfile". PRIORITIZE and KEEP the favorited + liked places (build the trip around them; do not drop a favorited item). NEVER re-suggest anything in skippedPlaces — if you would have suggested a skipped place, REPLACE it with a different real alternative that serves the same need. Match the preferenceProfile (likedCuisines, oceanPreference, themeParkPreference, walkingTolerance, accessibilityNeeds, likedTransport vs skippedTransport, budget, pace). Where you change something, the "why" should reference the group\'s votes/preferences (e.g. "your group loved the beach picks, so…").',
+    'Return ONLY valid JSON (no markdown): { "summary"(one short sentence' + (multi ? ' that notes how the picks balance the selected goals' : '') + '), "suggestions":[ { "category"(activity|food|stopover|timing|backup|cheaper|exciting|low_energy|discovery),"title"(short),"detail"(ONE sentence),"day"(1-based day number this applies to, or ""),"place"(a REAL place name if relevant, else ""),"city","action"(add|replace|consider),"why"(one short phrase: why it fits THIS group' + (multi ? ', noting any tradeoff' : '') + '),"ticketed"(true|false) } ] }',
+    'HARD RULES: Use REAL, well-known place names; NEVER invent exact prices, hours, availability, or URLs (say "pending verification" / leave for search). NEVER re-suggest a place in the skipped list. Keep pinned must-dos. Each suggestion must be specific and immediately useful (not generic advice). Write all human-readable text in ' + langName + '. Output ONE compact valid JSON object only.',
+  ].filter(Boolean).join('\n');
+}
+exports.improveTripPlan = onCall(
+  { region: 'us-central1', secrets: [GEMINI_API_KEY], timeoutSeconds: 50, memory: '256MiB', cors: true },
+  async (request) => {
+    const data = request.data || {};
+    const trip = data.trip || {};
+    const lang = (data.lang === 'vi' || data.lang === 'es') ? data.lang : 'en';
+    const ALLOWED = ['discoveries', 'lower_cost', 'kids_fun', 'food_focused', 'relaxing', 'scenic', 'theme_park', 'senior_friendly', 'rainy_backup', 'general'];
+    // Multi-select: accept improvementGoals[] (preferred) or a single goal (back-compat).
+    let goals = Array.isArray(data.improvementGoals) ? data.improvementGoals : (data.goal ? [data.goal] : []);
+    goals = goals.filter((g, i) => ALLOWED.indexOf(g) >= 0 && goals.indexOf(g) === i).slice(0, 5);
+    if (!goals.length) goals = ['general'];
+    const dests = (Array.isArray(trip.destinations) ? trip.destinations : []).map(d => String((d && d.city) || '').trim()).filter(Boolean);
+    if (!dests.length) return { ok: false, debugCode: 'NO_DESTINATIONS', suggestions: [] };
+    const geminiKey = await getAiKey('gemini');
+    if (!geminiKey) return { ok: false, debugCode: 'NO_GEMINI_KEY', suggestions: [] };
+    const userContent = 'Improve this trip. Input JSON:\n' + JSON.stringify({
+      destinations: dests.slice(0, 8), dateRange: trip.dateRange, budget: trip.budget, pace: trip.tripStyle,
+      improvementGoals: goals,
+      groupProfile: tcGroupProfile(trip.families, trip.budget, trip.tripStyle), familiesSummary: summarizeFamiliesForTrip(trip.families),
+      planDays: Array.isArray(data.planDays) ? data.planDays.slice(0, 12) : [],
+      skippedPlaces: Array.isArray(data.skippedPlaces) ? data.skippedPlaces.slice(0, 30).map(x => String(x).slice(0, 100)) : [],
+      likedPlaces: Array.isArray(data.likedPlaces) ? data.likedPlaces.slice(0, 30).map(x => String(x).slice(0, 100)) : [],
+      favoritePlaces: Array.isArray(data.favoritePlaces) ? data.favoritePlaces.slice(0, 20).map(x => String(x).slice(0, 100)) : [],
+      pinnedActivities: Array.isArray(trip.pinnedActivities) ? trip.pinnedActivities.slice(0, 12) : [],
+      preferenceProfile: (data.preferenceProfile && typeof data.preferenceProfile === 'object') ? data.preferenceProfile : null,
+      votesSummary: String(data.votesSummary || '').slice(0, 600), estTotalCost: data.estTotalCost || '',
+    });
+    try {
+      const text = await serverCallGeminiGrounded(buildImprovePrompt(lang, goals) + '\n\n' + userContent, geminiKey, 3000);
+      let raw = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').replace(/[\u0000-\u001F]+/g, ' ');
+      const s = raw.indexOf('{'); const e = raw.lastIndexOf('}');
+      if (s > 0 || e > 0) raw = raw.slice(s, e + 1);
+      const parsed = tripSalvageJson(raw);
+      if (!parsed || !Array.isArray(parsed.suggestions)) { console.error('[improveTripPlan] unparseable, len=' + raw.length); return { ok: false, debugCode: 'RESEARCH_ERROR', suggestions: [] }; }
+      const CATS = ['activity', 'food', 'stopover', 'timing', 'backup', 'cheaper', 'exciting', 'low_energy', 'discovery'];
+      const suggestions = parsed.suggestions.slice(0, 8).map(x => {
+        x = x || {};
+        return {
+          category: CATS.indexOf(x.category) >= 0 ? x.category : 'activity',
+          title: String(x.title || '').slice(0, 120), detail: String(x.detail || '').slice(0, 240),
+          day: (x.day === '' || x.day == null) ? '' : (parseInt(x.day, 10) || ''),
+          place: String(x.place || '').slice(0, 120), city: String(x.city || '').slice(0, 80),
+          action: ['add', 'replace', 'consider'].indexOf(x.action) >= 0 ? x.action : 'consider',
+          why: String(x.why || '').slice(0, 200), ticketed: !!x.ticketed,
+          dataSource: 'ai_suggested_pending_verification',
+        };
+      }).filter(x => x.title);
+      return { ok: true, goal: goals[0], goals, summary: String(parsed.summary || '').slice(0, 200), suggestions, dataSource: 'ai_suggested_pending_verification' };
+    } catch (e2) {
+      console.error('[improveTripPlan] failed', e2 && e2.message);
+      return { ok: false, debugCode: 'RESEARCH_ERROR', suggestions: [] };
+    }
+  }
+);
+// ── Skip → alternatives: same-intent replacements for a place the user skipped ─
+// Like a local concierge: given the skipped place + city, suggest 4-6 REAL alternatives
+// with the SAME intent (same cuisine/category, similar vibe). No fake prices/URLs.
+function buildAltPrompt(lang) {
+  var langName = lang === 'vi' ? 'Vietnamese' : (lang === 'es' ? 'Spanish' : 'English');
+  return [
+    'You are a LOCAL concierge for Du Lich Cali. The traveler SKIPPED one place; suggest REAL alternatives with the SAME intent (same cuisine/category and similar vibe) in the same city/area, using current web knowledge. Recommend only — never book or invent.',
+    'Return ONLY valid JSON (no markdown): { "alternatives":[ { "name"(a REAL, well-known place — never invented),"category","cuisine"(if a restaurant, else ""),"address"(approx street + city),"why"(one short sentence: why it fits the same need),"dataSource":"ai_researched_pending_verification" } ] }',
+    'Give 4-6 alternatives. THINK LIKE A LOCAL: if the area has a famous community matching the cuisine, use its real icons (e.g. Orange County Little Saigon Vietnamese → Phoholic, Pho 101, Ngu Binh, Brodard, Oc & Lau, Nep Cafe). Match the families\' food/age preferences when given. Do NOT repeat the skipped place. NEVER output exact prices, availability, phone numbers, or URLs. Keep each field to one short phrase. Write all human-readable text in ' + langName + '. Output ONE compact valid JSON object only.',
+  ].join('\n');
+}
+exports.suggestPlaceAlternatives = onCall(
+  { region: 'us-central1', secrets: [GEMINI_API_KEY], timeoutSeconds: 30, memory: '256MiB', cors: true },
+  async (request) => {
+    const data = request.data || {};
+    const lang = (data.lang === 'vi' || data.lang === 'es') ? data.lang : 'en';
+    const place = data.place || {};
+    if (!place.name) return { ok: false, debugCode: 'NO_PLACE', alternatives: [] };
+    const city = String(data.city || '').slice(0, 100);
+    const geminiKey = await getAiKey('gemini');
+    if (!geminiKey) return { ok: false, debugCode: 'NO_GEMINI_KEY', alternatives: [] };
+    const userContent = 'Skipped place + context:\n' + JSON.stringify({
+      skipped: { name: String(place.name).slice(0, 120), category: String(place.category || '').slice(0, 60), cuisine: String(place.cuisine || '').slice(0, 60) },
+      city, familiesSummary: summarizeFamiliesForTrip(data.families),
+    });
+    try {
+      const text = await serverCallGeminiGrounded(buildAltPrompt(lang) + '\n\n' + userContent, geminiKey, 1400);
+      let raw = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').replace(/[\u0000-\u001F]+/g, ' ');
+      const s = raw.indexOf('{'); const e = raw.lastIndexOf('}');
+      if (s > 0 || e > 0) raw = raw.slice(s, e + 1);
+      const parsed = tripSalvageJson(raw);
+      if (!parsed) { console.error('[suggestPlaceAlternatives] unparseable, len=' + raw.length); return { ok: false, debugCode: 'RESEARCH_ERROR', alternatives: [] }; }
+      const skip = String(place.name).trim().toLowerCase();
+      let alternatives = (Array.isArray(parsed.alternatives) ? parsed.alternatives : [])
+        .filter(a => a && a.name && String(a.name).trim().toLowerCase() !== skip)
+        .slice(0, 6).map(a => ({
+          name: String(a.name).slice(0, 120),
+          category: String(a.category || '').slice(0, 60),
+          cuisine: String(a.cuisine || '').slice(0, 60),
+          address: String(a.address || '').slice(0, 140),
+          why: String(a.why || '').slice(0, 200),
+          dataSource: 'ai_researched_pending_verification',
+        }));
+      return { ok: true, alternatives };
+    } catch (e2) {
+      console.error('[suggestPlaceAlternatives] failed', e2 && e2.message);
+      return { ok: false, debugCode: 'RESEARCH_ERROR', alternatives: [] };
+    }
+  }
+);
+// AI "Why this day/time?" — a short, GENERIC explanation of why a place sits in a given
+// day + time slot (route clustering, opening hours, crowds, weather, family/age pacing).
+// Never invents exact facts (no precise hours/prices/wait times) — speaks in general terms.
+function buildPlacementReasonPrompt(lang) {
+  var langName = lang === 'vi' ? 'Vietnamese' : (lang === 'es' ? 'Spanish' : 'English');
+  return [
+    'You are a thoughtful group-travel concierge for Du Lich Cali. Explain in 1–2 short sentences WHY the given place makes sense on this day and in this time slot for THIS group.',
+    'Reason GENERICALLY about the usual trade-offs a good planner weighs: clustering with the other places that day to cut driving, typical opening hours / best time of day for that kind of place, likely crowds, weather/heat, meal timing, and the group\'s family mix (young kids\' naps, teens, seniors\' mobility/energy, overall pace).',
+    'HARD RULES: Do NOT invent exact facts — no precise opening hours, prices, wait times, weather forecasts, or any claim you cannot reason generally. Speak in general terms ("usually quieter in the morning", "keeps driving low by pairing with nearby stops"). Be warm and concise. NEVER mention you are an AI or that data is unverified.',
+    'Return ONLY valid JSON (no markdown): { "reason": "<1–2 sentence explanation>" }. Write the reason in ' + langName + '. Output ONE compact JSON object only.',
+  ].join('\n');
+}
+exports.explainTripPlacement = onCall(
+  { region: 'us-central1', secrets: [CLAUDE_API_KEY], timeoutSeconds: 30, memory: '256MiB', cors: true },
+  async (request) => {
+    const data = request.data || {};
+    const lang = (data.lang === 'vi' || data.lang === 'es') ? data.lang : 'en';
+    const place = data.place || {};
+    if (!place.name) return { ok: false, debugCode: 'NO_PLACE', reason: '' };
+    const claudeKey = await getAiKey('claude');
+    if (!claudeKey) return { ok: false, debugCode: 'NO_CLAUDE_KEY', reason: '' };
+    const userContent = 'Explain this placement. Input JSON:\n' + JSON.stringify({
+      place: { name: String(place.name).slice(0, 120), category: String(place.category || '').slice(0, 60), cuisine: String(place.cuisine || '').slice(0, 60) },
+      dayNumber: data.dayNumber || 1, timeSlot: String(data.timeSlot || '').slice(0, 20), dayTitle: String(data.dayTitle || '').slice(0, 120),
+      city: String(data.city || '').slice(0, 100),
+      sameDayPlaces: Array.isArray(data.dayPlaces) ? data.dayPlaces.slice(0, 8).map(x => String(x).slice(0, 80)) : [],
+      familiesSummary: summarizeFamiliesForTrip(data.families),
+    });
+    try {
+      const text = await serverCallClaude(buildPlacementReasonPrompt(lang), [{ role: 'user', content: userContent }], true, claudeKey, 400, 'claude-haiku-4-5-20251001');
+      let raw = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').replace(/[\u0000-\u001F]+/g, ' ');
+      const s = raw.indexOf('{'); const e = raw.lastIndexOf('}');
+      if (s > 0 || e > 0) raw = raw.slice(s, e + 1);
+      let reason = '';
+      try { const parsed = JSON.parse(raw); reason = String((parsed && parsed.reason) || '').slice(0, 400); } catch (e3) { reason = ''; }
+      if (!reason) return { ok: false, debugCode: 'NO_REASON', reason: '' };
+      return { ok: true, reason };
+    } catch (e2) {
+      console.error('[explainTripPlacement] failed', e2 && e2.message);
+      return { ok: false, debugCode: 'AI_ERROR', reason: '' };
+    }
+  }
+);
+// ── Shared trip access: passcode-gated invite + server-enforced roles ──────
+// The trip owner generates a random shareToken + 6-digit passcode (hashed, never
+// stored plaintext). Invitees open /trip/<token>, log in (non-anonymous), and join
+// via joinTripWithPasscode — the ONLY writer of tripMembers (so a member can never
+// self-add or self-promote). Privileged actions (roles, disable, approve suggestions)
+// are owner/organizer-gated here. The app never charges or purchases anything.
+const crypto = require('crypto');
+function tripHashPasscode(passcode, salt) { return crypto.createHash('sha256').update(String(salt) + ':' + String(passcode)).digest('hex'); }
+function tripRandomToken() { return crypto.randomBytes(12).toString('base64').replace(/[^a-zA-Z0-9]/g, '').slice(0, 12); }
+function tripRandomPasscode() { return String(crypto.randomInt(100000, 1000000)); }
+function tripRequireAuth(request) {
+  const a = request.auth;
+  if (!a || !a.uid) throw new HttpsError('unauthenticated', 'Sign in to manage trip sharing.');
+  if (a.token && a.token.firebase && a.token.firebase.sign_in_provider === 'anonymous') throw new HttpsError('permission-denied', 'Use your account, not a guest session.');
+  return a.uid;
+}
+async function tripGetOwnerUid(tripId) { const s = await db.collection('groupTrips').doc(tripId).get(); return s.exists ? (s.data().ownerUid || '') : null; }
+function tripMemberRef(tripId, uid) { return db.collection('tripMembers').doc(tripId).collection('members').doc(uid); }
+function tripContactRef(tripId, uid) { return db.collection('tripMemberContacts').doc(tripId).collection('members').doc(uid); }
+function tripNormPhone(p) { var dd = String(p || '').replace(/\D/g, ''); if (dd.length === 11 && dd.charAt(0) === '1') dd = dd.slice(1); return dd.slice(-10); }
+function tripPhoneFromAuth(request) { try { var em = request.auth && request.auth.token && request.auth.token.email; if (em && /@mobile-barber\.dulichcali21\.local$/.test(em)) return em.split('@')[0]; } catch (e) {} return ''; }
+async function tripFamilyName(tripId, familyId) { if (!familyId) return ''; const ts = await db.collection('groupTrips').doc(tripId).get(); const fams = (ts.exists && Array.isArray(ts.data().families)) ? ts.data().families : []; const ff = fams.filter(f => f && f.id === familyId)[0]; return ff ? (ff.name || '') : ''; }
+async function tripCallerRole(tripId, uid) {
+  const ownerUid = await tripGetOwnerUid(tripId);
+  if (ownerUid && ownerUid === uid) return 'owner';
+  const m = await tripMemberRef(tripId, uid).get();
+  return m.exists ? (m.data().role || 'member') : null;
+}
+exports.createTripShareAccess = onCall({ region: 'us-central1', timeoutSeconds: 20, cors: true }, async (request) => {
+  const uid = tripRequireAuth(request);
+  const d = request.data || {};
+  const tripId = String(d.tripId || '');
+  if (!tripId) throw new HttpsError('invalid-argument', 'tripId required');
+  const ownerUid = await tripGetOwnerUid(tripId);
+  if (ownerUid == null) throw new HttpsError('not-found', 'Trip not found');
+  if (ownerUid !== uid) throw new HttpsError('permission-denied', 'Only the trip owner can manage sharing.');
+  const batch = db.batch();
+  const prior = await db.collection('tripShareAccess').where('tripId', '==', tripId).where('enabled', '==', true).get();
+  prior.forEach(doc => batch.update(doc.ref, { enabled: false }));
+  const shareToken = tripRandomToken(), passcode = tripRandomPasscode(), salt = crypto.randomBytes(8).toString('hex');
+  batch.set(db.collection('tripShareAccess').doc(shareToken), {
+    tripId, passcodeHash: tripHashPasscode(passcode, salt), salt, enabled: true,
+    createdBy: uid, createdAt: admin.firestore.FieldValue.serverTimestamp(), lastUsedAt: null, attemptCount: 0, attemptWindowStart: 0,
+  });
+  batch.set(tripMemberRef(tripId, uid), { displayName: String(d.ownerName || '').slice(0, 80), familyId: String(d.ownerFamilyId || ''), familyName: String(d.ownerFamilyName || '').slice(0, 80), role: 'owner', active: true, joinedAt: admin.firestore.FieldValue.serverTimestamp(), lastActiveAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+  batch.set(tripContactRef(tripId, uid), { phone: tripPhoneFromAuth(request), email: '' }, { merge: true });
+  await batch.commit();
+  return { ok: true, shareToken, passcode };
+});
+exports.getTripSharePreview = onCall({ region: 'us-central1', timeoutSeconds: 15, cors: true }, async (request) => {
+  const shareToken = String((request.data || {}).shareToken || '');
+  if (!shareToken) return { ok: false, reason: 'invalid' };
+  const acc = await db.collection('tripShareAccess').doc(shareToken).get();
+  if (!acc.exists || !acc.data().enabled) return { ok: false, reason: 'disabled' };
+  const trip = await db.collection('groupTrips').doc(acc.data().tripId).get();
+  if (!trip.exists) return { ok: false, reason: 'not_found' };
+  const t = trip.data();
+  if (t.deleted === true) return { ok: false, reason: 'not_found' };
+  const fams = Array.isArray(t.families) ? t.families.map((f, i) => ({ id: (f && f.id) || ('f' + i), name: (f && f.name) || '' })).filter(f => f.name) : [];
+  return { ok: true, tripId: acc.data().tripId, groupName: t.groupName || '', destination: t.destination || '', dateRange: t.dateRange || '', families: fams };
+});
+exports.joinTripWithPasscode = onCall({ region: 'us-central1', timeoutSeconds: 20, cors: true }, async (request) => {
+  const uid = tripRequireAuth(request);
+  const d = request.data || {};
+  const accRef = db.collection('tripShareAccess').doc(String(d.shareToken || ''));
+  const nowMs = Date.now();
+  const verdict = await db.runTransaction(async (tx) => {
+    const acc = await tx.get(accRef);
+    if (!acc.exists || !acc.data().enabled) return { ok: false, reason: 'disabled' };
+    const a = acc.data();
+    let count = a.attemptCount || 0, win = a.attemptWindowStart || 0;
+    if (nowMs - win > 600000) { count = 0; win = nowMs; }
+    if (count >= 8) return { ok: false, reason: 'rate_limited' };
+    if (tripHashPasscode(String(d.passcode || ''), a.salt) !== a.passcodeHash) { tx.update(accRef, { attemptCount: count + 1, attemptWindowStart: win }); return { ok: false, reason: 'bad_passcode' }; }
+    tx.update(accRef, { attemptCount: 0, attemptWindowStart: nowMs, lastUsedAt: admin.firestore.FieldValue.serverTimestamp() });
+    return { ok: true, tripId: a.tripId };
+  });
+  if (!verdict.ok) return verdict;
+  const tripId = verdict.tripId;
+  const tripSnap0 = await db.collection('groupTrips').doc(tripId).get();
+  if (!tripSnap0.exists || tripSnap0.data().deleted === true) return { ok: false, reason: 'not_found' };
+  const ownerUid = await tripGetOwnerUid(tripId);
+  const memRef = tripMemberRef(tripId, uid);
+  const existing = await memRef.get();
+  const phoneNorm = tripNormPhone(d.phone) || tripPhoneFromAuth(request);
+  let familyId = String(d.familyId || ''), familyName = String(d.familyName || '').slice(0, 80);
+  // "Add my family" → append a new family to the trip (atomic), and use its id.
+  if (!familyId && familyName) {
+    const tripRef = db.collection('groupTrips').doc(tripId);
+    familyId = await db.runTransaction(async (tx) => {
+      const snap = await tx.get(tripRef);
+      const fams = (snap.exists && Array.isArray(snap.data().families)) ? snap.data().families.slice() : [];
+      const fid = 'fam_' + crypto.randomBytes(4).toString('hex');
+      fams.push({ id: fid, name: familyName, primaryContactName: String(d.displayName || '').slice(0, 80), addedByMember: true });
+      tx.update(tripRef, { families: fams });
+      return fid;
+    });
+  } else if (familyId && !familyName) {
+    familyName = await tripFamilyName(tripId, familyId);
+  }
+  // Determine role: keep existing; owner stays owner; new members are 'member'
+  // (a self-requested 'organizer' is stored as requestedRole for owner approval, NOT auto-granted).
+  let role = existing.exists ? (existing.data().role || 'member') : (ownerUid === uid ? 'owner' : 'member');
+  // Adopt an owner-created pending invite matching this phone (pre-assigned family/role).
+  if (!existing.exists && ownerUid !== uid && phoneNorm) {
+    const invRef = tripMemberRef(tripId, 'inv_' + phoneNorm);
+    const inv = await invRef.get();
+    if (inv.exists) {
+      const iv = inv.data() || {};
+      if (iv.role === 'organizer') role = 'organizer';
+      if (!familyId && iv.familyId) { familyId = iv.familyId; familyName = iv.familyName || familyName; }
+      await invRef.delete().catch(() => {});
+      await tripContactRef(tripId, 'inv_' + phoneNorm).delete().catch(() => {});
+    }
+  }
+  const reqRole = ['member', 'organizer'].indexOf(String(d.requestedRole)) !== -1 ? String(d.requestedRole) : 'member';
+  await memRef.set({
+    displayName: String(d.displayName || '').slice(0, 80), familyId, familyName, role, requestedRole: reqRole, active: true,
+    joinedAt: existing.exists && existing.data().joinedAt ? existing.data().joinedAt : admin.firestore.FieldValue.serverTimestamp(),
+    lastActiveAt: admin.firestore.FieldValue.serverTimestamp(),
+  }, { merge: true });
+  await tripContactRef(tripId, uid).set({ phone: phoneNorm, email: String(d.email || '').slice(0, 120) }, { merge: true });
+  return { ok: true, tripId, role, displayName: String(d.displayName || '').slice(0, 80), familyId, familyName };
+});
+exports.setTripMemberRole = onCall({ region: 'us-central1', timeoutSeconds: 15, cors: true }, async (request) => {
+  const uid = tripRequireAuth(request);
+  const d = request.data || {};
+  const tripId = String(d.tripId || ''), memberUid = String(d.memberUid || ''), role = String(d.role || '');
+  if (['organizer', 'member'].indexOf(role) === -1) throw new HttpsError('invalid-argument', 'bad role');
+  const ownerUid = await tripGetOwnerUid(tripId);
+  if (ownerUid !== uid) throw new HttpsError('permission-denied', 'Only the owner can set roles.');
+  if (memberUid === ownerUid) throw new HttpsError('invalid-argument', 'Cannot change the owner role.');
+  await tripMemberRef(tripId, memberUid).set({ role }, { merge: true });
+  return { ok: true };
+});
+exports.removeTripMember = onCall({ region: 'us-central1', timeoutSeconds: 15, cors: true }, async (request) => {
+  const uid = tripRequireAuth(request);
+  const d = request.data || {};
+  const tripId = String(d.tripId || ''), memberUid = String(d.memberUid || '');
+  const ownerUid = await tripGetOwnerUid(tripId);
+  if (ownerUid !== uid) throw new HttpsError('permission-denied', 'Only the owner can remove members.');
+  if (memberUid === ownerUid) throw new HttpsError('invalid-argument', 'Cannot remove the owner.');
+  await tripMemberRef(tripId, memberUid).delete().catch(() => {});
+  await tripContactRef(tripId, memberUid).delete().catch(() => {});
+  return { ok: true };
+});
+exports.setTripMemberFamily = onCall({ region: 'us-central1', timeoutSeconds: 15, cors: true }, async (request) => {
+  const uid = tripRequireAuth(request);
+  const d = request.data || {};
+  const tripId = String(d.tripId || ''), memberUid = String(d.memberUid || '');
+  let familyId = String(d.familyId || ''), familyName = String(d.familyName || '').slice(0, 80);
+  const ownerUid = await tripGetOwnerUid(tripId);
+  if (ownerUid !== uid) throw new HttpsError('permission-denied', 'Only the owner can assign families.');
+  if (familyId && !familyName) familyName = await tripFamilyName(tripId, familyId);
+  await tripMemberRef(tripId, memberUid).set({ familyId, familyName }, { merge: true });
+  return { ok: true };
+});
+exports.inviteTripMember = onCall({ region: 'us-central1', timeoutSeconds: 15, cors: true }, async (request) => {
+  const uid = tripRequireAuth(request);
+  const d = request.data || {};
+  const tripId = String(d.tripId || '');
+  const ownerUid = await tripGetOwnerUid(tripId);
+  if (ownerUid !== uid) throw new HttpsError('permission-denied', 'Only the owner can invite members.');
+  const phoneNorm = tripNormPhone(d.phone);
+  if (!phoneNorm) throw new HttpsError('invalid-argument', 'A mobile phone number is required to invite.');
+  const role = ['organizer', 'member'].indexOf(String(d.role)) !== -1 ? String(d.role) : 'member';
+  let familyId = String(d.familyId || ''), familyName = String(d.familyName || '').slice(0, 80);
+  if (familyId && !familyName) familyName = await tripFamilyName(tripId, familyId);
+  const invId = 'inv_' + phoneNorm;
+  // Pending roster entry: NOT an access grant (its id is never a real auth uid, so
+  // gtTripMember can't match it). The phone lives only in the owner-only contacts doc.
+  await tripMemberRef(tripId, invId).set({
+    displayName: String(d.displayName || '').slice(0, 80), familyId, familyName, role, requestedRole: role,
+    pending: true, active: false, joinedAt: null, lastActiveAt: null,
+  }, { merge: true });
+  await tripContactRef(tripId, invId).set({ phone: phoneNorm, email: String(d.email || '').slice(0, 120) }, { merge: true });
+  return { ok: true, inviteId: invId };
+});
+exports.setTripShareEnabled = onCall({ region: 'us-central1', timeoutSeconds: 15, cors: true }, async (request) => {
+  const uid = tripRequireAuth(request);
+  const d = request.data || {};
+  const tripId = String(d.tripId || ''), enabled = !!d.enabled;
+  const ownerUid = await tripGetOwnerUid(tripId);
+  if (ownerUid !== uid) throw new HttpsError('permission-denied', 'Only the owner can change sharing.');
+  const toks = await db.collection('tripShareAccess').where('tripId', '==', tripId).get();
+  const batch = db.batch();
+  toks.forEach(doc => batch.update(doc.ref, { enabled }));
+  await batch.commit();
+  return { ok: true, count: toks.size };
+});
+exports.decideTripSuggestion = onCall({ region: 'us-central1', timeoutSeconds: 20, cors: true }, async (request) => {
+  const uid = tripRequireAuth(request);
+  const d = request.data || {};
+  const tripId = String(d.tripId || ''), suggestionId = String(d.suggestionId || ''), status = String(d.status || '');
+  if (['approved', 'rejected', 'pending'].indexOf(status) === -1) throw new HttpsError('invalid-argument', 'bad status');
+  const role = await tripCallerRole(tripId, uid);
+  if (role !== 'owner' && role !== 'organizer') throw new HttpsError('permission-denied', 'Only owner/organizer can decide suggestions.');
+  const ref = db.collection('groupTrips').doc(tripId);
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) throw new HttpsError('not-found', 'trip');
+    const sugg = (snap.data().suggestions || []).map(s => (s && s.id === suggestionId) ? Object.assign({}, s, { status: status }) : s);
+    tx.update(ref, { suggestions: sugg });
+  });
+  return { ok: true };
+});
+// Owner-only SOFT delete. Client delete stays blocked in rules (delete:false); this
+// Admin-SDK callable is the only delete path. It marks the trip deleted (recoverable),
+// and disables every share token so the link + passcode immediately stop working.
+// Participants/organizers cannot delete — only the trip owner (ownerUid).
+exports.deleteGroupTrip = onCall({ region: 'us-central1', timeoutSeconds: 15, cors: true }, async (request) => {
+  const uid = tripRequireAuth(request);
+  const d = request.data || {};
+  const tripId = String(d.tripId || '');
+  if (!tripId) throw new HttpsError('invalid-argument', 'tripId required');
+  const ref = db.collection('groupTrips').doc(tripId);
+  const snap = await ref.get();
+  if (!snap.exists) return { ok: true, alreadyGone: true };
+  if ((snap.data().ownerUid || '') !== uid) throw new HttpsError('permission-denied', 'Only the trip owner can delete this trip.');
+  await ref.set({ deleted: true, deletedAt: admin.firestore.FieldValue.serverTimestamp(), deletedBy: uid }, { merge: true });
+  const toks = await db.collection('tripShareAccess').where('tripId', '==', tripId).get();
+  if (!toks.empty) { const batch = db.batch(); toks.forEach(doc => batch.update(doc.ref, { enabled: false })); await batch.commit(); }
+  return { ok: true };
+});
 exports.validateAddressAndDistance = onCall(
   { region: 'us-central1', secrets: [GOOGLE_MAPS_API_KEY], timeoutSeconds: 30, cors: true },
   async (request) => {
@@ -2108,6 +3471,412 @@ exports.validateAddressAndDistance = onCall(
     } catch (err) {
       console.warn('[validateAddressAndDistance] maps error:', err && err.message);
       return fallback('maps_exception');
+    }
+  }
+);
+// ── computeTripRoute ─────────────────────────────────────────────────────────
+// VERIFIED route legs for the Travel Concierge — reuses the SAME Google Maps key +
+// Distance Matrix integration as the ride/driver subsystem (validateAddressAndDistance).
+// The AI must NEVER invent distance/drive-time; it gets these here. Degrades to a
+// city-centroid haversine estimate (clearly labelled source:'estimated') only when the
+// Maps key is absent. Input: { cities:[ ordered city strings ] }.
+// Shared route-leg computation (single source of truth for computeTripRoute AND the
+// transport agent). Verified Google Distance Matrix when GOOGLE_MAPS_API_KEY is real,
+// else a clearly-labelled haversine estimate. Never invents — returns source per leg.
+function tcFmtDur(min) { if (!min) return ''; const h = Math.floor(min / 60), m = Math.round(min % 60); return (h ? h + 'h ' : '') + (m ? m + 'm' : (h ? '' : '0m')); }
+function tcDirLink(a, b) { return 'https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(a) + '&destination=' + encodeURIComponent(b); }
+async function tcGoogleLeg(a, b, key) {
+  try {
+    const dm = await fetch(`https://maps.googleapis.com/maps/api/distancematrix/json?origins=${encodeURIComponent(a)}&destinations=${encodeURIComponent(b)}&departure_time=now&key=${key}`).then((r) => r.json());
+    const el = dm && dm.rows && dm.rows[0] && dm.rows[0].elements && dm.rows[0].elements[0];
+    if (el && el.status === 'OK' && el.distance) {
+      const miles = Math.round(el.distance.value / 1609.34);
+      const dmin = Math.round(el.duration.value / 60);
+      const tmin = el.duration_in_traffic ? Math.round(el.duration_in_traffic.value / 60) : dmin;
+      return { distanceMiles: miles, durationMin: dmin, durationTrafficMin: tmin, source: 'google_maps' };
+    }
+  } catch (e) { /* fall through to estimate */ }
+  return null;
+}
+function tcEstLeg(a, b) {
+  const ca = tcCentroid(a), cb = tcCentroid(b);
+  if (!ca || !cb) return null;
+  const miles = Math.round(mbHaversineMiles(ca, cb) * 1.12); // CA-freeway road factor
+  return { distanceMiles: miles, durationMin: Math.round(miles / 60 * 60), durationTrafficMin: Math.round(miles / 52 * 60), source: 'estimated' };
+}
+async function tcComputeRouteLegs(cities, key) {
+  const useGoogle = !!(key && String(key).trim().length >= 20);
+  const legs = [];
+  for (let i = 0; i < cities.length - 1; i++) {
+    let r = useGoogle ? await tcGoogleLeg(cities[i], cities[i + 1], key) : null;
+    if (!r) r = tcEstLeg(cities[i], cities[i + 1]);
+    if (!r) r = { distanceMiles: 0, durationMin: 0, durationTrafficMin: 0, source: 'unknown' };
+    legs.push({
+      fromCity: cities[i], toCity: cities[i + 1],
+      distanceMiles: r.distanceMiles, distanceText: r.distanceMiles ? (r.distanceMiles + ' mi') : '',
+      durationText: tcFmtDur(r.durationMin), durationTrafficText: tcFmtDur(r.durationTrafficMin), durationMin: r.durationMin || 0,
+      mapLink: tcDirLink(cities[i], cities[i + 1]), source: r.source,
+    });
+  }
+  const srcs = legs.map((l) => l.source);
+  const overall = legs.length ? (srcs.every((s) => s === 'google_maps') ? 'google_maps' : (srcs.every((s) => s === 'unknown') ? 'unknown' : 'estimated')) : 'unknown';
+  return { legs, source: overall };
+}
+exports.computeTripRoute = onCall(
+  { region: 'us-central1', secrets: [GOOGLE_MAPS_API_KEY], timeoutSeconds: 30, memory: '256MiB', cors: true },
+  async (request) => {
+    const cities = (Array.isArray(request.data && request.data.cities) ? request.data.cities : [])
+      .map((s) => String(s || '').trim()).filter(Boolean).slice(0, 12);
+    if (cities.length < 2) return { ok: false, legs: [] };
+    const { legs, source } = await tcComputeRouteLegs(cities, GOOGLE_MAPS_API_KEY.value());
+    const totMiles = legs.reduce((s, l) => s + (l.distanceMiles || 0), 0);
+    const totMin = legs.reduce((s, l) => s + (l.durationMin || 0), 0);
+    return { ok: true, source, legs, totalDistanceText: totMiles ? (totMiles + ' mi') : '', totalDurationText: tcFmtDur(totMin) };
+  }
+);
+// ── AI Transportation Agent (Phase B) ────────────────────────────────────────
+// Compares realistic travel options PER MAJOR LEG (origin→first dest, dest→dest,
+// final→home) and recommends a best-fit with a TRANSPARENT reason. Car/DLC-ride
+// distance+time are AUTHORITATIVE (computeTripRoute helper — Google or labelled
+// estimate); the AI NEVER invents them. Flight/bus/train are rough AI estimates
+// ("pending verification") + a real search link — never fabricated prices/schedules.
+// "AI reasons, providers verify." No hardcoded city/airport/route/provider/car type.
+// Deterministic transport-options builder — the RELIABILITY CORE of the Transport tab.
+// For EACH verified route leg it ALWAYS produces: a personal-car option (verified Google
+// distance/time + a labelled gas/parking/toll estimate + route link), a private Du Lich Cali
+// ride, a flight (when the leg is long enough — Google Flights + nearest-airport search links,
+// labelled per-person/group/per-family estimate + airport buffer/baggage notes), and an
+// intercity bus (Greyhound + FlixBus + Hoang Express for CA Vietnamese routes — labelled
+// estimate + station note). NO AI dependency, NO fabricated prices/schedules/confirmations —
+// rough costs are clearly "(est.)" and links are REAL search URLs. Human-readable reasons,
+// pros and cons are emitted as KEYS the client localizes (vi/en/es), never as English prose.
+function tcGsearch(q) { return 'https://www.google.com/search?q=' + encodeURIComponent(q); }
+function tcMoney(lo, hi) { return '$' + Math.round(lo) + '–$' + Math.round(hi); }
+// Is this city on the Xe Đò Hoàng SERVICE NETWORK (Bay Area ↔ Little Saigon/SoCal, and
+// Bay Area ↔ AZ/NV)? Hoàng runs a REAL fixed route network, so detecting its service area by
+// state suffix + the geography centroid table + the operator's known hub cities is correct
+// domain modeling — NOT a hardcoded "always suggest Little Saigon" answer. Works whether or
+// not the city carries a ", CA" suffix (the old brittle ", CA"-only check missed bare names).
+function tcHoangServiceCity(city) {
+  const s = String(city || '').toLowerCase().trim();
+  if (!s) return false;
+  if (/\b(ca|calif|california|az|ariz|arizona|nv|nev|nevada)\b/.test(s)) return true; // explicit state
+  if (tcCentroid(city)) return true; // known Western city in the centroid table (CA + Vegas)
+  // Hoàng hub/served cities (substring match; the state regex above already covers suffixed names).
+  const HUBS = ['san jose', 'san francisco', 'oakland', 'san mateo', 'santa clara', 'sunnyvale', 'milpitas', 'fremont', 'hayward', 'sacramento', 'stockton', 'elk grove', 'bay area',
+    'los angeles', 'orange county', 'westminster', 'garden grove', 'santa ana', 'anaheim', 'fountain valley', 'huntington beach', 'little saigon', 'el monte', 'rosemead', 'san gabriel', 'alhambra', 'monterey park', 'san diego', 'phoenix'];
+  for (let i = 0; i < HUBS.length; i++) { if (s.indexOf(HUBS[i]) >= 0) return true; }
+  return false;
+}
+function tcBuildTransportLegs(route, trip) {
+  const fams = summarizeFamiliesForTrip(trip.families);
+  const travelers = fams.reduce((s, f) => s + (f.travelers || 0), 0) || 1;
+  const numFamilies = fams.length || 1;
+  const kids = fams.reduce((s, f) => s + String(f.childrenAges || '').split(/[,\s]+/).filter((x) => { const n = parseInt(x, 10); return !isNaN(n) && n <= 12; }).length, 0);
+  const seniors = fams.reduce((s, f) => s + (f.seniors || 0), 0);
+  const lowBudget = String(trip.budget || '') === 'budget';
+  const cars = Math.max(1, Math.ceil(travelers / 4));
+  const nLegs = route.legs.length;
+  return route.legs.map((l, i) => {
+    const legType = i === 0 ? 'outbound' : (i === nLegs - 1 ? 'return' : 'inter');
+    const miles = l.distanceMiles || 0;
+    const driveMin = l.durationMin || 0;
+    const verified = l.source === 'google_maps';
+    const driveStatus = verified ? 'verified' : (l.source === 'unknown' ? 'unknown' : 'estimated');
+    const fromShort = String(l.fromCity || '').split(',')[0];
+    const toShort = String(l.toCity || '').split(',')[0];
+    // Xe Đò Hoàng serviceable when BOTH endpoints are on its network (robust — not ", CA"-only).
+    const inCA = tcHoangServiceCity(l.fromCity) && tcHoangServiceCity(l.toCity);
+    const options = [];
+    // Personal car (ALWAYS) — verified distance/time + labelled gas/parking/toll estimate.
+    const gasLo = miles * 0.18 * cars * 0.85, gasHi = miles * 0.18 * cars * 1.2;
+    options.push({
+      mode: 'personal_car', provider: '', status: driveStatus,
+      distanceText: l.distanceText || '', durationText: l.durationTrafficText || l.durationText || '',
+      totalCostRange: miles ? (tcMoney(gasLo, gasHi) + ' (est.)') : '', perTravelerCost: '', perFamilyCost: '',
+      gasEstimate: miles ? (tcMoney(gasLo, gasHi) + ' (est.)') : '', parkingEstimate: tcMoney(25, 40) + '/day (est.)', tollNoteKey: 'tpTollNote',
+      luggageSuitability: 'good', childSuitability: 'good', seniorSuitability: 'good',
+      prosKeys: ['tpro_door', 'tpro_flexible', 'tpro_luggage', 'tpro_costshare'],
+      consKeys: miles > 360 ? ['tcon_longdrive', 'tcon_fatigue', 'tcon_parking'] : ['tcon_parking'],
+      whyKey: 'tpwhy_personal_car',
+      bookingLink: '', mapLink: l.mapLink || '', convenience: miles > 480 ? 3 : 4,
+      confidence: verified ? 'high' : 'medium', canBookViaDLC: false,
+      affectsItinerary: legType === 'outbound' || legType === 'return', source: l.source || 'estimated',
+    });
+    // Private Du Lich Cali ride (ALWAYS) — hands off to the existing ride flow; fare on request.
+    options.push({
+      mode: 'dlc_ride', provider: 'Du Lich Cali', status: driveStatus,
+      distanceText: l.distanceText || '', durationText: l.durationTrafficText || l.durationText || '',
+      totalCostRange: '', perTravelerCost: '', perFamilyCost: '',
+      luggageSuitability: 'good', childSuitability: 'good', seniorSuitability: 'good',
+      prosKeys: ['tpro_private', 'tpro_door', 'tpro_kidssenior', 'tpro_noparking'], consKeys: ['tcon_highercost'],
+      whyKey: 'tpwhy_dlc_ride',
+      bookingLink: '', mapLink: l.mapLink || '', convenience: (legType === 'outbound' || legType === 'return') ? 5 : 4,
+      confidence: 'medium', canBookViaDLC: true, affectsItinerary: false, source: l.source || 'estimated',
+    });
+    // Flight (long legs only) — Google Flights + nearest-airport search; labelled estimate.
+    if (miles >= 250 && driveMin >= 180) {
+      const ppMid = Math.max(70, Math.min(450, 60 + miles * 0.18));
+      const ppLo = ppMid * 0.7, ppHi = ppMid * 1.5, grpLo = ppLo * travelers, grpHi = ppHi * travelers;
+      const flightMin = Math.round(miles / 8) + 165; // ~480 mph + ~2.5–3h door-to-door buffer
+      const flightUrl = 'https://www.google.com/travel/flights?q=' + encodeURIComponent('flights from ' + l.fromCity + ' to ' + l.toCity);
+      options.push({
+        mode: 'flight', provider: '', status: 'estimated', distanceText: '', durationText: tcFmtDur(flightMin),
+        totalCostRange: tcMoney(grpLo, grpHi) + ' (est.)', perTravelerCost: tcMoney(ppLo, ppHi) + '/person (est.)', perFamilyCost: tcMoney(grpLo / numFamilies, grpHi / numFamilies) + '/family (est.)',
+        luggageSuitability: 'ok', childSuitability: 'ok', seniorSuitability: 'ok',
+        prosKeys: ['tpro_fastest', 'tpro_lesstiring'], consKeys: ['tcon_airporttime', 'tcon_baggage', 'tcon_carthere', 'tcon_bookahead'],
+        noteKeys: ['tpAirportBuffer', 'tpBaggageNote'], whyKey: 'tpwhy_flight',
+        bookingLink: flightUrl,
+        bookingLinks: [{ labelKey: 'tpFlightSearch', url: flightUrl }, { labelKey: 'tpAirportsNear', url: tcGsearch('major airports near ' + l.toCity) }],
+        mapLink: '', convenience: kids > 0 ? 3 : 4, confidence: 'low', canBookViaDLC: false, affectsItinerary: true, source: 'ai_estimate',
+      });
+    }
+    // Xe Đò Hoàng (Vietnamese intercity coach) — a KEY differentiator for our Vietnamese
+    // families. Offered on California intercity corridors (the routes Hoàng actually runs:
+    // Bay Area ↔ Little Saigon / OC / LA / SD, Sacramento ↔ Westminster). Real booking page,
+    // booking guide and phone numbers from xedohoang.com — never a fabricated price/schedule.
+    const hoangMin = Math.round(driveMin * 1.4) + 30;
+    if (inCA && miles >= 80 && miles <= 800) {
+      const hppMid = Math.max(35, Math.min(120, 18 + miles * 0.07));
+      const hppLo = hppMid * 0.75, hppHi = hppMid * 1.4, hgrpLo = hppLo * travelers, hgrpHi = hppHi * travelers;
+      options.push({
+        mode: 'hoang_bus', provider: 'Xe Đò Hoàng', status: 'estimated', distanceText: '', durationText: tcFmtDur(hoangMin),
+        totalCostRange: tcMoney(hgrpLo, hgrpHi) + ' (est.)', perTravelerCost: tcMoney(hppLo, hppHi) + '/person (est.)', perFamilyCost: tcMoney(hgrpLo / numFamilies, hgrpHi / numFamilies) + '/family (est.)',
+        luggageSuitability: 'ok', childSuitability: 'ok', seniorSuitability: 'good', wifiAvailable: true,
+        prosKeys: ['tpro_rest', 'tpro_wifi', 'tpro_nodriving', 'tpro_vietnamese', 'tpro_avoidtraffic'],
+        consKeys: ['tcon_schedule', 'tcon_luggagelimit', 'tcon_slowerthancar'],
+        // Past the OC/Little Saigon hub (long leg, e.g. → San Diego) → note the onward DLC ride/van connection.
+        noteKeys: miles >= 420 ? ['tpHoangStation', 'tpHoangConnect'] : ['tpHoangStation'], whyKey: 'tpwhy_hoang_bus',
+        website: 'https://xedohoang.com', phoneNumbers: ['714-839-3500', '408-729-7885', '888-834-9336'],
+        bookingLink: 'https://xedohoang.com/en/plan-trip',
+        bookingLinks: [
+          { labelKey: 'tpHoangBook', url: 'https://xedohoang.com/en/plan-trip' },
+          { labelKey: 'tpHoangGuide', url: 'https://xedohoang.com/en/ticket-booking-guide' },
+          { labelKey: 'tpHoangSite', url: 'https://xedohoang.com' },
+        ],
+        mapLink: '', convenience: (seniors > 0 ? 4 : 3), confidence: 'low', canBookViaDLC: false, affectsItinerary: true, source: 'ai_estimate',
+      });
+    }
+    // Generic intercity bus (Greyhound + FlixBus) — the mainstream alternatives.
+    if (miles >= 25 && miles <= 700) {
+      const bppMid = Math.max(15, Math.min(99, 9 + miles * 0.06));
+      const bppLo = bppMid * 0.7, bppHi = bppMid * 1.6, bgrpLo = bppLo * travelers, bgrpHi = bppHi * travelers;
+      const busMin = Math.round(driveMin * 1.45) + 30;
+      const links = [
+        { labelKey: 'tpBusGreyhound', url: tcGsearch('Greyhound bus ' + fromShort + ' to ' + toShort + ' tickets') },
+        { labelKey: 'tpBusFlix', url: tcGsearch('FlixBus ' + fromShort + ' to ' + toShort + ' tickets') },
+      ];
+      options.push({
+        mode: 'bus', provider: 'Greyhound / FlixBus', status: 'estimated', distanceText: '', durationText: tcFmtDur(busMin),
+        totalCostRange: tcMoney(bgrpLo, bgrpHi) + ' (est.)', perTravelerCost: tcMoney(bppLo, bppHi) + '/person (est.)', perFamilyCost: tcMoney(bgrpLo / numFamilies, bgrpHi / numFamilies) + '/family (est.)',
+        luggageSuitability: 'poor', childSuitability: 'ok', seniorSuitability: 'poor',
+        prosKeys: ['tpro_cheapest', 'tpro_nodriving'], consKeys: ['tcon_slowest', 'tcon_schedule', 'tcon_luggagelimit'],
+        noteKeys: ['tpBusStationNote'], whyKey: 'tpwhy_bus', bookingLink: links[0].url, bookingLinks: links,
+        mapLink: '', convenience: 2, confidence: 'low', canBookViaDLC: false, affectsItinerary: true, source: 'ai_estimate',
+      });
+    }
+    // Recommendation (deterministic, group-aware). Hoàng wins for seniors / no-drive families
+    // on a long California corridor (rest, Wi-Fi, no SoCal traffic); a small adults-only group
+    // on a very long hop leans to flying; otherwise a big family group keeps the car.
+    let recommendedMode = 'personal_car';
+    const hasHoang = options.some((o) => o.mode === 'hoang_bus');
+    if (hasHoang && miles >= 150 && travelers <= 9 && (seniors > 0 || (lowBudget && (seniors > 0 || kids > 0)))) recommendedMode = 'hoang_bus';
+    else if (miles >= 450 && travelers <= 5 && kids === 0 && options.some((o) => o.mode === 'flight')) recommendedMode = 'flight';
+    const recReasonKey = recommendedMode === 'hoang_bus' ? 'tprec_hoang' : (recommendedMode === 'flight' ? 'tprec_flight_long' : (miles < 150 ? 'tprec_car_short' : 'tprec_car_group'));
+    return {
+      fromCity: l.fromCity, toCity: l.toCity, legType: legType,
+      dayHint: miles >= 300 ? 'transit' : (miles >= 120 ? 'half' : 'activity'),
+      driveDistanceText: l.distanceText || '', driveDurationText: l.durationTrafficText || l.durationText || '', driveSource: l.source || 'estimated', mapLink: l.mapLink || '',
+      options: options, recommendedMode: recommendedMode, recommendationReason: '', recReasonKey: recReasonKey,
+    };
+  });
+}
+// Test-only hook (guarded): lets the offline smoke suite exercise the REAL deterministic
+// transport builder + route helper without invoking the callable runtime. No prod effect.
+if (process.env.TC_EXPORT_INTERNALS) { module.exports.tcBuildTransportLegs = tcBuildTransportLegs; module.exports.tcComputeRouteLegs = tcComputeRouteLegs; }
+exports.researchTripTransport = onCall(
+  { region: 'us-central1', secrets: [GOOGLE_MAPS_API_KEY], timeoutSeconds: 30, memory: '256MiB', cors: true },
+  async (request) => {
+    const data = request.data || {};
+    const trip = data.trip || {};
+    const origin = String(trip.departureCity || '').trim();
+    const destCities = (Array.isArray(trip.destinations) ? trip.destinations : [])
+      .map((d) => String((d && d.city) || '').trim()).filter(Boolean);
+    if (!origin || !destCities.length) return { ok: false, debugCode: 'NO_ROUTE', legs: [] };
+    // Build the major-leg path: origin -> dest1 -> ... -> destN -> origin, collapsing repeats.
+    const path = [origin].concat(destCities);
+    path.push(origin); // return home
+    const cities = path.filter((c, i) => i === 0 || c.toLowerCase() !== path[i - 1].toLowerCase());
+    if (cities.length < 2) return { ok: false, debugCode: 'NO_ROUTE', legs: [] };
+    // AUTHORITATIVE per-leg drive distance/time (Google Distance Matrix, or a labelled
+    // haversine estimate when the key is absent) -- the SAME route code used elsewhere.
+    const route = await tcComputeRouteLegs(cities.slice(0, 12), GOOGLE_MAPS_API_KEY.value());
+    // Deterministic comparison -- ALWAYS returns car + (long->) flight + (intercity->) bus +
+    // a private DLC ride per leg. No AI dependency, so the tab can never come up empty.
+    const legs = tcBuildTransportLegs(route, trip);
+    return { ok: true, legs, source: route.source, mapsSource: route.source, dataSource: 'estimated_pending_verification' };
+  }
+);
+// ── AI Transport STRATEGY + TRANSFER Intelligence (V3) ───────────────────────
+// Research-driven, NO hardcoded schedules/routes/hubs. Given the trip + the AUTHORITATIVE
+// drive legs (Google or labelled estimate — the AI never invents drive times), it: researches
+// the real operators for the preferred mode + alternatives (official site, pickup/dropoff areas,
+// schedule WINDOW + price RANGE — all "pending verification" with a real link), INFERS transfer
+// hubs from geography + operator networks, GENERATES multiple multi-leg strategies (same-day
+// transfer / explore-the-hub / overnight-at-hub / vs flight / vs private car·DLC ride), reasons
+// about RETURN logistics (early-departure risk, overnight, leave-a-day-earlier, fly home), and
+// EXPLAINS every recommendation. Generalizes to ANY destination (Vegas, Yosemite, Seattle, NY…).
+// Never fabricates prices/schedules/availability. The deterministic tcBuildTransportLegs stays as
+// the always-on verified backbone + fallback when research yields nothing.
+function buildTransportStrategiesPrompt(lang) {
+  const langName = lang === 'vi' ? 'Vietnamese' : (lang === 'es' ? 'Spanish' : 'English');
+  return [
+    'You are an AI TRAVEL OPERATIONS agent for Du Lich Cali — a real travel operator that ALSO runs private rides/transfers. Plan how a GROUP physically gets from its origin through each destination and home, using current web knowledge. You RESEARCH and REASON; you NEVER fabricate exact schedules, prices, seat availability, or confirmations.',
+    'INPUT gives: origin, destinations (in order), dates, the group profile (families/kids/teens/seniors/luggage), a transport PREFERENCE, and verifiedLegs[] = the AUTHORITATIVE per-leg DRIVE distance/time (from Google Maps or a labelled estimate). USE verifiedLegs drive times as ground truth for car/private-ride legs — NEVER invent or contradict them; only the non-drive modes (bus/flight/train) get a clearly-labelled estimate.',
+    'DO THE HOMEWORK — research, do not assume: (1) For the PREFERRED mode and the realistic ALTERNATIVES (personal car, flight, the relevant intercity bus operators e.g. the Vietnamese-community operator Xe Do Hoang where it serves the route, Greyhound, FlixBus, a Du Lich Cali private ride/transfer, and train/shuttle when they exist), identify the REAL operator, its official website AND phone, the general pickup & dropoff AREAS (the actual STATIONS), the rough schedule WINDOW and price RANGE — every schedule/price marked "pending verification" with the official site to confirm.',
+    'TRANSFER DETECTION — this is critical, REASON it through, do NOT assume direct service: a bus or flight drops the group at a STATION / depot / airport, NEVER at their hotel — so a last-mile transfer to the hotel ALWAYS exists. MOREOVER many intercity/community bus lines do NOT reach the final destination city at all — their nearest stop is an intermediate METRO. RESEARCH the operator\'s real dropoff for THIS route and COMPARE it to the final destination: if the nearest dropoff is a different city/area than the destination, that dropoff city is a TRANSFER HUB and the leg from the hub to the destination hotel must be completed by another mode (typically a Du Lich Cali / private van/ride, dlcFit=true). Example of the KIND of reasoning (illustrative, NOT a hardcoded rule — apply the same logic to any operator/route): a Vietnamese-community bus from the Bay Area commonly terminates around the Orange County / Westminster / Garden Grove (Little Saigon) area, so reaching a San Diego hotel needs a transfer from that hub onward. Decide every hub from researched dropoff data + geography, never from a fixed city table.',
+    'HUB EXPERIENCE: when a transfer hub has time to spare or cultural relevance (e.g. dropping in a Vietnamese community hub), suggest a few hours there — REAL local Vietnamese food / coffee / bakery / quick attractions that fit the group — before the onward transfer. Only when timing genuinely allows.',
+    'COMPARE every strategy on these dimensions explicitly in pros/cons + why: COST, TIME, COMFORT, RISK OF MISSING THE BUS/FLIGHT, family/kid/senior convenience, and HOTEL IMPACT (e.g. losing a night at the destination if you overnight at the hub).',
+    'GENERATE 3-5 distinct STRATEGIES that a smart local would compare, e.g.: A) preferred mode + same-day transfer to the final destination; B) preferred mode, then spend several hours enjoying the transfer hub (real local food/coffee/bakery/attractions that fit the group) before continuing; C) overnight at the hub (or leave a day earlier) to de-risk an early departure; D) the fast/comfortable alternative (flight or private ride) and E) personal car with route stopovers — include only the strategies that actually make sense for THIS route and group. For each strategy give: ordered legs (from→to, mode, short note, and dlcFit=true on any leg a Du Lich Cali ride/transfer naturally serves), any overnightAt city, pros, cons, who it is bestFor (kids/seniors/luggage/budget/speed/comfort), a timingRisk (low/medium/high with the reason), and a one-sentence WHY tying it to the group + schedule + risk. Mark exactly one strategy recommended=true.',
+    'RETURN INTELLIGENCE: research the operator\'s RETURN schedule and analyse the trip home. If the return bus only departs EARLY (from the hub, far from the destination hotel), the group cannot make it from a destination hotel in time — so present the real options: Option A) overnight at the transfer hub the night BEFORE the return bus; Option B) a very early Du Lich Cali / private ride from the destination to the hub to catch the bus; Option C) skip the bus home and compare a flight or private ride instead. Set earlyDepartureRisk (low/medium/high), overnightRecommended, leaveDayEarlier, a flyHome option, and explain WHY referencing the group (kids, luggage, early departure, traffic, hotel impact).',
+    'OUTPUT ONLY valid JSON (no markdown). Put the most important keys FIRST so nothing critical is lost if output is long: { "preference":"<echo the preference or \'any\'>", "connectionPlan":{ "provider"(the main researched operator for the preference, or ""),"origin","providerDropoff"(the operator\'s real nearest dropoff station/area for this route),"finalDestination","transferNeeded"(bool — true whenever the dropoff is not the destination hotel/area),"transferHub"(the hub city when a transfer is needed, else ""),"transferOptions":[ { "mode"(dlc_ride|shuttle|rental_car|taxi|train|personal_car),"from","to","note","dlcFit"(bool) } ],"hubStopSuggested"(bool),"hubStopIdeas":[ short real food/coffee/bakery/attraction ideas at the hub ],"overnightBeforeReturnRecommended"(bool),"returnOptions":[ { "label"(A|B|C),"text"(one phrase) } ],"scheduleRisk"(low|medium|high — reason),"whyRecommended"(one sentence),"officialUrl"(REAL site or search URL),"officialPhone"(only if known, else ""),"verificationStatus":"pending_verification" }, "strategies":[ { "id"(A|B|C|D|E),"name"(short),"summary"(one sentence),"legs":[ { "from","to","mode","note","dlcFit"(bool) } ],"overnightAt"(city or ""),"totalTimeNote","pros":[short],"cons":[short],"bestFor","timingRisk"(low|medium|high — reason),"why"(one sentence),"recommended"(bool) } ], "returnIntelligence":{ "earlyDepartureRisk"(low|medium|high),"overnightRecommended"(bool),"leaveDayEarlier"(bool),"flyHomeOption"(one phrase),"explanation"(one-two sentences) }, "transferHubs":[ { "hub","connects"(A→B),"why"(one phrase) } ], "modes":[ { "mode"(personal_car|flight|hoang_bus|greyhound|flixbus|dlc_ride|train|shuttle),"operator","officialUrl"(REAL official site or a Google search URL — never invented),"routeSummary"(one phrase),"pickupAreas":[short],"dropoffAreas":[short],"scheduleNote"("pending verification — what to check"),"priceNote"("pending verification" or a rough "$X–$Y (est.)"),"travelTimeNote"(use the verified drive time when given, else "~Nh (est.)"),"constraints"(one phrase: luggage/kids/seniors/timing),"bestFor"(one phrase),"source":"ai_researched_pending_verification" } ] }',
+    'Keep it COMPACT (2-4 strategies, ≤6 modes, short phrases) so the whole JSON object is returned complete — never truncate mid-object.',
+    'HARD RULES: NO fabricated schedules/prices/availability/confirmations — use "pending verification" + the official link. Use REAL operator + place names; if unsure of a detail, say so and link the official source. Use the verifiedLegs drive times verbatim for car/ride legs. NO hardcoded city→hub or mode→behavior rules — derive everything from the route, operator networks and the group. The SAME reasoning must work for any destination. Write ALL human-readable text in ' + langName + '. Output ONE compact valid JSON object only.',
+  ].join('\n');
+}
+exports.researchTransportStrategies = onCall(
+  { region: 'us-central1', secrets: [GEMINI_API_KEY, GOOGLE_MAPS_API_KEY], timeoutSeconds: 100, memory: '256MiB', cors: true },
+  async (request) => {
+    const data = request.data || {};
+    const trip = data.trip || {};
+    const lang = (data.lang === 'vi' || data.lang === 'es') ? data.lang : 'en';
+    const origin = String(trip.departureCity || '').trim();
+    const destCities = (Array.isArray(trip.destinations) ? trip.destinations : []).map((d) => String((d && d.city) || '').trim()).filter(Boolean);
+    if (!origin || !destCities.length) return { ok: false, debugCode: 'NO_ROUTE' };
+    const geminiKey = await getAiKey('gemini');
+    if (!geminiKey) return { ok: false, debugCode: 'NO_GEMINI_KEY' };
+    // AUTHORITATIVE drive legs (origin → dests → home) — same route core as researchTripTransport.
+    const path = [origin].concat(destCities); path.push(origin);
+    const cities = path.filter((c, i) => i === 0 || c.toLowerCase() !== path[i - 1].toLowerCase());
+    let route = { legs: [], source: 'estimated' };
+    try { route = await tcComputeRouteLegs(cities.slice(0, 12), GOOGLE_MAPS_API_KEY.value()); } catch (e) { /* estimate fallback below */ }
+    const verifiedLegs = (route.legs || []).map((l) => ({ from: l.fromCity || l.from || '', to: l.toCity || l.to || '', driveTime: l.durationText || l.durationTrafficText || '', driveDistance: l.distanceText || '', source: route.source }));
+    const pref = String(data.transportPreference || trip.transportPreference || 'any').slice(0, 40);
+    const userContent = 'Plan transport strategies. Input JSON:\n' + JSON.stringify({
+      origin, destinations: destCities.slice(0, 8), dateRange: trip.dateRange, transportPreference: pref,
+      verifiedLegs, driveSource: route.source,
+      groupProfile: tcGroupProfile(trip.families, trip.budget, trip.tripStyle), familiesSummary: summarizeFamiliesForTrip(trip.families),
+      budget: trip.budget, pace: trip.tripStyle,
+    });
+    async function attemptStrategies() {
+    try {
+      const text = await serverCallGeminiGrounded(buildTransportStrategiesPrompt(lang) + '\n\n' + userContent, geminiKey, 6500);
+      let raw = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').replace(/[\u0000-\u001F]+/g, ' ');
+      const s = raw.indexOf('{'); const e = raw.lastIndexOf('}');
+      if (s > 0 || e > 0) raw = raw.slice(s, e + 1);
+      const parsed = tripSalvageJson(raw);
+      if (!parsed || typeof parsed !== 'object') { console.error('[researchTransportStrategies] unparseable, len=' + raw.length); return { ok: false, debugCode: 'RESEARCH_ERROR' }; }
+      const MODES = ['personal_car', 'flight', 'hoang_bus', 'greyhound', 'flixbus', 'dlc_ride', 'train', 'shuttle'];
+      const clampStr = (x, n) => String(x == null ? '' : x).slice(0, n);
+      const clampArr = (a, n, len) => (Array.isArray(a) ? a : []).slice(0, n).map((x) => clampStr(x, len)).filter(Boolean);
+      const modes = (Array.isArray(parsed.modes) ? parsed.modes : []).slice(0, 10).map((m) => {
+        m = m || {};
+        return {
+          mode: MODES.indexOf(String(m.mode)) >= 0 ? m.mode : 'shuttle', operator: clampStr(m.operator, 60), officialUrl: /^https?:\/\//i.test(String(m.officialUrl || '')) ? clampStr(m.officialUrl, 200) : '',
+          routeSummary: clampStr(m.routeSummary, 120), pickupAreas: clampArr(m.pickupAreas, 4, 50), dropoffAreas: clampArr(m.dropoffAreas, 4, 50),
+          scheduleNote: clampStr(m.scheduleNote || 'pending verification', 120), priceNote: clampStr(m.priceNote || 'pending verification', 60),
+          travelTimeNote: clampStr(m.travelTimeNote, 40), constraints: clampStr(m.constraints, 100), bestFor: clampStr(m.bestFor, 60),
+          source: 'ai_researched_pending_verification',
+        };
+      }).filter((m) => m.operator || m.routeSummary);
+      const transferHubs = (Array.isArray(parsed.transferHubs) ? parsed.transferHubs : []).slice(0, 5).map((h) => ({ hub: clampStr((h || {}).hub, 80), connects: clampStr((h || {}).connects, 80), why: clampStr((h || {}).why, 160) })).filter((h) => h.hub);
+      let recSeen = false;
+      const strategies = (Array.isArray(parsed.strategies) ? parsed.strategies : []).slice(0, 6).map((st, i) => {
+        st = st || {};
+        const rec = !recSeen && st.recommended === true; if (rec) recSeen = true;
+        return {
+          id: clampStr(st.id || String.fromCharCode(65 + i), 2), name: clampStr(st.name, 80), summary: clampStr(st.summary, 200),
+          legs: (Array.isArray(st.legs) ? st.legs : []).slice(0, 8).map((lg) => ({ from: clampStr((lg || {}).from, 60), to: clampStr((lg || {}).to, 60), mode: MODES.indexOf(String((lg || {}).mode)) >= 0 ? lg.mode : clampStr((lg || {}).mode, 24), note: clampStr((lg || {}).note, 120), dlcFit: (lg || {}).dlcFit === true })).filter((lg) => lg.from || lg.to),
+          overnightAt: clampStr(st.overnightAt, 80), totalTimeNote: clampStr(st.totalTimeNote, 40),
+          pros: clampArr(st.pros, 5, 80), cons: clampArr(st.cons, 5, 80), bestFor: clampStr(st.bestFor, 60),
+          timingRisk: clampStr(st.timingRisk, 120), why: clampStr(st.why, 240), recommended: rec,
+        };
+      }).filter((st) => st.name || st.legs.length);
+      const ri = parsed.returnIntelligence || {};
+      const returnIntelligence = {
+        earlyDepartureRisk: (['low', 'medium', 'high'].indexOf(String(ri.earlyDepartureRisk)) >= 0 ? ri.earlyDepartureRisk : ''),
+        overnightRecommended: ri.overnightRecommended === true, leaveDayEarlier: ri.leaveDayEarlier === true,
+        flyHomeOption: clampStr(ri.flyHomeOption, 120), explanation: clampStr(ri.explanation, 280),
+      };
+      // TransportConnectionPlan — the focused per-provider transfer analysis (dropoff vs final).
+      const cpRaw = parsed.connectionPlan || {};
+      const XMODES = ['dlc_ride', 'shuttle', 'rental_car', 'taxi', 'train', 'personal_car'];
+      const connectionPlan = (cpRaw.provider || cpRaw.providerDropoff || cpRaw.transferNeeded != null) ? {
+        provider: clampStr(cpRaw.provider, 60), origin: clampStr(cpRaw.origin, 60), providerDropoff: clampStr(cpRaw.providerDropoff, 80),
+        finalDestination: clampStr(cpRaw.finalDestination, 80), transferNeeded: cpRaw.transferNeeded === true, transferHub: clampStr(cpRaw.transferHub, 80),
+        transferOptions: (Array.isArray(cpRaw.transferOptions) ? cpRaw.transferOptions : []).slice(0, 5).map((o) => ({ mode: XMODES.indexOf(String((o || {}).mode)) >= 0 ? o.mode : clampStr((o || {}).mode, 24), from: clampStr((o || {}).from, 60), to: clampStr((o || {}).to, 60), note: clampStr((o || {}).note, 120), dlcFit: (o || {}).dlcFit === true })).filter((o) => o.from || o.to || o.mode),
+        hubStopSuggested: cpRaw.hubStopSuggested === true, hubStopIdeas: clampArr(cpRaw.hubStopIdeas, 5, 70),
+        overnightBeforeReturnRecommended: cpRaw.overnightBeforeReturnRecommended === true,
+        returnOptions: (Array.isArray(cpRaw.returnOptions) ? cpRaw.returnOptions : []).slice(0, 4).map((o) => ({ label: clampStr((o || {}).label, 2), text: clampStr((o || {}).text, 160) })).filter((o) => o.text),
+        scheduleRisk: clampStr(cpRaw.scheduleRisk, 120), whyRecommended: clampStr(cpRaw.whyRecommended, 240),
+        officialUrl: /^https?:\/\//i.test(String(cpRaw.officialUrl || '')) ? clampStr(cpRaw.officialUrl, 200) : '',
+        officialPhone: clampStr(cpRaw.officialPhone, 40), verificationStatus: 'pending_verification',
+      } : null;
+      // Strategies are the core deliverable — if they're missing (e.g. a truncated/partial
+      // grounding response), signal failure so the client's callWithRetry self-heals.
+      if (!strategies.length) return { ok: false, debugCode: 'RESEARCH_ERROR', modes: modes, transferHubs: transferHubs };
+      return { ok: true, preference: clampStr(parsed.preference || pref, 40), connectionPlan, modes, transferHubs, strategies, returnIntelligence, driveSource: route.source, dataSource: 'ai_researched_pending_verification' };
+    } catch (e2) {
+      console.error('[researchTransportStrategies] failed', e2 && e2.message);
+      return { ok: false, debugCode: 'RESEARCH_ERROR' };
+    }
+    }
+    // Single server-side retry: a transient grounding miss (unparseable / empty strategies /
+    // thrown error) self-heals here so even non-client callers get a complete plan. The route
+    // legs above are computed ONCE — only the AI generate+parse is retried.
+    let result = await attemptStrategies();
+    if (!result || !result.ok) { const retry = await attemptStrategies(); if (retry && retry.ok) result = retry; }
+    return result;
+  }
+);
+// ── placePhotos (PlacePhotoProvider) ─────────────────────────────────────────
+// REAL place/food photos via Google Places — reuses the SAME GOOGLE_MAPS_API_KEY as the
+// ride subsystem. Resolves the exact place (Find Place from name+address) → its photo
+// references → the keyless googleusercontent CDN URL (the Places Photo endpoint
+// 302-redirects there, so the API key is NEVER exposed to the client). Returns real
+// photos + attribution, or ok:false (NO_MAPS_KEY / no photos) so the client shows
+// "No verified photo available" + links. NEVER returns an AI/generic image.
+exports.placePhotos = onCall(
+  { region: 'us-central1', secrets: [GOOGLE_MAPS_API_KEY], timeoutSeconds: 20, memory: '256MiB', cors: true },
+  async (request) => {
+    const d = request.data || {};
+    const name = String(d.name || '').trim();
+    const address = String(d.address || '').trim();
+    if (!name) return { ok: false, debugCode: 'NO_PLACE', photos: [] };
+    const key = GOOGLE_MAPS_API_KEY.value();
+    if (!key || String(key).trim().length < 20) return { ok: false, debugCode: 'NO_MAPS_KEY', photos: [] };
+    const stripTags = (s) => String(s || '').replace(/<[^>]+>/g, '').trim();
+    try {
+      const q = encodeURIComponent((name + ' ' + address).trim());
+      const fp = await fetch(`https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${q}&inputtype=textquery&fields=place_id,photos,name&key=${key}`).then((r) => r.json());
+      const cand = fp && fp.candidates && fp.candidates[0];
+      if (!cand || !Array.isArray(cand.photos) || !cand.photos.length) return { ok: true, placeId: (cand && cand.place_id) || '', photos: [], source: 'google_places' };
+      const refs = cand.photos.slice(0, 3);
+      const photos = [];
+      for (const ph of refs) {
+        try {
+          // The Photo endpoint 302-redirects to a keyless lh3.googleusercontent.com URL.
+          const resp = await fetch(`https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${encodeURIComponent(ph.photo_reference)}&key=${key}`, { redirect: 'manual' });
+          const loc = resp.headers.get('location');
+          if (loc && /^https?:\/\//.test(loc) && loc.indexOf('key=') === -1) {
+            photos.push({ url: loc, attribution: stripTags((ph.html_attributions || [])[0]).slice(0, 120), width: ph.width || 0, height: ph.height || 0 });
+          }
+        } catch (e) { /* skip this photo */ }
+      }
+      return { ok: true, placeId: cand.place_id || '', photos, source: 'google_places' };
+    } catch (e) {
+      console.error('[placePhotos] failed', e && e.message);
+      return { ok: false, debugCode: 'ERROR', photos: [] };
     }
   }
 );
@@ -4983,6 +6752,24 @@ exports.rejectOffer = onCall(
 
 // ── expireRideOffers (scheduled every 2 minutes) ──────────────────────────────
 // Finds pending bookingOffers past their expiresAt and triggers next dispatch.
+// Privacy sweep for live trip location sharing: hard-delete any liveLocations doc past its
+// expiresAt (or with none) so no location persists after a trip / share window. Belt-and-
+// suspenders on top of client delete-on-stop + readers-ignore-expired + members-only rules.
+exports.cleanupExpiredLiveLocations = onSchedule(
+  { schedule: 'every 24 hours', region: 'us-central1', timeoutSeconds: 120, memory: '256MiB' },
+  async () => {
+    const now = Date.now();
+    let removed = 0, batch = db.batch(), n = 0;
+    const snap = await db.collectionGroup('liveLocations').limit(2000).get();
+    for (const d of snap.docs) {
+      const exp = d.get('expiresAt');
+      const expMs = (typeof exp === 'number') ? exp : (exp && exp.toMillis ? exp.toMillis() : 0);
+      if (!expMs || expMs < now) { batch.delete(d.ref); n++; removed++; if (n >= 400) { await batch.commit(); batch = db.batch(); n = 0; } }
+    }
+    if (n > 0) await batch.commit();
+    console.log('[cleanupExpiredLiveLocations] removed ' + removed + ' expired/stale live location(s)');
+  }
+);
 exports.expireRideOffers = onSchedule(
   { schedule: 'every 2 minutes', region: 'us-central1', timeoutSeconds: 60 },
   async () => {

@@ -288,6 +288,7 @@
       improveTitle: 'Improve this trip with AI', improveSub: 'AI optimizes using your group\'s votes, favorites & preferences — then suggests concrete changes you can add.', improveWorking: 'Looking for ways to make this trip better…', improveNone: 'No suggestions right now — try another goal.',
       optimizeTrip: 'Optimize Trip', optimizing: 'Rebuilding your trip from the group\'s votes…', optimizeDone: 'Trip rebuilt from your group\'s votes', optimizeNudge: 'Your group\'s votes changed — re-optimize the whole trip.', optimizeRebuildHint: 'Regenerates the itinerary, food, stays, events, stopovers, transport, costs & bookings from all your votes. Your pins & skips are kept.',
       mem_title: 'What we remember', mem_sub: 'Preferences learned from your past trips — used to start new ones smarter.', mem_cuisines: 'Cuisines you like', mem_liked: 'Places you liked', mem_never: 'Never suggest again', mem_transport: 'Preferred transport', mem_budget: 'Usual budget', mem_pace: 'Usual pace', mem_trips: 'Trips remembered', mem_clear: 'Clear memory', mem_cleared: 'Travel memory cleared',
+      nightOne: 'night', nightMany: 'nights',
       impGeneral: '✨ Improve this trip', impDiscoveries: '💎 Find more discoveries', impLowerCost: '💲 Lower cost', impKidsFun: '🧒 More fun for kids', impFoodFocused: '🍽 More food-focused',
       impSelected: '{n} selected', impRun: 'Run AI Improvement', impClear: 'Clear all',
       rejVote: 'Removed — the group voted to skip this', rejMajority: 'Removed — most families voted to skip this', rejNotNeeded: 'Removed — marked not needed',
@@ -537,6 +538,7 @@
       improveTitle: 'Cải thiện chuyến đi bằng AI', improveSub: 'AI tối ưu dựa trên bình chọn, yêu thích & sở thích của nhóm — rồi gợi ý thay đổi cụ thể để bạn thêm.', improveWorking: 'Đang tìm cách làm chuyến đi tốt hơn…', improveNone: 'Hiện chưa có gợi ý — thử mục tiêu khác.',
       optimizeTrip: 'Tối ưu chuyến đi', optimizing: 'Đang dựng lại chuyến đi theo bình chọn của nhóm…', optimizeDone: 'Đã dựng lại chuyến đi theo bình chọn của nhóm', optimizeNudge: 'Bình chọn của nhóm đã thay đổi — tối ưu lại toàn bộ chuyến đi.', optimizeRebuildHint: 'Tạo lại lịch trình, ẩm thực, nơi ở, sự kiện, điểm dừng, di chuyển, chi phí & đặt chỗ theo tất cả bình chọn. Mục ghim & bỏ qua được giữ lại.',
       mem_title: 'Những gì chúng tôi ghi nhớ', mem_sub: 'Sở thích học được từ các chuyến đi trước — dùng để bắt đầu chuyến mới thông minh hơn.', mem_cuisines: 'Ẩm thực bạn thích', mem_liked: 'Địa điểm bạn thích', mem_never: 'Không gợi ý lại', mem_transport: 'Phương tiện ưa thích', mem_budget: 'Ngân sách thường dùng', mem_pace: 'Nhịp độ thường dùng', mem_trips: 'Số chuyến đã ghi nhớ', mem_clear: 'Xóa bộ nhớ', mem_cleared: 'Đã xóa bộ nhớ du lịch',
+      nightOne: 'đêm', nightMany: 'đêm',
       impGeneral: '✨ Cải thiện chuyến đi', impDiscoveries: '💎 Tìm thêm khám phá', impLowerCost: '💲 Giảm chi phí', impKidsFun: '🧒 Vui hơn cho trẻ', impFoodFocused: '🍽 Tập trung ẩm thực',
       impSelected: 'Đã chọn {n}', impRun: 'Chạy cải thiện AI', impClear: 'Xóa tất cả',
       rejVote: 'Đã bỏ — cả nhóm bình chọn bỏ qua', rejMajority: 'Đã bỏ — đa số gia đình bình chọn bỏ qua', rejNotNeeded: 'Đã bỏ — đánh dấu không cần',
@@ -786,6 +788,7 @@
       improveTitle: 'Mejora este viaje con IA', improveSub: 'La IA optimiza con los votos, favoritos y preferencias de tu grupo — y sugiere cambios concretos para agregar.', improveWorking: 'Buscando formas de mejorar este viaje…', improveNone: 'No hay sugerencias ahora — prueba otro objetivo.',
       optimizeTrip: 'Optimizar viaje', optimizing: 'Reconstruyendo tu viaje según los votos del grupo…', optimizeDone: 'Viaje reconstruido según los votos del grupo', optimizeNudge: 'Los votos de tu grupo cambiaron — vuelve a optimizar todo el viaje.', optimizeRebuildHint: 'Regenera el itinerario, comida, alojamiento, eventos, paradas, transporte, costos y reservas usando todos tus votos. Tus fijados y omitidos se conservan.',
       mem_title: 'Lo que recordamos', mem_sub: 'Preferencias aprendidas de tus viajes anteriores — para empezar los nuevos de forma más inteligente.', mem_cuisines: 'Cocinas que te gustan', mem_liked: 'Lugares que te gustaron', mem_never: 'No sugerir de nuevo', mem_transport: 'Transporte preferido', mem_budget: 'Presupuesto habitual', mem_pace: 'Ritmo habitual', mem_trips: 'Viajes recordados', mem_clear: 'Borrar memoria', mem_cleared: 'Memoria de viaje borrada',
+      nightOne: 'noche', nightMany: 'noches',
       impGeneral: '✨ Mejorar este viaje', impDiscoveries: '💎 Más descubrimientos', impLowerCost: '💲 Reducir costo', impKidsFun: '🧒 Más diversión para niños', impFoodFocused: '🍽 Más enfocado en comida',
       impSelected: '{n} seleccionados', impRun: 'Ejecutar mejora con IA', impClear: 'Borrar todo',
       rejVote: 'Eliminado — el grupo votó por omitirlo', rejMajority: 'Eliminado — la mayoría votó por omitirlo', rejNotNeeded: 'Eliminado — marcado como no necesario',
@@ -1560,6 +1563,81 @@
     var nm = s.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\s*-\s*(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);
     if (nm) { var y1 = nm[3] ? (nm[3].length === 2 ? 2000 + +nm[3] : +nm[3]) : (new Date().getFullYear()); var y2 = nm[6] ? (nm[6].length === 2 ? 2000 + +nm[6] : +nm[6]) : y1; return build(new Date(y1, +nm[1] - 1, +nm[2]), new Date(y2, +nm[4] - 1, +nm[5])); }
     return null;
+  }
+
+  // ════════════════════════════════════════════════════════════════════════
+  //  MULTI-STOP JOURNEY MODEL (Step A) — segments own their dates; the trip date
+  //  range and the day→segment mapping are DERIVED from segments, not the reverse.
+  //  trip.destinations[] IS the segment array (segments() is a read alias). The
+  //  user defines WHERE + WHEN per stop; the AI optimizes WITHIN (never reorders).
+  //  Pure + deterministic — nothing hardcoded to a city/date/provider.
+  // ════════════════════════════════════════════════════════════════════════
+  function segments(trip) { trip = trip || state.trip; return (trip && trip.destinations) || []; }
+  function segArrival(d) { return (d && (d.arrivalDate || d.startDate)) || ''; }
+  function segDeparture(d) { return (d && (d.departureDate || d.endDate)) || ''; }
+  // Parse a single date: ISO (2026-07-01), "Jul 1, 2026"/"July 1", or m/d/yyyy. → Date | null.
+  function parseSegDate(s) {
+    s = String(s || '').trim(); if (!s) return null;
+    var iso = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (iso) { var di = new Date(+iso[1], +iso[2] - 1, +iso[3]); return isNaN(di.getTime()) ? null : di; }
+    var M = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11 };
+    var hm = s.toLowerCase().match(/([a-z]{3,})\.?\s+(\d{1,2})(?:,?\s*(\d{4}))?/);
+    if (hm && M[hm[1].slice(0, 3)] != null) { var yr = hm[3] ? +hm[3] : (new Date().getFullYear()); var dh = new Date(yr, M[hm[1].slice(0, 3)], +hm[2]); return isNaN(dh.getTime()) ? null : dh; }
+    var nm = s.match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);
+    if (nm) { var y = nm[3] ? (nm[3].length === 2 ? 2000 + +nm[3] : +nm[3]) : (new Date().getFullYear()); var dn = new Date(y, +nm[1] - 1, +nm[2]); return isNaN(dn.getTime()) ? null : dn; }
+    return null;
+  }
+  function isoOfDate(dt) { var m = dt.getMonth() + 1, d = dt.getDate(); return dt.getFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (d < 10 ? '0' : '') + d; }
+  function fmtSegDate(dt) { var loc = state.lang === 'vi' ? 'vi-VN' : (state.lang === 'es' ? 'es-ES' : 'en-US'); try { return dt.toLocaleDateString(loc, { month: 'short', day: 'numeric' }); } catch (e) { return isoOfDate(dt); } }
+  function nightsBetween(a, b) { if (!a || !b) return 0; return Math.round((b.getTime() - a.getTime()) / 86400000); }
+  // Computed nights for a segment ([arrival, departure)). 0 if dates missing/invalid.
+  function segNights(d) { var a = parseSegDate(segArrival(d)), b = parseSegDate(segDeparture(d)); return (a && b) ? Math.max(0, nightsBetween(a, b)) : 0; }
+  // Derive the trip's global dateRange from segments (min arrival … max departure).
+  // Returns an ISO range string parseTripDates() can re-read. When no segment carries
+  // explicit dates, returns the existing dateRange unchanged (legacy trips untouched).
+  function deriveDateRange(trip) {
+    trip = trip || state.trip;
+    var dated = segments(trip).map(function (d) { return { a: parseSegDate(segArrival(d)), b: parseSegDate(segDeparture(d)) }; }).filter(function (x) { return x.a && x.b; });
+    if (!dated.length) return (trip && trip.dateRange) || '';
+    var min = dated[0].a, max = dated[0].b;
+    dated.forEach(function (x) { if (x.a < min) min = x.a; if (x.b > max) max = x.b; });
+    return isoOfDate(min) + ' - ' + isoOfDate(max);
+  }
+  // DETERMINISTIC day→segment plan. Each segment owns [arrival, departure) (its nights);
+  // the shared boundary date belongs to the NEXT segment's arrival (travel-in). The final
+  // trip return day = last segment's departure (unless lastDayFull). Returns null when any
+  // segment lacks dates → caller falls back to the legacy dateRange path. The AI fills each
+  // day's CONTENT but never changes this mapping (kills the skeleton re-index/drop bug).
+  function buildSegmentDayPlan(trip) {
+    trip = trip || state.trip;
+    var segs = segments(trip);
+    var dated = segs.map(function (d) { return { d: d, a: parseSegDate(segArrival(d)), b: parseSegDate(segDeparture(d)) }; });
+    if (!dated.length || dated.some(function (x) { return !x.a || !x.b; })) return null;
+    var days = [], loc = '';
+    for (var i = 0; i < dated.length; i++) {
+      var seg = dated[i], city = (seg.d.city || '').trim();
+      var dayCount = Math.max(1, nightsBetween(seg.a, seg.b)); // [arrival, departure); same-day → 1
+      for (var k = 0; k < dayCount; k++) {
+        var dt = new Date(seg.a.getTime() + k * 86400000);
+        var travelIn = (k === 0) && (i === 0 || city.toLowerCase() !== loc.toLowerCase());
+        days.push({ date: fmtSegDate(dt), iso: isoOfDate(dt), destinationIndex: i, segmentId: seg.d.id || '', isTravelDay: !!travelIn, isReturnDay: false });
+      }
+      loc = city;
+    }
+    if (!trip.lastDayFull) {
+      var last = dated[dated.length - 1];
+      days.push({ date: fmtSegDate(last.b), iso: isoOfDate(last.b), destinationIndex: dated.length - 1, segmentId: last.d.id || '', isTravelDay: true, isReturnDay: true });
+    }
+    return days;
+  }
+  // Human "2 nights San Diego · 1 night Orange County · home <date>" summary from segments.
+  function journeySummary(trip) {
+    trip = trip || state.trip;
+    var parts = segments(trip).filter(function (d) { return (d.city || '').trim(); }).map(function (d) {
+      var n = segNights(d);
+      return n > 0 ? (n + ' ' + (n === 1 ? t('nightOne') : t('nightMany')) + ' ' + d.city) : d.city;
+    });
+    return parts;
   }
   // Day-type model: arrival_day | main_activity_day | transfer_day | return_day | mixed_day.
   // Generic — never hardcoded to any city/date. The Final-Day mode (Issue #3) shapes the last day.
@@ -2412,7 +2490,9 @@
   // Apply a role change: set role + reset its role-driven defaults (user can then tweak).
   function applyDestRole(d, role) { d.role = role; var defs = roleDefaults(role); Object.keys(defs).forEach(function (k) { d[k] = defs[k]; }); return d; }
   function newDestination(order) {
-    var d = { id: uid('dest'), order: order || 0, city: '', startDate: '', endDate: '', hotel: null, notes: '', hoursToSpend: '', hotelPrefs: [] };
+    // Segment model (Step A): arrivalDate/departureDate are canonical (startDate/endDate kept as
+    // aliases); transportPreference/preferredProvider describe the INBOUND leg to this stop.
+    var d = { id: uid('dest'), order: order || 0, city: '', arrivalDate: '', departureDate: '', startDate: '', endDate: '', nights: 0, overnightStay: true, transportPreference: 'any', preferredProvider: '', hotel: null, notes: '', hoursToSpend: '', hotelPrefs: [] };
     return normalizeDestRole(d);
   }
   function newFamily() {
@@ -2444,9 +2524,23 @@
     trip.destinations.forEach(function (d, i) { if (d.order == null) d.order = i; if (!d.id) d.id = uid('dest'); normalizeDestRole(d); });
     trip.destinations.sort(function (a, b) { return (a.order || 0) - (b.order || 0); });
     trip.destinations.forEach(function (d, i) { d.order = i; });
+    // Segment back-fill (Step A): sync arrival/departure ↔ start/end aliases, compute nights,
+    // default overnight/transport. Back-compat: old destinations with only start/end load clean.
+    trip.destinations.forEach(function (d) {
+      var a = segArrival(d), b = segDeparture(d);
+      d.arrivalDate = a; d.startDate = a; d.departureDate = b; d.endDate = b;
+      d.nights = segNights(d);
+      if (d.overnightStay == null) d.overnightStay = (d.nights > 0) || d.role === 'overnight_destination' || d.role === 'main_destination';
+      if (d.transportPreference == null) d.transportPreference = 'any';
+      if (d.preferredProvider == null) d.preferredProvider = '';
+    });
     var cities = trip.destinations.map(function (d) { return (d.city || '').trim(); }).filter(Boolean);
     // Keep the string field populated for the planner + samples (single city = plain name).
     trip.destination = cities.length ? cities.join(' → ') : (trip.destination || '');
+    // Segments own the calendar: derive the global dateRange from per-segment dates when present
+    // (legacy trips with only a manual dateRange are returned unchanged — never clobbered).
+    var derived = deriveDateRange(trip);
+    if (derived) trip.dateRange = derived;
     if (!trip.hotelStatus) trip.hotelStatus = {};
     if (!Array.isArray(trip.bookings)) trip.bookings = [];
     if (trip.plan && Array.isArray(trip.plan.days)) {
@@ -6522,7 +6616,8 @@
     _buildTripGraph: buildTripGraph, _materializeDay: materializeDay, _replanRange: replanRange, _lockNode: lockNode, _unlockNode: unlockNode, _isNodeLocked: isNodeLocked, _isPlaceNodeLocked: isPlaceNodeLocked, _nodeVotes: nodeVotes, _placeNodeId: placeNodeId,
     _renderJourney: renderJourney, _journeyNodeCard: journeyNodeCard, _nodeIcon: nodeIcon,
     _interpretCommand: interpretCommand, _applyEditPlan: applyEditPlan, _commandBar: commandBar, _editPlanPreview: editPlanPreview, _resolveNodeByName: resolveNodeByName, _opLine: opLine,
-    _emptyMemory: emptyMemory, _memUnion: memUnion, _normalizeMemory: normalizeMemory, _loadTravelMemory: loadTravelMemory, _saveTravelMemory: saveTravelMemory, _clearTravelMemory: clearTravelMemory, _learnFromTrip: learnFromTrip, _applyMemoryToNewTrip: applyMemoryToNewTrip, _hasTravelMemory: hasTravelMemory, _memoryPanel: memoryPanel };
+    _emptyMemory: emptyMemory, _memUnion: memUnion, _normalizeMemory: normalizeMemory, _loadTravelMemory: loadTravelMemory, _saveTravelMemory: saveTravelMemory, _clearTravelMemory: clearTravelMemory, _learnFromTrip: learnFromTrip, _applyMemoryToNewTrip: applyMemoryToNewTrip, _hasTravelMemory: hasTravelMemory, _memoryPanel: memoryPanel,
+    _segments: segments, _segArrival: segArrival, _segDeparture: segDeparture, _parseSegDate: parseSegDate, _segNights: segNights, _nightsBetween: nightsBetween, _deriveDateRange: deriveDateRange, _buildSegmentDayPlan: buildSegmentDayPlan, _journeySummary: journeySummary, _isoOfDate: isoOfDate };
 
   if (doc.readyState === 'loading') doc.addEventListener('DOMContentLoaded', init); else init();
 })(typeof window !== 'undefined' ? window : this);

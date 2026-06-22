@@ -2461,7 +2461,7 @@ function buildStaysResearchPrompt(lang) {
   return [
     'You are an expert lodging concierge for Du Lich Cali who acts like a PERSONAL TRAVEL AGENT. The group does NOT know the destination — so YOU decide the best AREA(s), the best HOTELS by category, and (across destinations) the smartest hotel STRATEGY, using current web knowledge. You ONLY research/recommend — never book or charge. The goal: the group thinks "wow, I never would have thought of staying there."',
     'Return ONLY valid JSON (no markdown): { "stays":[ { "city","bestArea","whyArea"(one sentence),"bestAreas":[ { "area","why"(one short phrase),"reasons":[2-4 very short checkmark phrases e.g. "Close to the Zoo","Ocean view","Family friendly","Easy parking"] } ],"hotels":[ { "name"(a real, well-known hotel/brand if confident, else ""),"area","category"(best_overall|best_value|family|luxury|resort|ocean_view|food_area|theme_parks|disneyland|budget|pool|breakfast|kitchen|accessible),"starRating"(rough number like "4.5" ONLY if grounded in search, else ""),"reviewCount"(rough like "2k+" ONLY if grounded, else ""),"amenities":[≤4 short],"breakfast"(bool),"kitchen"(bool),"pool"(bool),"familySuite"(bool),"oceanDistance"(short phrase or ""),"attractionDistances":[ { "name","distance"(rough drive/walk) } ](≤2),"parkingNote","priceRange"("pending verification" or a rough range/$/$$/$$$ — NEVER an exact/guaranteed price),"why"(one short sentence),"dataSource":"ai_researched_pending_verification" } ],"airbnbAreas":[ { "area","bestFor"(family|budget|kitchen|space),"why" } ] } ], "strategies":[ { "name"(single_base|split_nights|cheapest|near_attraction),"label"(short),"nights":[ { "city","nights" } ],"costRange"(rough total "(est.)" or "pending verification"),"driving"(one phrase),"convenience"(one phrase),"kidsNote"(one phrase),"foodNote"(one phrase),"why"(one sentence),"recommended"(bool) } ] }',
-    'CATEGORIES: present a SPREAD of category-labelled picks across the trip — always Best Overall, Best Value and Best For Families, PLUS an Ocean View pick when the group likes the coast/ocean, a Best Food Area pick when food is a priority, and a Best For Theme Parks / Disneyland pick when those are relevant. 3–5 hotels per destination spanning budget→luxury, including a family suite/kitchen/pool option when there are kids/toddlers and a low-walking/accessible option when there are seniors. Recommend 1–3 best AREAS per city with concrete reasons.',
+    'CATEGORIES: present a SPREAD of category-labelled picks across the trip — always Best Overall, Best Value and Best For Families, PLUS an Ocean View pick when the group likes the coast/ocean, a Best Food Area pick when food is a priority, and a Best For Theme Parks / Disneyland pick when those are relevant. ALWAYS return AT LEAST 3 hotels (ideally 3–5) for EVERY city — NEVER fewer than 3; if you are not confident of exact hotel names, still provide 3 distinct area-anchored options labelled by category. Span budget→luxury, including a family suite/kitchen/pool option when there are kids/toddlers and a low-walking/accessible option when there are seniors. Recommend 1–3 best AREAS per city with concrete reasons.',
     'You DETERMINE areas + hotels from the families\' "stayPrefs" atmosphere (ocean_view/near_beach/quiet/family_friendly/resort/airbnb/luxury/budget/near_attractions/walkable), budget and any destination "hotelPrefs" — map atmosphere words to REAL neighborhoods (e.g. "near_beach" → a real beachfront area; theme-park interest → the hotel district by the park). The user never gives hotel names or areas — YOU choose them. Optimise to minimise driving/traffic, maximise experience/safety/food/family-friendliness, and MINIMISE hotel changes. 2 Airbnb AREAS (not fake listings).',
     'MULTI-DESTINATION STRATEGY (include "strategies" ONLY when there are 2+ lodging destinations; otherwise omit it or return []): compare realistic stay strategies and mark exactly ONE recommended:true — e.g. single_base (one central base + day trips), split_nights (X nights here, Y there), cheapest (lowest total), near_attraction (next to the big attraction first, then move). For each give rough cost, driving, convenience, a kids note, a food note and WHY. Favour fewer hotel changes for families with young kids/seniors.',
     tcConsensusPromptLine(),
@@ -2469,7 +2469,7 @@ function buildStaysResearchPrompt(lang) {
   ].join('\n');
 }
 exports.researchTripStays = onCall(
-  { region: 'us-central1', secrets: [GEMINI_API_KEY], timeoutSeconds: 50, memory: '256MiB', cors: true },
+  { region: 'us-central1', secrets: [GEMINI_API_KEY], timeoutSeconds: 60, memory: '256MiB', cors: true },
   async (request) => {
     const data = request.data || {};
     const trip = data.trip || {};
@@ -2486,7 +2486,7 @@ exports.researchTripStays = onCall(
       familiesSummary: summarizeFamiliesForTrip(trip.families),
     });
     try {
-      const text = await serverCallGeminiGrounded(buildStaysResearchPrompt(lang) + '\n\n' + userContent, geminiKey, 3600);
+      const text = await serverCallGeminiGrounded(buildStaysResearchPrompt(lang) + '\n\n' + userContent, geminiKey, 7000);
       let raw = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').replace(/[\u0000-\u001F]+/g, ' ');
       const s = raw.indexOf('{'); const e = raw.lastIndexOf('}');
       if (s > 0 || e > 0) raw = raw.slice(s, e + 1);
@@ -3888,16 +3888,25 @@ function tcBuildTransportLegs(route, trip) {
     // ("by Bus Hoang", "Michael will take us"), it becomes the Recommended/Chosen option and the
     // AI heuristic above is overridden. Car/flight stay in `options` as alternatives (shown below),
     // but never as the primary, and a locked leg is NEVER overridden on cost. No fabricated data.
-    if (l.userLocked && l.userMode) {
+    const prio = l.userPriority || (l.userLocked ? 'required' : '');
+    if (l.userMode && (prio === 'required' || prio === 'preferred' || l.userLocked)) {
       let opt = options.filter((o) => o.mode === l.userMode)[0];
       if (!opt) { opt = tcMinimalOption(l.userMode, l); options.push(opt); }
       if (opt) {
         if (l.userProvider) opt.provider = l.userProvider;
-        opt.userChosen = true; opt.lockedByUser = true;
+        const hard = (prio === 'required' || l.userLocked);
+        opt.userChosen = true; opt.lockedByUser = hard;
         if (opt.confidence === 'low') opt.confidence = 'medium';
         opt.convenience = Math.max(opt.convenience || 4, 5);
         recommendedMode = l.userMode;
-        recReasonKey = 'tprec_userlocked';
+        recReasonKey = hard ? 'tprec_userlocked' : 'tprec_userpref';
+      }
+    } else if (prio === 'avoid' && l.userMode) {
+      // The traveler asked to AVOID this mode — never recommend it; tag it + pick the best remaining.
+      const av = options.filter((o) => o.mode === l.userMode)[0]; if (av) av.avoided = true;
+      if (recommendedMode === l.userMode) {
+        const alt = options.filter((o) => o.mode !== l.userMode).sort((a, b) => (b.convenience || 0) - (a.convenience || 0))[0];
+        if (alt) { recommendedMode = alt.mode; recReasonKey = 'tprec_avoided'; }
       }
     }
     return {
@@ -3936,7 +3945,7 @@ exports.researchTripTransport = onCall(
         chain.push(to);
       });
       cities = chain.slice(0, 13);
-      legMeta = lockedLegs.map((lg) => ({ userMode: tcMapLockedMode(lg), userProvider: lg.provider || '', userLocked: !!lg.lockedByUser }));
+      legMeta = lockedLegs.map((lg) => ({ userMode: tcMapLockedMode(lg), userProvider: lg.provider || '', userLocked: !!lg.lockedByUser, userPriority: lg.priority || (lg.lockedByUser ? 'required' : 'ai_decide') }));
     } else {
       if (!origin || !destCities.length) return { ok: false, debugCode: 'NO_ROUTE', legs: [] };
       // Build the major-leg path: origin -> dest1 -> ... -> destN -> origin, collapsing repeats.
@@ -3949,11 +3958,111 @@ exports.researchTripTransport = onCall(
     // haversine estimate when the key is absent) -- the SAME route code used elsewhere.
     const route = await tcComputeRouteLegs(cities, GOOGLE_MAPS_API_KEY.value());
     // Attach each leg's user-locked mode/provider (by order) so the builder honors it.
-    route.legs.forEach((rl, i) => { if (legMeta[i]) { rl.userMode = legMeta[i].userMode; rl.userProvider = legMeta[i].userProvider; rl.userLocked = legMeta[i].userLocked; } });
+    route.legs.forEach((rl, i) => { if (legMeta[i]) { rl.userMode = legMeta[i].userMode; rl.userProvider = legMeta[i].userProvider; rl.userLocked = legMeta[i].userLocked; rl.userPriority = legMeta[i].userPriority; } });
     // Deterministic comparison -- ALWAYS returns car + (long->) flight + (intercity->) bus +
     // a private DLC ride per leg. No AI dependency, so the tab can never come up empty.
     const legs = tcBuildTransportLegs(route, trip);
     return { ok: true, legs, source: route.source, mapsSource: route.source, researchedAt: Date.now(), dataSource: 'estimated_pending_verification' };
+  }
+);
+// ── Deal Hunter — grounded CURRENT-FARE research (the honest alternative to a paid fare API) ──
+// Uses Google-Search grounding to research APPROXIMATE current one-way fares per leg/mode. Returns
+// LOW–HIGH ranges with a source note + real search URLs, all "pending verification" — NEVER an
+// invented exact price (null when no credible fare is found). This powers the Deal Hunter snapshot
+// + the scheduled monitor; plug a paid flight-fare API into the SAME shape for authoritative prices.
+function buildLegFaresPrompt(legs, lang) {
+  const langName = lang === 'vi' ? 'Vietnamese' : (lang === 'es' ? 'Spanish' : 'English');
+  return [
+    'You are a fare RESEARCH agent for a travel concierge. Using current web search, research the APPROXIMATE current one-way fare PER PERSON for each travel leg below, by mode: flight, intercity bus, and train (Amtrak).',
+    'STRICT ANTI-FABRICATION: never invent a number. If you cannot find a credible current fare for a mode on a leg, return null for that mode and note "pending verification". Give a LOW–HIGH USD range reflecting typical current fares (not a fake exact price). Prefer well-known operators (e.g. Southwest/Alaska/United for flights; Greyhound/FlixBus for bus; Amtrak for train) and nearby major airports.',
+    'LEGS: ' + JSON.stringify(legs.map((l) => ({ from: l.fromCity, to: l.toCity }))),
+    'Return ONLY valid JSON (no markdown): { "sourceNote"(one short sentence), "legs":[ { "from","to","flight":{"low"(int|null),"high"(int|null),"note"(short),"url"(real search/booking URL)},"bus":{...same shape...},"train":{...same shape...} } ] }',
+    'Write notes in ' + langName + '. Output ONE compact valid JSON object only.',
+  ].join('\n');
+}
+// Shared grounded fare-research core (used by the callable AND the scheduled deal monitor).
+// Returns { legs:[{from,to,flight,bus,train}], sourceNote } or null. Never fabricates a number.
+async function tcResearchLegFares(legs, lang, geminiKey) {
+  const text = await serverCallGeminiGrounded(buildLegFaresPrompt(legs, lang), geminiKey, 1500);
+  let raw = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
+  const s = raw.indexOf('{'); const e = raw.lastIndexOf('}');
+  if (s >= 0 && e > s) raw = raw.slice(s, e + 1);
+  const parsed = tripSalvageJson(raw);
+  if (!parsed) return null;
+  const intOrNull = (x) => { const n = parseInt(x, 10); return (isFinite(n) && n > 0 && n < 20000) ? n : null; };
+  const clampMode = (m) => { m = m || {}; return { low: intOrNull(m.low), high: intOrNull(m.high), note: String(m.note || '').slice(0, 120), url: /^https?:\/\//.test(String(m.url || '')) ? String(m.url).slice(0, 300) : '' }; };
+  const outLegs = (Array.isArray(parsed.legs) ? parsed.legs : []).slice(0, 8).map((l) => ({ from: String((l && l.from) || '').slice(0, 80), to: String((l && l.to) || '').slice(0, 80), flight: clampMode(l && l.flight), bus: clampMode(l && l.bus), train: clampMode(l && l.train) }));
+  return { legs: outLegs, sourceNote: String(parsed.sourceNote || '').slice(0, 160) };
+}
+exports.researchLegFares = onCall(
+  { region: 'us-central1', secrets: [GEMINI_API_KEY], timeoutSeconds: 60, memory: '256MiB', cors: true },
+  async (request) => {
+    const data = request.data || {};
+    const lang = (data.lang === 'vi' || data.lang === 'es') ? data.lang : 'en';
+    const legs = (Array.isArray(data.legs) ? data.legs : []).filter((l) => l && String(l.fromCity || '').trim() && String(l.toCity || '').trim()).slice(0, 8);
+    if (!legs.length) return { ok: false, debugCode: 'NO_LEGS', legs: [] };
+    const geminiKey = await getAiKey('gemini');
+    if (!geminiKey) return { ok: false, debugCode: 'NO_GEMINI_KEY', legs: [] };
+    try {
+      const text = await serverCallGeminiGrounded(buildLegFaresPrompt(legs, lang), geminiKey, 1500);
+      let raw = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').replace(/[\u0000-\u001F]+/g, ' ');
+      const s = raw.indexOf('{'); const e = raw.lastIndexOf('}');
+      if (s >= 0 && e > s) raw = raw.slice(s, e + 1);
+      const parsed = tripSalvageJson(raw);
+      if (!parsed) { console.error('[researchLegFares] unparseable, len=' + raw.length); return { ok: false, debugCode: 'FARES_ERROR', legs: [] }; }
+      const intOrNull = (x) => { const n = parseInt(x, 10); return (isFinite(n) && n > 0 && n < 20000) ? n : null; };
+      const clampMode = (m) => { m = m || {}; return { low: intOrNull(m.low), high: intOrNull(m.high), note: String(m.note || '').slice(0, 120), url: /^https?:\/\//.test(String(m.url || '')) ? String(m.url).slice(0, 300) : '' }; };
+      const outLegs = (Array.isArray(parsed.legs) ? parsed.legs : []).slice(0, 8).map((l) => ({ from: String((l && l.from) || '').slice(0, 80), to: String((l && l.to) || '').slice(0, 80), flight: clampMode(l && l.flight), bus: clampMode(l && l.bus), train: clampMode(l && l.train) }));
+      return { ok: true, legs: outLegs, sourceNote: String(parsed.sourceNote || '').slice(0, 160), researchedAt: Date.now(), dataSource: 'grounded_pending_verification' };
+    } catch (e2) {
+      console.error('[researchLegFares] failed', e2 && e2.message);
+      return { ok: false, debugCode: 'FARES_ERROR', legs: [] };
+    }
+  }
+);
+// ── Deal Hunter — SCHEDULED background monitor (V3) ──────────────────────────
+// Once a day, re-research fares for trips the owner is WATCHING (dealWatch==true) and, when a leg's
+// cheapest researched fare drops below the stored snapshot, write a "better deal" alert onto the
+// trip (surfaced in-app next time the owner opens it). NOTIFICATION ONLY — never changes a plan.
+// HARD-CAPPED to a handful of trips/run to bound the recurring grounded-research cost; the owner
+// disables it by turning Deal Watch off. Prices stay "pending verification" (grounded research, or a
+// future fare API plugged into tcResearchLegFares) — never fabricated.
+exports.monitorDealWatchTrips = onSchedule(
+  { schedule: 'every 24 hours', region: 'us-central1', secrets: [GEMINI_API_KEY], timeoutSeconds: 540, memory: '512MiB' },
+  async () => {
+    const MAX_TRIPS = 10;
+    let geminiKey = null; try { geminiKey = await getAiKey('gemini'); } catch (e) {}
+    if (!geminiKey) { console.warn('[monitorDealWatchTrips] no gemini key — skip'); return; }
+    let snap;
+    try { snap = await db.collection('groupTrips').where('dealWatch', '==', true).limit(MAX_TRIPS).get(); } catch (e) { console.error('[monitorDealWatchTrips] query failed', e && e.message); return; }
+    for (const docSnap of snap.docs) {
+      try {
+        const trip = docSnap.data() || {};
+        const lang = (trip.lang === 'vi' || trip.lang === 'es') ? trip.lang : 'en';
+        let legs = (Array.isArray(trip.lockedLegs) ? trip.lockedLegs : []).filter((l) => l && l.fromCity && l.toCity).map((l) => ({ fromCity: l.fromCity, toCity: l.toCity }));
+        if (!legs.length) legs = (Array.isArray(trip.transport) ? trip.transport : []).filter((l) => l && l.fromCity && l.toCity).map((l) => ({ fromCity: l.fromCity, toCity: l.toCity }));
+        legs = legs.slice(0, 6);
+        if (!legs.length) continue;
+        const r = await tcResearchLegFares(legs, lang, geminiKey);
+        if (!r || !r.legs.length) continue;
+        const snapshot = Object.assign({}, trip.dealSnapshot || {});
+        const newAlerts = [];
+        r.legs.forEach((lf) => {
+          let best = null;
+          ['flight', 'bus', 'train'].forEach((mk) => { const f = lf[mk]; if (f && f.low && (!best || f.low < best.cost)) best = { cost: f.low, mode: mk }; });
+          if (!best) return;
+          const key = 'fare:' + (lf.from || '') + '>' + (lf.to || '');
+          const prev = snapshot[key];
+          if (prev && prev.cost && best.cost < prev.cost - 1) newAlerts.push({ route: (lf.from || '').split(',')[0] + '→' + (lf.to || '').split(',')[0], oldCost: prev.cost, newCost: best.cost, mode: best.mode, ts: Date.now() });
+          snapshot[key] = { cost: best.cost, mode: best.mode, ts: Date.now() };
+        });
+        const existing = Array.isArray(trip.dealAlerts) ? trip.dealAlerts : [];
+        const update = { dealSnapshot: snapshot, dealCheckedAt: Date.now() };
+        if (newAlerts.length) update.dealAlerts = existing.concat(newAlerts).slice(-10);
+        await docSnap.ref.set(update, { merge: true });
+      } catch (e) { console.error('[monitorDealWatchTrips] trip failed', docSnap.id, e && e.message); }
+    }
+    console.log('[monitorDealWatchTrips] checked ' + snap.docs.length + ' watched trip(s)');
   }
 );
 // ── AI Transport STRATEGY + TRANSFER Intelligence (V3) ───────────────────────

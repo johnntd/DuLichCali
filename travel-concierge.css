@@ -1384,3 +1384,7 @@ select.tc-input { appearance: none; background-image: linear-gradient(45deg, tra
 .tc-deal__t { display: block; font-family: var(--font-b); font-weight: 700; font-size: .92rem; color: #bbf7d0; }
 .tc-deal__d { font-family: var(--font-b); font-size: .85rem; line-height: 1.5; color: var(--cream); margin: .3rem 0 .55rem; }
 .tc-deal__acts { display: flex; flex-wrap: wrap; gap: .5rem; }
+.tc-fares { border: 1px solid var(--border); border-radius: 12px; padding: .6rem .75rem; margin-top: .6rem; background: var(--navy-900); }
+.tc-fares__t { display: block; font-family: var(--font-b); font-weight: 700; font-size: .85rem; color: var(--cream); margin-bottom: .35rem; }
+.tc-fares__leg { font-family: var(--font-b); font-size: .84rem; color: #e9d9b3; margin: .15rem 0; }
+.tc-fares__note { font-family: var(--font-b); font-size: .76rem; color: var(--muted); margin: .35rem 0 0; }

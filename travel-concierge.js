@@ -294,6 +294,7 @@
       nlSectionTitle: 'Tell AI exactly what you want', nlSectionHint: 'Describe your trip in your own words — dates, who’s driving, fixed plans. AI turns it into an editable journey you can adjust.', nlPlaceholder: 'Example: July 1 take Hoang Bus from San Jose to Orange County, then Michael drives us to San Diego. July 2 San Diego Zoo. July 3 morning in San Diego, then back to Orange County for Vietnamese food. July 4 take Hoang Bus home.', nlBuildBtn: 'Build journey from my notes', nlOrDivider: 'or build it step by step', nlBuilding: 'Reading your plan and building the journey…', nlParseFail: 'I couldn’t turn that into a journey — add the dates and stops, then tap Build again.', nlReviewTitle: 'Here’s what I understood', nlReviewSub: 'Review and adjust. Lock 🔒 anything that’s fixed — the AI plans around it and fills in the rest.', nlFixedReqs: 'Fixed by you', nlFlexWindows: 'AI will suggest', nlQuestions: 'A few things to confirm', nlConfirmBtn: 'Looks good — add who’s coming', nlEditManual: 'Fine-tune step by step', nlReparse: 'Edit my notes', nlAddAfter: 'Add after', nlAddStop: 'Add a step', nlLockSeg: 'Lock', nlUnlockSeg: 'Unlock', nlLocked: 'Locked', nlFlexMark: 'Flexible', nlFlexOn: 'AI suggests', nlNeedsResearch: 'Needs schedule', nlNeedsBooking: 'Needs booking', nlResearchLink: 'Look up schedule', nlResearchQuery: 'schedule', nlRequestRide: 'Request DuLichCali ride', nlSegTitle: 'What', nlSegTitlePh: 'e.g. San Diego Zoo', nlSegDate: 'Day', nlSegTime: 'Time', nlSegFrom: 'From', nlSegTo: 'To', nlSegMode: 'How', nlNoDate: 'No date yet', nlFoodExperience: 'Local food experience',
       nlSegType_transport: 'Travel', nlSegType_transfer: 'Transfer / ride', nlSegType_stay: 'Overnight stay', nlSegType_activity: 'Activity', nlSegType_food: 'Food', nlSegType_free_time: 'Free time', nlSegType_return: 'Return home',
       nlmode_car: 'Own car', nlmode_bus: 'Bus', nlmode_private_ride: 'Private ride', nlmode_flight: 'Flight', nlmode_train: 'Train', nlmode_walk: 'Walk', nlmode_other: 'Other',
+      nlYourRoute: 'Your locked route', nlCarAlt: 'Private car alternative', nlRouteFail: 'We couldn’t apply your required route. Please review the extracted journey below.',
       journeyLabel: 'Your journey', journeyHint: 'Add each stop with the dates you want there. We figure out transport, hotels and the day-by-day plan within your stops.', addSegment: 'Add stop', arrivalDate: 'Arrival', departureDate: 'Departure', sameDay: 'Same-day', segTransportDetails: 'Transport & details (optional)', howArrive: 'How you arrive in {city}', preferredProvider: 'Preferred provider', providerPh: 'e.g. Xe Đò Hoàng, Michael', overnightStay: 'Stay overnight here', segNotesPh: 'e.g. coming from the bus drop-off', homeOrigin: 'Home', viaLabel: 'via', viaAI: 'AI picks the best way', thisStop: 'this stop', returnTransport: 'Getting home', journeyEmpty: 'Add your first stop to see the journey', homeBy: 'home', quickEntry: 'Quick entry — one date range for the whole trip', quickEntryHint: 'Optional. Used only if you leave the per-stop dates blank — the AI will split the nights.', tp_any: 'AI decides', tp_bus: 'Bus', tp_private_ride: 'Private ride', tp_flight: 'Flight', tp_car: 'Own car', tp_train: 'Train', segRideBooked: 'Ride booked', segRidePending: 'Ride pending',
       impGeneral: '✨ Improve this trip', impDiscoveries: '💎 Find more discoveries', impLowerCost: '💲 Lower cost', impKidsFun: '🧒 More fun for kids', impFoodFocused: '🍽 More food-focused',
       impSelected: '{n} selected', impRun: 'Run AI Improvement', impClear: 'Clear all',
@@ -550,6 +551,7 @@
       nlSectionTitle: 'Nói với AI chính xác điều bạn muốn', nlSectionHint: 'Mô tả chuyến đi bằng lời của bạn — ngày tháng, ai lái xe, kế hoạch cố định. AI sẽ tạo một hành trình bạn có thể chỉnh sửa.', nlPlaceholder: 'Ví dụ: Ngày 1/7 đi Xe Đò Hoàng từ San Jose đến Orange County, rồi Michael chở chúng tôi đến San Diego. Ngày 2/7 đi Sở thú San Diego. Sáng 3/7 ở San Diego, rồi về Orange County ăn món Việt. Ngày 4/7 đi Xe Đò Hoàng về nhà.', nlBuildBtn: 'Tạo hành trình từ ghi chú của tôi', nlOrDivider: 'hoặc tạo từng bước', nlBuilding: 'Đang đọc kế hoạch và dựng hành trình…', nlParseFail: 'Tôi chưa hiểu thành hành trình — hãy thêm ngày và điểm dừng rồi nhấn Tạo lại.', nlReviewTitle: 'Đây là điều tôi hiểu', nlReviewSub: 'Xem lại và chỉnh sửa. Khóa 🔒 những gì cố định — AI sẽ lên kế hoạch quanh đó và bổ sung phần còn lại.', nlFixedReqs: 'Bạn đã cố định', nlFlexWindows: 'AI sẽ gợi ý', nlQuestions: 'Vài điều cần xác nhận', nlConfirmBtn: 'Ổn rồi — thêm người tham gia', nlEditManual: 'Tinh chỉnh từng bước', nlReparse: 'Sửa ghi chú', nlAddAfter: 'Thêm sau', nlAddStop: 'Thêm một bước', nlLockSeg: 'Khóa', nlUnlockSeg: 'Mở khóa', nlLocked: 'Đã khóa', nlFlexMark: 'Linh hoạt', nlFlexOn: 'AI gợi ý', nlNeedsResearch: 'Cần tra lịch', nlNeedsBooking: 'Cần đặt chỗ', nlResearchLink: 'Tra lịch trình', nlResearchQuery: 'lịch trình', nlRequestRide: 'Yêu cầu xe DuLichCali', nlSegTitle: 'Việc gì', nlSegTitlePh: 'vd: Sở thú San Diego', nlSegDate: 'Ngày', nlSegTime: 'Giờ', nlSegFrom: 'Từ', nlSegTo: 'Đến', nlSegMode: 'Bằng cách', nlNoDate: 'Chưa có ngày', nlFoodExperience: 'Trải nghiệm ẩm thực địa phương',
       nlSegType_transport: 'Di chuyển', nlSegType_transfer: 'Trung chuyển / đưa đón', nlSegType_stay: 'Nghỉ qua đêm', nlSegType_activity: 'Hoạt động', nlSegType_food: 'Ẩm thực', nlSegType_free_time: 'Thời gian tự do', nlSegType_return: 'Về nhà',
       nlmode_car: 'Xe nhà', nlmode_bus: 'Xe buýt', nlmode_private_ride: 'Xe riêng', nlmode_flight: 'Máy bay', nlmode_train: 'Tàu hỏa', nlmode_walk: 'Đi bộ', nlmode_other: 'Khác',
+      nlYourRoute: 'Lộ trình bạn đã khóa', nlCarAlt: 'Phương án xe riêng', nlRouteFail: 'Chúng tôi chưa áp dụng được lộ trình bắt buộc của bạn. Vui lòng xem lại hành trình đã trích xuất bên dưới.',
       journeyLabel: 'Hành trình của bạn', journeyHint: 'Thêm từng điểm dừng với ngày bạn muốn ở đó. Chúng tôi lo phương tiện, khách sạn và lịch trình từng ngày trong các điểm dừng của bạn.', addSegment: 'Thêm điểm dừng', arrivalDate: 'Ngày đến', departureDate: 'Ngày đi', sameDay: 'Trong ngày', segTransportDetails: 'Phương tiện & chi tiết (tùy chọn)', howArrive: 'Cách bạn đến {city}', preferredProvider: 'Nhà cung cấp ưu tiên', providerPh: 'vd: Xe Đò Hoàng, Michael', overnightStay: 'Nghỉ qua đêm ở đây', segNotesPh: 'vd: đến từ điểm trả khách của xe', homeOrigin: 'Nhà', viaLabel: 'bằng', viaAI: 'AI chọn cách tốt nhất', thisStop: 'điểm này', returnTransport: 'Về nhà', journeyEmpty: 'Thêm điểm dừng đầu tiên để xem hành trình', homeBy: 'về', quickEntry: 'Nhập nhanh — một khoảng ngày cho cả chuyến', quickEntryHint: 'Tùy chọn. Chỉ dùng khi bạn để trống ngày từng điểm — AI sẽ chia số đêm.', tp_any: 'AI quyết định', tp_bus: 'Xe buýt', tp_private_ride: 'Xe riêng', tp_flight: 'Máy bay', tp_car: 'Xe nhà', tp_train: 'Tàu hỏa', segRideBooked: 'Đã đặt xe', segRidePending: 'Xe đang chờ',
       impGeneral: '✨ Cải thiện chuyến đi', impDiscoveries: '💎 Tìm thêm khám phá', impLowerCost: '💲 Giảm chi phí', impKidsFun: '🧒 Vui hơn cho trẻ', impFoodFocused: '🍽 Tập trung ẩm thực',
       impSelected: 'Đã chọn {n}', impRun: 'Chạy cải thiện AI', impClear: 'Xóa tất cả',
@@ -806,6 +808,7 @@
       nlSectionTitle: 'Dile a la IA exactamente lo que quieres', nlSectionHint: 'Describe tu viaje con tus palabras — fechas, quién conduce, planes fijos. La IA crea un itinerario editable que puedes ajustar.', nlPlaceholder: 'Ejemplo: El 1 de julio tomamos el Hoang Bus de San Jose a Orange County, luego Michael nos lleva a San Diego. El 2 de julio el Zoológico de San Diego. La mañana del 3 de julio en San Diego, luego de vuelta a Orange County por comida vietnamita. El 4 de julio tomamos el Hoang Bus a casa.', nlBuildBtn: 'Crear itinerario desde mis notas', nlOrDivider: 'o créalo paso a paso', nlBuilding: 'Leyendo tu plan y creando el itinerario…', nlParseFail: 'No pude convertir eso en un itinerario — agrega las fechas y paradas y toca Crear de nuevo.', nlReviewTitle: 'Esto es lo que entendí', nlReviewSub: 'Revisa y ajusta. Bloquea 🔒 lo que sea fijo — la IA planifica alrededor y completa el resto.', nlFixedReqs: 'Fijado por ti', nlFlexWindows: 'La IA sugerirá', nlQuestions: 'Algunas cosas por confirmar', nlConfirmBtn: 'Se ve bien — agregar quién viene', nlEditManual: 'Ajustar paso a paso', nlReparse: 'Editar mis notas', nlAddAfter: 'Agregar después', nlAddStop: 'Agregar un paso', nlLockSeg: 'Bloquear', nlUnlockSeg: 'Desbloquear', nlLocked: 'Bloqueado', nlFlexMark: 'Flexible', nlFlexOn: 'La IA sugiere', nlNeedsResearch: 'Falta horario', nlNeedsBooking: 'Falta reservar', nlResearchLink: 'Buscar horario', nlResearchQuery: 'horario', nlRequestRide: 'Solicitar viaje DuLichCali', nlSegTitle: 'Qué', nlSegTitlePh: 'ej. Zoológico de San Diego', nlSegDate: 'Día', nlSegTime: 'Hora', nlSegFrom: 'Desde', nlSegTo: 'Hasta', nlSegMode: 'Cómo', nlNoDate: 'Sin fecha aún', nlFoodExperience: 'Experiencia gastronómica local',
       nlSegType_transport: 'Viaje', nlSegType_transfer: 'Traslado / viaje', nlSegType_stay: 'Noche', nlSegType_activity: 'Actividad', nlSegType_food: 'Comida', nlSegType_free_time: 'Tiempo libre', nlSegType_return: 'Regreso a casa',
       nlmode_car: 'Auto propio', nlmode_bus: 'Autobús', nlmode_private_ride: 'Viaje privado', nlmode_flight: 'Vuelo', nlmode_train: 'Tren', nlmode_walk: 'Caminar', nlmode_other: 'Otro',
+      nlYourRoute: 'Tu ruta fijada', nlCarAlt: 'Alternativa en auto privado', nlRouteFail: 'No pudimos aplicar tu ruta requerida. Revisa el itinerario extraído a continuación.',
       journeyLabel: 'Tu recorrido', journeyHint: 'Agrega cada parada con las fechas que quieres estar allí. Nosotros resolvemos el transporte, los hoteles y el plan día a día dentro de tus paradas.', addSegment: 'Agregar parada', arrivalDate: 'Llegada', departureDate: 'Salida', sameDay: 'El mismo día', segTransportDetails: 'Transporte y detalles (opcional)', howArrive: 'Cómo llegas a {city}', preferredProvider: 'Proveedor preferido', providerPh: 'p. ej. Xe Đò Hoàng, Michael', overnightStay: 'Pernoctar aquí', segNotesPh: 'p. ej. llegando desde la parada del autobús', homeOrigin: 'Casa', viaLabel: 'vía', viaAI: 'La IA elige la mejor forma', thisStop: 'esta parada', returnTransport: 'Regreso a casa', journeyEmpty: 'Agrega tu primera parada para ver el recorrido', homeBy: 'en casa', quickEntry: 'Entrada rápida — un rango de fechas para todo el viaje', quickEntryHint: 'Opcional. Se usa solo si dejas en blanco las fechas por parada — la IA dividirá las noches.', tp_any: 'La IA decide', tp_bus: 'Autobús', tp_private_ride: 'Viaje privado', tp_flight: 'Vuelo', tp_car: 'Auto propio', tp_train: 'Tren', segRideBooked: 'Viaje reservado', segRidePending: 'Viaje pendiente',
       impGeneral: '✨ Mejorar este viaje', impDiscoveries: '💎 Más descubrimientos', impLowerCost: '💲 Reducir costo', impKidsFun: '🧒 Más diversión para niños', impFoodFocused: '🍽 Más enfocado en comida',
       impSelected: '{n} seleccionados', impRun: 'Ejecutar mejora con IA', impClear: 'Borrar todo',
@@ -1726,6 +1729,10 @@
       if (days.length > parsed.count) plan.days = days = days.slice(0, parsed.count);
       days.forEach(function (d, k) { if (!d.date && parsed.dates[k]) d.date = parsed.dates[k]; d.dayNumber = k + 1; });
     }
+    // Stamp machine ISO dates (locale-independent) from the deterministic segment day plan, so
+    // downstream date matching (e.g. user-locked transport legs on a travel day) never depends on
+    // a localized date STRING. No-op for legacy trips without per-segment dates.
+    try { var segPlan = buildSegmentDayPlan(trip); if (segPlan) days.forEach(function (d, i) { if (!d.iso && segPlan[i]) d.iso = segPlan[i].iso; }); } catch (e) {}
     assignDayTypes(plan, trip);
   }
   // V2: the AI skeleton DETERMINES each destination's role + whether it needs a hotel. Mirror
@@ -3026,6 +3033,21 @@
     });
     saveTrip(tr);
   }
+  // HARD VALIDATION — if the user's notes named explicit transport providers (Bus Hoang /
+  // Xe Đò Hoàng / Michael / DuLichCali ride), the extracted journey MUST carry a leg that
+  // represents them. Returns a non-empty issue code only on a genuine EXTRACTION failure (the
+  // provider was mentioned but no matching leg survived) — NOT when the user deliberately
+  // unlocked a leg in the review screen (the leg + provider still exist).
+  function lockedRouteIssue(tr) {
+    var notes = ((tr && tr.journeyNotes) || '').toLowerCase(); if (!notes) return '';
+    if (!/hoang|hoàng|xe ?đò|xe ?do|michael|du ?lich ?cali|dulichcali|\bdlc\b/.test(notes)) return '';
+    var legs = (tr.lockedLegs || []);
+    var represented = legs.some(function (l) {
+      var p = (l.provider || '').toLowerCase();
+      return /hoang|hoàng|michael|dulichcali|du lich cali|\bdlc\b/.test(p) || l.transportMode === 'bus' || l.transportMode === 'private_ride';
+    });
+    return represented ? '' : 'no_locked_legs';
+  }
   // ── "Request DuLichCali ride" for a parsed transfer/ride segment — reuse the EXISTING
   //    sessionStorage → /airport → RideIntake handoff (tripId + segmentId; never auto-confirms). ──
   // Resolve the destination segment for a ride — by city AND date, so a city visited twice in
@@ -3110,6 +3132,7 @@
     var s = el('section', 'tc-screen');
     s.appendChild(el('h2', 'tc-screen__title', '🧭 ' + t('nlReviewTitle')));
     s.appendChild(el('p', 'tc-screen__sub', t('nlReviewSub')));
+    if (tr._routeIssue) s.appendChild(el('p', 'tc-jr-fail', '⚠️ ' + t('nlRouteFail')));
     // Trip-level summary (origin + dates) — editable origin.
     var sumBox = el('div', 'tc-jr-sum');
     var dep = input(pj.origin || tr.departureCity, 'San Jose, CA'); dep.addEventListener('input', function () { pj.origin = dep.value; tr.departureCity = dep.value; });
@@ -3379,6 +3402,10 @@
       state.trip.plan = plan; state.trip._fallback = !!res.fallback;
       syncDestRolesFromPlan(state.trip, plan); // V2: AI-determined roles drive which stops get hotels/food
       finalizePlanDays(plan, state.trip); // guarantee day count + return day + day types
+      // HARD route validation — the user's required providers MUST survive into the journey. If the
+      // parser dropped them, never silently show a car route: send the user back to confirm/fix.
+      if (lockedRouteIssue(state.trip)) { state.generating = false; state.trip._routeIssue = true; toast(t('nlRouteFail')); state.screen = 'nlreview'; render(); return; }
+      state.trip._routeIssue = false;
       state.screen = 'plan'; state.activeDay = 0; state.activeTab = 'itinerary';
       saveTrip(state.trip); pushTripUrl(state.trip.id);
       try { learnFromTrip(state.trip); } catch (e) {} // cross-trip memory: learn budget/pace/cuisines/group shape from this plan
@@ -3875,9 +3902,49 @@
     if (src === 'estimated') return el('span', 'tc-routesrc', '≈ ' + t('routeEstimatedTag'));
     return null;
   }
+  // The travel legs the user LOCKED for this day (NL Journey Builder). Matched by ISO date
+  // (locale-independent), falling back to the arrival/return city. These OVERRIDE the AI's
+  // generic single-car route — the planner can never collapse "SJ →bus→ OC →ride→ SD" into
+  // "SJ → SD by car". Returns [] for manual/legacy trips (then the classic render runs).
+  function lockedLegsForDay(tr, day, plan) {
+    var legs = (tr && tr.lockedLegs) || []; if (!legs.length) return [];
+    var dIso = ''; var pd = parseSegDate(day.iso || day.date || ''); if (pd) dIso = isoOfDate(pd);
+    var byDate = dIso ? legs.filter(function (l) { var p = parseSegDate(l.date); return p && isoOfDate(p) === dIso; }) : [];
+    if (byDate.length) return byDate;
+    if (day.isReturnDay) { var home = tcNorm(tr.departureCity); return legs.filter(function (l) { return tcNorm(l.toCity) === home; }); }
+    var city = tcNorm(destCityName(plan, day.destinationIndex || 0) || ''); if (!city) return [];
+    return legs.filter(function (l) { return tcNorm(l.toCity) === city; });
+  }
+  function legModeIcon(m) { return { bus: '🚌', private_ride: '🚐', car: '🚗', flight: '✈️', train: '🚆', walk: '🚶' }[m] || '🚐'; }
+  function lockedLegRow(l, tr) {
+    var row = el('div', 'tc-travel__leg');
+    row.appendChild(el('div', 'tc-travel__legroute', legModeIcon(l.transportMode) + ' ' + (l.fromCity || '') + '  →  ' + (l.toCity || '')));
+    var meta = el('div', 'tc-travel__legmeta');
+    meta.appendChild(chip('tc-chip--lock', '🔒 ' + ((l.provider || '').trim() || t('nlmode_' + (l.transportMode || 'other')) || t('nlLocked'))));
+    if (l.needsResearch) meta.appendChild(chip('tc-chip--warn', '🔎 ' + t('nlNeedsResearch')));
+    if (l.needsBooking) meta.appendChild(chip('tc-chip--warn', '🎫 ' + t('nlNeedsBooking')));
+    row.appendChild(meta);
+    var acts = el('div', 'tc-travel__legacts');
+    var isRide = l.transportMode === 'private_ride' || /michael|dulichcali|du lich cali|\bdlc\b/i.test(l.provider || '');
+    if (isRide && !state.readonly) acts.appendChild(pbtn('🚐 ' + t('nlRequestRide'), 'tc-pbtn--ride', function () { requestDlcInquiry({ kind: 'ride', pickup: l.fromCity, dropoff: l.toCity, label: l.title || '', mode: 'dlc_ride', segmentId: segmentIdForCity(tr, l.toCity) }); }));
+    if (l.needsResearch || l.transportMode === 'bus') acts.appendChild(pbtn('🔎 ' + t('nlResearchLink'), 'tc-pbtn--ghost', function () { openProviderResearch({ provider: l.provider, origin: l.fromCity, destination: l.toCity }); }));
+    var mp = el('a', 'tc-chip tc-chip--route', '🗺 ' + t('route')); mp.href = MapLinkProvider.google(l.toCity || '', ''); mp.target = '_blank'; mp.rel = 'noopener'; acts.appendChild(mp);
+    row.appendChild(acts);
+    return row;
+  }
   function renderTravelDay(day, plan) {
-    var tl = day.travelLeg || {};
+    var tr = state.trip, tl = day.travelLeg || {};
     var card = el('div', 'tc-travel');
+    // USER-LOCKED ROUTE WINS — render the exact legs the traveler required (e.g. Bus Hoang +
+    // Michael ride); the AI's single-car route is demoted to an optional comparison only.
+    var locked = lockedLegsForDay(tr, day, plan);
+    if (locked.length) {
+      card.appendChild(el('div', 'tc-travel__route', '🔒 ' + t('nlYourRoute')));
+      locked.forEach(function (l) { card.appendChild(lockedLegRow(l, tr)); });
+      if (tl.estimatedDriveTime) card.appendChild(el('p', 'tc-travel__caralt', '🚗 ' + t('nlCarAlt') + ': ' + tl.estimatedDriveTime + (tl.estimatedDistance ? (' · ' + tl.estimatedDistance) : '')));
+      if (tl.mealStops && tl.mealStops.length) { card.appendChild(el('strong', 'tc-travel__sub', t('mealStops'))); tl.mealStops.forEach(function (p) { card.appendChild(placeCard(p)); }); }
+      return card;
+    }
     card.appendChild(el('div', 'tc-travel__route', '🚗 ' + ((tl.fromCity || '') + ' → ' + (tl.toCity || destCityName(plan, day.destinationIndex || 0) || ''))));
     var grid = el('div', 'tc-travel__grid');
     grid.appendChild(kv(t('driveTime'), tl.estimatedDriveTime || t('pending')));

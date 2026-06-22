@@ -1282,6 +1282,56 @@
     if (typeof ticketedAttractionBookings === 'function') mergeBookings(tr, ticketedAttractionBookings(tr));
     return tr.bookings;
   }
+  // ── V6 Dependency Graph: tag each task → graph node and run the deterministic engine. ──
+  function depKind(type) {
+    type = String(type || '');
+    if (/flight|bus|ride|rental_car|train/.test(type)) return 'transport';
+    if (/hotel|airbnb/.test(type)) return 'lodging';
+    if (/attraction|tour/.test(type)) return 'ticket';
+    if (/restaurant/.test(type)) return 'food';
+    return 'optional';
+  }
+  function _cityShort(c) { return String(c || '').split(',')[0].trim().toLowerCase(); }
+  // Map tasks → dependency-graph nodes using the journey backbone (ordered transport legs). Each
+  // non-transport task inherits the journeyIndex of the leg that ARRIVES at its city (dueDate
+  // disambiguates a city visited twice, e.g. OC). Unmappable tasks → Infinity (unscheduled, never
+  // block). Returns { tasks (enriched with _dep), nextAction (the booking), progress }.
+  function buildDepNodes(tr) {
+    var tasks = []; try { tasks = deriveTripTasks(tr) || []; } catch (e) { tasks = tr.bookings || []; }
+    if (!root.TCDepGraph) return { tasks: tasks, nextAction: null, progress: null };
+    var legSrc = (tr.transport && tr.transport.length) ? tr.transport : (tr.lockedLegs || []);
+    var legs = legSrc.map(function (lg, i) {
+      return { index: i, toCity: _cityShort(lg.toCity), fromCity: _cityShort(lg.fromCity), date: lg.date || lg.dueDate || '', key: (typeof legKeyOf === 'function' ? legKeyOf(lg, i) : ((lg.fromCity || '') + '>' + (lg.toCity || ''))), isReturn: lg.legType === 'return' };
+    });
+    function legForCity(city, dueDate) {
+      var c = _cityShort(city); if (!c || !legs.length) return null;
+      var m = legs.filter(function (L) { return L.toCity === c; });
+      if (!m.length) return null;
+      if (m.length === 1) return m[0];
+      // a city visited more than once → the leg whose date is the latest that is on/before the due date
+      var pick = null;
+      if (dueDate) m.forEach(function (L) { if (L.date && L.date <= dueDate && (!pick || L.date >= pick.date)) pick = L; });
+      return pick || m[0];
+    }
+    function legForTransport(b) {
+      var byKey = legs.filter(function (L) { return b.linkedSegmentId && (L.key === b.linkedSegmentId || ((b.linkedSegmentId || '').indexOf(L.toCity) !== -1 && (b.linkedSegmentId || '').indexOf(L.fromCity) !== -1)); })[0];
+      if (byKey) return byKey;
+      return legForCity(b.city, b.dueDate);
+    }
+    var now = new Date();
+    var mapped = tasks.map(function (b) {
+      var kind = depKind(b.type);
+      var leg = (kind === 'transport') ? legForTransport(b) : legForCity(b.city, b.dueDate);
+      var jIdx = leg ? leg.index : Infinity;
+      var du = null; if (b.dueDate) { var d = new Date(b.dueDate); if (!isNaN(d)) du = Math.ceil((d - now) / 86400000); }
+      return { id: b.id, kind: kind, city: _cityShort(b.city), journeyIndex: jIdx, status: b.bookingStatus || 'research_needed', daysUntilDue: du, pinned: /pinned/.test(b.dataSource || ''), votes: 0, type: b.type, title: b.title };
+    });
+    var dg = root.TCDepGraph.build(mapped);
+    var depById = {}; dg.nodes.forEach(function (n) { depById[n.id] = n; });
+    tasks.forEach(function (b) { var n = depById[b.id]; b._dep = n ? { blocked: n.blocked, reason: n.blockedReason, score: n.priorityScore, deps: n.dependencies, kind: n.kind } : null; });
+    var na = dg.nextAction ? tasks.filter(function (b) { return b.id === dg.nextAction.id; })[0] : null;
+    return { tasks: tasks, nextAction: na || null, progress: dg.progress };
+  }
   // AI booking research callable (Gemini grounded). Never blocks; returns [] on failure.
   function researchBookings(trip) {
     var c = mkCallable('researchTripBookings', 42000);
@@ -1985,9 +2035,15 @@
   // ── Persistence (localStorage + Firestore once logged in) ──────────────
   function stripRuntime(trip) {
     var c = {}; for (var k in trip) { if (k === '_demo' || k === '_fallback') continue; c[k] = trip[k]; }
-    // _prevStatus is a transient checkbox-undo hint — keep it in memory (same-session uncheck) but
-    // never persist it. Map to shallow copies so the live booking objects keep _prevStatus.
-    if (Array.isArray(c.bookings)) c.bookings = c.bookings.map(function (b) { if (b && b._prevStatus !== undefined) { var nb = {}; for (var bk in b) { if (bk !== '_prevStatus') nb[bk] = b[bk]; } return nb; } return b; });
+    // Drop transient underscore-prefixed booking fields (_prevStatus checkbox-undo hint, _dep
+    // dependency-graph annotation) — kept in memory for the session but NEVER persisted. Map to
+    // shallow copies so the live booking objects keep their transient fields.
+    if (Array.isArray(c.bookings)) c.bookings = c.bookings.map(function (b) {
+      if (!b || typeof b !== 'object') return b;
+      var hasTransient = false; for (var k in b) { if (k.charAt(0) === '_') { hasTransient = true; break; } }
+      if (!hasTransient) return b;
+      var nb = {}; for (var bk in b) { if (bk.charAt(0) !== '_') nb[bk] = b[bk]; } return nb;
+    });
     return c;
   }
   function saveTrip(trip) {

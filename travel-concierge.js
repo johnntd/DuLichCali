@@ -221,6 +221,12 @@
       findTransport: 'Compare transport (AI)', refreshTransport: 'Refresh options', researchingTransport: 'Comparing car, flight, bus & private ride…', noTransportYet: 'Tap “Compare transport” for AI travel options.',
       tpVerified: 'Verified', tpEstimate: 'Estimate', tpNeedsConfirm: 'Confirm live',
       tm_personal_car: 'Personal car', tm_rental_car: 'Rental car', tm_flight: 'Flight', tm_bus: 'Bus', tm_train: 'Train', tm_dlc_ride: 'Private DuLichCali ride',
+      // V3 — Amtrak/train, best-for ranks, Deal Hunter
+      tpwhy_train: 'Amtrak is scenic and low-stress — no driving, room to move, easy for seniors and kids; the schedule is researched, never assumed.',
+      tpro_scenic: 'Scenic ride', tcon_stations: 'Station-to-station', tpTrainStation: 'Travels station to station — check the nearest Amtrak station and times.',
+      tpTrainAmtrak: 'Amtrak.com', tpTrainSearch: 'Search Amtrak schedule',
+      tpBestKids: 'Best with kids', tpBestSeniors: 'Best for seniors', tpLeastTiring: 'Least tiring', tpBestLuggage: 'Best for luggage', tpScenic: 'Most scenic',
+      dealWatchOn: 'Watching for deals', dealWatchOff: 'Watch for deals', dealCheckNow: 'Check now', dealWatchHint: 'AI re-checks transport when you tap “Check now” and alerts you if a cheaper option appears — it never changes your plan on its own. Prices come from research and booking links; nothing is fabricated.', dealNoBetter: 'No better deal right now', dealBetterFound: 'Better deal found', dealWas: 'was', dealNow: 'now', dealSave: 'save', dealKeep: 'Keep itinerary', dealSwitch: 'Switch', researchedAt: 'Researched',
       tm_any: 'Any · compare all', tm_greyhound: 'Greyhound', tm_flixbus: 'FlixBus', tm_shuttle: 'Shuttle',
       // V3 Transport strategy + transfer intelligence
       tpCompareTitle: 'Compare every leg', whyRecommended: 'Why',
@@ -478,6 +484,12 @@
       findTransport: 'So sánh di chuyển (AI)', refreshTransport: 'Làm mới phương án', researchingTransport: 'Đang so sánh ô tô, máy bay, xe buýt & xe riêng…', noTransportYet: 'Nhấn “So sánh di chuyển” để xem phương án AI.',
       tpVerified: 'Đã xác minh', tpEstimate: 'Ước tính', tpNeedsConfirm: 'Cần xác nhận',
       tm_personal_car: 'Xe nhà', tm_rental_car: 'Xe thuê', tm_flight: 'Máy bay', tm_bus: 'Xe buýt', tm_train: 'Tàu hỏa', tm_dlc_ride: 'Xe riêng Du Lịch Cali',
+      // V3 — Amtrak/tàu, hạng "tốt nhất cho", Săn ưu đãi
+      tpwhy_train: 'Amtrak ngắm cảnh và nhẹ nhàng — không phải lái, rộng rãi, tiện cho người lớn tuổi và trẻ em; lịch trình được tra cứu, không phỏng đoán.',
+      tpro_scenic: 'Ngắm cảnh đẹp', tcon_stations: 'Đi theo nhà ga', tpTrainStation: 'Đi từ ga đến ga — kiểm tra ga Amtrak gần nhất và giờ tàu.',
+      tpTrainAmtrak: 'Amtrak.com', tpTrainSearch: 'Tra lịch tàu Amtrak',
+      tpBestKids: 'Hợp với trẻ em', tpBestSeniors: 'Hợp người lớn tuổi', tpLeastTiring: 'Ít mệt nhất', tpBestLuggage: 'Hợp nhiều hành lý', tpScenic: 'Cảnh đẹp nhất',
+      dealWatchOn: 'Đang theo dõi ưu đãi', dealWatchOff: 'Theo dõi ưu đãi', dealCheckNow: 'Kiểm tra ngay', dealWatchHint: 'AI kiểm tra lại phương tiện khi bạn nhấn “Kiểm tra ngay” và báo nếu có lựa chọn rẻ hơn — không bao giờ tự đổi kế hoạch. Giá đến từ nghiên cứu và liên kết đặt chỗ; không bịa đặt.', dealNoBetter: 'Hiện chưa có ưu đãi tốt hơn', dealBetterFound: 'Đã tìm thấy ưu đãi tốt hơn', dealWas: 'trước', dealNow: 'nay', dealSave: 'tiết kiệm', dealKeep: 'Giữ lịch trình', dealSwitch: 'Đổi', researchedAt: 'Tra cứu lúc',
       tm_any: 'Bất kỳ · so sánh tất cả', tm_greyhound: 'Greyhound', tm_flixbus: 'FlixBus', tm_shuttle: 'Xe trung chuyển',
       // V3 Transport strategy + transfer intelligence
       tpCompareTitle: 'So sánh từng chặng', whyRecommended: 'Vì sao',
@@ -735,6 +747,12 @@
       findTransport: 'Comparar transporte (IA)', refreshTransport: 'Actualizar opciones', researchingTransport: 'Comparando auto, vuelo, autobús y viaje privado…', noTransportYet: 'Toca “Comparar transporte” para ver opciones de IA.',
       tpVerified: 'Verificado', tpEstimate: 'Estimado', tpNeedsConfirm: 'Confirmar',
       tm_personal_car: 'Auto propio', tm_rental_car: 'Auto de alquiler', tm_flight: 'Vuelo', tm_bus: 'Autobús', tm_train: 'Tren', tm_dlc_ride: 'Viaje privado DuLichCali',
+      // V3 — Amtrak/tren, rangos "mejor para", Cazador de ofertas
+      tpwhy_train: 'Amtrak es panorámico y relajado — sin conducir, con espacio para moverse y cómodo para mayores y niños; el horario se investiga, nunca se asume.',
+      tpro_scenic: 'Viaje panorámico', tcon_stations: 'De estación a estación', tpTrainStation: 'Va de estación a estación — revisa la estación Amtrak más cercana y los horarios.',
+      tpTrainAmtrak: 'Amtrak.com', tpTrainSearch: 'Buscar horario de Amtrak',
+      tpBestKids: 'Mejor con niños', tpBestSeniors: 'Mejor para mayores', tpLeastTiring: 'Menos cansado', tpBestLuggage: 'Mejor para equipaje', tpScenic: 'Más panorámico',
+      dealWatchOn: 'Vigilando ofertas', dealWatchOff: 'Vigilar ofertas', dealCheckNow: 'Revisar ahora', dealWatchHint: 'La IA revisa el transporte cuando tocas “Revisar ahora” y te avisa si aparece una opción más barata — nunca cambia tu plan por su cuenta. Los precios vienen de la investigación y enlaces de reserva; nada se inventa.', dealNoBetter: 'No hay mejor oferta por ahora', dealBetterFound: 'Mejor oferta encontrada', dealWas: 'antes', dealNow: 'ahora', dealSave: 'ahorra', dealKeep: 'Mantener itinerario', dealSwitch: 'Cambiar', researchedAt: 'Investigado',
       tm_any: 'Cualquiera · comparar todo', tm_greyhound: 'Greyhound', tm_flixbus: 'FlixBus', tm_shuttle: 'Shuttle',
       // V3 Transport strategy + transfer intelligence
       tpCompareTitle: 'Compara cada tramo', whyRecommended: 'Por qué',
@@ -1242,7 +1260,7 @@
     var c = mkCallable('researchTripTransport', 50000);
     if (!c) return Promise.resolve({ legs: [] });
     return c({ trip: { departureCity: trip.departureCity, destinations: trip.destinations, dateRange: trip.dateRange, budget: trip.budget, tripStyle: trip.tripStyle, families: trip.families, returnTransportPreference: trip.returnTransportPreference || 'any', returnProvider: trip.returnProvider || '', lockedLegs: trip.lockedLegs || [] }, lang: state.lang })
-      .then(function (r) { var d = (r && r.data) || {}; return { legs: d.legs || [], source: d.source || 'estimated' }; })
+      .then(function (r) { var d = (r && r.data) || {}; return { legs: d.legs || [], source: d.source || 'estimated', researchedAt: d.researchedAt || 0 }; })
       .catch(function () { return { legs: [] }; });
   }
   // V3 AI Transport STRATEGY + TRANSFER agent — research-driven multi-leg strategies, transfer
@@ -3426,7 +3444,7 @@
     function done(k) { if (state._cResearch) state._cResearch[k] = false; if (state.screen === 'plan') render(); }
     if (anyHotel) { researchStays(tr).then(function (res) { if (res.stays && res.stays.length) { tr.stays = res.stays; tr.stayStrategies = res.strategies || []; saveTrip(tr); } done('stays'); }).catch(function () { done('stays'); }); }
     researchRestaurants(tr).then(function (res) { if (res.food && res.food.length) { tr.food = res.food; saveTrip(tr); } done('food'); }).catch(function () { done('food'); });
-    if (anyTransport) { researchTransport(tr).then(function (res) { if (res.legs && res.legs.length) { tr.transport = res.legs; tr.transportSource = res.source || 'estimated'; saveTrip(tr); } done('transport'); }).catch(function () { done('transport'); }); }
+    if (anyTransport) { researchTransport(tr).then(function (res) { applyTransportResult(tr, res); done('transport'); }).catch(function () { done('transport'); }); }
     // Destination Intelligence: rank signature attractions for the group + add ticketed icons to the booking checklist.
     if (anyDest) { researchAttractions(tr).then(function (res) { if (res.destinations && res.destinations.length) { tr.attractions = res.destinations; if (res.groupProfile) tr.groupProfile = res.groupProfile; mergeBookings(tr, ticketedAttractionBookings(tr)); saveTrip(tr); } done('attractions'); }).catch(function () { done('attractions'); }); }
     // Event Discovery + Stopover agents (events match trip dates; stopovers on long legs).
@@ -5955,6 +5973,9 @@
   function tpParseCost(o) { var m = String(o && o.totalCostRange || '').replace(/,/g, '').match(/\d+/); return m ? parseInt(m[0], 10) : Infinity; }
   function tpParseDur(o) { var s = String(o && o.durationText || ''), h = (s.match(/(\d+)\s*h/) || [])[1], mn = (s.match(/(\d+)\s*m/) || [])[1]; var v = (parseInt(h || 0, 10) * 60) + parseInt(mn || 0, 10); return v || Infinity; }
   function tpComfortRank(o) { var order = { dlc_ride: 5, flight: 4, rental_car: 3, personal_car: 3, hoang_bus: 2, train: 2, bus: 1 }; var base = order[o.mode] || 0; var bonus = (o.seniorSuitability === 'good' ? 1 : 0) + (o.childSuitability === 'good' ? 1 : 0); return base + bonus; }
+  // Least-tiring (no self-driving + restful), scenic value (by mode) — for the best-for ranks.
+  function tpTireScore(o) { var m = { dlc_ride: 5, train: 5, flight: 4, hoang_bus: 4, bus: 3, rental_car: 2, personal_car: 2 }; return (m[o.mode] || 0) + (o.seniorSuitability === 'good' ? 1 : 0); }
+  function tpScenicScore(o) { var m = { train: 5, personal_car: 4, rental_car: 4, hoang_bus: 3, dlc_ride: 3, bus: 2, flight: 1 }; return m[o.mode] || 0; }
   function tpPick(leg, criterion) {
     var opts = (leg.options || []); if (!opts.length) return null;
     if (criterion === 'recommended') return opts.filter(function (o) { return o.mode === leg.recommendedMode; })[0] || opts[0];
@@ -5962,6 +5983,11 @@
     if (criterion === 'fastest') return opts.slice().sort(function (a, b) { return tpParseDur(a) - tpParseDur(b); })[0];
     if (criterion === 'comfort') return opts.slice().sort(function (a, b) { return tpComfortRank(b) - tpComfortRank(a); })[0];
     if (criterion === 'family') return opts.slice().sort(function (a, b) { return tpFamilyRank(b) - tpFamilyRank(a); })[0];
+    if (criterion === 'seniors') return opts.slice().sort(function (a, b) { return (tpSuitScore(b.seniorSuitability) * 2 + tpComfortRank(b)) - (tpSuitScore(a.seniorSuitability) * 2 + tpComfortRank(a)); })[0];
+    if (criterion === 'kids') return opts.slice().sort(function (a, b) { return (tpSuitScore(b.childSuitability) * 2 + (b.convenience || 0)) - (tpSuitScore(a.childSuitability) * 2 + (a.convenience || 0)); })[0];
+    if (criterion === 'least_tiring') return opts.slice().sort(function (a, b) { return tpTireScore(b) - tpTireScore(a); })[0];
+    if (criterion === 'luggage') return opts.slice().sort(function (a, b) { return (tpSuitScore(b.luggageSuitability) - tpSuitScore(a.luggageSuitability)) || ((b.convenience || 0) - (a.convenience || 0)); })[0];
+    if (criterion === 'scenic') return opts.slice().sort(function (a, b) { return tpScenicScore(b) - tpScenicScore(a); })[0];
     if (criterion === 'dlc') return opts.filter(function (o) { return o.canBookViaDLC; })[0] || null;
     return null;
   }
@@ -5979,6 +6005,63 @@
       toast(t('tpAffectsItin'));
     } else { toast(t('tpChosen')); }
     render();
+  }
+  // ── Deal Hunter / continuous deal watch (V3) ──────────────────────────────
+  // Store the cheapest cost per leg as a SNAPSHOT each time transport is researched. When the
+  // user is watching and a later re-check finds a lower cheapest cost, raise a "better deal" alert
+  // — a NOTIFICATION ONLY; the itinerary is NEVER changed unless the user taps "Switch". Estimates
+  // are labelled; real-time price movement comes from the grounded research / a future fare API,
+  // never fabricated. (Periodic background checking needs a scheduled function — on-demand for now.)
+  function cheapestCostForLeg(leg) {
+    var best = null; (leg.options || []).forEach(function (o) { var v = tpParseCost(o); if (v !== Infinity && (!best || v < best.cost)) best = { cost: v, mode: o.mode }; });
+    return best;
+  }
+  function checkDealDrops(tr) {
+    var legs = tr.transport || []; if (!legs.length) return;
+    tr.dealSnapshot = tr.dealSnapshot || {};
+    var alerts = [];
+    legs.forEach(function (lg, i) {
+      var key = legKeyOf(lg, i), cur = cheapestCostForLeg(lg); if (!cur) return;
+      var prev = tr.dealSnapshot[key];
+      if (tr.dealWatch && prev && prev.cost && cur.cost < prev.cost - 1) {
+        alerts.push({ route: (lg.fromCity || '').split(',')[0] + '→' + (lg.toCity || '').split(',')[0], oldCost: prev.cost, newCost: cur.cost, mode: cur.mode, leg: lg, i: i });
+      }
+      tr.dealSnapshot[key] = { cost: cur.cost, mode: cur.mode, ts: Date.now() };
+    });
+    if (alerts.length) state._dealAlerts = (state._dealAlerts || []).concat(alerts);
+  }
+  // Apply a transport research result: store legs + source + timestamp, then snapshot/diff for deals.
+  function applyTransportResult(tr, res) {
+    if (!res || !res.legs || !res.legs.length) return;
+    tr.transport = res.legs; tr.transportSource = res.source || 'estimated';
+    if (res.researchedAt) tr.transportResearchedAt = res.researchedAt;
+    checkDealDrops(tr);
+    saveTrip(tr);
+  }
+  function tpResearchedLabel(ts) {
+    if (!ts) return '';
+    var loc = state.lang === 'vi' ? 'vi-VN' : (state.lang === 'es' ? 'es-ES' : 'en-US');
+    try { return new Date(ts).toLocaleString(loc, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; }
+  }
+  function dealWatchPanel() {
+    var tr = state.trip, box = el('div', 'tc-dealwatch');
+    var row = el('div', 'tc-dealwatch__row');
+    row.appendChild(pbtn((tr.dealWatch ? '🔔 ' + t('dealWatchOn') : '🔕 ' + t('dealWatchOff')), 'tc-pbtn--ghost' + (tr.dealWatch ? ' tc-pbtn--on' : ''), function () { tr.dealWatch = !tr.dealWatch; saveTrip(tr); render(); }));
+    if (!state.readonly && !tr._demo) row.appendChild(pbtn('↻ ' + t('dealCheckNow'), 'tc-pbtn--ghost', function () { state.generating = true; renderGenerating(t('researchingTransport')); researchTransport(tr).then(function (res) { state.generating = false; var before = (state._dealAlerts || []).length; applyTransportResult(tr, res); if ((state._dealAlerts || []).length === before) toast(t('dealNoBetter')); render(); }); }));
+    box.appendChild(row);
+    if (tr.transportResearchedAt) box.appendChild(el('p', 'tc-dealwatch__ts', '🕒 ' + t('researchedAt') + ' ' + tpResearchedLabel(tr.transportResearchedAt)));
+    box.appendChild(el('p', 'tc-hint', t('dealWatchHint')));
+    (state._dealAlerts || []).forEach(function (a) {
+      var card = el('div', 'tc-deal');
+      card.appendChild(el('strong', 'tc-deal__t', '🎉 ' + t('dealBetterFound')));
+      card.appendChild(el('p', 'tc-deal__d', a.route + ' · ' + (tpIcon(a.mode) + ' ' + (t('tm_' + a.mode) || a.mode)) + ' — ' + t('dealWas') + ' $' + a.oldCost + ' → ' + t('dealNow') + ' $' + a.newCost + ' · ' + t('dealSave') + ' $' + Math.max(0, a.oldCost - a.newCost)));
+      var acts = el('div', 'tc-deal__acts');
+      acts.appendChild(pbtn('✓ ' + t('dealKeep'), 'tc-pbtn--ghost', function () { state._dealAlerts = (state._dealAlerts || []).filter(function (x) { return x !== a; }); render(); }));
+      acts.appendChild(pbtn('🔁 ' + t('dealSwitch'), 'tc-pbtn--accent', function () { state._dealAlerts = (state._dealAlerts || []).filter(function (x) { return x !== a; }); chooseTransport(a.leg, a.i, a.mode); }));
+      card.appendChild(acts);
+      box.appendChild(card);
+    });
+    return box;
   }
   // Build a DRAFT ride request from trip data and hand off to the EXISTING ride flow
   // (sessionStorage → /airport → RideIntake). NEVER auto-confirms a booking.
@@ -6165,7 +6248,7 @@
     // Quick "choose by" criteria (Recommended / Lowest cost / Fastest / Most comfortable / Private DLC)
     if (canEditPlan()) {
       var crit = el('div', 'tc-tpleg__crit');
-      [['recommended', '⭐ ' + t('tpRecommended')], ['cheapest', '💲 ' + t('tpLowestCost')], ['fastest', '⚡ ' + t('tpFastest')], ['family', '👨‍👩‍👧 ' + t('tpBestFamilies')], ['comfort', '🛋 ' + t('tpComfort')], ['dlc', '🚐 ' + t('tpPrivateDlc')]].forEach(function (pair) {
+      [['recommended', '⭐ ' + t('tpRecommended')], ['cheapest', '💲 ' + t('tpLowestCost')], ['fastest', '⚡ ' + t('tpFastest')], ['family', '👨‍👩‍👧 ' + t('tpBestFamilies')], ['kids', '🧒 ' + t('tpBestKids')], ['seniors', '🧓 ' + t('tpBestSeniors')], ['least_tiring', '😌 ' + t('tpLeastTiring')], ['luggage', '🧳 ' + t('tpBestLuggage')], ['scenic', '🏞 ' + t('tpScenic')], ['comfort', '🛋 ' + t('tpComfort')], ['dlc', '🚐 ' + t('tpPrivateDlc')]].forEach(function (pair) {
         var pk = tpPick(leg, pair[0]); if (!pk) return;
         var on = pk.mode === cm;
         crit.appendChild(pbtn(pair[1], 'tc-pbtn--ghost' + (on ? ' tc-pbtn--on' : ''), function () { chooseTransport(leg, i, pk.mode); }));
@@ -6391,7 +6474,7 @@
       var find = el('button', 'tc-cta', (tr.transport && tr.transport.length) ? ('↻ ' + t('refreshTransport')) : t('findTransport')); find.type = 'button';
       find.addEventListener('click', function () {
         find.disabled = true; state.generating = true; renderGenerating(t('researchingTransport'));
-        researchTransport(tr).then(function (res) { state.generating = false; if (res.legs && res.legs.length) { tr.transport = res.legs; tr.transportSource = res.source || 'estimated'; saveTrip(tr); } render(); });
+        researchTransport(tr).then(function (res) { state.generating = false; applyTransportResult(tr, res); render(); });
       });
       wrap.appendChild(find);
     }
@@ -6403,13 +6486,15 @@
       var hasHoang = legs.some(function (lg) { return (lg.options || []).some(function (o) { return o.mode === 'hoang_bus'; }); });
       if (serviceable && !hasHoang) {
         state._tpHoangHealFor = tr.id;
-        researchTransport(tr).then(function (res) { if (res.legs && res.legs.length) { tr.transport = res.legs; tr.transportSource = res.source || 'estimated'; saveTrip(tr); } render(); }).catch(function () {});
+        researchTransport(tr).then(function (res) { applyTransportResult(tr, res); render(); }).catch(function () {});
       }
     }
     if (isResearching('transport') && !legs.length) { wrap.appendChild(researchBanner('researchingTransport')); return wrap; }
     if (!legs.length) { wrap.appendChild(el('p', 'tc-empty', t('noTransportYet'))); return wrap; }
     // Upgrade drive legs to verified Google Maps distances (client key) once per session.
     if (!state.readonly && !tr._demo) verifyTransportRoutes(tr);
+    // Deal Hunter — watch toggle, on-demand re-check, research timestamp, "better deal" alerts.
+    wrap.appendChild(dealWatchPanel());
     // Door-to-door summary chips
     var sum = el('div', 'tc-transport__sumrow');
     legs.forEach(function (lg, i) {

@@ -1375,3 +1375,12 @@ select.tc-input { appearance: none; background-image: linear-gradient(45deg, tra
 .tc-travel__legacts { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; }
 .tc-travel__caralt { font-family: var(--font-b); font-size: .8rem; color: var(--muted); margin: .5rem 0 0; }
 .tc-jr-fail { font-family: var(--font-b); font-size: .9rem; line-height: 1.5; color: #fecaca; background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.4); border-radius: 12px; padding: .7rem .85rem; margin: 0 0 1rem; }
+
+/* V3 Deal Hunter — watch toggle + research timestamp + "better deal" alert card */
+.tc-dealwatch { border: 1px solid var(--border); border-radius: 14px; padding: .7rem .8rem; margin: .6rem 0 1rem; background: var(--navy-900); }
+.tc-dealwatch__row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.tc-dealwatch__ts { font-family: var(--font-b); font-size: .76rem; color: var(--muted); margin: .5rem 0 .2rem; }
+.tc-deal { border: 1px solid rgba(110,231,160,.45); background: rgba(16,185,129,.1); border-radius: 12px; padding: .7rem .8rem; margin-top: .6rem; }
+.tc-deal__t { display: block; font-family: var(--font-b); font-weight: 700; font-size: .92rem; color: #bbf7d0; }
+.tc-deal__d { font-family: var(--font-b); font-size: .85rem; line-height: 1.5; color: var(--cream); margin: .3rem 0 .55rem; }
+.tc-deal__acts { display: flex; flex-wrap: wrap; gap: .5rem; }

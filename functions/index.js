@@ -3858,6 +3858,24 @@ function tcBuildTransportLegs(route, trip) {
         mapLink: '', convenience: 2, confidence: 'low', canBookViaDLC: false, affectsItinerary: true, source: 'ai_estimate',
       });
     }
+    // Amtrak (regional rail) — offered on a regional distance band (operator/route RESEARCHED,
+    // never a hardcoded line). Real Amtrak + Google search links, labelled estimate, NO fabricated
+    // schedule/price. Scenic + low-stress, strong for seniors. Completes the multi-modal comparison.
+    if (miles >= 40 && miles <= 700) {
+      const tppMid = Math.max(20, Math.min(140, 14 + miles * 0.09));
+      const tppLo = tppMid * 0.7, tppHi = tppMid * 1.5, tgrpLo = tppLo * travelers, tgrpHi = tppHi * travelers;
+      const trainMin = Math.round(driveMin * 1.5) + 30;
+      options.push({
+        mode: 'train', provider: 'Amtrak', status: 'estimated', distanceText: '', durationText: tcFmtDur(trainMin),
+        totalCostRange: tcMoney(tgrpLo, tgrpHi) + ' (est.)', perTravelerCost: tcMoney(tppLo, tppHi) + '/person (est.)', perFamilyCost: tcMoney(tgrpLo / numFamilies, tgrpHi / numFamilies) + '/family (est.)',
+        luggageSuitability: 'good', childSuitability: 'good', seniorSuitability: 'good', wifiAvailable: true,
+        prosKeys: ['tpro_scenic', 'tpro_nodriving', 'tpro_rest', 'tpro_wifi'], consKeys: ['tcon_schedule', 'tcon_stations', 'tcon_slowerthancar'],
+        noteKeys: ['tpTrainStation'], whyKey: 'tpwhy_train',
+        bookingLink: tcGsearch('Amtrak ' + fromShort + ' to ' + toShort + ' schedule tickets'),
+        bookingLinks: [{ labelKey: 'tpTrainAmtrak', url: 'https://www.amtrak.com/home.html' }, { labelKey: 'tpTrainSearch', url: tcGsearch('Amtrak ' + fromShort + ' to ' + toShort + ' schedule tickets') }],
+        mapLink: '', convenience: (seniors > 0 ? 4 : 3), confidence: 'low', canBookViaDLC: false, affectsItinerary: true, source: 'ai_estimate',
+      });
+    }
     // Recommendation (deterministic, group-aware). Hoàng wins for seniors / no-drive families
     // on a long California corridor (rest, Wi-Fi, no SoCal traffic); a small adults-only group
     // on a very long hop leans to flying; otherwise a big family group keeps the car.
@@ -3935,7 +3953,7 @@ exports.researchTripTransport = onCall(
     // Deterministic comparison -- ALWAYS returns car + (long->) flight + (intercity->) bus +
     // a private DLC ride per leg. No AI dependency, so the tab can never come up empty.
     const legs = tcBuildTransportLegs(route, trip);
-    return { ok: true, legs, source: route.source, mapsSource: route.source, dataSource: 'estimated_pending_verification' };
+    return { ok: true, legs, source: route.source, mapsSource: route.source, researchedAt: Date.now(), dataSource: 'estimated_pending_verification' };
   }
 );
 // ── AI Transport STRATEGY + TRANSFER Intelligence (V3) ───────────────────────

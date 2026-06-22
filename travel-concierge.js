@@ -153,6 +153,7 @@
       hotelStatus: 'Hotel status', hs_planning: 'Planning', hs_researching: 'Researching', hs_booked: 'Booked',
       travelDay: 'Travel day', driveTime: 'Drive time', distance: 'Distance', departFrom: 'Depart', arriveAt: 'Arrive', mealStops: 'Meal stops', restStopsLabel: 'Rest stops',
       routeOverviewTitle: 'Route', totalDriveTime: 'Total drive time', totalDistance: 'Total distance', leg: 'Leg', legPending: 'Details coming soon for this stop.', dayOpen: 'Open day — ask AI to plan this day',
+      learnMore: 'Learn more', lmLoading: 'Finding helpful links…', lmVerify: 'verify', lmWhy: 'Why we recommend it', lmGroupFit: 'Group fit', lmBestTime: 'Best time', lmTimeNeeded: 'Time needed', lm_official_site: 'Official site', lm_menu: 'Menu', lm_ticket: 'Tickets', lm_google_reviews: 'Google reviews', lm_yelp_reviews: 'Yelp reviews', lm_tripadvisor: 'Tripadvisor', lm_youtube_search: 'Find videos on YouTube', lm_tiktok: 'Find on TikTok', lm_photos: 'Photos', lm_map: 'Map', lm_blog_guide: 'Travel guide',
       popularDishesLabel: 'Popular dishes', altTitle: 'Alternatives & backups', alt_kidFriendly: 'Kid-friendly', alt_toddlerLowEnergy: 'Toddler / low-energy', alt_teenOption: 'Teen option', alt_seniorLowWalking: 'Senior / low-walking', alt_rainyDay: 'Rainy day', alt_foodBackup: 'Food backup',
       routeVerifiedTag: 'Distances via Google Maps', routeEstimatedTag: 'Estimated distances', driveHome: 'Drive home',
       dt_arrival_day: 'Arrival', dt_transfer_day: 'Travel', dt_return_day: 'Return', dt_mixed_day: 'Mixed',
@@ -421,6 +422,7 @@
       hotelStatus: 'Trạng thái khách sạn', hs_planning: 'Đang lên kế hoạch', hs_researching: 'Đang tìm hiểu', hs_booked: 'Đã đặt',
       travelDay: 'Ngày di chuyển', driveTime: 'Thời gian lái xe', distance: 'Khoảng cách', departFrom: 'Khởi hành', arriveAt: 'Đến nơi', mealStops: 'Điểm ăn uống', restStopsLabel: 'Điểm dừng nghỉ',
       routeOverviewTitle: 'Lộ trình', totalDriveTime: 'Tổng thời gian lái', totalDistance: 'Tổng khoảng cách', leg: 'Chặng', legPending: 'Chi tiết cho điểm này sẽ có sớm.', dayOpen: 'Ngày trống — nhờ AI lên kế hoạch cho ngày này',
+      learnMore: 'Tìm hiểu thêm', lmLoading: 'Đang tìm liên kết hữu ích…', lmVerify: 'kiểm chứng', lmWhy: 'Vì sao nên chọn', lmGroupFit: 'Phù hợp nhóm', lmBestTime: 'Thời điểm tốt nhất', lmTimeNeeded: 'Thời gian cần', lm_official_site: 'Trang chính thức', lm_menu: 'Thực đơn', lm_ticket: 'Vé', lm_google_reviews: 'Đánh giá Google', lm_yelp_reviews: 'Đánh giá Yelp', lm_tripadvisor: 'Tripadvisor', lm_youtube_search: 'Tìm video trên YouTube', lm_tiktok: 'Tìm trên TikTok', lm_photos: 'Hình ảnh', lm_map: 'Bản đồ', lm_blog_guide: 'Cẩm nang du lịch',
       popularDishesLabel: 'Món nổi tiếng', altTitle: 'Lựa chọn thay thế & dự phòng', alt_kidFriendly: 'Hợp trẻ em', alt_toddlerLowEnergy: 'Trẻ nhỏ / nhẹ nhàng', alt_teenOption: 'Cho tuổi teen', alt_seniorLowWalking: 'Người lớn tuổi / ít đi bộ', alt_rainyDay: 'Ngày mưa', alt_foodBackup: 'Quán ăn dự phòng',
       routeVerifiedTag: 'Khoảng cách từ Google Maps', routeEstimatedTag: 'Khoảng cách ước tính', driveHome: 'Lái về',
       dt_arrival_day: 'Ngày đến', dt_transfer_day: 'Di chuyển', dt_return_day: 'Ngày về', dt_mixed_day: 'Hỗn hợp',
@@ -688,6 +690,7 @@
       hotelStatus: 'Estado del hotel', hs_planning: 'Planeando', hs_researching: 'Investigando', hs_booked: 'Reservado',
       travelDay: 'Día de viaje', driveTime: 'Tiempo de conducción', distance: 'Distancia', departFrom: 'Salida', arriveAt: 'Llegada', mealStops: 'Paradas para comer', restStopsLabel: 'Paradas de descanso',
       routeOverviewTitle: 'Ruta', totalDriveTime: 'Tiempo total de conducción', totalDistance: 'Distancia total', leg: 'Tramo', legPending: 'Los detalles de esta parada llegarán pronto.', dayOpen: 'Día libre — pide a la IA que planifique este día',
+      learnMore: 'Más información', lmLoading: 'Buscando enlaces útiles…', lmVerify: 'verificar', lmWhy: 'Por qué lo recomendamos', lmGroupFit: 'Ideal para el grupo', lmBestTime: 'Mejor momento', lmTimeNeeded: 'Tiempo necesario', lm_official_site: 'Sitio oficial', lm_menu: 'Menú', lm_ticket: 'Entradas', lm_google_reviews: 'Reseñas de Google', lm_yelp_reviews: 'Reseñas de Yelp', lm_tripadvisor: 'Tripadvisor', lm_youtube_search: 'Buscar videos en YouTube', lm_tiktok: 'Buscar en TikTok', lm_photos: 'Fotos', lm_map: 'Mapa', lm_blog_guide: 'Guía de viaje',
       popularDishesLabel: 'Platos populares', altTitle: 'Alternativas y respaldos', alt_kidFriendly: 'Para niños', alt_toddlerLowEnergy: 'Bebé / tranquilo', alt_teenOption: 'Opción para teens', alt_seniorLowWalking: 'Mayores / poca caminata', alt_rainyDay: 'Día lluvioso', alt_foodBackup: 'Restaurante alterno',
       routeVerifiedTag: 'Distancias vía Google Maps', routeEstimatedTag: 'Distancias estimadas', driveHome: 'Conducir a casa',
       dt_arrival_day: 'Llegada', dt_transfer_day: 'Viaje', dt_return_day: 'Regreso', dt_mixed_day: 'Mixto',
@@ -5091,6 +5094,64 @@
     var le = el('button', 'tc-pbtn', t('leaveEmpty')); le.type = 'button'; le.addEventListener('click', function () { state._altOpen = null; render(); }); panel.appendChild(le);
     return panel;
   }
+  // ── Media Enrichment: "Learn more" expandable. Deterministic honest links show instantly;
+  //    the AI (researchPlaceMedia) enriches lazily on FIRST expand (cached on item._media).
+  //    Videos are always YouTube/TikTok SEARCH links; photos are verified-only (placeMedia). ──
+  function mediaTypeForPlace(p) {
+    var c = String((p && p.category) || '').toLowerCase();
+    if (/restaurant|food|cafe|coffee|dessert|eat/.test(c)) return 'restaurant';
+    if (/lodging|hotel|stay|resort|motel|inn/.test(c)) return 'hotel';
+    if (/tour|cruise|whale|kayak/.test(c)) return 'tour';
+    if (/beach|cove|scenic|park|nature|hike|trail|view|gem/.test(c)) return 'scenic';
+    if (/event|festival|concert|market|fireworks/.test(c)) return 'event';
+    return 'attraction';
+  }
+  function lmLabel(m) { return t('lm_' + m.type) || m.title || String(m.type || '').replace(/_/g, ' '); }
+  function renderMediaLinks(wrap, media) {
+    (media || []).forEach(function (m) {
+      if (!m || !m.url) return;
+      var b = linkBtn(lmLabel(m), m.url, 'tc-lmlink');
+      if (m.verificationStatus === 'ai_suggested') b.appendChild(el('span', 'tc-lmlink__v', ' · ' + t('lmVerify')));
+      wrap.appendChild(b);
+    });
+  }
+  function applyAiMedia(links, notes, r) {
+    (r.media || []).forEach(function (m) { // add AI-curated REAL urls the deterministic baseline can't know
+      if (m && m.verificationStatus === 'ai_suggested' && m.url) links.appendChild(linkBtn(lmLabel(m) + ' · ' + t('lmVerify'), m.url, 'tc-lmlink tc-lmlink--ai'));
+    });
+    function note(k, v) { if (v) notes.appendChild(el('p', 'tc-learnmore__note', t(k) + ': ' + v)); }
+    note('lmWhy', r.why); note('lmGroupFit', r.groupFit); note('lmBestTime', r.bestTime); note('lmTimeNeeded', r.timeNeeded);
+    if (notes.childNodes.length) notes.appendChild(el('p', 'tc-unverified', t('unverified')));
+  }
+  function buildLearnMoreBody(body, item, type, city) {
+    var links = el('div', 'tc-learnmore__links'); body.appendChild(links);
+    if (root.TCMedia) renderMediaLinks(links, root.TCMedia.build(item, type, city));
+    body.appendChild(placeMedia({ name: item.name, address: item.address || '', city: city, category: type }, 'tc-learnmore__media'));
+    var notes = el('div', 'tc-learnmore__notes'); body.appendChild(notes);
+    if (item._media) { applyAiMedia(links, notes, item._media); return; }
+    var fn = mkCallable('researchPlaceMedia', 40000); if (!fn) return;
+    var banner = researchBanner('lmLoading'); body.appendChild(banner);
+    fn({ tripId: (state.trip && state.trip.id) || '', name: item.name, type: type, city: city, lang: state.lang })
+      .then(function (rr) { try { body.removeChild(banner); } catch (e) {} var r = (rr && rr.data) || {}; if (r.ok) { item._media = r; applyAiMedia(links, notes, r); } })
+      .catch(function () { try { body.removeChild(banner); } catch (e) {} });
+  }
+  function learnMoreSection(item, type, city) {
+    if (!item || !item.name || !root.TCMedia) return null;
+    var sec = el('section', 'tc-collapse tc-learnmore');
+    var head = el('button', 'tc-collapse__head'); head.type = 'button'; head.setAttribute('aria-expanded', 'false');
+    head.appendChild(el('span', 'tc-collapse__title', '🔎 ' + t('learnMore')));
+    head.appendChild(el('span', 'tc-collapse__chev', '▾'));
+    var body = el('div', 'tc-collapse__body'); body.hidden = true;
+    var built = false;
+    head.addEventListener('click', function () {
+      var open = head.getAttribute('aria-expanded') === 'true';
+      head.setAttribute('aria-expanded', open ? 'false' : 'true');
+      body.hidden = open; sec.classList.toggle('tc-collapse--open', !open);
+      if (!built && !open) { built = true; buildLearnMoreBody(body, item, type, city); } // lazy on FIRST expand
+    });
+    sec.appendChild(head); sec.appendChild(body);
+    return sec;
+  }
   function placeCard(p, ctx) {
     ctx = ctx || {};
     var controllable = canEditPlan() && ctx.lane && ctx.pkey;
@@ -5139,6 +5200,7 @@
     if (canEditPlan() && !controllable) { var sk = el('button', 'tc-pbtn tc-pbtn--danger', '⤫ ' + t('skipPlace')); sk.type = 'button'; sk.addEventListener('click', function () { setPlaceOverride(ctx.p || p, 'skipped', null); }); acts.appendChild(sk); }
     body.appendChild(acts);
     // (Restaurant photo/review/menu links now live in the media panel — see placeMedia.)
+    var _lm = learnMoreSection(p, mediaTypeForPlace(p), p.city || ''); if (_lm) body.appendChild(_lm); // "Learn more" media enrichment
     body.appendChild(voteRow(p, { booking: true })); // itinerary places keep the reservation status select
     c.appendChild(body);
     return c;
@@ -5994,6 +6056,7 @@
       acts.appendChild(addbk);
     }
     c.appendChild(acts);
+    var _lmf = learnMoreSection({ name: p.name, address: p.address || '', city: city }, 'restaurant', city); if (_lmf) c.appendChild(_lmf); // "Learn more" media enrichment
     if (!state.readonly && p.name) c.appendChild(voteRow({ name: p.name, category: 'restaurant', cuisine: p.cuisine || '' }));
     return c;
   }

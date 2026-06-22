@@ -3811,7 +3811,12 @@
     // Verify route distances/times via Google Maps once per plan (lazy) — replaces any
     // AI-invented distance/drive-time/ETA with real data. Runs for new, regenerated and
     // older saved plans alike; sets plan._routeSource so it only fires once.
-    if (plan.days && plan.days.length && plan.days[0] && !plan.days[0].dayType) finalizePlanDays(plan, tr); // backfill day types on older plans
+    // Backfill day types on older plans AND heal a calendar-day gap (a pre-fix trip saved missing a
+    // day — e.g. a folded transfer day — re-reconciles to the full inclusive range on load, no regen needed).
+    if (plan.days && plan.days.length && plan.days[0]) {
+      var _pdHeal = parseTripDates(tr.dateRange);
+      if (!plan.days[0].dayType || (_pdHeal && _pdHeal.count && plan.days.length !== _pdHeal.count)) finalizePlanDays(plan, tr);
+    }
     // Verify routes once per session: new plans (no source) AND existing estimated/unknown
     // plans get one client-side (browser Maps key) re-verify attempt → flips to google_maps.
     if (!tr._demo && plan.days && !tr._routeChecking && (!plan._routeSource || ((plan._routeSource === 'estimated' || plan._routeSource === 'unknown') && state._routeTriedTrip !== tr.id))) verifyRoute(tr);

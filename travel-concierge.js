@@ -289,6 +289,10 @@
       optimizeTrip: 'Optimize Trip', optimizing: 'Rebuilding your trip from the group\'s votes…', optimizeDone: 'Trip rebuilt from your group\'s votes', optimizeNudge: 'Your group\'s votes changed — re-optimize the whole trip.', optimizeRebuildHint: 'Regenerates the itinerary, food, stays, events, stopovers, transport, costs & bookings from all your votes. Your pins & skips are kept.',
       mem_title: 'What we remember', mem_sub: 'Preferences learned from your past trips — used to start new ones smarter.', mem_cuisines: 'Cuisines you like', mem_liked: 'Places you liked', mem_never: 'Never suggest again', mem_transport: 'Preferred transport', mem_budget: 'Usual budget', mem_pace: 'Usual pace', mem_trips: 'Trips remembered', mem_clear: 'Clear memory', mem_cleared: 'Travel memory cleared',
       nightOne: 'night', nightMany: 'nights',
+      // Natural-language Journey Builder
+      nlSectionTitle: 'Tell AI exactly what you want', nlSectionHint: 'Describe your trip in your own words — dates, who’s driving, fixed plans. AI turns it into an editable journey you can adjust.', nlPlaceholder: 'Example: July 1 take Hoang Bus from San Jose to Orange County, then Michael drives us to San Diego. July 2 San Diego Zoo. July 3 morning in San Diego, then back to Orange County for Vietnamese food. July 4 take Hoang Bus home.', nlBuildBtn: 'Build journey from my notes', nlOrDivider: 'or build it step by step', nlBuilding: 'Reading your plan and building the journey…', nlParseFail: 'I couldn’t turn that into a journey — add the dates and stops, then tap Build again.', nlReviewTitle: 'Here’s what I understood', nlReviewSub: 'Review and adjust. Lock 🔒 anything that’s fixed — the AI plans around it and fills in the rest.', nlFixedReqs: 'Fixed by you', nlFlexWindows: 'AI will suggest', nlQuestions: 'A few things to confirm', nlConfirmBtn: 'Looks good — add who’s coming', nlEditManual: 'Fine-tune step by step', nlReparse: 'Edit my notes', nlAddAfter: 'Add after', nlAddStop: 'Add a step', nlLockSeg: 'Lock', nlUnlockSeg: 'Unlock', nlLocked: 'Locked', nlFlexMark: 'Flexible', nlFlexOn: 'AI suggests', nlNeedsResearch: 'Needs schedule', nlNeedsBooking: 'Needs booking', nlResearchLink: 'Look up schedule', nlResearchQuery: 'schedule', nlRequestRide: 'Request DuLichCali ride', nlSegTitle: 'What', nlSegTitlePh: 'e.g. San Diego Zoo', nlSegDate: 'Day', nlSegTime: 'Time', nlSegFrom: 'From', nlSegTo: 'To', nlSegMode: 'How', nlNoDate: 'No date yet', nlFoodExperience: 'Local food experience',
+      nlSegType_transport: 'Travel', nlSegType_transfer: 'Transfer / ride', nlSegType_stay: 'Overnight stay', nlSegType_activity: 'Activity', nlSegType_food: 'Food', nlSegType_free_time: 'Free time', nlSegType_return: 'Return home',
+      nlmode_car: 'Own car', nlmode_bus: 'Bus', nlmode_private_ride: 'Private ride', nlmode_flight: 'Flight', nlmode_train: 'Train', nlmode_walk: 'Walk', nlmode_other: 'Other',
       journeyLabel: 'Your journey', journeyHint: 'Add each stop with the dates you want there. We figure out transport, hotels and the day-by-day plan within your stops.', addSegment: 'Add stop', arrivalDate: 'Arrival', departureDate: 'Departure', sameDay: 'Same-day', segTransportDetails: 'Transport & details (optional)', howArrive: 'How you arrive in {city}', preferredProvider: 'Preferred provider', providerPh: 'e.g. Xe Đò Hoàng, Michael', overnightStay: 'Stay overnight here', segNotesPh: 'e.g. coming from the bus drop-off', homeOrigin: 'Home', viaLabel: 'via', viaAI: 'AI picks the best way', thisStop: 'this stop', returnTransport: 'Getting home', journeyEmpty: 'Add your first stop to see the journey', homeBy: 'home', quickEntry: 'Quick entry — one date range for the whole trip', quickEntryHint: 'Optional. Used only if you leave the per-stop dates blank — the AI will split the nights.', tp_any: 'AI decides', tp_bus: 'Bus', tp_private_ride: 'Private ride', tp_flight: 'Flight', tp_car: 'Own car', tp_train: 'Train', segRideBooked: 'Ride booked', segRidePending: 'Ride pending',
       impGeneral: '✨ Improve this trip', impDiscoveries: '💎 Find more discoveries', impLowerCost: '💲 Lower cost', impKidsFun: '🧒 More fun for kids', impFoodFocused: '🍽 More food-focused',
       impSelected: '{n} selected', impRun: 'Run AI Improvement', impClear: 'Clear all',
@@ -540,6 +544,10 @@
       optimizeTrip: 'Tối ưu chuyến đi', optimizing: 'Đang dựng lại chuyến đi theo bình chọn của nhóm…', optimizeDone: 'Đã dựng lại chuyến đi theo bình chọn của nhóm', optimizeNudge: 'Bình chọn của nhóm đã thay đổi — tối ưu lại toàn bộ chuyến đi.', optimizeRebuildHint: 'Tạo lại lịch trình, ẩm thực, nơi ở, sự kiện, điểm dừng, di chuyển, chi phí & đặt chỗ theo tất cả bình chọn. Mục ghim & bỏ qua được giữ lại.',
       mem_title: 'Những gì chúng tôi ghi nhớ', mem_sub: 'Sở thích học được từ các chuyến đi trước — dùng để bắt đầu chuyến mới thông minh hơn.', mem_cuisines: 'Ẩm thực bạn thích', mem_liked: 'Địa điểm bạn thích', mem_never: 'Không gợi ý lại', mem_transport: 'Phương tiện ưa thích', mem_budget: 'Ngân sách thường dùng', mem_pace: 'Nhịp độ thường dùng', mem_trips: 'Số chuyến đã ghi nhớ', mem_clear: 'Xóa bộ nhớ', mem_cleared: 'Đã xóa bộ nhớ du lịch',
       nightOne: 'đêm', nightMany: 'đêm',
+      // Trình tạo hành trình bằng ngôn ngữ tự nhiên
+      nlSectionTitle: 'Nói với AI chính xác điều bạn muốn', nlSectionHint: 'Mô tả chuyến đi bằng lời của bạn — ngày tháng, ai lái xe, kế hoạch cố định. AI sẽ tạo một hành trình bạn có thể chỉnh sửa.', nlPlaceholder: 'Ví dụ: Ngày 1/7 đi Xe Đò Hoàng từ San Jose đến Orange County, rồi Michael chở chúng tôi đến San Diego. Ngày 2/7 đi Sở thú San Diego. Sáng 3/7 ở San Diego, rồi về Orange County ăn món Việt. Ngày 4/7 đi Xe Đò Hoàng về nhà.', nlBuildBtn: 'Tạo hành trình từ ghi chú của tôi', nlOrDivider: 'hoặc tạo từng bước', nlBuilding: 'Đang đọc kế hoạch và dựng hành trình…', nlParseFail: 'Tôi chưa hiểu thành hành trình — hãy thêm ngày và điểm dừng rồi nhấn Tạo lại.', nlReviewTitle: 'Đây là điều tôi hiểu', nlReviewSub: 'Xem lại và chỉnh sửa. Khóa 🔒 những gì cố định — AI sẽ lên kế hoạch quanh đó và bổ sung phần còn lại.', nlFixedReqs: 'Bạn đã cố định', nlFlexWindows: 'AI sẽ gợi ý', nlQuestions: 'Vài điều cần xác nhận', nlConfirmBtn: 'Ổn rồi — thêm người tham gia', nlEditManual: 'Tinh chỉnh từng bước', nlReparse: 'Sửa ghi chú', nlAddAfter: 'Thêm sau', nlAddStop: 'Thêm một bước', nlLockSeg: 'Khóa', nlUnlockSeg: 'Mở khóa', nlLocked: 'Đã khóa', nlFlexMark: 'Linh hoạt', nlFlexOn: 'AI gợi ý', nlNeedsResearch: 'Cần tra lịch', nlNeedsBooking: 'Cần đặt chỗ', nlResearchLink: 'Tra lịch trình', nlResearchQuery: 'lịch trình', nlRequestRide: 'Yêu cầu xe DuLichCali', nlSegTitle: 'Việc gì', nlSegTitlePh: 'vd: Sở thú San Diego', nlSegDate: 'Ngày', nlSegTime: 'Giờ', nlSegFrom: 'Từ', nlSegTo: 'Đến', nlSegMode: 'Bằng cách', nlNoDate: 'Chưa có ngày', nlFoodExperience: 'Trải nghiệm ẩm thực địa phương',
+      nlSegType_transport: 'Di chuyển', nlSegType_transfer: 'Trung chuyển / đưa đón', nlSegType_stay: 'Nghỉ qua đêm', nlSegType_activity: 'Hoạt động', nlSegType_food: 'Ẩm thực', nlSegType_free_time: 'Thời gian tự do', nlSegType_return: 'Về nhà',
+      nlmode_car: 'Xe nhà', nlmode_bus: 'Xe buýt', nlmode_private_ride: 'Xe riêng', nlmode_flight: 'Máy bay', nlmode_train: 'Tàu hỏa', nlmode_walk: 'Đi bộ', nlmode_other: 'Khác',
       journeyLabel: 'Hành trình của bạn', journeyHint: 'Thêm từng điểm dừng với ngày bạn muốn ở đó. Chúng tôi lo phương tiện, khách sạn và lịch trình từng ngày trong các điểm dừng của bạn.', addSegment: 'Thêm điểm dừng', arrivalDate: 'Ngày đến', departureDate: 'Ngày đi', sameDay: 'Trong ngày', segTransportDetails: 'Phương tiện & chi tiết (tùy chọn)', howArrive: 'Cách bạn đến {city}', preferredProvider: 'Nhà cung cấp ưu tiên', providerPh: 'vd: Xe Đò Hoàng, Michael', overnightStay: 'Nghỉ qua đêm ở đây', segNotesPh: 'vd: đến từ điểm trả khách của xe', homeOrigin: 'Nhà', viaLabel: 'bằng', viaAI: 'AI chọn cách tốt nhất', thisStop: 'điểm này', returnTransport: 'Về nhà', journeyEmpty: 'Thêm điểm dừng đầu tiên để xem hành trình', homeBy: 'về', quickEntry: 'Nhập nhanh — một khoảng ngày cho cả chuyến', quickEntryHint: 'Tùy chọn. Chỉ dùng khi bạn để trống ngày từng điểm — AI sẽ chia số đêm.', tp_any: 'AI quyết định', tp_bus: 'Xe buýt', tp_private_ride: 'Xe riêng', tp_flight: 'Máy bay', tp_car: 'Xe nhà', tp_train: 'Tàu hỏa', segRideBooked: 'Đã đặt xe', segRidePending: 'Xe đang chờ',
       impGeneral: '✨ Cải thiện chuyến đi', impDiscoveries: '💎 Tìm thêm khám phá', impLowerCost: '💲 Giảm chi phí', impKidsFun: '🧒 Vui hơn cho trẻ', impFoodFocused: '🍽 Tập trung ẩm thực',
       impSelected: 'Đã chọn {n}', impRun: 'Chạy cải thiện AI', impClear: 'Xóa tất cả',
@@ -791,6 +799,10 @@
       optimizeTrip: 'Optimizar viaje', optimizing: 'Reconstruyendo tu viaje según los votos del grupo…', optimizeDone: 'Viaje reconstruido según los votos del grupo', optimizeNudge: 'Los votos de tu grupo cambiaron — vuelve a optimizar todo el viaje.', optimizeRebuildHint: 'Regenera el itinerario, comida, alojamiento, eventos, paradas, transporte, costos y reservas usando todos tus votos. Tus fijados y omitidos se conservan.',
       mem_title: 'Lo que recordamos', mem_sub: 'Preferencias aprendidas de tus viajes anteriores — para empezar los nuevos de forma más inteligente.', mem_cuisines: 'Cocinas que te gustan', mem_liked: 'Lugares que te gustaron', mem_never: 'No sugerir de nuevo', mem_transport: 'Transporte preferido', mem_budget: 'Presupuesto habitual', mem_pace: 'Ritmo habitual', mem_trips: 'Viajes recordados', mem_clear: 'Borrar memoria', mem_cleared: 'Memoria de viaje borrada',
       nightOne: 'noche', nightMany: 'noches',
+      // Creador de itinerario con lenguaje natural
+      nlSectionTitle: 'Dile a la IA exactamente lo que quieres', nlSectionHint: 'Describe tu viaje con tus palabras — fechas, quién conduce, planes fijos. La IA crea un itinerario editable que puedes ajustar.', nlPlaceholder: 'Ejemplo: El 1 de julio tomamos el Hoang Bus de San Jose a Orange County, luego Michael nos lleva a San Diego. El 2 de julio el Zoológico de San Diego. La mañana del 3 de julio en San Diego, luego de vuelta a Orange County por comida vietnamita. El 4 de julio tomamos el Hoang Bus a casa.', nlBuildBtn: 'Crear itinerario desde mis notas', nlOrDivider: 'o créalo paso a paso', nlBuilding: 'Leyendo tu plan y creando el itinerario…', nlParseFail: 'No pude convertir eso en un itinerario — agrega las fechas y paradas y toca Crear de nuevo.', nlReviewTitle: 'Esto es lo que entendí', nlReviewSub: 'Revisa y ajusta. Bloquea 🔒 lo que sea fijo — la IA planifica alrededor y completa el resto.', nlFixedReqs: 'Fijado por ti', nlFlexWindows: 'La IA sugerirá', nlQuestions: 'Algunas cosas por confirmar', nlConfirmBtn: 'Se ve bien — agregar quién viene', nlEditManual: 'Ajustar paso a paso', nlReparse: 'Editar mis notas', nlAddAfter: 'Agregar después', nlAddStop: 'Agregar un paso', nlLockSeg: 'Bloquear', nlUnlockSeg: 'Desbloquear', nlLocked: 'Bloqueado', nlFlexMark: 'Flexible', nlFlexOn: 'La IA sugiere', nlNeedsResearch: 'Falta horario', nlNeedsBooking: 'Falta reservar', nlResearchLink: 'Buscar horario', nlResearchQuery: 'horario', nlRequestRide: 'Solicitar viaje DuLichCali', nlSegTitle: 'Qué', nlSegTitlePh: 'ej. Zoológico de San Diego', nlSegDate: 'Día', nlSegTime: 'Hora', nlSegFrom: 'Desde', nlSegTo: 'Hasta', nlSegMode: 'Cómo', nlNoDate: 'Sin fecha aún', nlFoodExperience: 'Experiencia gastronómica local',
+      nlSegType_transport: 'Viaje', nlSegType_transfer: 'Traslado / viaje', nlSegType_stay: 'Noche', nlSegType_activity: 'Actividad', nlSegType_food: 'Comida', nlSegType_free_time: 'Tiempo libre', nlSegType_return: 'Regreso a casa',
+      nlmode_car: 'Auto propio', nlmode_bus: 'Autobús', nlmode_private_ride: 'Viaje privado', nlmode_flight: 'Vuelo', nlmode_train: 'Tren', nlmode_walk: 'Caminar', nlmode_other: 'Otro',
       journeyLabel: 'Tu recorrido', journeyHint: 'Agrega cada parada con las fechas que quieres estar allí. Nosotros resolvemos el transporte, los hoteles y el plan día a día dentro de tus paradas.', addSegment: 'Agregar parada', arrivalDate: 'Llegada', departureDate: 'Salida', sameDay: 'El mismo día', segTransportDetails: 'Transporte y detalles (opcional)', howArrive: 'Cómo llegas a {city}', preferredProvider: 'Proveedor preferido', providerPh: 'p. ej. Xe Đò Hoàng, Michael', overnightStay: 'Pernoctar aquí', segNotesPh: 'p. ej. llegando desde la parada del autobús', homeOrigin: 'Casa', viaLabel: 'vía', viaAI: 'La IA elige la mejor forma', thisStop: 'esta parada', returnTransport: 'Regreso a casa', journeyEmpty: 'Agrega tu primera parada para ver el recorrido', homeBy: 'en casa', quickEntry: 'Entrada rápida — un rango de fechas para todo el viaje', quickEntryHint: 'Opcional. Se usa solo si dejas en blanco las fechas por parada — la IA dividirá las noches.', tp_any: 'La IA decide', tp_bus: 'Autobús', tp_private_ride: 'Viaje privado', tp_flight: 'Vuelo', tp_car: 'Auto propio', tp_train: 'Tren', segRideBooked: 'Viaje reservado', segRidePending: 'Viaje pendiente',
       impGeneral: '✨ Mejorar este viaje', impDiscoveries: '💎 Más descubrimientos', impLowerCost: '💲 Reducir costo', impKidsFun: '🧒 Más diversión para niños', impFoodFocused: '🍽 Más enfocado en comida',
       impSelected: '{n} seleccionados', impRun: 'Ejecutar mejora con IA', impClear: 'Borrar todo',
@@ -1853,6 +1865,7 @@
     if (state.screen === 'hero') host.appendChild(renderHero());
     else if (state.screen === 'dashboard') host.appendChild(renderDashboard());
     else if (state.screen === 'create') host.appendChild(renderCreate());
+    else if (state.screen === 'nlreview') host.appendChild(renderNLReview());
     else if (state.screen === 'families') host.appendChild(renderFamilies());
     else if (state.screen === 'prefs') host.appendChild(renderPrefs());
     else if (state.screen === 'plan') host.appendChild(renderPlan());
@@ -2548,7 +2561,10 @@
   function newDestination(order) {
     // Segment model (Step A): arrivalDate/departureDate are canonical (startDate/endDate kept as
     // aliases); transportPreference/preferredProvider describe the INBOUND leg to this stop.
-    var d = { id: uid('dest'), order: order || 0, city: '', arrivalDate: '', departureDate: '', startDate: '', endDate: '', nights: 0, overnightStay: true, transportPreference: 'any', preferredProvider: '', hotel: null, notes: '', hoursToSpend: '', hotelPrefs: [] };
+    var d = { id: uid('dest'), order: order || 0, city: '', arrivalDate: '', departureDate: '', startDate: '', endDate: '', nights: 0, overnightStay: true, transportPreference: 'any', preferredProvider: '', hotel: null, notes: '', hoursToSpend: '', hotelPrefs: [],
+      // Journey Builder intent flags (NL parser fills these; manual builder defaults are inert).
+      // lockedByUser = the user fixed this leg's transport/provider → the AI never overrides it.
+      lockedByUser: false, needsResearch: false, needsBooking: false, verificationStatus: '' };
     return normalizeDestRole(d);
   }
   function newFamily() {
@@ -2589,6 +2605,11 @@
       if (d.overnightStay == null) d.overnightStay = (d.nights > 0) || d.role === 'overnight_destination' || d.role === 'main_destination';
       if (d.transportPreference == null) d.transportPreference = 'any';
       if (d.preferredProvider == null) d.preferredProvider = '';
+      // Journey Builder intent flags — back-fill for trips created before these existed.
+      if (d.lockedByUser == null) d.lockedByUser = false;
+      if (d.needsResearch == null) d.needsResearch = false;
+      if (d.needsBooking == null) d.needsBooking = false;
+      if (d.verificationStatus == null) d.verificationStatus = '';
     });
     var cities = trip.destinations.map(function (d) { return (d.city || '').trim(); }).filter(Boolean);
     // Keep the string field populated for the planner + samples (single city = plain name).
@@ -2829,6 +2850,310 @@
     return wrap;
   }
 
+  // ════════════════════════════════════════════════════════════════════════
+  //  NATURAL-LANGUAGE JOURNEY BUILDER — the user types their plan in plain words
+  //  ("July 1 take Hoang Bus from San Jose to Orange County, then Michael drives
+  //  us to San Diego…"); the AI PARSES it into editable, typed segments shown on a
+  //  "Here's what I understood" screen. Locked items (named operators, fixed
+  //  activities) are preserved; the rest is flexible and the AI optimizes around the
+  //  locked spine. The rich parsed journey (trip.parsedJourney) is the review/edit
+  //  source of truth; trip.destinations[] + pinnedActivities[] + the return leg are
+  //  DERIVED from it so the existing planner/hotel/itinerary engine runs unchanged.
+  //  No hardcoded schedules / prices / photos — unknowns are flagged needsResearch.
+  // ════════════════════════════════════════════════════════════════════════
+  var JOURNEY_SEG_TYPES = ['transport', 'transfer', 'stay', 'activity', 'food', 'free_time', 'return'];
+  var JOURNEY_MODES = ['car', 'bus', 'private_ride', 'flight', 'train', 'walk', 'other'];
+  function segTypeIcon(tp) { return { transport: '🚌', transfer: '🚐', stay: '🏨', activity: '🎟️', food: '🍜', free_time: '🕐', return: '🏠' }[tp] || '📍'; }
+  function tcNorm(x) { return String(x || '').trim().toLowerCase(); }
+  function newJourneySegment(over) {
+    var sg = { id: uid('jseg'), date: '', startTime: '', endTime: '', origin: '', destination: '', segmentType: 'activity', transportMode: '', provider: '', title: '', notes: '', lockedByUser: false, flexible: false, mainActivity: false, needsResearch: false, needsBooking: false };
+    if (over) Object.keys(over).forEach(function (k) { if (over[k] != null) sg[k] = over[k]; });
+    if (JOURNEY_SEG_TYPES.indexOf(sg.segmentType) === -1) sg.segmentType = 'activity';
+    return sg;
+  }
+  // Ensure a parsed journey (from the callable OR loaded from Firestore) has a clean shape.
+  function normalizeParsedJourney(pj) {
+    pj = pj || {};
+    pj.origin = pj.origin || ''; pj.overallStartDate = pj.overallStartDate || ''; pj.overallEndDate = pj.overallEndDate || '';
+    pj.segments = (Array.isArray(pj.segments) ? pj.segments : []).map(function (s) { return newJourneySegment(s); });
+    ['fixedRequirements', 'flexibleWindows', 'missingInfoQuestions'].forEach(function (k) { if (!Array.isArray(pj[k])) pj[k] = []; });
+    return pj;
+  }
+  // Map a journey transportMode → the existing per-segment transportPreference enum.
+  function modeToTransportPref(mode) {
+    switch (mode) { case 'bus': return 'bus'; case 'private_ride': return 'private_ride'; case 'flight': return 'flight'; case 'car': return 'car'; case 'train': return 'train'; default: return 'any'; }
+  }
+  // Time-of-day bucket for a parsed segment (from startTime, else hints in title/notes).
+  function timeOfDayFromSeg(s) {
+    var m = String(s.startTime || '').match(/^(\d{1,2}):/);
+    if (m) { var h = +m[1]; if (h < 11) return 'morning'; if (h < 13) return 'lunch'; if (h < 17) return 'afternoon'; if (h < 20) return 'dinner'; return 'evening'; }
+    var txt = tcNorm((s.title || '') + ' ' + (s.notes || ''));
+    if (/morning|sáng|mañana/.test(txt)) return 'morning';
+    if (/lunch|trưa|almuerzo/.test(txt)) return 'lunch';
+    if (/evening|night|tối|đêm|noche/.test(txt)) return 'evening';
+    if (/dinner|tối|cena/.test(txt)) return 'dinner';
+    if (/afternoon|chiều|tarde/.test(txt)) return 'afternoon';
+    return 'flexible';
+  }
+  // Client wrapper for the interpretJourneyNotes callable. Resolves to the parsed plan or null.
+  function parseJourneyNotes(notes) {
+    var c = mkCallable('interpretJourneyNotes', 60000);
+    if (!c) return Promise.resolve(null);
+    var now = new Date();
+    var todayIso = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+    return callWithRetry(c, { notes: notes, lang: state.lang, todayIso: todayIso, originHint: (state.trip && state.trip.departureCity) || '' })
+      .then(function (r) { var d = (r && r.data) || {}; return (d && d.ok) ? d : null; })
+      .catch(function () { return null; });
+  }
+  // Parse the user's free-text notes → store the parsed journey → show the review screen.
+  function buildJourneyFromNotes(notes) {
+    notes = String(notes || '').trim();
+    if (notes.length < 8) { toast(t('nlParseFail')); return; }
+    state._nlNotes = notes;
+    renderGenerating(t('nlBuilding'));
+    parseJourneyNotes(notes).then(function (pj) {
+      if (!pj || !(pj.segments || []).length) { toast(t('nlParseFail')); state.screen = 'create'; render(); return; }
+      pj = normalizeParsedJourney(pj); pj._notes = notes;
+      state.trip.parsedJourney = pj; state.trip.journeyNotes = notes;
+      state.screen = 'nlreview'; render();
+    });
+  }
+  // DERIVE the existing trip model (destinations[] + pinnedActivities[] + return leg) from the
+  // rich parsed journey. Deterministic, idempotent — nothing hardcoded to any city/provider.
+  // Overnight cities come from 'stay' segments (or inferred from transit destinations); each
+  // city's INBOUND transport = the leg that arrives into it; fixed activities/food → pins.
+  function applyParsedJourneyToTrip(tr, pj) {
+    pj = normalizeParsedJourney(pj);
+    tr.parsedJourney = pj;
+    if (state._nlNotes) tr.journeyNotes = state._nlNotes;
+    if ((pj.origin || '').trim()) tr.departureCity = pj.origin.trim();
+    if ((pj.groupName || '').trim() && !(tr.groupName || '').trim()) tr.groupName = pj.groupName.trim();
+    var segs = pj.segments || [];
+    // Last transit (transport/transfer/return) arriving INTO `city`, at-or-before segment index `byIdx`.
+    function inboundFor(city, byIdx) {
+      var c = tcNorm(city), best = null;
+      for (var i = 0; i <= byIdx && i < segs.length; i++) { var s = segs[i]; if ((s.segmentType === 'transport' || s.segmentType === 'transfer' || s.segmentType === 'return') && tcNorm(s.destination) === c) best = s; }
+      return best;
+    }
+    // 1) Overnight cities — from explicit 'stay' segments (merge consecutive same-city repeats).
+    var stays = [];
+    segs.forEach(function (s, idx) {
+      if (s.segmentType !== 'stay') return;
+      var city = (s.destination || s.origin || '').trim(); if (!city) return;
+      var prev = stays[stays.length - 1]; if (prev && tcNorm(prev.city) === tcNorm(city)) return;
+      stays.push({ city: city, date: s.date, idx: idx });
+    });
+    // Fallback: no explicit stays → infer overnight cities from distinct transit destinations
+    // (skip a destination that is the home origin — that's the return, not an overnight stop).
+    if (!stays.length) {
+      segs.forEach(function (s, idx) {
+        if (s.segmentType !== 'transport' && s.segmentType !== 'transfer') return;
+        var city = (s.destination || '').trim(); if (!city || tcNorm(city) === tcNorm(tr.departureCity)) return;
+        var prev = stays[stays.length - 1]; if (prev && tcNorm(prev.city) === tcNorm(city)) return;
+        stays.push({ city: city, date: s.date, idx: idx });
+      });
+    }
+    var ret = segs.filter(function (s) { return s.segmentType === 'return'; }).slice(-1)[0] || null;
+    // Robust trip bounds: prefer the AI's overall dates, else the return leg, else the min/max of
+    // any dated segment — so a missing overallStartDate/overallEndDate never produces an empty
+    // arrival/departure (which would make buildSegmentDayPlan bail) or blank pinned-activity days.
+    var datedIsos = segs.map(function (s) { return s.date; }).filter(function (x) { return parseSegDate(x); }).sort();
+    var startIso = pj.overallStartDate || (datedIsos[0] || '');
+    var endIso = pj.overallEndDate || (ret && ret.date) || (datedIsos.length ? datedIsos[datedIsos.length - 1] : '');
+    if (stays.length) {
+      var dests = stays.map(function (st, k) {
+        var d = newDestination(k);
+        d.city = st.city;
+        d.arrivalDate = st.date || ''; d.startDate = d.arrivalDate;
+        var dep = (k < stays.length - 1) ? (stays[k + 1].date || '') : endIso;
+        d.departureDate = dep || ''; d.endDate = d.departureDate;
+        d.overnightStay = true;
+        var inb = inboundFor(st.city, st.idx);
+        if (inb) {
+          d.transportPreference = modeToTransportPref(inb.transportMode);
+          d.preferredProvider = inb.provider || '';
+          d.lockedByUser = !!inb.lockedByUser; d.needsResearch = !!inb.needsResearch; d.needsBooking = !!inb.needsBooking;
+          d.verificationStatus = inb.lockedByUser ? 'locked_by_user' : (inb.needsResearch ? 'pending_verification' : '');
+          if ((inb.notes || '').trim()) d.notes = inb.notes.trim();
+        }
+        return d;
+      });
+      // Drop same-day pass-through waypoints (0-night) so ONLY real overnight stops become
+      // destinations — the full multi-leg detail stays in parsedJourney + the review screen.
+      // Keep the last stop even if 0-night so a same-day round trip still yields one destination.
+      var overnight = dests.filter(function (d) { return segNights(d) > 0; });
+      tr.destinations = overnight.length ? overnight : dests.slice(-1);
+    }
+    if (ret) { tr.returnTransportPreference = modeToTransportPref(ret.transportMode) || 'any'; tr.returnProvider = ret.provider || ''; }
+    if (startIso && endIso) tr.dateRange = startIso + ' - ' + endIso;
+    normalizeDestinations(tr);
+    // 2) Fixed / flexible activities + food → pinned anchors (the planner honors these).
+    var startD = parseSegDate(startIso);
+    function dayNumFor(iso) { var d = parseSegDate(iso); if (!d || !startD) return ''; var n = nightsBetween(startD, d) + 1; return n > 0 ? String(n) : ''; }
+    tr.pinnedActivities = [];
+    segs.forEach(function (s) {
+      if (s.segmentType !== 'activity' && s.segmentType !== 'food' && !(s.segmentType === 'free_time' && (s.title || '').trim())) return;
+      var title = (s.title || '').trim() || (s.segmentType === 'food' ? t('nlFoodExperience') : '');
+      if (!title) return;
+      var pin = newPinned();
+      pin.title = title;
+      pin.destination = (s.destination || s.origin || '').trim();
+      pin.preferredDayNumber = dayNumFor(s.date);
+      pin.preferredTimeOfDay = timeOfDayFromSeg(s);
+      pin.priority = s.lockedByUser ? 'required' : (s.flexible ? 'optional' : 'preferred');
+      pin.notes = (s.notes || '');
+      tr.pinnedActivities.push(pin);
+    });
+    saveTrip(tr);
+  }
+  // ── "Request DuLichCali ride" for a parsed transfer/ride segment — reuse the EXISTING
+  //    sessionStorage → /airport → RideIntake handoff (tripId + segmentId; never auto-confirms). ──
+  // Resolve the destination segment for a ride — by city AND date, so a city visited twice in
+  // one trip (e.g. a pass-through then a return overnight) attaches the booking to the RIGHT stop.
+  function segmentIdForJourneySeg(tr, sg) {
+    var c = tcNorm(sg.destination); if (!c) return '';
+    var matches = (tr.destinations || []).filter(function (d) { return tcNorm(d.city) === c; });
+    if (matches.length > 1 && sg.date) {
+      var exact = matches.filter(function (d) { return (d.arrivalDate || '') === sg.date || (d.departureDate || '') === sg.date; })[0];
+      if (exact) return exact.id || '';
+    }
+    return (matches[0] && matches[0].id) || segmentIdForCity(tr, sg.destination);
+  }
+  function requestSegmentRide(sg) {
+    applyParsedJourneyToTrip(state.trip, state.trip.parsedJourney);
+    requestDlcInquiry({ kind: 'ride', pickup: sg.origin || state.trip.departureCity || '', dropoff: sg.destination || '', label: sg.title || '', mode: 'dlc_ride', segmentId: segmentIdForJourneySeg(state.trip, sg) });
+  }
+  // Honest schedule lookup for a named operator (e.g. a bus line) — a REAL web search, never a
+  // fabricated schedule/price. Opens the operator's results so the user verifies the real times.
+  function openProviderResearch(sg) {
+    var q = [sg.provider || '', sg.origin || '', '→', sg.destination || '', t('nlResearchQuery')].filter(Boolean).join(' ');
+    var url = 'https://www.google.com/search?q=' + encodeURIComponent(q);
+    try { root.open(url, '_blank', 'noopener'); } catch (e) { try { root.location.href = url; } catch (e2) {} }
+  }
+  function journeyReviewCard(pj, sg, i, rerender) {
+    var locked = !!sg.lockedByUser;
+    var card = el('article', 'tc-jr' + (locked ? ' tc-jr--locked' : '') + (sg.flexible ? ' tc-jr--flex' : ''));
+    var head = el('div', 'tc-jr__head');
+    head.appendChild(el('span', 'tc-jr__icon', segTypeIcon(sg.segmentType)));
+    var typeSel = selectFrom(JOURNEY_SEG_TYPES, sg.segmentType, function (o) { return t('nlSegType_' + o); });
+    typeSel.className = 'tc-input tc-jr__type'; typeSel.addEventListener('change', function () { sg.segmentType = typeSel.value; rerender(); });
+    head.appendChild(typeSel);
+    var ctrls = el('div', 'tc-jr__ctrls');
+    if (i > 0) { var up = el('button', 'tc-jr__mv', '↑'); up.type = 'button'; up.setAttribute('aria-label', t('moveUp')); up.addEventListener('click', function () { var a = pj.segments; var tmp = a[i]; a[i] = a[i - 1]; a[i - 1] = tmp; rerender(); }); ctrls.appendChild(up); }
+    if (i < pj.segments.length - 1) { var dn = el('button', 'tc-jr__mv', '↓'); dn.type = 'button'; dn.setAttribute('aria-label', t('moveDown')); dn.addEventListener('click', function () { var a = pj.segments; var tmp = a[i]; a[i] = a[i + 1]; a[i + 1] = tmp; rerender(); }); ctrls.appendChild(dn); }
+    var del = el('button', 'tc-jr__rm', '×'); del.type = 'button'; del.setAttribute('aria-label', t('removeDestination')); del.addEventListener('click', function () { pj.segments.splice(i, 1); rerender(); }); ctrls.appendChild(del);
+    head.appendChild(ctrls);
+    card.appendChild(head);
+    // Title.
+    var ti = input(sg.title, t('nlSegTitlePh')); ti.addEventListener('input', function () { sg.title = ti.value; }); card.appendChild(field(t('nlSegTitle'), ti));
+    // Date + time row.
+    var r1 = el('div', 'tc-row2');
+    var di = tcDateInput(sg.date); di.classList.remove('tc-seg2__date'); di.addEventListener('change', function () { sg.date = di.value || ''; rerender(); }); r1.appendChild(field(t('nlSegDate'), di));
+    var tmi = input(sg.startTime, '', 'time'); tmi.addEventListener('change', function () { sg.startTime = tmi.value || ''; }); r1.appendChild(field(t('nlSegTime'), tmi));
+    card.appendChild(r1);
+    // Transit-only: from / to / mode / provider.
+    if (sg.segmentType === 'transport' || sg.segmentType === 'transfer' || sg.segmentType === 'return') {
+      var r2 = el('div', 'tc-row2');
+      var fi = input(sg.origin, t('homeOrigin')); fi.addEventListener('input', function () { sg.origin = fi.value; }); r2.appendChild(field(t('nlSegFrom'), fi));
+      var toi = input(sg.destination, t('thisStop')); toi.addEventListener('input', function () { sg.destination = toi.value; }); r2.appendChild(field(t('nlSegTo'), toi));
+      card.appendChild(r2);
+      var modeSel = selectFrom(JOURNEY_MODES, sg.transportMode || 'other', function (o) { return t('nlmode_' + o); }); modeSel.addEventListener('change', function () { sg.transportMode = modeSel.value; }); card.appendChild(field(t('nlSegMode'), modeSel));
+      var prov = input(sg.provider, t('providerPh')); prov.addEventListener('input', function () { sg.provider = prov.value; }); card.appendChild(field(t('preferredProvider'), prov));
+    } else {
+      var pli = input(sg.destination || sg.origin, t('destination')); pli.addEventListener('input', function () { sg.destination = pli.value; }); card.appendChild(field(t('destination'), pli));
+    }
+    // Status pills.
+    var pills = el('div', 'tc-jr__pills');
+    if (locked) pills.appendChild(chip('tc-chip--lock', '🔒 ' + t('nlLocked')));
+    if (sg.flexible) pills.appendChild(chip('tc-chip--flex', '✨ ' + t('nlFlexOn')));
+    if (sg.needsResearch) pills.appendChild(chip('tc-chip--warn', '🔎 ' + t('nlNeedsResearch')));
+    if (sg.needsBooking) pills.appendChild(chip('tc-chip--warn', '🎫 ' + t('nlNeedsBooking')));
+    if (pills.children.length) card.appendChild(pills);
+    // Actions: lock/unlock, flexible toggle, research link, ride handoff.
+    var acts = el('div', 'tc-jr__acts');
+    acts.appendChild(pbtn((locked ? '🔓 ' + t('nlUnlockSeg') : '🔒 ' + t('nlLockSeg')), 'tc-pbtn--ghost', function () { sg.lockedByUser = !locked; if (sg.lockedByUser) sg.flexible = false; rerender(); }));
+    if (!locked) acts.appendChild(pbtn((sg.flexible ? '✓ ' + t('nlFlexMark') : '✨ ' + t('nlFlexMark')), 'tc-pbtn--ghost' + (sg.flexible ? ' tc-pbtn--on' : ''), function () { sg.flexible = !sg.flexible; rerender(); }));
+    if (sg.needsResearch && (sg.provider || '').trim()) acts.appendChild(pbtn('🔎 ' + t('nlResearchLink'), 'tc-pbtn--ghost', function () { openProviderResearch(sg); }));
+    if ((sg.segmentType === 'transfer' || sg.segmentType === 'transport') && (sg.transportMode === 'private_ride' || /michael|dulichcali|du lich cali|dlc/i.test(sg.provider || ''))) {
+      acts.appendChild(pbtn('🚐 ' + t('nlRequestRide'), 'tc-pbtn--ride', function () { requestSegmentRide(sg); }));
+    }
+    card.appendChild(acts);
+    // Add-after row.
+    var addRow = el('div', 'tc-jr__add');
+    addRow.appendChild(pbtn('+ ' + t('nlAddAfter'), 'tc-pbtn--ghost', function () { pj.segments.splice(i + 1, 0, newJourneySegment({ date: sg.date, origin: sg.destination, segmentType: 'activity' })); rerender(); }));
+    card.appendChild(addRow);
+    return card;
+  }
+  function renderNLReview() {
+    var tr = state.trip, pj = normalizeParsedJourney(tr.parsedJourney);
+    tr.parsedJourney = pj;
+    var s = el('section', 'tc-screen');
+    s.appendChild(el('h2', 'tc-screen__title', '🧭 ' + t('nlReviewTitle')));
+    s.appendChild(el('p', 'tc-screen__sub', t('nlReviewSub')));
+    // Trip-level summary (origin + dates) — editable origin.
+    var sumBox = el('div', 'tc-jr-sum');
+    var dep = input(pj.origin || tr.departureCity, 'San Jose, CA'); dep.addEventListener('input', function () { pj.origin = dep.value; tr.departureCity = dep.value; });
+    sumBox.appendChild(field('🏠 ' + t('originLabel'), dep));
+    if (pj.overallStartDate || pj.overallEndDate) {
+      var dr = el('p', 'tc-jr-sum__dates');
+      var a = parseSegDate(pj.overallStartDate), b = parseSegDate(pj.overallEndDate);
+      dr.textContent = '📅 ' + (a ? fmtSegDate(a) : '?') + ' — ' + (b ? fmtSegDate(b) : '?');
+      sumBox.appendChild(dr);
+    }
+    s.appendChild(sumBox);
+    var listHost = el('div', 'tc-jr-list');
+    function rerender() {
+      listHost.textContent = '';
+      var lastDate = '__none__';
+      pj.segments.forEach(function (sg, i) {
+        if ((sg.date || '') !== lastDate) {
+          lastDate = sg.date || '';
+          var dd = parseSegDate(sg.date);
+          listHost.appendChild(el('div', 'tc-jr-day', dd ? fmtSegDate(dd) : t('nlNoDate')));
+        }
+        listHost.appendChild(journeyReviewCard(pj, sg, i, rerender));
+      });
+      var add = el('button', 'tc-adddest', '+ ' + t('nlAddStop')); add.type = 'button';
+      add.addEventListener('click', function () { var last = pj.segments[pj.segments.length - 1]; pj.segments.push(newJourneySegment({ date: last ? last.date : '', segmentType: 'activity' })); rerender(); });
+      listHost.appendChild(add);
+    }
+    rerender();
+    s.appendChild(listHost);
+    // Fixed requirements / flexible windows / questions.
+    function chipBlock(titleKey, arr, cls) {
+      if (!arr || !arr.length) return null;
+      var b = el('div', 'tc-jr-block');
+      b.appendChild(el('strong', 'tc-jr-block__t', t(titleKey)));
+      var w = el('div', 'tc-chips');
+      arr.forEach(function (x) { w.appendChild(chip(cls, x)); });
+      b.appendChild(w); return b;
+    }
+    var fb = chipBlock('nlFixedReqs', pj.fixedRequirements, 'tc-chip--lock'); if (fb) s.appendChild(fb);
+    var xb = chipBlock('nlFlexWindows', pj.flexibleWindows, 'tc-chip--flex'); if (xb) s.appendChild(xb);
+    if (pj.missingInfoQuestions && pj.missingInfoQuestions.length) {
+      var qb = el('div', 'tc-jr-block');
+      qb.appendChild(el('strong', 'tc-jr-block__t', t('nlQuestions')));
+      var ql = el('ul', 'tc-jr-q');
+      pj.missingInfoQuestions.forEach(function (q) { ql.appendChild(el('li', null, q)); });
+      qb.appendChild(ql); s.appendChild(qb);
+    }
+    // CTAs.
+    var cta = el('button', 'tc-cta tc-cta--big', '✓ ' + t('nlConfirmBtn')); cta.type = 'button';
+    cta.addEventListener('click', function () {
+      if (!pj.segments.length) { toast(t('nlParseFail')); return; }
+      applyParsedJourneyToTrip(tr, pj);
+      if (!(tr.destinations[0] && tr.destinations[0].city)) { toast(t('required')); return; }
+      if (!(tr.groupName || '').trim()) tr.groupName = (tr.destinations[0] && tr.destinations[0].city) || '';
+      state.screen = 'families'; render();
+    });
+    s.appendChild(cta);
+    var row = el('div', 'tc-jr-cta2');
+    row.appendChild(pbtn('✏️ ' + t('nlEditManual'), 'tc-pbtn--ghost', function () { applyParsedJourneyToTrip(tr, pj); state.screen = 'create'; render(); }));
+    row.appendChild(pbtn('↩ ' + t('nlReparse'), 'tc-pbtn--ghost', function () { state._reopenNotes = true; state.screen = 'create'; render(); }));
+    s.appendChild(row);
+    return s;
+  }
+
   // V2 STEP 1 — Trip basics ONLY: who/where/when + the vibe. AI infers everything else
   // (roles, hotels, transport, schedules, routes, return day). No roles, no hotel forms.
   function renderCreate() {
@@ -2837,6 +3162,21 @@
     var s = el('section', 'tc-screen'); s.appendChild(stepHeader(1));
     s.appendChild(el('h2', 'tc-screen__title', t('createTitle')));
     s.appendChild(el('p', 'tc-screen__sub', t('createSubV2')));
+    // ── Natural-language Journey Builder — describe the trip in plain words; AI parses it into
+    //    an editable journey (locked items preserved). Sits ABOVE the step-by-step builder. ──
+    var nl = el('div', 'tc-nlcard');
+    nl.appendChild(el('strong', 'tc-nlcard__t', '🪄 ' + t('nlSectionTitle')));
+    nl.appendChild(el('p', 'tc-nlcard__hint', t('nlSectionHint')));
+    var ta = doc.createElement('textarea'); ta.className = 'tc-input tc-nlcard__ta'; ta.rows = 4; ta.placeholder = t('nlPlaceholder');
+    if (state._nlNotes) ta.value = state._nlNotes;
+    ta.addEventListener('input', function () { state._nlNotes = ta.value; });
+    nl.appendChild(ta);
+    var build = el('button', 'tc-cta tc-nlcard__btn', '✨ ' + t('nlBuildBtn')); build.type = 'button';
+    build.addEventListener('click', function () { buildJourneyFromNotes(ta.value); });
+    nl.appendChild(build);
+    s.appendChild(nl);
+    if (state._reopenNotes) { state._reopenNotes = false; root.setTimeout(function () { try { ta.focus(); ta.scrollIntoView({ block: 'center' }); } catch (e) {} }, 60); }
+    s.appendChild(el('div', 'tc-nldiv', t('nlOrDivider')));
     // Journey Builder: Home → Segment 1…N → Return. Origin first, then per-stop dates/transport.
     var dep = input(tr.departureCity, 'San Jose, CA'); dep.addEventListener('input', function () { tr.departureCity = dep.value; });
     s.appendChild(field('🏠 ' + t('originLabel'), dep));

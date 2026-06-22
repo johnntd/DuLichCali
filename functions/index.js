@@ -3063,6 +3063,91 @@ exports.interpretTripCommand = onCall(
     }
   }
 );
+// ── Natural-Language Journey Builder — parse free-form trip notes into a JOURNEY ──
+// The user already knows parts of the route ("July 1 take Hoang Bus from San Jose to
+// Orange County, then Michael drives us to San Diego. July 2 zoo…"). We PARSE that
+// into a structured, editable list of typed segments (the user confirms before any
+// plan is generated). We do the language understanding; we NEVER invent dates the user
+// didn't give, schedules, prices, or photos. Explicit user requirements are lockedByUser;
+// the rest is flexible and the AI optimizes around the locked spine later.
+function buildJourneyNotesPrompt(lang, todayIso) {
+  const langName = lang === 'vi' ? 'Vietnamese' : (lang === 'es' ? 'Spanish' : 'English');
+  return [
+    'You are the JOURNEY PARSER for an AI group-travel concierge (Du Lich Cali, Southern California / Vietnamese-American travelers). The user describes a trip they ALREADY partly planned, in their own words. Extract a precise, structured journey. You ONLY parse and organize what the user said — you do NOT invent destinations, dates, times, schedules, prices, or providers they did not mention.',
+    'TODAY is ' + todayIso + '. Resolve relative dates ("July 1", "next Friday") to absolute YYYY-MM-DD using the NEXT upcoming occurrence (never a past date). If the user gives a day with no year, pick the soonest future year.',
+    'Output a flat, time-ordered list of SEGMENTS. Each segment has a segmentType:',
+    '  - "transport": a long inter-city leg the user named a mode/operator for (e.g. a bus or flight between metro areas).',
+    '  - "transfer": a short hop/drop between nearby places or a named driver ride (e.g. "Michael drives us from OC to San Diego").',
+    '  - "stay": an overnight stop in a city (create one whenever the user sleeps somewhere; infer the city from context).',
+    '  - "activity": a specific thing to do (e.g. "San Diego Zoo").',
+    '  - "food": a meal/food experience (e.g. "Vietnamese food in Orange County").',
+    '  - "free_time": an open block the user left vague ("something in San Diego in the morning").',
+    '  - "return": the final leg back to the origin.',
+    'transportMode (only for transport/transfer/return) is one of: car | bus | private_ride | flight | train | walk | other. Map a named DRIVER (e.g. "Michael") to private_ride. Map a named BUS LINE ("Bus Hoang"/"Hoang Bus"/"Xe Do Hoang") to bus with provider "Xe Đò Hoàng". Keep the provider string the user used (a person\'s name, a bus company) — do not translate proper names.',
+    'LOCKING: set lockedByUser=true on anything the user stated as a fixed decision (a named operator, a fixed activity like the zoo, a stated arrival time, a return day). Set flexible=true (and lockedByUser=false) on anything vague the user wants help with ("something in San Diego", "enjoy Vietnamese foods") — the concierge will suggest real options later.',
+    'FLAGS: needsResearch=true when a real schedule/route must be looked up (e.g. a bus line, ticketed attraction). needsBooking=true when a ride or ticket will need to be booked (named driver rides, bus tickets, the zoo). mainActivity=true for the headline thing of a day.',
+    'Also extract: origin (the home/start city), overallStartDate, overallEndDate (YYYY-MM-DD), fixedRequirements (short phrases for each locked decision), flexibleWindows (short phrases for each open block to fill), and missingInfoQuestions (short, specific questions you genuinely need answered to finalize — e.g. exact bus departure time, number of hotel rooms — ONLY real gaps, max 5).',
+    'Return ONLY valid JSON (no markdown): { "origin","overallStartDate","overallEndDate","groupName"(if the user named the group, else ""),"segments":[ { "date"(YYYY-MM-DD or ""),"startTime"(HH:MM 24h, or "" if not stated — infer from "about 4pm"→"16:00"),"endTime"(HH:MM or ""),"origin"(place or ""),"destination"(place or ""),"segmentType","transportMode"(or ""),"provider"(or ""),"title"(short, human),"notes"(short, or ""),"lockedByUser"(bool),"flexible"(bool),"mainActivity"(bool),"needsResearch"(bool),"needsBooking"(bool) } ], "fixedRequirements":[strings], "flexibleWindows":[strings], "missingInfoQuestions":[strings] }',
+    'Write title/notes/fixedRequirements/flexibleWindows/missingInfoQuestions in ' + langName + '. Keep city names and proper provider names as the user wrote them. Output ONE compact valid JSON object only.',
+  ].join('\n');
+}
+exports.interpretJourneyNotes = onCall(
+  { region: 'us-central1', secrets: [CLAUDE_API_KEY], timeoutSeconds: 60, memory: '256MiB', cors: true },
+  async (request) => {
+    const data = request.data || {};
+    const lang = (data.lang === 'vi' || data.lang === 'es') ? data.lang : 'en';
+    const notes = String(data.notes || '').trim().slice(0, 2000);
+    if (notes.length < 8) return { ok: false, debugCode: 'NO_NOTES' };
+    let todayIso = String(data.todayIso || '').match(/^\d{4}-\d{2}-\d{2}$/) ? data.todayIso : '';
+    if (!todayIso) { const d = new Date(); todayIso = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+    const claudeKey = await getAiKey('claude');
+    if (!claudeKey) return { ok: false, debugCode: 'NO_CLAUDE_KEY' };
+    const userContent = 'Parse this trip description into a journey. Origin hint (may be blank): "' + String(data.originHint || '').slice(0, 80) + '".\n\nUSER NOTES:\n' + notes;
+    try {
+      const text = await serverCallClaude(buildJourneyNotesPrompt(lang, todayIso), [{ role: 'user', content: userContent }], true, claudeKey, 2600, 'claude-haiku-4-5-20251001');
+      let raw = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
+      const s = raw.indexOf('{'); const e = raw.lastIndexOf('}');
+      if (s >= 0 && e > s) raw = raw.slice(s, e + 1);
+      const parsed = tripSalvageJson(raw);
+      if (!parsed || typeof parsed !== 'object') { console.error('[interpretJourneyNotes] unparseable, len=' + raw.length); return { ok: false, debugCode: 'PARSE_ERROR' }; }
+      const clamp = (x, n) => String(x == null ? '' : x).slice(0, n);
+      const isoOr = (x) => (String(x || '').match(/^\d{4}-\d{2}-\d{2}$/) ? x : '');
+      const timeOr = (x) => { const m = String(x || '').match(/^(\d{1,2}):(\d{2})$/); return m ? (String(Math.min(23, +m[1])).padStart(2, '0') + ':' + m[2]) : ''; };
+      const SEG_TYPES = ['transport', 'transfer', 'stay', 'activity', 'food', 'free_time', 'return'];
+      const MODES = ['car', 'bus', 'private_ride', 'flight', 'train', 'walk', 'other'];
+      const segments = (Array.isArray(parsed.segments) ? parsed.segments : []).slice(0, 40).map((o) => {
+        o = o || {};
+        const segmentType = SEG_TYPES.indexOf(String(o.segmentType)) >= 0 ? o.segmentType : 'activity';
+        const transportMode = MODES.indexOf(String(o.transportMode)) >= 0 ? o.transportMode : '';
+        return {
+          date: isoOr(o.date), startTime: timeOr(o.startTime), endTime: timeOr(o.endTime),
+          origin: clamp(o.origin, 80), destination: clamp(o.destination, 80),
+          segmentType: segmentType, transportMode: transportMode, provider: clamp(o.provider, 60),
+          title: clamp(o.title, 120), notes: clamp(o.notes, 200),
+          lockedByUser: !!o.lockedByUser, flexible: !!o.flexible, mainActivity: !!o.mainActivity,
+          needsResearch: !!o.needsResearch, needsBooking: !!o.needsBooking,
+        };
+      }).filter((sg) => sg.title || sg.destination || sg.origin);
+      if (!segments.length) return { ok: false, debugCode: 'NO_SEGMENTS' };
+      const strArr = (a, n, max) => (Array.isArray(a) ? a : []).map((x) => clamp(typeof x === 'string' ? x : (x && (x.text || x.question || x.requirement)) || '', n)).filter(Boolean).slice(0, max);
+      return {
+        ok: true,
+        origin: clamp(parsed.origin || data.originHint || '', 80),
+        overallStartDate: isoOr(parsed.overallStartDate),
+        overallEndDate: isoOr(parsed.overallEndDate),
+        groupName: clamp(parsed.groupName, 80),
+        segments: segments,
+        fixedRequirements: strArr(parsed.fixedRequirements, 160, 16),
+        flexibleWindows: strArr(parsed.flexibleWindows, 160, 16),
+        missingInfoQuestions: strArr(parsed.missingInfoQuestions, 200, 5),
+        dataSource: 'user_notes_parsed_pending_verification',
+      };
+    } catch (e2) {
+      console.error('[interpretJourneyNotes] failed', e2 && e2.message);
+      return { ok: false, debugCode: 'PARSE_ERROR' };
+    }
+  }
+);
 // ── Experience Optimizer Agent — "How can this trip be better?" ──────────────
 // Suggests CONCRETE improvements toward a goal (general/discoveries/lower_cost/kids/food),
 // reasoning over weather, current events, group makeup, budget, route, crowds, hours, votes,

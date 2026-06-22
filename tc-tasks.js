@@ -83,5 +83,35 @@
     return task;
   }
 
-  root.TCTasks = { priority: priority, computeBalances: computeBalances, isDone: isDone, setDone: setDone };
+  // Per-member cost rollup (V6). Each task's cost is attributed to a named member:
+  //  - assignedToMember → that member owes the whole task.
+  //  - else assignedToFamily (with a member roster) → split equally among that family's members.
+  //  - else → unassigned (no member resolution).
+  //   families = [{ id, name, members:[{id,name}] }]
+  // Returns { perMember:[{id,name,familyId,familyName,owed}], unassigned, total }.
+  function memberCosts(tasks, families) {
+    tasks = tasks || []; families = families || [];
+    var memById = {}, famById = {}, owed = {};
+    families.forEach(function (f) {
+      famById[f.id] = f;
+      (f.members || []).forEach(function (m) { if (!m || !m.id) return; memById[m.id] = { id: m.id, name: m.name || '', familyId: f.id, familyName: f.name || '' }; owed[m.id] = 0; });
+    });
+    function num(x) { var m = String(x == null ? '' : x).replace(/[, $]/g, '').match(/\d+(\.\d+)?/); return m ? parseFloat(m[0]) : 0; }
+    var unassigned = 0, total = 0;
+    tasks.forEach(function (tk) {
+      var amt = num(tk.actualCost) || num(tk.costEstimate); if (!(amt > 0)) return;
+      total += amt;
+      if (tk.assignedToMember && memById[tk.assignedToMember]) { owed[tk.assignedToMember] += amt; return; }
+      if (tk.assignedToFamily && famById[tk.assignedToFamily]) {
+        var mems = famById[tk.assignedToFamily].members || [];
+        if (mems.length) { var share = amt / mems.length; mems.forEach(function (m) { if (owed[m.id] != null) owed[m.id] += share; }); return; }
+      }
+      unassigned += amt;
+    });
+    var perMember = Object.keys(owed).map(function (id) { var m = memById[id]; return { id: id, name: m.name, familyId: m.familyId, familyName: m.familyName, owed: Math.round(owed[id]) }; })
+      .filter(function (r) { return r.owed > 0; });
+    return { perMember: perMember, unassigned: Math.round(unassigned), total: Math.round(total) };
+  }
+
+  root.TCTasks = { priority: priority, computeBalances: computeBalances, memberCosts: memberCosts, isDone: isDone, setDone: setDone };
 })(typeof window !== 'undefined' ? window : this);

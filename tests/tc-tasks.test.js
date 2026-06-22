@@ -55,5 +55,24 @@ T.setDone(tk2, false, {}); ok('uncheck restores ready_to_book', tk2.bookingStatu
 var tk3 = {}; T.setDone(tk3, true, {}); T.setDone(tk3, false, {});
 ok('no prior status → uncheck = research_needed', tk3.bookingStatus === 'research_needed');
 
+// ── memberCosts — per-member cost rollup (V6) ──
+var famsM = [
+  { id: 'a', name: 'Loan', members: [{ id: 'm1', name: 'Loan' }, { id: 'm2', name: 'Minh' }] },
+  { id: 'b', name: 'Khoa', members: [{ id: 'm3', name: 'Khoa' }] },
+];
+var mc = T.memberCosts([
+  { actualCost: '100', assignedToMember: 'm1' },                 // Loan owes 100
+  { costEstimate: '$200', assignedToFamily: 'a' },              // split a's 2 members → 100 each
+  { actualCost: '50', assignedToFamily: 'b' },                  // Khoa (sole member) owes 50
+  { actualCost: '30' },                                          // unassigned
+], famsM);
+function owedOf(id) { var r = mc.perMember.filter(function (x) { return x.id === id; })[0]; return r ? r.owed : 0; }
+ok('assignedToMember → that member owes it', owedOf('m1') === 200); // 100 direct + 100 family-split
+ok('family task splits among members', owedOf('m2') === 100);
+ok('sole-member family → that member', owedOf('m3') === 50);
+ok('unassigned tracked separately', mc.unassigned === 30);
+ok('total sums all costs', mc.total === 380);
+ok('member with no cost omitted', mc.perMember.every(function (r) { return r.owed > 0; }));
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

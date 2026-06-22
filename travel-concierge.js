@@ -1206,7 +1206,7 @@
       deadline: '', bookingStatus: 'research_needed', confirmationNumber: '', bookedBy: '', notes: '',
       cancellationPolicy: '', refundPolicy: '', dataSource: 'user_entered', lastVerifiedAt: '',
       // Task Tracker fields (additive; legacy bookings still valid):
-      priority: (root.TCTasks ? root.TCTasks.priority(vt) : 'P2'), assignedToFamily: '', dueDate: '',
+      priority: (root.TCTasks ? root.TCTasks.priority(vt) : 'P2'), assignedToFamily: '', assignedToMember: '', dueDate: '',
       costEstimate: '', actualCost: '', paidBy: '', splitMode: '', splitBetween: [], linkedSegmentId: '',
     };
     if (extra) for (var k in extra) b[k] = extra[k];
@@ -2821,7 +2821,7 @@
   function normalizeFamily(f) {
     if (!f) return newFamily();
     if (!Array.isArray(f.interests)) f.interests = [];
-    ['foodPrefsKeys', 'kidPrefs', 'teenInterests', 'seniorNeeds', 'hotelPrefs', 'stayPrefs'].forEach(function (k) { if (!Array.isArray(f[k])) f[k] = []; });
+    ['foodPrefsKeys', 'kidPrefs', 'teenInterests', 'seniorNeeds', 'hotelPrefs', 'stayPrefs', 'members'].forEach(function (k) { if (!Array.isArray(f[k])) f[k] = []; });
     return f;
   }
   // Pure, idempotent. Guarantees trip.destinations[] (ordered) AND the derived
@@ -8145,6 +8145,23 @@
       if (f.accessibility) needs.push(f.accessibility);
       if (f.specialRequests) needs.push(f.specialRequests);
       if (needs.length) c.appendChild(el('p', 'tc-traveler__needs', '♿ ' + needs.join(' · ')));
+      // V6 member roster — named people in this family (for task assignment + per-member cost).
+      if (Array.isArray(f.members) && f.members.length) {
+        var mr = el('div', 'tc-mroster');
+        f.members.forEach(function (m) {
+          var chip = el('span', 'tc-mchip'); chip.appendChild(el('span', 'tc-mchip__n', '👤 ' + m.name));
+          if (canEditPlan()) { var x = el('button', 'tc-mchip__x', '✕'); x.type = 'button'; x.addEventListener('click', function () { f.members = (f.members || []).filter(function (z) { return z.id !== m.id; }); saveTrip(state.trip); render(); }); chip.appendChild(x); }
+          mr.appendChild(chip);
+        });
+        c.appendChild(mr);
+      }
+      if (canEditPlan()) {
+        var addRow = el('div', 'tc-mroster__add');
+        var mi = input('', t('memberNamePh')); mi.className = 'tc-input tc-mroster__in';
+        var ma = el('button', 'tc-pbtn', '＋ ' + t('addMember')); ma.type = 'button';
+        ma.addEventListener('click', function () { var v = (mi.value || '').trim(); if (!v) return; f.members = Array.isArray(f.members) ? f.members : []; f.members.push({ id: uid('mem'), name: v }); mi.value = ''; saveTrip(state.trip); render(); });
+        addRow.appendChild(mi); addRow.appendChild(ma); c.appendChild(addRow);
+      }
       box.appendChild(c);
     });
     if (canEditPlan()) box.appendChild(pbtn('✏ ' + t('travelersEdit'), '', function () { state.screen = 'create'; render(); }));

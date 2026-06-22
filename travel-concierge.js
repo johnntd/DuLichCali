@@ -2250,6 +2250,13 @@
       var sh = el('button', 'tc-pbtn', '🔗 ' + t('shareTrip')); sh.type = 'button'; sh.addEventListener('click', function () { closeModal(); openShareModal(); }); list.appendChild(sh);
       var del = el('button', 'tc-pbtn tc-pbtn--danger', '🗑 ' + t('deleteTripBtn')); del.type = 'button'; del.addEventListener('click', function () { closeModal(); openDeleteModal(tr.id, tr.groupName || tr.destination); }); list.appendChild(del);
     }
+    // V5: the trip surfaces not in the 5-tab bar are reachable here (set state.activeTab + render).
+    list.appendChild(el('p', 'tc-sheet__lbl', t('moreNavTitle')));
+    [['journey', '🧭 ', 'tab_journey'], ['transport', '🚐 ', 'tab_transport'], ['stay', '🏨 ', 'tab_stay'], ['food', '🍽 ', 'tab_food'], ['events', '🎉 ', 'tab_events'], ['stopovers', '✨ ', 'tab_stopovers'], ['costs', '💰 ', 'tab_costs'], ['group', '👥 ', 'tab_group']].forEach(function (it) {
+      var b = el('button', 'tc-pbtn', it[1] + t(it[2])); b.type = 'button';
+      b.addEventListener('click', function () { closeModal(); state.activeTab = it[0]; render(); });
+      list.appendChild(b);
+    });
     card.appendChild(list);
     ov.appendChild(card); ov.addEventListener('click', function (e) { if (e.target === ov) closeModal(); }); doc.body.appendChild(ov);
   }
@@ -3941,12 +3948,22 @@
     // One streamlined pipeline of tabs. The old "Family Arrival Plan" tab was removed (it
     // duplicated Stay's hotels + Transport's logistics); arrival logistics live in Transport,
     // hotels in Stay, and travelers + live coordination in Group. Stopovers reads as Discoveries.
-    var TAB_PAIRS = [['overview', 'tab_overview'], ['itinerary', 'tab_itinerary'], ['journey', 'tab_journey'], ['transport', 'tab_transport'], ['stay', 'tab_stay'], ['food', 'tab_food'], ['events', 'tab_events'], ['stopovers', 'tab_stopovers'], ['costs', 'tab_costs'], ['bookings', 'tab_bookings'], ['album', 'tab_album'], ['clips', 'tab_clips'], ['group', 'tab_group']];
-    if (!TAB_PAIRS.some(function (p) { return p[0] === state.activeTab; })) state.activeTab = 'overview'; // heal stale 'arrival'/'live'/'itinerary'
+    // V5: 5 visible tabs. The other 8 surfaces stay fully reachable via the More sheet (which sets
+    // state.activeTab). ALL_TABS validates activeTab against EVERY render branch — NOT just the 5
+    // pills — so navigating to a hidden tab via More is never reset to 'overview' by the heal.
+    var ALL_TABS = ['overview', 'itinerary', 'journey', 'transport', 'stay', 'food', 'events', 'stopovers', 'costs', 'bookings', 'album', 'clips', 'group'];
+    if (ALL_TABS.indexOf(state.activeTab) === -1) state.activeTab = 'overview'; // heal stale 'arrival'/'live'/'more'
+    var TAB_PAIRS = [['overview', 'tab_overview'], ['itinerary', 'tab_days'], ['bookings', 'tab_tasks'], ['album', 'tab_album'], ['more', 'tab_more']];
+    var HIDDEN_TABS = ['journey', 'transport', 'stay', 'food', 'events', 'stopovers', 'costs', 'group']; // reachable via More (clips lives inside Album)
+    function tabIsActive(key) {
+      if (key === 'more') return HIDDEN_TABS.indexOf(state.activeTab) !== -1;
+      if (key === 'album') return state.activeTab === 'album' || state.activeTab === 'clips';
+      return state.activeTab === key;
+    }
     var tabs = el('div', 'tc-tabs');
     TAB_PAIRS.forEach(function (pair) {
-      var b = el('button', 'tc-tab' + (state.activeTab === pair[0] ? ' tc-tab--on' : ''), t(pair[1])); b.type = 'button';
-      b.addEventListener('click', function () { state.activeTab = pair[0]; render(); });
+      var b = el('button', 'tc-tab' + (tabIsActive(pair[0]) ? ' tc-tab--on' : ''), t(pair[1])); b.type = 'button';
+      b.addEventListener('click', function () { if (pair[0] === 'more') { openMoreSheet(); } else { state.activeTab = pair[0]; render(); } });
       tabs.appendChild(b);
     });
     s.appendChild(tabs);
@@ -3960,7 +3977,7 @@
     else if (state.activeTab === 'stopovers') s.appendChild(renderStopovers(plan));
     else if (state.activeTab === 'costs') s.appendChild(renderCosts(plan));
     else if (state.activeTab === 'bookings') s.appendChild(renderBookings(plan));
-    else if (state.activeTab === 'album') s.appendChild(renderAlbum(plan));
+    else if (state.activeTab === 'album') { s.appendChild(renderAlbum(plan)); s.appendChild(renderClips(plan)); } // Clips merged into Album
     else if (state.activeTab === 'clips') s.appendChild(renderClips(plan));
     else s.appendChild(renderGroup(plan));
     // Bottom Back to My Trips + mobile sticky action bar.

@@ -50,6 +50,7 @@ const CLAUDE_API_KEY  = defineSecret('CLAUDE_API_KEY');
 // degrades to a city/ZIP centroid haversine when the key is absent or Maps errors.
 const GOOGLE_MAPS_API_KEY = defineSecret('GOOGLE_MAPS_API_KEY');
 const _userPlaceSanitize = require('./lib/userPlaceSanitize.js');
+const _placeMediaSanitize = require('./lib/placeMediaSanitize.js');
 
 // Email provider secret (Resend — https://resend.com)
 const RESEND_API_KEY      = defineSecret('RESEND_API_KEY');
@@ -2657,6 +2658,58 @@ function buildRestaurantResearchPrompt(lang) {
     'BE CONCISE so the JSON stays valid: 4-6 picks per destination; address = street + city only; every text field ONE short phrase; dishes/mustTry at most 2 each; no trailing commas. Write all human-readable text in ' + langName + '. Output ONE compact valid JSON object only.',
   ].join('\n');
 }
+// Curate research links + notes for ONE recommended place ("Learn more" media enrichment).
+// Gemini decides which link types matter + crafts search queries; placeMediaSanitize enforces
+// honesty (videos → search links only; official/menu/ticket validated; reviews/map deterministic;
+// no fabricated prices/ratings). The client always also shows its deterministic baseline links.
+exports.researchPlaceMedia = onCall(
+  { region: 'us-central1', secrets: [GEMINI_API_KEY], timeoutSeconds: 40, memory: '256MiB', cors: true },
+  async (request) => {
+    const uid = tripRequireAuth(request);
+    const d = request.data || {};
+    const tripId = String(d.tripId || '');
+    const role = await tripCallerRole(tripId, uid);
+    if (!role) throw new HttpsError('permission-denied', 'Join this trip to enrich places.');
+    const name = String(d.name || '').trim();
+    if (!name) return { ok: false, debugCode: 'NO_NAME' };
+    const placeType = String(d.type || d.placeType || 'place').slice(0, 40);
+    const city = String(d.city || '').slice(0, 80);
+    const lang = (d.lang === 'vi' || d.lang === 'es') ? d.lang : 'en';
+    const geminiKey = await getAiKey('gemini');
+    if (!geminiKey) return { ok: false, debugCode: 'NO_GEMINI_KEY' };
+
+    const userContent = 'Curate research links + notes for ONE place the app is recommending. Input JSON:\n' + JSON.stringify({ name: name, placeType: placeType, city: city });
+    const prompt = [
+      'You are a LOCAL travel concierge for Du Lich Cali. For ONE recommended place, decide which research links are MOST useful for this place type, plus a short why-it-fits + group-fit + best-time + time-needed. You ONLY research — never reserve or charge.',
+      'Return ONLY valid JSON (no markdown): { "media":[ { "type"(official_site|menu|ticket|google_reviews|yelp_reviews|tripadvisor|youtube_search|tiktok|photos|map|blog_guide), "title"(short label), "url"(a REAL official/menu/ticket/blog URL ONLY for official_site|menu|ticket|blog_guide and ONLY if you actually know it from current search — else omit), "query"(for youtube_search/tiktok: the best SEARCH phrase, e.g. "San Diego SEAL Tour review"), "reason"(one short phrase) } ], "why"(one sentence), "groupFit"(short), "bestTime"(short or ""), "timeNeeded"(e.g. "1-2 hours" or ""), "popularDishes":[up to 4 for restaurants, else []] }',
+      'HARD RULES: NEVER invent a video — for any video give a SEARCH "query", never a watch/embed URL. NEVER output exact prices, ratings, review counts, availability, hours, or phone numbers. For official_site/menu/ticket/blog_guide give a url ONLY if it is the real, current official URL you found; if unsure, omit url (the app builds a search link). Prioritize by type: restaurants -> menu/reviews/yelp/youtube food review/photos; tours -> official/ticket/youtube/reviews; beaches/scenic -> map/youtube travel guide/reviews; events -> official/ticket/map; hotels -> reviews/tripadvisor/photos.',
+      'Write human text (title/why/groupFit/bestTime/reason) in ' + (lang === 'vi' ? 'Vietnamese' : (lang === 'es' ? 'Spanish' : 'English')) + '. Output ONE compact valid JSON object.',
+    ].join('\n');
+
+    try {
+      const text = await serverCallGeminiGrounded(prompt + '\n\n' + userContent, geminiKey, 1800);
+      let raw = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
+      const s = raw.indexOf('{'); const e = raw.lastIndexOf('}');
+      if (s > 0 || e > 0) raw = raw.slice(s, e + 1);
+      const parsed = tripSalvageJson(raw);
+      if (!parsed) return { ok: false, debugCode: 'RESEARCH_ERROR' };
+      const media = _placeMediaSanitize.sanitizeMediaItems(parsed.media, { name: name, city: city });
+      return {
+        ok: true, media: media,
+        why: String(parsed.why || '').slice(0, 240),
+        groupFit: String(parsed.groupFit || '').slice(0, 160),
+        bestTime: String(parsed.bestTime || '').slice(0, 120),
+        timeNeeded: String(parsed.timeNeeded || '').slice(0, 60),
+        popularDishes: (Array.isArray(parsed.popularDishes) ? parsed.popularDishes : []).slice(0, 4).map(function (x) { return String(x).slice(0, 60); }),
+        dataSource: 'ai_researched_pending_verification',
+      };
+    } catch (e2) {
+      console.error('[researchPlaceMedia] failed', e2 && e2.message);
+      return { ok: false, debugCode: 'RESEARCH_ERROR' };
+    }
+  }
+);
+
 exports.researchTripRestaurants = onCall(
   { region: 'us-central1', secrets: [GEMINI_API_KEY], timeoutSeconds: 50, memory: '256MiB', cors: true },
   async (request) => {

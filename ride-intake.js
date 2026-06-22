@@ -648,6 +648,16 @@ window.RideIntake = (function () {
   }
 
   function close() {
+    // Travel Concierge handoff: this flow REPLACED the trip page (full-page nav to /airport), so
+    // "close" must return the user to their trip — not strand them on the airport page with no way
+    // back. onSuccess already redirects after a booking; this covers backing out / a failed booking /
+    // closing at any point before success. Cleared after use so a normal /airport close still hides.
+    try {
+      if (typeof window !== 'undefined' && window._tcReturnUrl) {
+        var back = window._tcReturnUrl; window._tcReturnUrl = null;
+        window.location.href = back; return;
+      }
+    } catch (e) {}
     var modal = document.getElementById('rideIntakeModal');
     if (modal) modal.hidden = true;
     document.body.style.overflow = '';
@@ -1921,7 +1931,12 @@ window.RideIntake = (function () {
     try { window.sessionStorage.removeItem('dlc_ride_prefill'); } catch (e) {}
     var draft; try { draft = JSON.parse(raw); } catch (e) { return; }
     // Remember the Travel Concierge handoff context so onSuccess can emit a result + return.
-    if (draft && draft.source === 'travel_concierge' && draft.tripId) { window._tcRideHandoff = draft; }
+    // _tcReturnUrl persists (NOT cleared on success like _tcRideHandoff) so the close/X button can
+    // ALWAYS take the user back to their trip — before success, on a failed booking, or any time.
+    if (draft && draft.source === 'travel_concierge' && draft.tripId) {
+      window._tcRideHandoff = draft;
+      window._tcReturnUrl = draft.returnUrl || '';
+    }
     if (draft && window.RideIntake && window.RideIntake.openWithPrefill) {
       try { window.RideIntake.openWithPrefill(draft); } catch (e) {}
     }

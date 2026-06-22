@@ -3971,6 +3971,223 @@
   function chip(cls, txt) { return el('span', 'tc-chip ' + (cls || ''), txt); }
 
   function liveCatIcon(c) { return ({ event: '🎉', seasonal: '🌸', attraction: '📸', restaurant: '🍽', bar: '🍸', beach: '🏖', nightlife: '🌃', shopping: '🛍' })[c] || '✨'; }
+  // ── V4 Overview — immersive, image-first landing surface. Composes existing computed data
+  //    (tasks, costs, attractions, liveHighlights) into a 5-second-understandable hub. No new
+  //    data is fetched here; honest-image rule via placeMedia. ──
+  function ovLeadPlace(tr) {
+    var dests = (tr.attractions && tr.attractions.length) ? tr.attractions : [];
+    var rej = rejectedNameSet(tr);
+    for (var i = 0; i < dests.length; i++) {
+      var atts = consensusSort((dests[i].attractions || []).filter(function (a) { return a && a.name && !rej[(a.name || '').trim().toLowerCase()]; }), function (a) { return a.name; });
+      if (atts.length) return { place: atts[0], city: dests[i].city };
+    }
+    return null;
+  }
+  // SVG readiness ring — gold progress arc on a navy track; % text + aria-label (color is not
+  // the only signal). Pure DOM, no animation dependency.
+  function ovRing(pct) {
+    pct = Math.max(0, Math.min(100, pct | 0));
+    var R = 26, C = 2 * Math.PI * R, off = C * (1 - pct / 100);
+    var NS = 'http://www.w3.org/2000/svg';
+    var box = el('div', 'tc-ov-ring'); box.setAttribute('role', 'img');
+    box.setAttribute('aria-label', pct + '% ' + t('ovReadyShort'));
+    var svg = doc.createElementNS(NS, 'svg'); svg.setAttribute('viewBox', '0 0 64 64'); svg.setAttribute('class', 'tc-ov-ring__svg');
+    function circle(cls, dash) { var c = doc.createElementNS(NS, 'circle'); c.setAttribute('cx', '32'); c.setAttribute('cy', '32'); c.setAttribute('r', String(R)); c.setAttribute('class', cls); if (dash != null) { c.setAttribute('stroke-dasharray', String(C)); c.setAttribute('stroke-dashoffset', String(dash)); } return c; }
+    svg.appendChild(circle('tc-ov-ring__track'));
+    svg.appendChild(circle('tc-ov-ring__prog', off));
+    box.appendChild(svg);
+    var lbl = el('div', 'tc-ov-ring__lbl');
+    lbl.appendChild(el('strong', 'tc-ov-ring__pct', pct + '%'));
+    lbl.appendChild(el('span', 'tc-ov-ring__cap', t('ovReadyShort')));
+    box.appendChild(lbl);
+    return box;
+  }
+  // Shallow copy + city merge — never mutate the source attraction/highlight object.
+  function ovWithCity(o, city) { var p = {}; for (var k in o) { if (Object.prototype.hasOwnProperty.call(o, k)) p[k] = o[k]; } if (!p.city) p.city = city; return p; }
+  // Compact, image-first Highlights card. Real photo via placeMedia (honest fallback otherwise).
+  // Tap opens the existing detail modal — no duplicated detail logic.
+  function ovHighlightCard(a, city) {
+    var c = el('article', 'tc-ov-card');
+    c.appendChild(placeMedia(a, 'tc-ov-card__media'));
+    var body = el('div', 'tc-ov-card__body');
+    if (a.tier) body.appendChild(el('span', 'tc-ov-card__tier tc-attr__tier--' + a.tier, t('tier_' + a.tier) || ''));
+    body.appendChild(el('strong', 'tc-ov-card__name', a.name));
+    if (a.why) body.appendChild(el('p', 'tc-ov-card__why', a.why));
+    var foot = el('div', 'tc-ov-card__foot');
+    if (a.ticketed) foot.appendChild(el('span', 'tc-ov-card__tix', '🎟 ' + t('ticketed')));
+    if (a.ageFit) foot.appendChild(el('span', 'tc-ov-card__fit', t('fit_' + a.ageFit) || a.ageFit));
+    if (foot.children.length) body.appendChild(foot);
+    c.appendChild(body);
+    c.addEventListener('click', function () { try { openPlaceModal(ovWithCity(a, city)); } catch (e) {} });
+    return c;
+  }
+  // One compact day row: Day N · city · up to 3 headline place chips. Tap → Itinerary at day i.
+  // Travel/transfer days show their travel label (never fabricated activities).
+  function ovTimelineRow(d, i) {
+    var row = el('button', 'tc-ov-tl__row'); row.type = 'button';
+    var head = el('div', 'tc-ov-tl__head');
+    head.appendChild(el('span', 'tc-ov-tl__d', t('day') + ' ' + (i + 1)));
+    if (d.city) head.appendChild(el('span', 'tc-ov-tl__city', d.city));
+    if (d.isTravelDay || d.transferDay) head.appendChild(el('span', 'tc-ov-tl__travel', '🚗 ' + t('travelDay')));
+    row.appendChild(head);
+    var names = [];
+    (d.sections || []).forEach(function (s) { (s.places || []).forEach(function (p) { if (p && p.name && names.length < 3) names.push(p.name); }); });
+    if (names.length) {
+      var chipw = el('div', 'tc-ov-tl__chips');
+      names.forEach(function (n) { chipw.appendChild(el('span', 'tc-ov-tl__chip', n)); });
+      row.appendChild(chipw);
+    }
+    row.addEventListener('click', function () { state.activeTab = 'itinerary'; state.activeDay = i; render(); });
+    return row;
+  }
+  // Image-first discovery card from a liveHighlights entry. Real image via placeMedia; honest
+  // fallback otherwise. Tap opens the existing detail modal (search links live inside it).
+  function ovDiscoveryCard(x) {
+    var c = el('article', 'tc-ov-card tc-ov-card--disc');
+    c.appendChild(placeMedia(x, 'tc-ov-card__media'));
+    var body = el('div', 'tc-ov-card__body');
+    body.appendChild(el('span', 'tc-ov-card__tier', liveCatIcon(x.category) + ' ' + (x.category ? String(x.category).replace(/_/g, ' ') : '')));
+    body.appendChild(el('strong', 'tc-ov-card__name', x.name || ''));
+    if (x.note || x.why) body.appendChild(el('p', 'tc-ov-card__why', x.note || x.why));
+    c.appendChild(body);
+    c.addEventListener('click', function () { try { openPlaceModal(ovWithCity(x, '')); } catch (e) {} });
+    return c;
+  }
+  function renderOverview(plan) {
+    var tr = state.trip;
+    var wrap = el('div', 'tc-ov');
+
+    // ── Block 1: Trip Hero ──
+    var tasks = []; try { tasks = deriveTripTasks(tr) || []; } catch (e) { tasks = tr.bookings || []; }
+    var rd = root.TCOverview.readiness(tasks);
+    var na = root.TCOverview.nextAction(tasks);
+    var chips = root.TCOverview.statusChips(tasks);
+
+    var hero = el('section', 'tc-ov-hero');
+    var lead = ovLeadPlace(tr);
+    hero.appendChild(placeMedia(lead ? lead.place : { name: plan.destination || tr.destination }, 'tc-ov-hero__media'));
+    var inner = el('div', 'tc-ov-hero__inner');
+    inner.appendChild(el('span', 'tc-ov-hero__chip', plan.destination || tr.destination || ''));
+    inner.appendChild(el('h1', 'tc-ov-hero__title', plan.groupName || tr.groupName || ''));
+    var famN = (tr.families || []).length, travN = (function () { try { return totalTravelers(); } catch (e) { return 0; } })();
+    var sub = (plan.dateRange || tr.dateRange || '');
+    if (famN) sub += ' · ' + famN + ' ' + t('ovFamilies');
+    if (travN) sub += ' · ' + travN + ' ' + t('travelers');
+    inner.appendChild(el('p', 'tc-ov-hero__sub', sub));
+
+    var stat = el('div', 'tc-ov-hero__stat');
+    stat.appendChild(ovRing(rd.pct));
+    var costs = (function () { try { return computeTripCosts(tr); } catch (e) { return null; } })();
+    if (costs) {
+      var bbtn = el('button', 'tc-ov-hero__budget'); bbtn.type = 'button';
+      bbtn.appendChild(el('span', 'tc-ov-hero__budget-k', '💰 ' + t('costEstTotal')));
+      bbtn.appendChild(el('strong', 'tc-ov-hero__budget-v', money(costs.total.expected)));
+      bbtn.addEventListener('click', function () { state.activeTab = 'costs'; render(); });
+      stat.appendChild(bbtn);
+    }
+    inner.appendChild(stat);
+
+    if (chips.length) {
+      var chrow = el('div', 'tc-ov-hero__chips');
+      var LBL = { stay: 'ovChipStay', transport: 'ovChipTransport', activities: 'ovChipTickets', food: 'ovChipFood' };
+      chips.forEach(function (c) {
+        var cb = el('button', 'tc-ov-chip tc-ov-chip--' + c.state); cb.type = 'button';
+        cb.appendChild(el('span', 'tc-ov-chip__ic', c.state === 'ok' ? '✓' : '⚠'));
+        cb.appendChild(el('span', 'tc-ov-chip__lbl', t(LBL[c.key] || c.key)));
+        cb.addEventListener('click', function () { state.activeTab = c.tab; render(); });
+        chrow.appendChild(cb);
+      });
+      inner.appendChild(chrow);
+    }
+
+    if (na) {
+      var cta = el('button', 'tc-ov-hero__cta'); cta.type = 'button';
+      cta.textContent = t('ovNext') + ': ' + na.title;
+      cta.addEventListener('click', function () {
+        var tabFor = { stay: 'stay', transport: 'transport', activities: 'bookings', food: 'food' };
+        state.activeTab = tabFor[na.category] || 'bookings'; render();
+      });
+      inner.appendChild(cta);
+    } else {
+      inner.appendChild(el('p', 'tc-ov-hero__allset', '✓ ' + t('ovAllSet')));
+    }
+
+    hero.appendChild(inner);
+    if (tr._fallback || (plan.dataSource && /pending/.test(plan.dataSource))) hero.appendChild(el('p', 'tc-unverified', t('unverified')));
+    wrap.appendChild(hero);
+
+    // ── Block 2: Highlights rail (top attractions, image-first, horizontal scroll) ──
+    var rej = rejectedNameSet(tr);
+    var flat = [];
+    ((tr.attractions && tr.attractions.length) ? tr.attractions : []).forEach(function (d) {
+      (d.attractions || []).forEach(function (a) { if (a && a.name && !rej[(a.name || '').trim().toLowerCase()]) flat.push({ a: a, city: d.city }); });
+    });
+    var top = consensusSort(flat, function (x) { return x.a.name; }).slice(0, 6);
+    if (top.length || (state._cResearch && state._cResearch.attractions)) {
+      var hsec = el('section', 'tc-ov-sec');
+      var hhead = el('div', 'tc-ov-sec__head');
+      hhead.appendChild(el('h2', 'tc-ov-sec__t', t('ovHighlights')));
+      var seeAll = el('button', 'tc-ov-sec__more', t('ovSeeAll')); seeAll.type = 'button';
+      seeAll.addEventListener('click', function () { state.activeTab = 'itinerary'; render(); });
+      hhead.appendChild(seeAll);
+      hsec.appendChild(hhead);
+      if (top.length) {
+        var rail = el('div', 'tc-ov-rail');
+        top.forEach(function (x) { rail.appendChild(ovHighlightCard(x.a, x.city)); });
+        hsec.appendChild(rail);
+      } else {
+        hsec.appendChild(researchBanner('ovCuratingHighlights'));
+      }
+      wrap.appendChild(hsec);
+    }
+
+    // ── Block 3: Daily Timeline preview (collapsed; deep-links into Itinerary) ──
+    var days = (plan.days || []);
+    if (days.length) {
+      var tsec = el('section', 'tc-ov-sec');
+      var thead = el('div', 'tc-ov-sec__head');
+      thead.appendChild(el('h2', 'tc-ov-sec__t', t('ovTimeline')));
+      var viewIt = el('button', 'tc-ov-sec__more', t('ovViewItinerary')); viewIt.type = 'button';
+      viewIt.addEventListener('click', function () { state.activeTab = 'itinerary'; state.activeDay = 0; render(); });
+      thead.appendChild(viewIt);
+      tsec.appendChild(thead);
+      var tl = el('div', 'tc-ov-tl');
+      days.slice(0, 5).forEach(function (d, i) { tl.appendChild(ovTimelineRow(d, i)); });
+      if (days.length > 5) {
+        var moreRow = el('button', 'tc-ov-tl__more', '+' + (days.length - 5) + ' ' + t('day').toLowerCase()); moreRow.type = 'button';
+        moreRow.addEventListener('click', function () { state.activeTab = 'itinerary'; state.activeDay = 5; render(); });
+        tl.appendChild(moreRow);
+      }
+      tsec.appendChild(tl);
+      wrap.appendChild(tsec);
+    }
+
+    // ── Block 4: AI Discoveries rail (live highlights; image-first) ──
+    var hl = (plan && plan.liveHighlights && plan.liveHighlights.length) ? plan.liveHighlights : ((tr && tr.liveHighlights) || []);
+    if (hl.length) {
+      var dsec = el('section', 'tc-ov-sec');
+      var dhead = el('div', 'tc-ov-sec__head');
+      dhead.appendChild(el('h2', 'tc-ov-sec__t', t('ovDiscoveries')));
+      if (tr.liveSourceNote) dhead.appendChild(el('span', 'tc-ov-sec__src', tr.liveSourceNote));
+      dsec.appendChild(dhead);
+      var drail = el('div', 'tc-ov-rail');
+      hl.slice(0, 8).forEach(function (x) { drail.appendChild(ovDiscoveryCard(x)); });
+      dsec.appendChild(drail);
+      wrap.appendChild(dsec);
+    }
+
+    // ── Block 5: Quick links to the remaining tabs (true hub) ──
+    var qsec = el('section', 'tc-ov-sec tc-ov-quick');
+    qsec.appendChild(el('span', 'tc-ov-quick__k', t('ovQuickLinks')));
+    [['group', 'tab_group'], ['stay', 'tab_stay'], ['food', 'tab_food'], ['costs', 'tab_costs'], ['bookings', 'tab_bookings']].forEach(function (p) {
+      var b = el('button', 'tc-ov-quick__b', t(p[1])); b.type = 'button';
+      b.addEventListener('click', function () { state.activeTab = p[0]; render(); });
+      qsec.appendChild(b);
+    });
+    wrap.appendChild(qsec);
+
+    return wrap;
+  }
   function liveHighlightsBlock(plan) {
     var hl = (plan && plan.liveHighlights && plan.liveHighlights.length) ? plan.liveHighlights : ((state.trip && state.trip.liveHighlights) || []);
     if (!hl || !hl.length) return null;

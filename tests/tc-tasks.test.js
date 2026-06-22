@@ -36,5 +36,24 @@ ok('ad-hoc ledger payment credited', bal4.perFamily[1].paid === 50);
 var bal5 = T.computeBalances([{ actualCost: '300', paidBy: 'a' }], fams, { mode: 'owner_pays' }, []);
 ok('owner_pays → first family owes all', bal5.perFamily[0].owed === 300 && bal5.perFamily[1].owed === 0);
 
+// ── isDone / setDone — checkbox completion toggle (the field is bookingStatus) ──
+ok('isDone false for research_needed', T.isDone({ bookingStatus: 'research_needed' }) === false);
+ok('isDone true for completed', T.isDone({ bookingStatus: 'completed' }) === true);
+ok('isDone true for booked', T.isDone({ bookingStatus: 'booked' }) === true);
+var tk1 = { bookingStatus: 'research_needed', title: 'Book Xe Đò Hoàng' };
+T.setDone(tk1, true, { by: 'f1', byName: 'Bố', nowIso: '2026-06-22T10:00:00.000Z' });
+ok('check → completed', tk1.bookingStatus === 'completed');
+ok('check → completedAt stamped', tk1.completedAt === '2026-06-22T10:00:00.000Z');
+ok('check → completedBy/Name stamped', tk1.completedBy === 'f1' && tk1.completedByName === 'Bố');
+ok('check → remembers prev status', tk1._prevStatus === 'research_needed');
+T.setDone(tk1, false, {});
+ok('uncheck → restores prev status', tk1.bookingStatus === 'research_needed');
+ok('uncheck → clears stamps', !tk1.completedAt && !tk1.completedBy && tk1._prevStatus === undefined);
+var tk2 = { bookingStatus: 'ready_to_book' };
+T.setDone(tk2, true, { nowIso: 'x' }); ok('check from ready_to_book remembers it', tk2._prevStatus === 'ready_to_book');
+T.setDone(tk2, false, {}); ok('uncheck restores ready_to_book', tk2.bookingStatus === 'ready_to_book');
+var tk3 = {}; T.setDone(tk3, true, {}); T.setDone(tk3, false, {});
+ok('no prior status → uncheck = research_needed', tk3.bookingStatus === 'research_needed');
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

@@ -179,7 +179,8 @@
       bookingType: 'Type', openOfficial: 'Open official page', readyToBook: 'Ready to book', markBooked: 'Mark booked', undoBooked: 'Booked ✓ (tap to undo)',
       confirmationNumber: 'Confirmation #', cancellationPolicy: 'Cancellation policy', refundPolicy: 'Refund policy', deadlineLabel: 'Book by', providerLabel: 'Provider', recommended: 'Recommended', bookingNotes: 'Notes',
       bt_flight: 'Flight', bt_hotel: 'Hotel', bt_airbnb: 'Vacation rental', bt_attraction: 'Attraction / tickets', bt_restaurant: 'Restaurant', bt_tour: 'Tour', bt_parking: 'Parking', bt_rental_car: 'Rental car', bt_bus: 'Bus', bt_ride: 'Ride', bt_packing: 'Packing', bt_payment: 'Payment', bt_confirmation: 'Confirmation', bt_other: 'Other',
-      bs_research_needed: 'Research needed', bs_researching: 'Researching', bs_ready_to_book: 'Ready to book', bs_user_approval_needed: 'Needs approval', bs_booked: 'Booked', bs_skipped: 'Skipped', bs_paid: 'Paid', bs_not_needed: 'Not needed',
+      bs_research_needed: 'Research needed', bs_researching: 'Researching', bs_ready_to_book: 'Ready to book', bs_user_approval_needed: 'Needs approval', bs_booked: 'Booked', bs_skipped: 'Skipped', bs_paid: 'Paid', bs_not_needed: 'Not needed', bs_completed: 'Completed',
+      tf_todo: 'To do', tf_completed: 'Completed', markDone: 'Mark done', taskCompletedBy: 'Completed by',
       pri_P0: 'P0 · Urgent', pri_P1: 'P1', pri_P2: 'P2', taskUnassigned: 'Unassigned', taskDue: 'Due date', taskCost: 'Est. cost', taskBook: 'Book', taskConfirmRide: 'Confirm ride', taskChoose: 'Choose/vote', taskActual: 'Actual cost', taskPaidBy: 'Paid by', taskPaidByNone: 'Not paid', taskBalanceTitle: 'Per-family balance', taskOwed: 'owed', taskOwes: 'owes', taskAhead: 'ahead', taskPaidTotal: 'Total paid', taskRemaining: 'remaining', tf_all: 'All', tf_urgent: 'Urgent', tf_mine: 'My tasks', tf_unpaid: 'Unpaid', tf_bookings: 'Bookings', tf_done: 'Completed',
       // Shared trip access (invite link + passcode + roles)
       shareTrip: 'Share Trip', shareModalTitle: 'Invite your group', shareLinkLabel: 'Trip link', sharePasscodeLabel: 'Passcode', copyPasscode: 'Copy passcode', passcodeCopied: 'Passcode copied!',
@@ -459,7 +460,8 @@
       bookingType: 'Loại', openOfficial: 'Mở trang chính thức', readyToBook: 'Sẵn sàng đặt', markBooked: 'Đánh dấu đã đặt', undoBooked: 'Đã đặt ✓ (chạm để hoàn tác)',
       confirmationNumber: 'Mã xác nhận', cancellationPolicy: 'Chính sách hủy', refundPolicy: 'Chính sách hoàn tiền', deadlineLabel: 'Đặt trước', providerLabel: 'Nhà cung cấp', recommended: 'Đề xuất', bookingNotes: 'Ghi chú',
       bt_flight: 'Chuyến bay', bt_hotel: 'Khách sạn', bt_airbnb: 'Nhà cho thuê', bt_attraction: 'Tham quan / vé', bt_restaurant: 'Nhà hàng', bt_tour: 'Tour', bt_parking: 'Bãi đỗ xe', bt_rental_car: 'Thuê xe', bt_bus: 'Xe khách', bt_ride: 'Đưa đón', bt_packing: 'Hành lý', bt_payment: 'Thanh toán', bt_confirmation: 'Xác nhận', bt_other: 'Khác',
-      bs_research_needed: 'Cần tìm hiểu', bs_researching: 'Đang tìm hiểu', bs_ready_to_book: 'Sẵn sàng đặt', bs_user_approval_needed: 'Cần phê duyệt', bs_booked: 'Đã đặt', bs_skipped: 'Bỏ qua', bs_paid: 'Đã thanh toán', bs_not_needed: 'Không cần',
+      bs_research_needed: 'Cần tìm hiểu', bs_researching: 'Đang tìm hiểu', bs_ready_to_book: 'Sẵn sàng đặt', bs_user_approval_needed: 'Cần phê duyệt', bs_booked: 'Đã đặt', bs_skipped: 'Bỏ qua', bs_paid: 'Đã thanh toán', bs_not_needed: 'Không cần', bs_completed: 'Hoàn tất',
+      tf_todo: 'Cần làm', tf_completed: 'Hoàn tất', markDone: 'Đánh dấu xong', taskCompletedBy: 'Hoàn tất bởi',
       pri_P0: 'P0 · Khẩn', pri_P1: 'P1', pri_P2: 'P2', taskUnassigned: 'Chưa giao', taskDue: 'Hạn chót', taskCost: 'Chi phí ước tính', taskBook: 'Đặt', taskConfirmRide: 'Xác nhận xe', taskChoose: 'Chọn/bình chọn', taskActual: 'Chi phí thực tế', taskPaidBy: 'Người trả', taskPaidByNone: 'Chưa trả', taskBalanceTitle: 'Số dư theo gia đình', taskOwed: 'nợ', taskOwes: 'còn nợ', taskAhead: 'trả dư', taskPaidTotal: 'Tổng đã trả', taskRemaining: 'còn lại', tf_all: 'Tất cả', tf_urgent: 'Khẩn', tf_mine: 'Của tôi', tf_unpaid: 'Chưa trả', tf_bookings: 'Đặt chỗ', tf_done: 'Hoàn tất',
       shareTrip: 'Chia sẻ chuyến đi', shareModalTitle: 'Mời nhóm của bạn', shareLinkLabel: 'Liên kết chuyến đi', sharePasscodeLabel: 'Mật mã', copyPasscode: 'Sao chép mật mã', passcodeCopied: 'Đã sao chép mật mã!',
       regeneratePasscode: 'Tạo lại liên kết + mật mã', shareRegenWarn: 'Việc này tạo liên kết và mật mã mới; cái cũ sẽ ngừng hoạt động.', disableSharing: 'Tắt chia sẻ', enableSharing: 'Bật chia sẻ', sharingDisabled: 'Chia sẻ hiện đang TẮT.', shareGenerating: 'Đang tạo lời mời an toàn…',
@@ -738,7 +740,8 @@
       bookingType: 'Tipo', openOfficial: 'Abrir página oficial', readyToBook: 'Listo para reservar', markBooked: 'Marcar reservado', undoBooked: 'Reservado ✓ (toca para deshacer)',
       confirmationNumber: 'N.º de confirmación', cancellationPolicy: 'Política de cancelación', refundPolicy: 'Política de reembolso', deadlineLabel: 'Reservar antes de', providerLabel: 'Proveedor', recommended: 'Recomendado', bookingNotes: 'Notas',
       bt_flight: 'Vuelo', bt_hotel: 'Hotel', bt_airbnb: 'Alquiler vacacional', bt_attraction: 'Atracción / entradas', bt_restaurant: 'Restaurante', bt_tour: 'Tour', bt_parking: 'Estacionamiento', bt_rental_car: 'Auto de alquiler', bt_bus: 'Autobús', bt_ride: 'Transporte', bt_packing: 'Equipaje', bt_payment: 'Pago', bt_confirmation: 'Confirmación', bt_other: 'Otro',
-      bs_research_needed: 'Investigar', bs_researching: 'Investigando', bs_ready_to_book: 'Listo para reservar', bs_user_approval_needed: 'Requiere aprobación', bs_booked: 'Reservado', bs_skipped: 'Omitido', bs_paid: 'Pagado', bs_not_needed: 'No necesario',
+      bs_research_needed: 'Investigar', bs_researching: 'Investigando', bs_ready_to_book: 'Listo para reservar', bs_user_approval_needed: 'Requiere aprobación', bs_booked: 'Reservado', bs_skipped: 'Omitido', bs_paid: 'Pagado', bs_not_needed: 'No necesario', bs_completed: 'Completado',
+      tf_todo: 'Por hacer', tf_completed: 'Completado', markDone: 'Marcar hecho', taskCompletedBy: 'Completado por',
       pri_P0: 'P0 · Urgente', pri_P1: 'P1', pri_P2: 'P2', taskUnassigned: 'Sin asignar', taskDue: 'Fecha límite', taskCost: 'Costo est.', taskBook: 'Reservar', taskConfirmRide: 'Confirmar transporte', taskChoose: 'Elegir/votar', taskActual: 'Costo real', taskPaidBy: 'Pagado por', taskPaidByNone: 'Sin pagar', taskBalanceTitle: 'Saldo por familia', taskOwed: 'debe', taskOwes: 'debe', taskAhead: 'a favor', taskPaidTotal: 'Total pagado', taskRemaining: 'restante', tf_all: 'Todo', tf_urgent: 'Urgente', tf_mine: 'Mías', tf_unpaid: 'Sin pagar', tf_bookings: 'Reservas', tf_done: 'Completadas',
       shareTrip: 'Compartir viaje', shareModalTitle: 'Invita a tu grupo', shareLinkLabel: 'Enlace del viaje', sharePasscodeLabel: 'Código', copyPasscode: 'Copiar código', passcodeCopied: '¡Código copiado!',
       regeneratePasscode: 'Regenerar enlace + código', shareRegenWarn: 'Esto crea un nuevo enlace y código; los anteriores dejan de funcionar.', disableSharing: 'Desactivar', enableSharing: 'Activar', sharingDisabled: 'El compartir está DESACTIVADO.', shareGenerating: 'Creando invitación segura…',
@@ -7651,7 +7654,7 @@
 
   // ── Bookings tab: human-approval-gated booking checklist (never purchases) ──
   function bookingTypeIcon(type) { return ({ flight: '✈', hotel: '🏨', airbnb: '🏠', attraction: '🎟', restaurant: '🍽', tour: '🧭', parking: '🅿️', rental_car: '🚗', bus: '🚌', ride: '🚙', packing: '🎒', payment: '💳', confirmation: '📋', other: '📝' })[type] || '📌'; }
-  function bookingStatusClass(s) { return ({ booked: 'tc-bstat--booked', paid: 'tc-bstat--booked', ready_to_book: 'tc-bstat--ready', user_approval_needed: 'tc-bstat--approve', skipped: 'tc-bstat--skip', not_needed: 'tc-bstat--skip' })[s] || 'tc-bstat--research'; }
+  function bookingStatusClass(s) { return ({ completed: 'tc-bstat--booked', booked: 'tc-bstat--booked', paid: 'tc-bstat--booked', ready_to_book: 'tc-bstat--ready', user_approval_needed: 'tc-bstat--approve', skipped: 'tc-bstat--skip', not_needed: 'tc-bstat--skip' })[s] || 'tc-bstat--research'; }
   function bookingForPlace(p) {
     if (!p || !state.trip || !Array.isArray(state.trip.bookings)) return null;
     var pid = p.id, name = (p.name || '').trim().toLowerCase();
@@ -7682,7 +7685,17 @@
       wrap.appendChild(actions);
     }
     if (tr.bookings.length) {
-      var FILTERS = ['all', 'urgent', 'mine', 'unpaid', 'bookings', 'done'];
+      // Progress header — N done / M total + readiness %. Reuses TCOverview.readiness (bookingStatus).
+      var _rd = (root.TCOverview ? root.TCOverview.readiness(tr.bookings) : { doneCount: 0, totalCount: tr.bookings.length, pct: 0 });
+      var prog = el('div', 'tc-bookings__progress');
+      var pline = el('div', 'tc-bookings__progline');
+      pline.appendChild(el('span', 'tc-bookings__progk', _rd.doneCount + ' ' + t('ovDone') + ' / ' + _rd.totalCount + ' ' + t('ovTotalLc')));
+      pline.appendChild(el('span', 'tc-bookings__progpct', _rd.pct + '%'));
+      prog.appendChild(pline);
+      var barwrap = el('div', 'tc-bookings__bar'); var fill = el('div', 'tc-bookings__barfill'); fill.style.width = _rd.pct + '%'; barwrap.appendChild(fill); prog.appendChild(barwrap);
+      wrap.appendChild(prog);
+      // Filters — All / To do / Completed / Urgent / My tasks.
+      var FILTERS = ['all', 'todo', 'completed', 'urgent', 'mine'];
       var fbar = el('div', 'tc-taskfilters');
       FILTERS.forEach(function (fk) {
         var fb = el('button', 'tc-pbtn' + ((state._taskFilter || 'all') === fk ? ' tc-pbtn--on' : ''), t('tf_' + fk)); fb.type = 'button';
@@ -7695,17 +7708,15 @@
     else if (!tr.bookings.length) wrap.appendChild(el('p', 'tc-empty', t('noBookings')));
     else {
       var _flt = state._taskFilter || 'all', _me = getMe();
-      var _doneSet = { booked: 1, paid: 1, skipped: 1, not_needed: 1 };
-      var _bkTypes = { flight: 1, hotel: 1, airbnb: 1, attraction: 1, restaurant: 1, tour: 1, rental_car: 1, bus: 1, ride: 1 };
       var _shown = 0;
       tr.bookings.forEach(function (b, i) {
         var _p = b.priority || (root.TCTasks ? root.TCTasks.priority(b.type) : 'P2');
+        var _done = root.TCTasks ? root.TCTasks.isDone(b) : false;
         var _show = _flt === 'all'
-          || (_flt === 'urgent' && _p === 'P0')
-          || (_flt === 'mine' && b.assignedToFamily && b.assignedToFamily === _me)
-          || (_flt === 'unpaid' && b.bookingStatus !== 'paid' && (b.costEstimate || b.actualCost || b.priceRange))
-          || (_flt === 'bookings' && _bkTypes[b.type])
-          || (_flt === 'done' && _doneSet[b.bookingStatus]);
+          || (_flt === 'todo' && !_done)
+          || (_flt === 'completed' && _done)
+          || (_flt === 'urgent' && _p === 'P0' && !_done)
+          || (_flt === 'mine' && b.assignedToFamily && b.assignedToFamily === _me);
         if (_show) { wrap.appendChild(bookingCard(b, i)); _shown++; }
       });
       if (!_shown) wrap.appendChild(el('p', 'tc-empty', t('noBookings')));
@@ -7731,15 +7742,31 @@
   }
   function bookingCard(b, idx) {
     var tr = state.trip, ro = (state.readonly || tr._demo);
+    var done = root.TCTasks ? root.TCTasks.isDone(b) : false;
     var links = BookingLinkProvider.links(b, tr);
-    var c = el('article', 'tc-bk');
+    var c = el('article', 'tc-bk' + (done ? ' tc-bk--done' : ''));
     var head = el('div', 'tc-bk__head');
+    // Large mobile-friendly completion checkbox (left). Check → 'completed' + completedAt/By;
+    // uncheck → restore prior status. Persisted to Firestore via saveTrip; trip members see it.
+    if (!ro) {
+      var cb = el('label', 'tc-bk__check' + (done ? ' tc-bk__check--on' : ''));
+      var cbi = doc.createElement('input'); cbi.type = 'checkbox'; cbi.checked = done; cbi.className = 'tc-bk__checkbox';
+      cbi.setAttribute('aria-label', t('markDone') + ': ' + (b.title || ''));
+      cbi.addEventListener('change', function () {
+        root.TCTasks.setDone(b, cbi.checked, { by: getMe() || '', byName: (getMe() ? famName(getMe()) : ''), nowIso: new Date().toISOString() });
+        saveTrip(tr); if (cbi.checked) tcNotifyTask('completed', b.title); render();
+      });
+      cb.appendChild(cbi);
+      cb.appendChild(el('span', 'tc-bk__checkmark', '✓'));
+      head.appendChild(cb);
+    }
     head.appendChild(el('span', 'tc-bk__type', bookingTypeIcon(b.type) + ' ' + t('bt_' + b.type)));
     head.appendChild(el('span', 'tc-bk__stat ' + bookingStatusClass(b.bookingStatus), t('bs_' + (b.bookingStatus || 'research_needed'))));
     var _pr = b.priority || (root.TCTasks ? root.TCTasks.priority(b.type) : 'P2');
     head.appendChild(el('span', 'tc-bk__pri tc-bk__pri--' + _pr, t('pri_' + _pr)));
     c.appendChild(head);
     c.appendChild(el('strong', 'tc-bk__title', b.title));
+    if (done && b.completedAt) c.appendChild(el('p', 'tc-bk__donemeta', '✓ ' + t('taskCompletedBy') + (b.completedByName ? (' ' + b.completedByName) : '') + ' · ' + String(b.completedAt).slice(0, 10)));
     if (b.provider) c.appendChild(el('p', 'tc-bk__meta', t('providerLabel') + ': ' + b.provider));
     if (b.priceRange) c.appendChild(el('p', 'tc-bk__meta', '💵 ' + b.priceRange));
     if (b.recommendedOption) { var rec = el('p', 'tc-bk__rec'); rec.appendChild(el('span', 'tc-bk__rec-k', t('recommended') + ': ')); rec.appendChild(doc.createTextNode(b.recommendedOption)); c.appendChild(rec); }

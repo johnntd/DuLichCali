@@ -4,9 +4,11 @@
    list produced by deriveTripTasks(tr) (i.e. tr.bookings). Presentation-layer only —
    never fabricates data. */
 (function (root) {
-  var DONE = { booked: 1, paid: 1, skipped: 1, not_needed: 1 };
+  var DONE = { booked: 1, paid: 1, skipped: 1, not_needed: 1, completed: 1 };
   var PRIO = { P0: 0, P1: 1, P2: 2 };
-  function isDone(tk) { return !!(tk && DONE[tk.status]); }
+  // Real trip tasks carry bookingStatus; synthetic/legacy objects may use status. Read either
+  // (bookingStatus first) — reading only .status was a field mismatch that made readiness always 0.
+  function isDone(tk) { return !!(tk && DONE[(tk.bookingStatus || tk.status)]); }
   function prioRank(tk) { var p = (tk && tk.priority) || 'P2'; return PRIO[p] == null ? 2 : PRIO[p]; }
 
   // Which readiness category a task rolls up to. Maps task categories/types to the four

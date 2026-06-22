@@ -59,5 +59,29 @@
     return { perFamily: perFamily, totalEstimated: Math.round(totalEstimated), totalActual: Math.round(totalActual), totalPaid: totalPaid, remaining: Math.max(0, Math.round(totalActual || totalEstimated) - totalPaid) };
   }
 
-  root.TCTasks = { priority: priority, computeBalances: computeBalances };
+  // Done set + checkbox toggle. A task is "done" when its bookingStatus is a completion state.
+  var DONE = { booked: 1, paid: 1, skipped: 1, not_needed: 1, completed: 1 };
+  function isDone(task) { return !!(task && DONE[task.bookingStatus]); }
+  // Toggle a task's completion (pure mutation of the task object — caller persists + re-renders).
+  //   done=true  → remember the prior status (unless already a done-state), set 'completed' + stamp
+  //                completedAt / completedBy / completedByName.
+  //   done=false → restore the remembered prior status (else 'research_needed') + clear the stamps.
+  function setDone(task, done, opts) {
+    opts = opts || {};
+    if (!task) return task;
+    if (done) {
+      if (!DONE[task.bookingStatus]) task._prevStatus = task.bookingStatus || 'research_needed';
+      task.bookingStatus = 'completed';
+      task.completedAt = opts.nowIso || '';
+      task.completedBy = opts.by || '';
+      task.completedByName = opts.byName || '';
+    } else {
+      task.bookingStatus = (task._prevStatus && task._prevStatus !== 'completed') ? task._prevStatus : 'research_needed';
+      delete task._prevStatus;
+      task.completedAt = ''; task.completedBy = ''; task.completedByName = '';
+    }
+    return task;
+  }
+
+  root.TCTasks = { priority: priority, computeBalances: computeBalances, isDone: isDone, setDone: setDone };
 })(typeof window !== 'undefined' ? window : this);

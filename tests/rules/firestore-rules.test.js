@@ -218,6 +218,7 @@ async function denied(name, p) { try { await assertFails(p); rec(name, true); } 
   // Joined member — access via server-written membership.
   await allowed('joined MEMBER CAN read the trip', getDoc(doc(tripMember, 'groupTrips/trip-1')));
   await allowed('joined MEMBER CAN collaborate (update)', updateDoc(doc(tripMember, 'groupTrips/trip-1'), { notes: [{ text: 'yo' }] }));
+  await allowed('joined MEMBER CAN check off a task (update bookings)', updateDoc(doc(tripMember, 'groupTrips/trip-1'), { bookings: [{ id: 'bk1', title: 'Book Xe Do Hoang', bookingStatus: 'completed', completedBy: 'member-1' }] }));
   await allowed('member CAN read own membership doc', getDoc(doc(tripMember, 'tripMembers/trip-1/members/member-1')));
   await allowed('member CAN read another member (member list)', getDoc(doc(tripMember, 'tripMembers/trip-1/members/member-1')));
   // Non-member, non-owner stranger — scoped OUT even though signed in.

@@ -6,7 +6,7 @@ const O = new Function('window', src)({});
 let pass = 0, fail = 0;
 function ok(n, c) { c ? pass++ : fail++; console.log((c ? '  PASS ' : '  FAIL ') + n); }
 
-// ── readiness(tasks) — done/total → pct; DONE = booked|paid|skipped|not_needed ──
+// ── readiness(tasks) — done/total → pct; DONE = booked|paid|skipped|not_needed|completed ──
 ok('empty → 100%', O.readiness([]).pct === 100);
 ok('all done → 100%', O.readiness([{ status: 'booked' }, { status: 'paid' }]).pct === 100);
 ok('half done → 50%', O.readiness([{ status: 'booked' }, { status: 'todo' }]).pct === 50);
@@ -14,6 +14,11 @@ ok('skipped/not_needed count as done', O.readiness([{ status: 'skipped' }, { sta
 ok('rounds 1/3 → 33%', O.readiness([{ status: 'booked' }, { status: 'todo' }, { status: 'todo' }]).pct === 33);
 var r = O.readiness([{ status: 'booked' }, { status: 'todo' }]);
 ok('reports counts', r.doneCount === 1 && r.totalCount === 2);
+// REAL tasks carry bookingStatus (not status) — readiness MUST read it (was a field-mismatch bug)
+ok('bookingStatus=completed counts done', O.readiness([{ bookingStatus: 'completed' }]).pct === 100);
+ok('bookingStatus=research_needed not done', O.readiness([{ bookingStatus: 'research_needed' }]).pct === 0);
+ok('mixed bookingStatus 1/2', O.readiness([{ bookingStatus: 'booked' }, { bookingStatus: 'research_needed' }]).pct === 50);
+ok('nextAction skips completed bookingStatus', O.nextAction([{ bookingStatus: 'completed', priority: 'P0', title: 'X' }]) === null);
 
 // ── nextAction(tasks) — highest-priority incomplete; P0<P1<P2, then dueDate, then order ──
 ok('null when all done', O.nextAction([{ status: 'booked', priority: 'P0' }]) === null);

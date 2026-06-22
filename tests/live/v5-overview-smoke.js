@@ -43,7 +43,18 @@ const OURS = /tc-overview\.js|travel-concierge\.js/;
       tabLabels: Array.from(qa('.tc-tabs .tc-tab')).map(b => b.textContent),
       bigCards: qa('.tc-ov-card--lg').length,
       bottomNav: qa('.tc-bottomnav .tc-actionbar__btn').length,
-      bottomLabels: Array.from(qa('.tc-bottomnav .tc-actionbar__lbl')).map(b => b.textContent)
+      bottomLabels: Array.from(qa('.tc-bottomnav .tc-actionbar__lbl')).map(b => b.textContent),
+      // P1: collapsible centers + collapsed day rows; old redundant quick-links row must be gone
+      collapses: qa('.tc-ov-collapse').length,
+      dayRows: qa('.tc-ov-day').length,
+      quickLinksGone: !q('.tc-ov-quick'),
+      // experience-first order: Discoveries section appears before the first collapse (Timeline)
+      discoveriesBeforeLogistics: (function () {
+        var secs = Array.from(qa('.tc-ov > section, .tc-ov > details'));
+        var disc = secs.findIndex(n => /AI Discoveries|Descubrimientos|Khám phá/.test(n.textContent || ''));
+        var firstCol = secs.findIndex(n => n.classList && n.classList.contains('tc-ov-collapse'));
+        return disc !== -1 && firstCol !== -1 && disc < firstCol;
+      })()
     };
   });
 
@@ -57,7 +68,9 @@ const OURS = /tc-overview\.js|travel-concierge\.js/;
   console.log('OUR_ERRORS', ourErrors.length);
   ourErrors.slice(0, 6).forEach(e => console.log('  ! ' + e));
   const ok = c.heroTitle && c.eyebrow && !c.ring && !c.budget && c.statusChips === 0 &&
-    c.tabCount === 5 && c.teasers >= 1 && c.bigCards >= 1 && c.bottomNav === 4 && ourErrors.length === 0;
+    c.tabCount === 5 && c.teasers >= 1 && c.bigCards >= 1 && c.bottomNav === 4 &&
+    c.collapses >= 1 && c.dayRows >= 1 && c.quickLinksGone && c.discoveriesBeforeLogistics &&
+    ourErrors.length === 0;
   console.log(ok ? '\nSMOKE: PASS' : '\nSMOKE: FAIL');
   process.exit(ok ? 0 : 1);
 })().catch(e => { console.error('SMOKE: FAIL (exception)\n', e); process.exit(1); });

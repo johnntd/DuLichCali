@@ -105,6 +105,7 @@
       season_spring: 'Spring', season_summer: 'Summer', season_fall: 'Fall', season_winter: 'Winter',
       tab_days: 'Days', tab_tasks: 'Tasks', tab_more: 'More', moreNavTitle: 'All sections', continuePlanning: 'Continue Planning',
       navTrips: 'Trips', navConcierge: 'AI Concierge', navShare: 'Share', navProfile: 'Profile', mustSee: 'Must See', topPick: 'Top Pick',
+      ovToDo: 'to do', ovDone: 'done', ovTotalLc: 'total', ovFamilyLc: 'family', ovEstimated: 'Estimated', ovRemaining: 'Remaining',
       tab_itinerary: 'Itinerary', tab_arrival: 'Family Arrival Plan', tab_group: 'Group',
       tab_journey: 'Journey', journeyTitle: 'Your journey', journeySub: 'Every stop, stay and ride as a node. Lock what you love 🔒 — the AI only replans around it.', jnNoPlan: 'Generate the trip first — your journey timeline appears here.', jnLock: 'Lock', jnUnlock: 'Unlock', jnLocked: 'Locked', jnImprove: 'Improve around this', jnImproving: 'Replanning this day (keeping locked items)…', jnAddAfter: 'Add after', jnReplanDay: 'Replan this day', jnReplanKeep: 'keeps 🔒 locked', jnReplanned: 'Day replanned — locked items kept', jnTransportNode: 'Transport', jnViewTransport: 'Compare transport', jnNodeMenu: 'Options', jnAddPh: 'Add a place / activity', jnAdd: 'Add',
       cmdPh: 'Tell the concierge what to change…', cmdGo: 'Ask AI', cmdBusy: 'Understanding your request…', cmdPlanTitle: 'Here’s what I’ll change', cmdNone: 'I couldn’t turn that into an edit — try rephrasing (e.g. “skip the zoo”, “add Disneyland day 2”, “find another Vietnamese dinner”).', cmdFail: 'Couldn’t interpret that right now — try again.', cmdDays: 'Replans day {d}', cmdApply: 'Apply changes', cmdApplied: 'Trip updated', cmdCancel: 'Cancel',
@@ -387,6 +388,7 @@
       season_spring: 'Mùa xuân', season_summer: 'Mùa hè', season_fall: 'Mùa thu', season_winter: 'Mùa đông',
       tab_days: 'Ngày', tab_tasks: 'Nhiệm vụ', tab_more: 'Thêm', moreNavTitle: 'Tất cả mục', continuePlanning: 'Tiếp tục lên kế hoạch',
       navTrips: 'Chuyến đi', navConcierge: 'Trợ lý AI', navShare: 'Chia sẻ', navProfile: 'Tài khoản', mustSee: 'Nên xem', topPick: 'Lựa chọn hàng đầu',
+      ovToDo: 'cần làm', ovDone: 'xong', ovTotalLc: 'tổng', ovFamilyLc: 'gia đình', ovEstimated: 'Ước tính', ovRemaining: 'Còn lại',
       tab_itinerary: 'Lịch trình', tab_arrival: 'Kế Hoạch Đến Nơi', tab_group: 'Nhóm',
       tab_journey: 'Hành trình', journeyTitle: 'Hành trình của bạn', journeySub: 'Mỗi điểm dừng, nơi ở và chuyến xe là một nút. Khóa thứ bạn thích 🔒 — AI chỉ tối ưu xung quanh.', jnNoPlan: 'Hãy tạo chuyến đi trước — dòng thời gian hành trình sẽ hiện ở đây.', jnLock: 'Khóa', jnUnlock: 'Mở khóa', jnLocked: 'Đã khóa', jnImprove: 'Cải thiện quanh mục này', jnImproving: 'Đang lên lại ngày này (giữ mục đã khóa)…', jnAddAfter: 'Thêm sau', jnReplanDay: 'Lên lại ngày này', jnReplanKeep: 'giữ 🔒 đã khóa', jnReplanned: 'Đã lên lại ngày — giữ mục đã khóa', jnTransportNode: 'Di chuyển', jnViewTransport: 'So sánh di chuyển', jnNodeMenu: 'Tùy chọn', jnAddPh: 'Thêm địa điểm / hoạt động', jnAdd: 'Thêm',
       cmdPh: 'Nói cho trợ lý biết bạn muốn đổi gì…', cmdGo: 'Hỏi AI', cmdBusy: 'Đang hiểu yêu cầu của bạn…', cmdPlanTitle: 'Đây là những thay đổi tôi sẽ làm', cmdNone: 'Tôi chưa chuyển được thành chỉnh sửa — hãy thử diễn đạt lại (vd: “bỏ sở thú”, “thêm Disneyland ngày 2”, “tìm bữa tối Việt khác”).', cmdFail: 'Hiện chưa hiểu được — vui lòng thử lại.', cmdDays: 'Lên lại ngày {d}', cmdApply: 'Áp dụng thay đổi', cmdApplied: 'Đã cập nhật chuyến đi', cmdCancel: 'Hủy',
@@ -664,6 +666,7 @@
       season_spring: 'Primavera', season_summer: 'Verano', season_fall: 'Otoño', season_winter: 'Invierno',
       tab_days: 'Días', tab_tasks: 'Tareas', tab_more: 'Más', moreNavTitle: 'Todas las secciones', continuePlanning: 'Seguir planeando',
       navTrips: 'Viajes', navConcierge: 'Concierge IA', navShare: 'Compartir', navProfile: 'Perfil', mustSee: 'Imprescindible', topPick: 'Top',
+      ovToDo: 'por hacer', ovDone: 'hecho', ovTotalLc: 'total', ovFamilyLc: 'familia', ovEstimated: 'Estimado', ovRemaining: 'Restante',
       tab_itinerary: 'Itinerario', tab_arrival: 'Plan de Llegada', tab_group: 'Grupo',
       tab_journey: 'Recorrido', journeyTitle: 'Tu recorrido', journeySub: 'Cada parada, alojamiento y viaje como un nodo. Bloquea lo que te gusta 🔒 — la IA solo replanifica alrededor.', jnNoPlan: 'Genera el viaje primero — tu línea de tiempo aparecerá aquí.', jnLock: 'Bloquear', jnUnlock: 'Desbloquear', jnLocked: 'Bloqueado', jnImprove: 'Mejorar alrededor de esto', jnImproving: 'Replanificando este día (manteniendo lo bloqueado)…', jnAddAfter: 'Agregar después', jnReplanDay: 'Replanificar este día', jnReplanKeep: 'mantiene 🔒 bloqueado', jnReplanned: 'Día replanificado — se mantuvo lo bloqueado', jnTransportNode: 'Transporte', jnViewTransport: 'Comparar transporte', jnNodeMenu: 'Opciones', jnAddPh: 'Agregar un lugar / actividad', jnAdd: 'Agregar',
       cmdPh: 'Dile al concierge qué cambiar…', cmdGo: 'Preguntar a la IA', cmdBusy: 'Entendiendo tu solicitud…', cmdPlanTitle: 'Esto es lo que cambiaré', cmdNone: 'No pude convertirlo en una edición — reformula (ej. “omite el zoológico”, “agrega Disneyland día 2”, “busca otra cena vietnamita”).', cmdFail: 'No se pudo interpretar ahora — inténtalo de nuevo.', cmdDays: 'Replanifica el día {d}', cmdApply: 'Aplicar cambios', cmdApplied: 'Viaje actualizado', cmdCancel: 'Cancelar',
@@ -4259,28 +4262,8 @@
       wrap.appendChild(hsec);
     }
 
-    // ── Block 3: Daily Timeline preview (collapsed; deep-links into Itinerary) ──
-    var days = (plan.days || []);
-    if (days.length) {
-      var tsec = el('section', 'tc-ov-sec');
-      var thead = el('div', 'tc-ov-sec__head');
-      thead.appendChild(el('h2', 'tc-ov-sec__t', t('ovTimeline')));
-      var viewIt = el('button', 'tc-ov-sec__more', t('ovViewItinerary')); viewIt.type = 'button';
-      viewIt.addEventListener('click', function () { state.activeTab = 'itinerary'; state.activeDay = 0; render(); });
-      thead.appendChild(viewIt);
-      tsec.appendChild(thead);
-      var tl = el('div', 'tc-ov-tl');
-      days.slice(0, 5).forEach(function (d, i) { tl.appendChild(ovTimelineRow(d, i)); });
-      if (days.length > 5) {
-        var moreRow = el('button', 'tc-ov-tl__more', '+' + (days.length - 5) + ' ' + t('day').toLowerCase()); moreRow.type = 'button';
-        moreRow.addEventListener('click', function () { state.activeTab = 'itinerary'; state.activeDay = 5; render(); });
-        tl.appendChild(moreRow);
-      }
-      tsec.appendChild(tl);
-      wrap.appendChild(tsec);
-    }
-
-    // ── Block 4: AI Discoveries rail (live highlights; image-first) ──
+    // ── AI Discoveries rail — right after Highlights (both dominant, image-first; inspiration
+    //    BEFORE logistics). Live highlights only; honest images. ──
     var hl = (plan && plan.liveHighlights && plan.liveHighlights.length) ? plan.liveHighlights : ((tr && tr.liveHighlights) || []);
     if (hl.length) {
       var dsec = el('section', 'tc-ov-sec');
@@ -4294,17 +4277,122 @@
       wrap.appendChild(dsec);
     }
 
-    // ── Block 5: Quick links to the remaining tabs (true hub) ──
-    var qsec = el('section', 'tc-ov-sec tc-ov-quick');
-    qsec.appendChild(el('span', 'tc-ov-quick__k', t('ovQuickLinks')));
-    [['group', 'tab_group'], ['stay', 'tab_stay'], ['food', 'tab_food'], ['costs', 'tab_costs'], ['bookings', 'tab_bookings']].forEach(function (p) {
-      var b = el('button', 'tc-ov-quick__b', t(p[1])); b.type = 'button';
-      b.addEventListener('click', function () { state.activeTab = p[0]; render(); });
-      qsec.appendChild(b);
+    // ── Logistics, COLLAPSED (experience first): Timeline → Tasks → Costs → Details. ──
+    var days = (plan.days || []);
+    if (days.length) {
+      var tcol = ovCollapse('timeline', '🗓 ' + t('ovTimeline'), days.length + ' ' + t('day').toLowerCase() + ((plan.dateRange || tr.dateRange) ? (' · ' + (plan.dateRange || tr.dateRange)) : ''), true);
+      var tlBody = el('div', 'tc-ov-collapse__body');
+      var dl = el('div', 'tc-ov-days');
+      days.forEach(function (d, i) { dl.appendChild(ovDayDetails(d, i)); });
+      tlBody.appendChild(dl);
+      var viewIt = el('button', 'tc-ov-collapse__cta', t('ovViewItinerary') + ' →'); viewIt.type = 'button';
+      viewIt.addEventListener('click', function () { state.activeTab = 'itinerary'; state.activeDay = 0; render(); });
+      tlBody.appendChild(viewIt);
+      tcol.appendChild(tlBody);
+      wrap.appendChild(tcol);
+    }
+
+    // Task Center (collapsed) — relocated readiness/next-action + priority-ordered task rows.
+    var tasks = []; try { tasks = deriveTripTasks(tr) || []; } catch (e) { tasks = tr.bookings || []; }
+    if (tasks.length) {
+      var rdc = root.TCOverview.readiness(tasks), todoN = rdc.totalCount - rdc.doneCount;
+      var na = root.TCOverview.nextAction(tasks);
+      var taskCol = ovCollapse('tasks', '✅ ' + t('tab_tasks'), todoN + ' ' + t('ovToDo') + ' · ' + rdc.doneCount + ' ' + t('ovDone'), false);
+      var tkBody = el('div', 'tc-ov-collapse__body');
+      if (na) tkBody.appendChild(el('p', 'tc-ov-next', '→ ' + t('ovNext') + ': ' + na.title));
+      var PR = { P0: 0, P1: 1, P2: 2 };
+      tasks.slice().sort(function (a, b) { var p = (PR[a.priority] == null ? 2 : PR[a.priority]) - (PR[b.priority] == null ? 2 : PR[b.priority]); if (p) return p; return (a.dueDate ? String(a.dueDate) : '~') < (b.dueDate ? String(b.dueDate) : '~') ? -1 : 1; })
+        .slice(0, 8).forEach(function (tk) { tkBody.appendChild(ovTaskRow(tk)); });
+      var allTasks = el('button', 'tc-ov-collapse__cta', t('tab_tasks') + ' →'); allTasks.type = 'button';
+      allTasks.addEventListener('click', function () { state.activeTab = 'bookings'; render(); });
+      tkBody.appendChild(allTasks);
+      taskCol.appendChild(tkBody);
+      wrap.appendChild(taskCol);
+    }
+
+    // Cost Center (collapsed) — estimated/paid/remaining + per-family. Honest '~' on estimates.
+    var costs = null; try { costs = computeTripCosts(tr); } catch (e) {}
+    if (costs) {
+      var bal = null; try { if (root.TCTasks) bal = root.TCTasks.computeBalances(tasks, costs.perFamilies, costSplit(tr), costLedger(tr)); } catch (e) {}
+      var paid = bal ? bal.totalPaid : 0, remain = bal ? bal.remaining : costs.total.expected;
+      var perFamAvg = Math.round(costs.total.expected / (costs.perFamilies.length || 1));
+      var costCol = ovCollapse('costs', '💰 ' + t('tab_costs'), '~' + money(costs.total.expected) + ' ' + t('ovTotalLc') + ' · ~' + money(perFamAvg) + '/' + t('ovFamilyLc'), false);
+      var cBody = el('div', 'tc-ov-collapse__body');
+      var grid = el('div', 'tc-ov-costgrid');
+      [[t('ovEstimated'), '~' + money(costs.total.expected)], [t('costPaid'), money(paid)], [t('ovRemaining'), '~' + money(remain)], [t('costPerPerson'), '~' + money(costs.perPerson)]].forEach(function (cc) {
+        var cell = el('div', 'tc-ov-costcell'); cell.appendChild(el('span', 'tc-ov-costcell__l', cc[0])); cell.appendChild(el('span', 'tc-ov-costcell__v', cc[1])); grid.appendChild(cell);
+      });
+      cBody.appendChild(grid);
+      var allCost = el('button', 'tc-ov-collapse__cta', t('tab_costs') + ' →'); allCost.type = 'button';
+      allCost.addEventListener('click', function () { state.activeTab = 'costs'; render(); });
+      cBody.appendChild(allCost);
+      costCol.appendChild(cBody);
+      wrap.appendChild(costCol);
+    }
+
+    // Details (collapsed) — quiet entry points to the remaining surfaces (replaces the old quick-links row).
+    var detCol = ovCollapse('details', '🧭 ' + t('moreNavTitle'), t('tab_transport') + ' · ' + t('tab_stay') + ' · ' + t('tab_food') + '…', false);
+    var dBody = el('div', 'tc-ov-collapse__body');
+    [['transport', '🚐 ', 'tab_transport'], ['stay', '🏨 ', 'tab_stay'], ['food', '🍽 ', 'tab_food'], ['events', '🎉 ', 'tab_events'], ['group', '👥 ', 'tab_group']].forEach(function (it) {
+      var r = el('button', 'tc-ov-detrow', it[1] + t(it[2])); r.type = 'button';
+      r.appendChild(el('span', 'tc-ov-detrow__arr', '→'));
+      r.addEventListener('click', function () { state.activeTab = it[0]; render(); });
+      dBody.appendChild(r);
     });
-    wrap.appendChild(qsec);
+    detCol.appendChild(dBody);
+    wrap.appendChild(detCol);
 
     return wrap;
+  }
+  // ── V5 collapsible primitives (native <details>, localStorage-persisted open state) ──
+  function ovCollapseState(key, def) { try { var v = root.localStorage.getItem('tc_ov_' + key); if (v === '1') return true; if (v === '0') return false; } catch (e) {} return !!def; }
+  function ovCollapse(key, titleText, subText, defOpen) {
+    var d = el('details', 'tc-ov-collapse'); if (ovCollapseState(key, defOpen)) d.open = true;
+    var sm = el('summary', 'tc-ov-collapse__sum');
+    var lab = el('div', 'tc-ov-collapse__lab');
+    lab.appendChild(el('span', 'tc-ov-collapse__k', titleText));
+    if (subText) lab.appendChild(el('span', 'tc-ov-collapse__v', subText));
+    sm.appendChild(lab);
+    sm.appendChild(el('span', 'tc-ov-collapse__chev', '▾'));
+    d.appendChild(sm);
+    d.addEventListener('toggle', function () { try { root.localStorage.setItem('tc_ov_' + key, d.open ? '1' : '0'); } catch (e) {} });
+    return d;
+  }
+  // Collapsed day row (Day N ▼) — expand shows that day's places; sibling days auto-collapse; a
+  // "view full itinerary" deep-link preserved. Travel days show the travel label, never fabricated.
+  function ovDayDetails(d, i) {
+    var det = el('details', 'tc-ov-day');
+    var sm = el('summary', 'tc-ov-day__sum');
+    sm.appendChild(el('span', 'tc-ov-day__d', t('day') + ' ' + (i + 1)));
+    if (d.city) sm.appendChild(el('span', 'tc-ov-day__city', d.city));
+    if (d.isTravelDay || d.transferDay) sm.appendChild(el('span', 'tc-ov-day__travel', '🚗 ' + t('travelDay')));
+    sm.appendChild(el('span', 'tc-ov-day__chev', '▾'));
+    det.appendChild(sm);
+    var body = el('div', 'tc-ov-day__body');
+    var any = false;
+    (d.sections || []).forEach(function (sec) { (sec.places || []).forEach(function (p) { if (p && p.name) { any = true; var r = el('div', 'tc-ov-day__place'); r.appendChild(el('span', 'tc-ov-day__pic', '•')); r.appendChild(el('span', null, p.name)); body.appendChild(r); } }); });
+    if (!any) body.appendChild(el('p', 'tc-ov-day__empty', d.isTravelDay || d.transferDay ? t('travelDay') : (d.title || '')));
+    var go = el('button', 'tc-ov-day__open', t('ovViewItinerary') + ' →'); go.type = 'button';
+    go.addEventListener('click', function (e) { e.preventDefault(); state.activeTab = 'itinerary'; state.activeDay = i; render(); });
+    body.appendChild(go);
+    det.appendChild(body);
+    det.addEventListener('toggle', function () { if (det.open && det.parentNode) { var sibs = det.parentNode.querySelectorAll('details.tc-ov-day'); for (var k = 0; k < sibs.length; k++) if (sibs[k] !== det) sibs[k].open = false; } });
+    return det;
+  }
+  // Compact priority task row for the Overview Task Center. Status/due/cost/assignee — facts only.
+  function ovTaskRow(tk) {
+    var done = ({ booked: 1, paid: 1, skipped: 1, not_needed: 1 })[tk.status];
+    var row = el('div', 'tc-ov-task' + (done ? ' tc-ov-task--done' : ''));
+    var pri = el('span', 'tc-ov-task__pri tc-ov-task__pri--' + (done ? 'done' : String(tk.priority || 'P2').toLowerCase()));
+    pri.textContent = done ? '✓' : (tk.priority || 'P2');
+    row.appendChild(pri);
+    row.appendChild(el('span', 'tc-ov-task__t', tk.title || tk.name || ''));
+    var bits = [];
+    if (tk.dueDate) bits.push(tk.dueDate);
+    var cost = tk.actualCost || tk.costEstimate; if (cost) bits.push((tk.actualCost ? '' : '~') + String(cost).replace(/^\$?/, '$'));
+    if (tk.assignedToFamily) { var fam = ((state.trip.families || []).filter(function (f) { return f.id === tk.assignedToFamily; })[0] || {}); if (fam.name) bits.push(fam.name); }
+    if (bits.length) row.appendChild(el('span', 'tc-ov-task__meta', bits.join(' · ')));
+    return row;
   }
   function liveHighlightsBlock(plan) {
     var hl = (plan && plan.liveHighlights && plan.liveHighlights.length) ? plan.liveHighlights : ((state.trip && state.trip.liveHighlights) || []);

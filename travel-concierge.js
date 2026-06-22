@@ -152,7 +152,7 @@
       legStart: 'Start date', legEnd: 'End date', hotelName: 'Hotel name', hotelArea: 'Hotel area', hotelNotes: 'Hotel notes', moreDetailsOptional: 'More details (optional)',
       hotelStatus: 'Hotel status', hs_planning: 'Planning', hs_researching: 'Researching', hs_booked: 'Booked',
       travelDay: 'Travel day', driveTime: 'Drive time', distance: 'Distance', departFrom: 'Depart', arriveAt: 'Arrive', mealStops: 'Meal stops', restStopsLabel: 'Rest stops',
-      routeOverviewTitle: 'Route', totalDriveTime: 'Total drive time', totalDistance: 'Total distance', leg: 'Leg', legPending: 'Details coming soon for this stop.',
+      routeOverviewTitle: 'Route', totalDriveTime: 'Total drive time', totalDistance: 'Total distance', leg: 'Leg', legPending: 'Details coming soon for this stop.', dayOpen: 'Open day — ask AI to plan this day',
       popularDishesLabel: 'Popular dishes', altTitle: 'Alternatives & backups', alt_kidFriendly: 'Kid-friendly', alt_toddlerLowEnergy: 'Toddler / low-energy', alt_teenOption: 'Teen option', alt_seniorLowWalking: 'Senior / low-walking', alt_rainyDay: 'Rainy day', alt_foodBackup: 'Food backup',
       routeVerifiedTag: 'Distances via Google Maps', routeEstimatedTag: 'Estimated distances', driveHome: 'Drive home',
       dt_arrival_day: 'Arrival', dt_transfer_day: 'Travel', dt_return_day: 'Return', dt_mixed_day: 'Mixed',
@@ -420,7 +420,7 @@
       legStart: 'Ngày bắt đầu', legEnd: 'Ngày kết thúc', hotelName: 'Tên khách sạn', hotelArea: 'Khu vực khách sạn', hotelNotes: 'Ghi chú khách sạn', moreDetailsOptional: 'Thêm chi tiết (tùy chọn)',
       hotelStatus: 'Trạng thái khách sạn', hs_planning: 'Đang lên kế hoạch', hs_researching: 'Đang tìm hiểu', hs_booked: 'Đã đặt',
       travelDay: 'Ngày di chuyển', driveTime: 'Thời gian lái xe', distance: 'Khoảng cách', departFrom: 'Khởi hành', arriveAt: 'Đến nơi', mealStops: 'Điểm ăn uống', restStopsLabel: 'Điểm dừng nghỉ',
-      routeOverviewTitle: 'Lộ trình', totalDriveTime: 'Tổng thời gian lái', totalDistance: 'Tổng khoảng cách', leg: 'Chặng', legPending: 'Chi tiết cho điểm này sẽ có sớm.',
+      routeOverviewTitle: 'Lộ trình', totalDriveTime: 'Tổng thời gian lái', totalDistance: 'Tổng khoảng cách', leg: 'Chặng', legPending: 'Chi tiết cho điểm này sẽ có sớm.', dayOpen: 'Ngày trống — nhờ AI lên kế hoạch cho ngày này',
       popularDishesLabel: 'Món nổi tiếng', altTitle: 'Lựa chọn thay thế & dự phòng', alt_kidFriendly: 'Hợp trẻ em', alt_toddlerLowEnergy: 'Trẻ nhỏ / nhẹ nhàng', alt_teenOption: 'Cho tuổi teen', alt_seniorLowWalking: 'Người lớn tuổi / ít đi bộ', alt_rainyDay: 'Ngày mưa', alt_foodBackup: 'Quán ăn dự phòng',
       routeVerifiedTag: 'Khoảng cách từ Google Maps', routeEstimatedTag: 'Khoảng cách ước tính', driveHome: 'Lái về',
       dt_arrival_day: 'Ngày đến', dt_transfer_day: 'Di chuyển', dt_return_day: 'Ngày về', dt_mixed_day: 'Hỗn hợp',
@@ -687,7 +687,7 @@
       legStart: 'Fecha de inicio', legEnd: 'Fecha de fin', hotelName: 'Nombre del hotel', hotelArea: 'Zona del hotel', hotelNotes: 'Notas del hotel', moreDetailsOptional: 'Más detalles (opcional)',
       hotelStatus: 'Estado del hotel', hs_planning: 'Planeando', hs_researching: 'Investigando', hs_booked: 'Reservado',
       travelDay: 'Día de viaje', driveTime: 'Tiempo de conducción', distance: 'Distancia', departFrom: 'Salida', arriveAt: 'Llegada', mealStops: 'Paradas para comer', restStopsLabel: 'Paradas de descanso',
-      routeOverviewTitle: 'Ruta', totalDriveTime: 'Tiempo total de conducción', totalDistance: 'Distancia total', leg: 'Tramo', legPending: 'Los detalles de esta parada llegarán pronto.',
+      routeOverviewTitle: 'Ruta', totalDriveTime: 'Tiempo total de conducción', totalDistance: 'Distancia total', leg: 'Tramo', legPending: 'Los detalles de esta parada llegarán pronto.', dayOpen: 'Día libre — pide a la IA que planifique este día',
       popularDishesLabel: 'Platos populares', altTitle: 'Alternativas y respaldos', alt_kidFriendly: 'Para niños', alt_toddlerLowEnergy: 'Bebé / tranquilo', alt_teenOption: 'Opción para teens', alt_seniorLowWalking: 'Mayores / poca caminata', alt_rainyDay: 'Día lluvioso', alt_foodBackup: 'Restaurante alterno',
       routeVerifiedTag: 'Distancias vía Google Maps', routeEstimatedTag: 'Distancias estimadas', driveHome: 'Conducir a casa',
       dt_arrival_day: 'Llegada', dt_transfer_day: 'Viaje', dt_return_day: 'Regreso', dt_mixed_day: 'Mixto',
@@ -1764,8 +1764,28 @@
     var days = plan.days = plan.days || [];
     if (parsed && parsed.count) {
       var lastDest = (plan.destinations && plan.destinations.length) ? plan.destinations.length - 1 : 0;
-      while (days.length < parsed.count) { var i = days.length; days.push({ date: parsed.dates[i] || '', dayNumber: i + 1, title: '', theme: '', summary: '', destinationIndex: lastDest, isReturnDay: false, sections: [], _needsDetail: true }); }
-      if (days.length > parsed.count) plan.days = days = days.slice(0, parsed.count);
+      // Reconcile to EXACTLY one day per inclusive calendar date — inserting a placeholder for any
+      // MISSING day (including a dropped middle/transfer day — the Day-3 bug) instead of only
+      // tail-padding (which can never recover a middle gap). Type hints come from the deterministic
+      // segment plan when available; otherwise the day is a generic "open day" placeholder.
+      var segHint = null; try { segHint = buildSegmentDayPlan(trip); } catch (eSeg) {}
+      var segByIso = {}; (segHint || []).forEach(function (s) { if (s && s.iso) segByIso[s.iso] = s; });
+      var expected = [];
+      for (var ei = 0; ei < parsed.count; ei++) {
+        var eIso = isoOfDate(new Date(parsed.start.getTime() + ei * 86400000));
+        var sh = segByIso[eIso] || {};
+        expected.push({ iso: eIso, date: parsed.dates[ei] || '', isTravelDay: !!sh.isTravelDay, isReturnDay: !!sh.isReturnDay, destinationIndex: (sh.destinationIndex != null ? sh.destinationIndex : lastDest) });
+      }
+      // Stamp machine ISO on existing days so reconcile matches by calendar date, not array order.
+      days.forEach(function (d) { if (d && !d.iso && d.date) { var pdt = parseSegDate(d.date); if (pdt) d.iso = isoOfDate(pdt); } });
+      if (root.TCJourneyDays && root.TCJourneyDays.reconcileCalendarDays) {
+        var rec = root.TCJourneyDays.reconcileCalendarDays(days, expected);
+        plan.days = days = rec.days;
+        if (rec.repaired) { try { console.warn('[finalizePlanDays] inserted ' + rec.repaired + ' missing calendar day(s) to honor the trip date range'); } catch (eW) {} }
+      } else { // module missing → legacy tail-pad/truncate (no middle-gap recovery)
+        while (days.length < parsed.count) { var i = days.length; days.push({ date: parsed.dates[i] || '', dayNumber: i + 1, title: '', theme: '', summary: '', destinationIndex: lastDest, isReturnDay: false, sections: [], _needsDetail: true }); }
+        if (days.length > parsed.count) plan.days = days = days.slice(0, parsed.count);
+      }
       days.forEach(function (d, k) { if (!d.date && parsed.dates[k]) d.date = parsed.dates[k]; d.dayNumber = k + 1; });
     }
     // Stamp machine ISO dates (locale-independent) from the deterministic segment day plan, so
@@ -3013,11 +3033,19 @@
     var startIso = pj.overallStartDate || (datedIsos[0] || '');
     var endIso = pj.overallEndDate || (ret && ret.date) || (datedIsos.length ? datedIsos[datedIsos.length - 1] : '');
     if (stays.length) {
+      // Resolve a parseable [arrival, departure) window per stay BEFORE building destinations, so a
+      // stay the parser left undated (a same-day downstream overnight, e.g. "back to Orange County
+      // … overnight" with no restated date) never yields an empty date that makes buildSegmentDayPlan
+      // bail to the day-folding legacy skeleton (the Day-3-skipped bug). Inbound-leg date → chain.
+      var inboundIso = {};
+      stays.forEach(function (st) { var ib = inboundFor(st.city, st.idx); if (ib && ib.date) inboundIso[(st.city || '').trim().toLowerCase()] = ib.date; });
+      var stayWins = (root.TCJourneyDays && root.TCJourneyDays.fillStayWindows) ? root.TCJourneyDays.fillStayWindows(stays, startIso, endIso, inboundIso) : null;
       var dests = stays.map(function (st, k) {
         var d = newDestination(k);
         d.city = st.city;
-        d.arrivalDate = st.date || ''; d.startDate = d.arrivalDate;
-        var dep = (k < stays.length - 1) ? (stays[k + 1].date || '') : endIso;
+        var win = stayWins && stayWins[k];
+        d.arrivalDate = (win && win.arrivalIso) || st.date || ''; d.startDate = d.arrivalDate;
+        var dep = (win && win.departureIso) || ((k < stays.length - 1) ? (stays[k + 1].date || '') : endIso);
         d.departureDate = dep || ''; d.endDate = d.departureDate;
         d.overnightStay = true;
         var inb = inboundFor(st.city, st.idx);
@@ -4292,7 +4320,8 @@
       wrap.appendChild(renderTravelDay(day, plan));
       var rpT = routeOpportunitiesPanel(day, plan, state.activeDay); if (rpT) wrap.appendChild(rpT);
       var altT = dayAlternativesBlock(day); if (altT) wrap.appendChild(altT);
-      return wrap;
+      // Pure transfer/return day → done. A MIXED day (also has activities) falls through to render its lanes below.
+      if (!(day.sections && day.sections.length)) return wrap;
     }
     var di2 = state.activeDay;
     if (state._regenDay === di2) wrap.appendChild(researchBanner('regenDayWorking'));
@@ -4300,7 +4329,7 @@
     if (canEditPlan() && state._replanDay === di2) wrap.appendChild(replanBanner(di2));
     var view = (buildDayView(plan)[di2]) || { lanes: [] };
     if (!view.lanes.length) {
-      wrap.appendChild(el('p', 'tc-empty tc-unverified', t('legPending')));
+      wrap.appendChild(el('p', 'tc-empty tc-unverified', (day._placeholder || day._needsDetail) ? t('dayOpen') : t('legPending')));
       if (canEditPlan()) wrap.appendChild(dayActionsBar(di2));
       return wrap;
     }
@@ -4565,7 +4594,10 @@
     var view = days.map(function () { return { byslot: {}, laneMeta: {} }; });
     var items = [];
     days.forEach(function (d, di) {
-      if (!d || d.isTravelDay) return;
+      if (!d) return;
+      // Pure transfer/return days have no activity lanes; a MIXED day (a travel day that ALSO carries
+      // activities — e.g. San Diego morning + transfer + Orange County food) DOES render its lanes.
+      if (d.isTravelDay && !(Array.isArray(d.sections) && d.sections.length)) return;
       var sorted = (d.sections || []).slice().sort(function (a, b) { return TIME_ORDER.indexOf(a.timeOfDay) - TIME_ORDER.indexOf(b.timeOfDay); });
       var ord = 0;
       sorted.forEach(function (sec) {

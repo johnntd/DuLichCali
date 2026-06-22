@@ -36,5 +36,13 @@ ok('activities chip ok', chip('activities') && chip('activities').state === 'ok'
 ok('omits empty category (food)', !chip('food'));
 ok('P2-only incomplete does NOT warn', O.statusChips([{ category: 'other', status: 'todo', priority: 'P2' }])[0] === undefined || O.statusChips([{ category: 'food', status: 'todo', priority: 'P2' }])[0].state === 'ok');
 
+// ── heroTitle(dateRange) — season + year for the cinematic hero title; null when unparseable ──
+ok('July 1–4, 2026 → summer 2026', (function () { var r = O.heroTitle('July 1–4, 2026'); return r && r.seasonKey === 'season_summer' && r.year === '2026'; })());
+ok('Dec 2025 → winter 2025', (function () { var r = O.heroTitle('Dec 20–24, 2025'); return r && r.seasonKey === 'season_winter' && r.year === '2025'; })());
+ok('2026-03-10 → spring 2026', (function () { var r = O.heroTitle('2026-03-10 to 2026-03-14'); return r && r.seasonKey === 'season_spring' && r.year === '2026'; })());
+ok('9/15/2026 → fall 2026', (function () { var r = O.heroTitle('9/15/2026 - 9/18/2026'); return r && r.seasonKey === 'season_fall' && r.year === '2026'; })());
+ok('no parseable date → null', O.heroTitle('sometime soon') === null);
+ok('year but no month → null', O.heroTitle('our 2026 trip') === null);
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

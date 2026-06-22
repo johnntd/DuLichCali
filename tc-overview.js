@@ -52,5 +52,27 @@
       .map(function (k) { return { key: k, state: groups[k].warn ? 'warn' : 'ok', tab: TABS[k] }; });
   }
 
-  root.TCOverview = { readiness: readiness, nextAction: nextAction, statusChips: statusChips, _categoryOf: categoryOf };
+  // Cinematic hero title — derive {seasonKey, year} from the trip's date range (e.g. "Summer 2026").
+  // Returns null when a year+month can't both be parsed (caller falls back to the group name).
+  var MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+  function seasonOf(m) { // m = 1..12
+    if (m === 12 || m === 1 || m === 2) return 'season_winter';
+    if (m >= 3 && m <= 5) return 'season_spring';
+    if (m >= 6 && m <= 8) return 'season_summer';
+    if (m >= 9 && m <= 11) return 'season_fall';
+    return null;
+  }
+  function heroTitle(dateRange) {
+    var s = String(dateRange || '');
+    var ym = s.match(/(20\d{2})/); if (!ym) return null;
+    var year = ym[1], month = 0;
+    var nm = s.toLowerCase().match(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/);
+    if (nm) { month = MONTHS.indexOf(nm[1]) + 1; }
+    else { var iso = s.match(/20\d{2}-(\d{1,2})/); if (iso) month = parseInt(iso[1], 10); else { var sl = s.match(/\b(\d{1,2})\/\d{1,2}/); if (sl) month = parseInt(sl[1], 10); } }
+    if (!month || month < 1 || month > 12) return null;
+    var sk = seasonOf(month); if (!sk) return null;
+    return { seasonKey: sk, year: year };
+  }
+
+  root.TCOverview = { readiness: readiness, nextAction: nextAction, statusChips: statusChips, heroTitle: heroTitle, _categoryOf: categoryOf };
 })(typeof window !== 'undefined' ? window : this);

@@ -49,6 +49,7 @@ const CLAUDE_API_KEY  = defineSecret('CLAUDE_API_KEY');
 // exposed to the frontend; the validateAddressAndDistance callable proxies it and
 // degrades to a city/ZIP centroid haversine when the key is absent or Maps errors.
 const GOOGLE_MAPS_API_KEY = defineSecret('GOOGLE_MAPS_API_KEY');
+const _userPlaceSanitize = require('./lib/userPlaceSanitize.js');
 
 // Email provider secret (Resend — https://resend.com)
 const RESEND_API_KEY      = defineSecret('RESEND_API_KEY');
@@ -2541,6 +2542,101 @@ exports.researchTripStays = onCall(
     } catch (e2) {
       console.error('[researchTripStays] failed', e2 && e2.message);
       return { ok: false, debugCode: 'RESEARCH_ERROR', stays: [] };
+    }
+  }
+);
+// Research ONE user-named place (e.g. "Pho 79, Garden Grove"). Returns labeled,
+// never-faked details + a placement suggestion. Photos + rating come ONLY from Google Places.
+exports.researchUserPlace = onCall(
+  { region: 'us-central1', secrets: [GEMINI_API_KEY, GOOGLE_MAPS_API_KEY], timeoutSeconds: 60, memory: '256MiB', cors: true },
+  async (request) => {
+    const uid = tripRequireAuth(request);
+    const d = request.data || {};
+    const tripId = String(d.tripId || '');
+    const role = await tripCallerRole(tripId, uid);
+    if (!role) throw new HttpsError('permission-denied', 'Join this trip to add places.');
+    const name = String(d.name || '').trim();
+    if (!name) return { ok: false, debugCode: 'NO_NAME' };
+    const lang = (d.lang === 'vi' || d.lang === 'es') ? d.lang : 'en';
+    const geminiKey = await getAiKey('gemini');
+    if (!geminiKey) return { ok: false, debugCode: 'NO_GEMINI_KEY' };
+
+    const ctx = d.tripContext || {};
+    const userContent = 'Research this ONE place the user already chose. Input JSON:\n' + JSON.stringify({
+      name: name, area: String(d.area || '').slice(0, 120), placeType: String(d.placeType || '').slice(0, 40),
+      mealType: String(d.mealType || '').slice(0, 20), notes: String(d.notes || '').slice(0, 300),
+      destinations: Array.isArray(ctx.destinations) ? ctx.destinations.slice(0, 6) : [],
+      dayContents: Array.isArray(ctx.dayContents) ? ctx.dayContents.slice(0, 10) : [],
+      hotelsByCity: ctx.hotelsByCity || {}, groupProfile: ctx.groupProfile || {},
+    });
+    const prompt = [
+      'You are a LOCAL concierge for Du Lich Cali. The user already chose a specific place; research it using current web knowledge. You ONLY research — never reserve or charge.',
+      'Return ONLY valid JSON (no markdown): { "place": { "name","address"(approx street + city, no fake suite),"rating"(rough star ONLY if grounded, e.g. "4.6★", else ""),"reviewCount"(e.g. "2k+" only if grounded, else ""),"hours"(short, only if grounded, else ""),"popularDishes":[up to 4 real signature items],"priceRange"("pending verification" or rough $/$$/$$$ — NEVER exact),"parkingNote"(short),"kidSuitability"(short),"seniorSuitability"(short),"estimatedDuration"(e.g. "1–2 hours"),"reservationNote"(walk-in ok / reserve ahead),"why"(one sentence) }, "suggestedPlacement": { "day"(0-based index into dayContents),"slot"(morning|lunch|afternoon|dinner|evening),"reason"(one sentence),"fits"(true|false) } }',
+      'NEVER output exact prices, availability, confirmation numbers, phone numbers, or website/reservation URLs. NEVER output photos or image URLs. If you are not confident of a fact, leave that field "" — do not guess.',
+      'For suggestedPlacement, reason from the provided dayContents, hotels, route, opening hours, mealType and the group mix (kids/seniors). Pick the day/slot that best fits.',
+    ].join('\n');
+
+    try {
+      const text = await serverCallGeminiGrounded(prompt + '\n\n' + userContent, geminiKey, 2200);
+      let raw = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
+      const s = raw.indexOf('{'); const e = raw.lastIndexOf('}');
+      if (s > 0 || e > 0) raw = raw.slice(s, e + 1);
+      const parsed = tripSalvageJson(raw);
+      if (!parsed || !parsed.place) return { ok: false, debugCode: 'RESEARCH_ERROR' };
+
+      const place = _userPlaceSanitize.sanitizeUserPlace(parsed.place, d);
+      place.name = place.name || name;
+
+      // Photos + VERIFIED rating — Google Places only; empty without a key.
+      place.photos = [];
+      let researchedPlaceId = '';
+      try {
+        const key = GOOGLE_MAPS_API_KEY.value();
+        if (key && String(key).trim().length >= 20) {
+          const q = encodeURIComponent((place.name + ' ' + place.address).trim());
+          const fp = await fetch(`https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${q}&inputtype=textquery&fields=place_id,photos,name,rating,user_ratings_total&key=${key}`).then((r) => r.json());
+          const cand = fp && fp.candidates && fp.candidates[0];
+          researchedPlaceId = (cand && cand.place_id) || '';
+          // Verified rating/reviewCount from Google Places override the AI text (google_maps-sourced).
+          if (cand && typeof cand.rating === 'number') place.rating = String(cand.rating) + '★';
+          if (cand && typeof cand.user_ratings_total === 'number') place.reviewCount = cand.user_ratings_total >= 1000 ? (Math.round(cand.user_ratings_total / 100) / 10 + 'k') : String(cand.user_ratings_total);
+          const refs = (cand && Array.isArray(cand.photos)) ? cand.photos.slice(0, 3) : [];
+          for (const ph of refs) {
+            try {
+              const resp = await fetch(`https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${encodeURIComponent(ph.photo_reference)}&key=${key}`, { redirect: 'manual' });
+              const loc = resp.headers.get('location');
+              if (loc && /^https?:\/\//.test(loc) && loc.indexOf('key=') === -1) place.photos.push({ url: loc, source: 'google_places' });
+            } catch (e3) { /* skip photo */ }
+          }
+        }
+      } catch (e2) { /* no photos */ }
+
+      // Distance from hotel/route — labeled estimate under the placeholder key.
+      let distanceNote = '', distanceSource = 'unknown';
+      try {
+        const fromCity = (ctx.hotelsByCity && Object.keys(ctx.hotelsByCity)[0]) || (Array.isArray(ctx.destinations) && ctx.destinations[0] && ctx.destinations[0].city) || '';
+        const toArea = String(d.area || '') || place.address;
+        if (fromCity && toArea) {
+          const rl = await tcComputeRouteLegs([fromCity, toArea], GOOGLE_MAPS_API_KEY.value());
+          const leg = rl && rl.legs && rl.legs[0];
+          if (leg) { distanceNote = (leg.distanceText ? leg.distanceText + ' · ' : '') + (leg.durationText || ''); distanceSource = leg.source; }
+        }
+      } catch (e4) { /* no distance */ }
+      if (distanceNote && distanceSource !== 'google_maps') distanceNote = distanceNote + ' (est.)';
+
+      const sp = parsed.suggestedPlacement || {};
+      const slots = ['morning', 'lunch', 'afternoon', 'dinner', 'evening'];
+      const suggestedPlacement = {
+        day: Number.isInteger(sp.day) ? sp.day : null,
+        slot: slots.indexOf(String(sp.slot)) !== -1 ? sp.slot : '',
+        reason: String(sp.reason || '').slice(0, 200),
+        fits: sp.fits !== false,
+      };
+
+      return { ok: true, place, suggestedPlacement, distanceNote, distanceSource, researchedPlaceId, verificationStatus: 'pending_verification' };
+    } catch (e) {
+      console.error('[researchUserPlace] failed', e && e.message);
+      return { ok: false, debugCode: 'RESEARCH_ERROR' };
     }
   }
 );

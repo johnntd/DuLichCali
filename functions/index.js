@@ -51,6 +51,7 @@ const CLAUDE_API_KEY  = defineSecret('CLAUDE_API_KEY');
 const GOOGLE_MAPS_API_KEY = defineSecret('GOOGLE_MAPS_API_KEY');
 const _userPlaceSanitize = require('./lib/userPlaceSanitize.js');
 const _placeMediaSanitize = require('./lib/placeMediaSanitize.js');
+const _driverRanking = require('./lib/driverRanking.js');
 
 // Email provider secret (Resend — https://resend.com)
 const RESEND_API_KEY      = defineSecret('RESEND_API_KEY');
@@ -6078,8 +6079,50 @@ exports.onRideBookingCreated = onDocumentCreated(
         throw e;
       }
     }
+
+    // Admin notification — server-side. The customer browser is DENIED by the tightened
+    // vendors/{vendorId}/{sub=**} rule (isVendorMember||isAdmin), so the admin "new booking"
+    // notification MUST be written here with the Admin SDK (it had been silently failing on the
+    // client). Best-effort: a failure here must never break dispatch.
+    try {
+      await db.collection('vendors').doc('admin-dlc').collection('notifications').add({
+        type:         'new_booking',
+        title:        '🚐 New Booking — ' + _svcLabelCF(booking.serviceType),
+        message:      _buildAdminMsgCF(bookingId, booking),
+        bookingId:    bookingId,
+        serviceType:  booking.serviceType || '',
+        passengers:   (booking.passengers != null ? booking.passengers : null),
+        customerName: booking.customerName || '',
+        read:         false,
+        createdAt:    admin.firestore.FieldValue.serverTimestamp(),
+      });
+      log('admin notification created (server-side)');
+    } catch (e) {
+      log(`admin notification skipped: ${e.message}`);
+    }
   }
 );
+
+// ── Admin-notification helpers (server-side equivalents of the client svcLabel/buildAdminMsg) ──
+function _svcLabelCF(serviceType) {
+  return ({ pickup: 'Airport Pickup', airport_pickup: 'Airport Pickup', dropoff: 'Airport Dropoff', airport_dropoff: 'Airport Dropoff', private_ride: 'Private Ride' })[serviceType] || 'Ride';
+}
+function _buildAdminMsgCF(bookingId, b) {
+  b = b || {};
+  var route = b.airport
+    ? (b.airport + ((b.pickupAddress || b.dropoffAddress) ? (' · ' + (b.pickupAddress || b.dropoffAddress)) : ''))
+    : ([b.pickupAddress, b.dropoffAddress].filter(Boolean).join(' → '));
+  var when = [b.arrivalDate || b.departureDate || b.rideDate || '', b.arrivalTime || b.departureTime || b.rideTime || ''].filter(Boolean).join(' ');
+  return [
+    'Booking: ' + bookingId,
+    _svcLabelCF(b.serviceType),
+    (b.customerName || '') + (b.customerPhone ? (' · ' + b.customerPhone) : ''),
+    (b.passengers != null ? (b.passengers + ' pax') : ''),
+    route,
+    when,
+    (b.estimatedMiles ? ('~' + b.estimatedMiles + ' mi') : ''),
+  ].filter(Boolean).join(' · ');
+}
 
 // ── Shared helper: query eligible drivers ─────────────────────────────────────
 // Logs each filter stage for debugging. Falls back to any active+approved driver
@@ -7159,8 +7202,13 @@ exports.onDispatchQueue = onDocumentCreated(
       return;
     }
 
-    // Select first driver (TODO: add GPS/last-active ranking in future phase)
-    const selected = eligible[0];
+    // Capacity-aware selection: offer a vehicle that FITS the party first (e.g. a 12-seat van for a
+    // 10-passenger ride), preferring the closest fit. NEVER excludes — if no vehicle is recorded as
+    // big enough (seat data may be the admin default/missing), the booking still gets offered to a
+    // driver rather than dead-ending. Distance/owner ranking is a future phase. See driverRanking.js.
+    const ranked = _driverRanking.rankDriversByFit(eligible, booking.passengers);
+    const selected = ranked[0];
+    log(`selected ${selected.id} (vehicle seats=${_driverRanking.seatsOf(selected) || 'unknown'}, party=${booking.passengers || 1})`);
     const expiresAt = new Date(Date.now() + 35 * 1000); // 35-second offer window
 
     // Write or overwrite the offer doc for this booking

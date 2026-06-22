@@ -4028,11 +4028,15 @@ exports.researchLegFares = onCall(
 // disables it by turning Deal Watch off. Prices stay "pending verification" (grounded research, or a
 // future fare API plugged into tcResearchLegFares) — never fabricated.
 exports.monitorDealWatchTrips = onSchedule(
-  { schedule: 'every 24 hours', region: 'us-central1', secrets: [GEMINI_API_KEY], timeoutSeconds: 540, memory: '512MiB' },
+  { schedule: 'every 24 hours', region: 'us-central1', secrets: [GEMINI_API_KEY, VAPID_PRIVATE_KEY], timeoutSeconds: 540, memory: '512MiB' },
   async () => {
     const MAX_TRIPS = 10;
     let geminiKey = null; try { geminiKey = await getAiKey('gemini'); } catch (e) {}
     if (!geminiKey) { console.warn('[monitorDealWatchTrips] no gemini key — skip'); return; }
+    // Web Push (reuses the shared VAPID stack) — used to notify the trip owner's device(s).
+    let webpush = null; try { webpush = require('web-push'); } catch (e) {}
+    const vapidPriv = VAPID_PRIVATE_KEY.value();
+    if (webpush && vapidPriv) { try { webpush.setVapidDetails('mailto:dulichcali21@gmail.com', VAPID_PUBLIC_KEY, vapidPriv); } catch (e) { webpush = null; } } else { webpush = null; }
     let snap;
     try { snap = await db.collection('groupTrips').where('dealWatch', '==', true).limit(MAX_TRIPS).get(); } catch (e) { console.error('[monitorDealWatchTrips] query failed', e && e.message); return; }
     for (const docSnap of snap.docs) {
@@ -4060,6 +4064,29 @@ exports.monitorDealWatchTrips = onSchedule(
         const update = { dealSnapshot: snapshot, dealCheckedAt: Date.now() };
         if (newAlerts.length) update.dealAlerts = existing.concat(newAlerts).slice(-10);
         await docSnap.ref.set(update, { merge: true });
+        // Web Push the trip's opted-in device(s) when a better deal appeared. Notification only —
+        // the itinerary is never changed. Dead subscriptions (404/410) are pruned.
+        if (newAlerts.length && webpush) {
+          try {
+            const subsSnap = await docSnap.ref.collection('pushSubscriptions').get();
+            if (!subsSnap.empty) {
+              const a0 = newAlerts[0];
+              const payload = JSON.stringify({
+                title: 'Better deal found',
+                body: a0.route + ': $' + a0.oldCost + ' → $' + a0.newCost + (newAlerts.length > 1 ? (' (+' + (newAlerts.length - 1) + ' more)') : ''),
+                url: '/travel-concierge?trip=' + docSnap.id,
+                tag: 'dlc-deal-' + docSnap.id,
+                badgeCount: (update.dealAlerts || newAlerts).length,
+              });
+              await Promise.all(subsSnap.docs.map(async (sd) => {
+                const s = sd.data() || {};
+                if (!s.endpoint || !s.keys) return;
+                try { await webpush.sendNotification({ endpoint: s.endpoint, keys: s.keys }, payload, { TTL: 3600 }); }
+                catch (err) { const code = err && err.statusCode; if (code === 404 || code === 410) await sd.ref.delete().catch(() => {}); }
+              }));
+            }
+          } catch (e) { console.warn('[monitorDealWatchTrips] push failed', docSnap.id, e && e.message); }
+        }
       } catch (e) { console.error('[monitorDealWatchTrips] trip failed', docSnap.id, e && e.message); }
     }
     console.log('[monitorDealWatchTrips] checked ' + snap.docs.length + ' watched trip(s)');

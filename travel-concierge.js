@@ -230,6 +230,7 @@
       tprec_userpref: 'You prefer this for this leg, so it leads the comparison — alternatives stay below.', tprec_avoided: 'Picked to avoid the mode you asked to skip on this leg.',
       dealWatchOn: 'Watching for deals', dealWatchOff: 'Watch for deals', dealCheckNow: 'Check now', dealWatchHint: 'AI re-checks transport when you tap “Check now” and alerts you if a cheaper option appears — it never changes your plan on its own. Prices come from research and booking links; nothing is fabricated.', dealNoBetter: 'No better deal right now', dealBetterFound: 'Better deal found', dealWas: 'was', dealNow: 'now', dealSave: 'save', dealKeep: 'Keep itinerary', dealSwitch: 'Switch', researchedAt: 'Researched',
       dealResearchFares: 'Research current fares', dealNoFares: 'No current fares found — try the booking links.', dealFaresTitle: 'Current fares (researched · pending verification)', dealWhileAway: 'found while you were away',
+      pushEnable: 'Enable phone alerts', pushOn: 'Phone alerts on', pushEnabled: 'Phone alerts enabled — we’ll notify you of better deals.', pushDenied: 'Notifications are blocked — enable them in your browser/phone settings.', pushUnsupported: 'Phone alerts aren’t available on this device/browser.',
       tm_any: 'Any · compare all', tm_greyhound: 'Greyhound', tm_flixbus: 'FlixBus', tm_shuttle: 'Shuttle',
       // V3 Transport strategy + transfer intelligence
       tpCompareTitle: 'Compare every leg', whyRecommended: 'Why',
@@ -496,6 +497,7 @@
       tprec_userpref: 'Bạn ưu tiên phương án này cho chặng này nên nó dẫn đầu so sánh — các lựa chọn khác ở bên dưới.', tprec_avoided: 'Đã chọn để tránh phương án bạn muốn bỏ qua ở chặng này.',
       dealWatchOn: 'Đang theo dõi ưu đãi', dealWatchOff: 'Theo dõi ưu đãi', dealCheckNow: 'Kiểm tra ngay', dealWatchHint: 'AI kiểm tra lại phương tiện khi bạn nhấn “Kiểm tra ngay” và báo nếu có lựa chọn rẻ hơn — không bao giờ tự đổi kế hoạch. Giá đến từ nghiên cứu và liên kết đặt chỗ; không bịa đặt.', dealNoBetter: 'Hiện chưa có ưu đãi tốt hơn', dealBetterFound: 'Đã tìm thấy ưu đãi tốt hơn', dealWas: 'trước', dealNow: 'nay', dealSave: 'tiết kiệm', dealKeep: 'Giữ lịch trình', dealSwitch: 'Đổi', researchedAt: 'Tra cứu lúc',
       dealResearchFares: 'Tra giá vé hiện tại', dealNoFares: 'Không tìm thấy giá hiện tại — thử các liên kết đặt chỗ.', dealFaresTitle: 'Giá vé hiện tại (đã tra cứu · chờ xác minh)', dealWhileAway: 'tìm thấy khi bạn vắng mặt',
+      pushEnable: 'Bật thông báo điện thoại', pushOn: 'Đã bật thông báo', pushEnabled: 'Đã bật thông báo — chúng tôi sẽ báo khi có ưu đãi tốt hơn.', pushDenied: 'Thông báo đang bị chặn — hãy bật trong cài đặt trình duyệt/điện thoại.', pushUnsupported: 'Thiết bị/trình duyệt này không hỗ trợ thông báo.',
       tm_any: 'Bất kỳ · so sánh tất cả', tm_greyhound: 'Greyhound', tm_flixbus: 'FlixBus', tm_shuttle: 'Xe trung chuyển',
       // V3 Transport strategy + transfer intelligence
       tpCompareTitle: 'So sánh từng chặng', whyRecommended: 'Vì sao',
@@ -762,6 +764,7 @@
       tprec_userpref: 'Prefieres esto para este tramo, así que encabeza la comparación — las alternativas quedan abajo.', tprec_avoided: 'Elegido para evitar el modo que pediste omitir en este tramo.',
       dealWatchOn: 'Vigilando ofertas', dealWatchOff: 'Vigilar ofertas', dealCheckNow: 'Revisar ahora', dealWatchHint: 'La IA revisa el transporte cuando tocas “Revisar ahora” y te avisa si aparece una opción más barata — nunca cambia tu plan por su cuenta. Los precios vienen de la investigación y enlaces de reserva; nada se inventa.', dealNoBetter: 'No hay mejor oferta por ahora', dealBetterFound: 'Mejor oferta encontrada', dealWas: 'antes', dealNow: 'ahora', dealSave: 'ahorra', dealKeep: 'Mantener itinerario', dealSwitch: 'Cambiar', researchedAt: 'Investigado',
       dealResearchFares: 'Buscar tarifas actuales', dealNoFares: 'No se encontraron tarifas actuales — prueba los enlaces de reserva.', dealFaresTitle: 'Tarifas actuales (investigadas · pendiente de verificación)', dealWhileAway: 'encontrado mientras no estabas',
+      pushEnable: 'Activar alertas en el teléfono', pushOn: 'Alertas activadas', pushEnabled: 'Alertas activadas — te avisaremos de mejores ofertas.', pushDenied: 'Las notificaciones están bloqueadas — actívalas en los ajustes del navegador/teléfono.', pushUnsupported: 'Las alertas no están disponibles en este dispositivo/navegador.',
       tm_any: 'Cualquiera · comparar todo', tm_greyhound: 'Greyhound', tm_flixbus: 'FlixBus', tm_shuttle: 'Shuttle',
       // V3 Transport strategy + transfer intelligence
       tpCompareTitle: 'Compara cada tramo', whyRecommended: 'Por qué',
@@ -6068,15 +6071,48 @@
     var loc = state.lang === 'vi' ? 'vi-VN' : (state.lang === 'es' ? 'es-ES' : 'en-US');
     try { return new Date(ts).toLocaleString(loc, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; }
   }
+  // ── Web Push for Deal Hunter alerts — reuses the shared portal-kit push stack (PortalPWA +
+  //    VAPID) already used by mobile-barber/driver. Subscription stored under the trip so the
+  //    scheduled monitor (monitorDealWatchTrips) can push the owner's device(s). Opt-in only. ──
+  var TC_VAPID_PUBLIC = 'BBHEU_YqwysrntO1a6JPvWn8YSQmKumg6fcgLipNPcOVC-0LbZc8SU-1q0Nf_ilI7B3pFs_OXPCf-ajrSO8c0V8';
+  function tcPushSubId(endpoint) { var h = 0, s = String(endpoint || ''); for (var i = 0; i < s.length; i++) { h = ((h << 5) - h + s.charCodeAt(i)) | 0; } return 'sub_' + Math.abs(h).toString(36); }
+  function tcRegisterSW() { if (state._swReg || !root.PortalPWA) return; state._swReg = true; try { root.PortalPWA.register({ swUrl: '/travel-concierge-sw.js', scope: '/travel-concierge' }); } catch (e) {} }
+  function tcPushSupported() { return !!(root.PortalPWA && ('Notification' in root) && ('PushManager' in root) && root.navigator && 'serviceWorker' in root.navigator); }
+  // Subscribe this device + store the subscription on the trip. silent=true suppresses toasts
+  // (used when the user just flips Deal Watch on). Resolves true on success.
+  function tcEnablePush(silent) {
+    var tr = state.trip;
+    if (!tcPushSupported() || !tr || !tr.id || tr._demo || !realUser()) { if (!silent) toast(t('pushUnsupported')); return Promise.resolve(false); }
+    tcRegisterSW();
+    return root.PortalPWA.subscribePush({ vapidPublicKey: TC_VAPID_PUBLIC }).then(function (sub) {
+      if (!sub || !sub.endpoint) { if (!silent) toast((root.Notification && root.Notification.permission === 'denied') ? t('pushDenied') : t('pushUnsupported')); return false; }
+      try {
+        var col = root.dlcDb && root.dlcDb.collection('groupTrips').doc(tr.id).collection('pushSubscriptions');
+        if (col) col.doc(tcPushSubId(sub.endpoint)).set({ endpoint: sub.endpoint, keys: sub.keys || {}, uid: curUid() || '', tripId: tr.id, platform: (root.PortalPWA.isStandalone && root.PortalPWA.isStandalone()) ? 'home-screen' : 'browser', updatedAt: new Date().toISOString() }).catch(function () {});
+      } catch (e) {}
+      tr.pushEnabled = true; saveTrip(tr);
+      if (!silent) toast(t('pushEnabled'));
+      render();
+      return true;
+    }).catch(function () { if (!silent) toast(t('pushUnsupported')); return false; });
+  }
   function dealWatchPanel() {
     var tr = state.trip, box = el('div', 'tc-dealwatch');
     var row = el('div', 'tc-dealwatch__row');
-    row.appendChild(pbtn((tr.dealWatch ? '🔔 ' + t('dealWatchOn') : '🔕 ' + t('dealWatchOff')), 'tc-pbtn--ghost' + (tr.dealWatch ? ' tc-pbtn--on' : ''), function () { tr.dealWatch = !tr.dealWatch; saveTrip(tr); render(); }));
+    row.appendChild(pbtn((tr.dealWatch ? '🔔 ' + t('dealWatchOn') : '🔕 ' + t('dealWatchOff')), 'tc-pbtn--ghost' + (tr.dealWatch ? ' tc-pbtn--on' : ''), function () { tr.dealWatch = !tr.dealWatch; saveTrip(tr); if (tr.dealWatch && tcPushSupported() && !tr.pushEnabled) tcEnablePush(); else render(); }));
     if (!state.readonly && !tr._demo) {
       row.appendChild(pbtn('↻ ' + t('dealCheckNow'), 'tc-pbtn--ghost', function () { state.generating = true; renderGenerating(t('researchingTransport')); researchTransport(tr).then(function (res) { state.generating = false; var before = (state._dealAlerts || []).length; applyTransportResult(tr, res); if ((state._dealAlerts || []).length === before) toast(t('dealNoBetter')); render(); }); }));
       row.appendChild(pbtn('💲 ' + t('dealResearchFares'), 'tc-pbtn--ghost', function () { state.generating = true; renderGenerating(t('researchingTransport')); researchFares(tr).then(function (res) { state.generating = false; if (res.ok && res.legs.length) { tr.legFares = res.legs; tr.legFaresAt = res.researchedAt; tr.legFaresNote = res.sourceNote; saveTrip(tr); } else toast(t('dealNoFares')); render(); }); }));
     }
     box.appendChild(row);
+    // Phone push opt-in — so "better deal" alerts reach the device even when the app is closed.
+    if (!state.readonly && !tr._demo && tcPushSupported()) {
+      if (tr.pushEnabled && root.Notification && root.Notification.permission === 'granted') {
+        box.appendChild(el('p', 'tc-dealwatch__ts', '📲 ' + t('pushOn')));
+      } else {
+        box.appendChild(pbtn('📲 ' + t('pushEnable'), 'tc-pbtn--ghost', function () { tcEnablePush(); }));
+      }
+    }
     if (tr.transportResearchedAt) box.appendChild(el('p', 'tc-dealwatch__ts', '🕒 ' + t('researchedAt') + ' ' + tpResearchedLabel(tr.transportResearchedAt)));
     box.appendChild(el('p', 'tc-hint', t('dealWatchHint')));
     // Grounded current-fare research (honest estimates, pending verification, with source + time).
@@ -7331,6 +7367,7 @@
     state.lang = detectLang(); doc.documentElement.setAttribute('lang', state.lang);
     doc.querySelectorAll('#tcLang .tc-lang__btn').forEach(function (b) { b.addEventListener('click', function () { setLang(b.getAttribute('data-lang')); }); });
     syncLangBtns();
+    try { tcRegisterSW(); } catch (e) {} // register the Web Push service worker (deal alerts)
     var tripId = null; try { tripId = new URLSearchParams(root.location.search).get('trip'); } catch (e) {}
     var shareToken = null; try { var mm = (root.location.pathname || '').match(/\/travel-concierge\/trip\/([^\/?#]+)/); if (mm) shareToken = decodeURIComponent(mm[1]); } catch (e) {}
     var wantDash = false; try { wantDash = /\/travel-concierge\/my-trips\/?$/.test(root.location.pathname || ''); } catch (e) {}

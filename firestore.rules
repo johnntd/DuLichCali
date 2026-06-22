@@ -643,6 +643,17 @@ service cloud.firestore {
         allow delete: if isSignedInUser() && (request.auth.uid == memberUid || gtTripOwner(tripId));
       }
 
+      // ── Deal Hunter push subscriptions — the owner/member's Web Push endpoints for
+      // "better deal" alerts. Read/write by the trip owner or a joined member (must stamp
+      // their OWN uid); the scheduled monitor reads via the Admin SDK (bypasses rules).
+      // No public access; default-deny covers everything else.
+      match /pushSubscriptions/{subId} {
+        allow read, delete: if isSignedInUser() && (gtTripOwner(tripId) || gtTripMember(tripId));
+        allow create, update: if isSignedInUser()
+                          && (gtTripOwner(tripId) || gtTripMember(tripId))
+                          && request.resource.data.get('uid', '') == request.auth.uid;
+      }
+
       // ── Trip Album media (V2) — member-uploaded photos/videos/links, privacy-first ──
       // Read: the trip OWNER, the item's AUTHOR, OR any joined member EXCEPT when the item is
       // marked "private" (private items are visible only to their author + the owner). Create:

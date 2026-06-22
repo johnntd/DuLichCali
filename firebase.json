@@ -106,6 +106,13 @@
         ]
       },
       {
+        "source": "/travel-concierge-sw.js",
+        "headers": [
+          { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+          { "key": "Service-Worker-Allowed", "value": "/travel-concierge" }
+        ]
+      },
+      {
         "source": "**/*.webmanifest",
         "headers": [
           { "key": "Content-Type", "value": "application/manifest+json" },

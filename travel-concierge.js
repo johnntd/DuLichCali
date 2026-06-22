@@ -3929,6 +3929,7 @@
       if (x.note) c.appendChild(el('p', 'tc-live__note', x.note));
       var a = el('a', 'tc-pbtn', '🔎 ' + t('mapG')); a.href = MapLinkProvider.google(x.name, (state.trip && state.trip.destination) || ''); a.target = '_blank'; a.rel = 'noopener';
       c.appendChild(a);
+      var _lmx = learnMoreSection({ name: x.name, category: x.category }, mediaTypeForPlace({ category: x.category }), (state.trip && state.trip.destination) || ''); if (_lmx) c.appendChild(_lmx); // "Learn more"
       grid.appendChild(c);
     });
     b.appendChild(grid);
@@ -4116,6 +4117,7 @@
     acts.appendChild(linkBtn('🔎 ' + t('mapG'), MapLinkProvider.google(a.name, city)));
     if (canEditPlan()) acts.appendChild(pbtn('📌 ' + t('pinToTrip'), 'tc-pbtn--accent', function () { pinAttraction(a, city); }));
     c.appendChild(acts);
+    var _lma = learnMoreSection(a, 'attraction', city); if (_lma) c.appendChild(_lma); // "Learn more"
     if (!state.readonly && a.name) c.appendChild(voteRow({ name: a.name }));
     return c;
   }
@@ -4164,6 +4166,7 @@
       acts.appendChild(pbtn('🚐 ' + t('tourRequestDlc'), '', function () { requestDlcInquiry({ kind: 'tour', label: to.name + (city ? (' (' + city + ')') : ''), dropoff: city }); }));
     }
     c.appendChild(acts);
+    var _lmt = learnMoreSection(to, 'tour', city); if (_lmt) c.appendChild(_lmt); // "Learn more"
     if (!state.readonly && to.name) c.appendChild(voteRow({ name: to.name }));
     return c;
   }
@@ -4432,6 +4435,7 @@
       acts.appendChild(pbtn('⤫ ' + t('skipPlace'), '', function () { setPlaceOverride({ name: op.place }, 'skipped', null); }));
     }
     c.appendChild(acts);
+    var _lmo = learnMoreSection({ name: op.place, address: op.mapQuery || '', category: op.category }, mediaTypeForPlace({ category: op.category }), ''); if (_lmo) c.appendChild(_lmo); // "Learn more"
     if (!state.readonly) c.appendChild(voteRow({ name: op.place }));
     return c;
   }
@@ -5699,6 +5703,7 @@
     if (p.reservationUrl) acts.appendChild(linkBtn('🎟 ' + t('reserve'), p.reservationUrl, 'tc-pbtn--accent'));
     if (p.videoUrl) acts.appendChild(linkBtn('▶ ' + t('watchClip'), p.videoUrl, 'tc-pbtn--accent'));
     card.appendChild(acts);
+    var _lmm = learnMoreSection(p, mediaTypeForPlace(p), p.city || ''); if (_lmm) card.appendChild(_lmm); // "Learn more" (shared with cards)
     card.appendChild(el('p', 'tc-unverified', t('unverified')));
     ov.appendChild(card);
     ov.addEventListener('click', function (e) { if (e.target === ov) closeModal(); });
@@ -5928,6 +5933,7 @@
       acts.appendChild(addbk);
     }
     c.appendChild(acts);
+    var _lmh = learnMoreSection(h, 'hotel', city); if (_lmh) c.appendChild(_lmh); // "Learn more"
     if (!state.readonly && (h.name || h.area)) c.appendChild(voteRow({ name: hotelVoteName(h, city) }));
     return c;
   }
@@ -6718,6 +6724,7 @@
     if (canEditPlan()) acts.appendChild(pbtn('📌 ' + t('addToPlan'), 'tc-pbtn--accent', function () { pinAttraction({ name: ev.name, why: ev.whyRecommended || '' }, city); }));
     c.appendChild(acts);
     c.appendChild(el('span', 'tc-event__pending', '≈ ' + t('eventPending')));
+    var _lme = learnMoreSection(ev, 'event', city); if (_lme) c.appendChild(_lme); // "Learn more"
     if (!state.readonly && ev.name) c.appendChild(voteRow({ name: ev.name }));
     return c;
   }
@@ -6772,6 +6779,7 @@
     }
     c.appendChild(acts);
     c.appendChild(el('span', 'tc-event__pending', '≈ ' + t('soPending')));
+    var _lms = learnMoreSection({ name: so.name, address: so.location || '', category: so.type }, mediaTypeForPlace({ category: so.type }), so.location || (lg && lg.toCity) || ''); if (_lms) c.appendChild(_lms); // "Learn more"
     if (!state.readonly && so.name) c.appendChild(voteRow({ name: so.name }));
     return c;
   }

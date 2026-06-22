@@ -7,6 +7,8 @@
     "test:rules": "bash scripts/ai/rules_test.sh",
     "test:pricing": "node tests/pricing.test.js",
     "test:journeydays": "node tests/journey-days.test.js",
+    "test:media": "node tests/tc-media.test.js && node tests/place-media-sanitize.test.js",
+    "test:tasks": "node tests/tc-tasks.test.js && node tests/task-tracker-accept.test.js",
     "auto:hair": "bash automation/auto_run.sh automation/prompts/hair_salon_system_audit.md",
     "auto:full": "bash automation/auto_run.sh automation/prompts/full_app_system_audit.md",
     "auto:phase1": "bash automation/auto_run.sh automation/prompts/phase1_hair_salon_fix.md"

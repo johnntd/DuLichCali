@@ -162,14 +162,15 @@
       hotelsTitle: 'Hotels', researchHotels: 'Search hotels', fatigueNote: 'Fatigue', napNote: 'Nap timing', seniorNote: 'Senior note',
       genSkeleton: 'Mapping your route…', genLeg: 'Planning each stop…', genLegOf: 'Planning stop {n} of {total}…',
       // Travel Booking Concierge
-      tab_bookings: 'Bookings', bookingsTitle: 'Booking checklist', bookingsSub: 'What to reserve for this trip.',
+      tab_bookings: 'Tasks', bookingsTitle: 'Trip tasks & action items', bookingsSub: 'What to book, confirm, and pay for this trip.',
       bookingApprovalNotice: 'The AI researches and prepares options only — it never buys, charges your card, or stores card numbers. You complete payment on the official page.',
       researchBookings: 'Research options (AI)', rebuildChecklist: 'Rebuild from itinerary', addBooking: 'Add booking', noBookings: 'No booking items yet — research options or add one.',
       researchingBookings: 'Finding tickets & reservations to book…', conciergeWorking: 'Your AI concierge is doing the homework — hotels, food and bookings are loading.', refreshResearch: 'Refresh',
       bookingType: 'Type', openOfficial: 'Open official page', readyToBook: 'Ready to book', markBooked: 'Mark booked', undoBooked: 'Booked ✓ (tap to undo)',
       confirmationNumber: 'Confirmation #', cancellationPolicy: 'Cancellation policy', refundPolicy: 'Refund policy', deadlineLabel: 'Book by', providerLabel: 'Provider', recommended: 'Recommended', bookingNotes: 'Notes',
-      bt_flight: 'Flight', bt_hotel: 'Hotel', bt_airbnb: 'Vacation rental', bt_attraction: 'Attraction / tickets', bt_restaurant: 'Restaurant', bt_tour: 'Tour', bt_parking: 'Parking', bt_rental_car: 'Rental car', bt_bus: 'Bus', bt_ride: 'Ride',
-      bs_research_needed: 'Research needed', bs_researching: 'Researching', bs_ready_to_book: 'Ready to book', bs_user_approval_needed: 'Needs approval', bs_booked: 'Booked', bs_skipped: 'Skipped',
+      bt_flight: 'Flight', bt_hotel: 'Hotel', bt_airbnb: 'Vacation rental', bt_attraction: 'Attraction / tickets', bt_restaurant: 'Restaurant', bt_tour: 'Tour', bt_parking: 'Parking', bt_rental_car: 'Rental car', bt_bus: 'Bus', bt_ride: 'Ride', bt_packing: 'Packing', bt_payment: 'Payment', bt_confirmation: 'Confirmation', bt_other: 'Other',
+      bs_research_needed: 'Research needed', bs_researching: 'Researching', bs_ready_to_book: 'Ready to book', bs_user_approval_needed: 'Needs approval', bs_booked: 'Booked', bs_skipped: 'Skipped', bs_paid: 'Paid', bs_not_needed: 'Not needed',
+      pri_P0: 'P0 · Urgent', pri_P1: 'P1', pri_P2: 'P2', taskUnassigned: 'Unassigned', taskDue: 'Due date', taskCost: 'Est. cost', taskBook: 'Book', taskConfirmRide: 'Confirm ride', taskChoose: 'Choose/vote', tf_all: 'All', tf_urgent: 'Urgent', tf_mine: 'My tasks', tf_unpaid: 'Unpaid', tf_bookings: 'Bookings', tf_done: 'Completed',
       // Shared trip access (invite link + passcode + roles)
       shareTrip: 'Share Trip', shareModalTitle: 'Invite your group', shareLinkLabel: 'Trip link', sharePasscodeLabel: 'Passcode', copyPasscode: 'Copy passcode', passcodeCopied: 'Passcode copied!',
       regeneratePasscode: 'Regenerate link + passcode', shareRegenWarn: 'This creates a new link and passcode; the old ones stop working.', disableSharing: 'Disable sharing', enableSharing: 'Enable sharing', sharingDisabled: 'Sharing is currently OFF.', shareGenerating: 'Creating secure invite…',
@@ -431,14 +432,15 @@
       hotelsTitle: 'Khách sạn', researchHotels: 'Tìm khách sạn', fatigueNote: 'Mệt mỏi', napNote: 'Giờ ngủ trưa', seniorNote: 'Lưu ý người cao tuổi',
       genSkeleton: 'Đang vạch lộ trình…', genLeg: 'Đang lên kế hoạch từng chặng…', genLegOf: 'Đang lên chặng {n}/{total}…',
       // Travel Booking Concierge
-      tab_bookings: 'Đặt chỗ', bookingsTitle: 'Danh sách đặt chỗ', bookingsSub: 'Những thứ cần đặt cho chuyến đi.',
+      tab_bookings: 'Nhiệm vụ', bookingsTitle: 'Nhiệm vụ chuyến đi', bookingsSub: 'Cần đặt, xác nhận và thanh toán cho chuyến đi.',
       bookingApprovalNotice: 'AI chỉ tìm hiểu và chuẩn bị lựa chọn — không bao giờ mua, tính tiền thẻ hay lưu số thẻ. Bạn hoàn tất thanh toán trên trang chính thức.',
       researchBookings: 'Tìm lựa chọn (AI)', rebuildChecklist: 'Tạo lại từ lịch trình', addBooking: 'Thêm mục đặt chỗ', noBookings: 'Chưa có mục nào — hãy tìm lựa chọn hoặc thêm một mục.',
       researchingBookings: 'Đang tìm vé & chỗ cần đặt trước…', conciergeWorking: 'Trợ lý AI đang làm bài tập — khách sạn, ẩm thực và đặt chỗ đang được tải.', refreshResearch: 'Làm mới',
       bookingType: 'Loại', openOfficial: 'Mở trang chính thức', readyToBook: 'Sẵn sàng đặt', markBooked: 'Đánh dấu đã đặt', undoBooked: 'Đã đặt ✓ (chạm để hoàn tác)',
       confirmationNumber: 'Mã xác nhận', cancellationPolicy: 'Chính sách hủy', refundPolicy: 'Chính sách hoàn tiền', deadlineLabel: 'Đặt trước', providerLabel: 'Nhà cung cấp', recommended: 'Đề xuất', bookingNotes: 'Ghi chú',
-      bt_flight: 'Chuyến bay', bt_hotel: 'Khách sạn', bt_airbnb: 'Nhà cho thuê', bt_attraction: 'Tham quan / vé', bt_restaurant: 'Nhà hàng', bt_tour: 'Tour', bt_parking: 'Bãi đỗ xe', bt_rental_car: 'Thuê xe', bt_bus: 'Xe khách', bt_ride: 'Đưa đón',
-      bs_research_needed: 'Cần tìm hiểu', bs_researching: 'Đang tìm hiểu', bs_ready_to_book: 'Sẵn sàng đặt', bs_user_approval_needed: 'Cần phê duyệt', bs_booked: 'Đã đặt', bs_skipped: 'Bỏ qua',
+      bt_flight: 'Chuyến bay', bt_hotel: 'Khách sạn', bt_airbnb: 'Nhà cho thuê', bt_attraction: 'Tham quan / vé', bt_restaurant: 'Nhà hàng', bt_tour: 'Tour', bt_parking: 'Bãi đỗ xe', bt_rental_car: 'Thuê xe', bt_bus: 'Xe khách', bt_ride: 'Đưa đón', bt_packing: 'Hành lý', bt_payment: 'Thanh toán', bt_confirmation: 'Xác nhận', bt_other: 'Khác',
+      bs_research_needed: 'Cần tìm hiểu', bs_researching: 'Đang tìm hiểu', bs_ready_to_book: 'Sẵn sàng đặt', bs_user_approval_needed: 'Cần phê duyệt', bs_booked: 'Đã đặt', bs_skipped: 'Bỏ qua', bs_paid: 'Đã thanh toán', bs_not_needed: 'Không cần',
+      pri_P0: 'P0 · Khẩn', pri_P1: 'P1', pri_P2: 'P2', taskUnassigned: 'Chưa giao', taskDue: 'Hạn chót', taskCost: 'Chi phí ước tính', taskBook: 'Đặt', taskConfirmRide: 'Xác nhận xe', taskChoose: 'Chọn/bình chọn', tf_all: 'Tất cả', tf_urgent: 'Khẩn', tf_mine: 'Của tôi', tf_unpaid: 'Chưa trả', tf_bookings: 'Đặt chỗ', tf_done: 'Hoàn tất',
       shareTrip: 'Chia sẻ chuyến đi', shareModalTitle: 'Mời nhóm của bạn', shareLinkLabel: 'Liên kết chuyến đi', sharePasscodeLabel: 'Mật mã', copyPasscode: 'Sao chép mật mã', passcodeCopied: 'Đã sao chép mật mã!',
       regeneratePasscode: 'Tạo lại liên kết + mật mã', shareRegenWarn: 'Việc này tạo liên kết và mật mã mới; cái cũ sẽ ngừng hoạt động.', disableSharing: 'Tắt chia sẻ', enableSharing: 'Bật chia sẻ', sharingDisabled: 'Chia sẻ hiện đang TẮT.', shareGenerating: 'Đang tạo lời mời an toàn…',
       sharePermInfo: 'Bất kỳ ai có liên kết VÀ mật mã đều có thể đăng nhập để xem, bình chọn, đề xuất và thêm gia đình. Chỉ bạn mới có thể sửa chuyến đi, duyệt đề xuất và quản lý thành viên. Không ai xóa được chuyến đi hay mua hàng.',
@@ -699,14 +701,15 @@
       hotelsTitle: 'Hoteles', researchHotels: 'Buscar hoteles', fatigueNote: 'Fatiga', napNote: 'Hora de siesta', seniorNote: 'Nota para mayores',
       genSkeleton: 'Trazando tu ruta…', genLeg: 'Planeando cada parada…', genLegOf: 'Planeando parada {n} de {total}…',
       // Travel Booking Concierge
-      tab_bookings: 'Reservas', bookingsTitle: 'Lista de reservas', bookingsSub: 'Qué reservar para este viaje.',
+      tab_bookings: 'Tareas', bookingsTitle: 'Tareas del viaje', bookingsSub: 'Qué reservar, confirmar y pagar para este viaje.',
       bookingApprovalNotice: 'La IA solo investiga y prepara opciones — nunca compra, cobra tu tarjeta ni guarda números de tarjeta. Tú completas el pago en la página oficial.',
       researchBookings: 'Buscar opciones (IA)', rebuildChecklist: 'Recrear desde el itinerario', addBooking: 'Añadir reserva', noBookings: 'Aún no hay reservas — busca opciones o añade una.',
       researchingBookings: 'Buscando entradas y reservas por hacer…', conciergeWorking: 'Tu concierge de IA está haciendo la tarea — hoteles, comida y reservas se están cargando.', refreshResearch: 'Actualizar',
       bookingType: 'Tipo', openOfficial: 'Abrir página oficial', readyToBook: 'Listo para reservar', markBooked: 'Marcar reservado', undoBooked: 'Reservado ✓ (toca para deshacer)',
       confirmationNumber: 'N.º de confirmación', cancellationPolicy: 'Política de cancelación', refundPolicy: 'Política de reembolso', deadlineLabel: 'Reservar antes de', providerLabel: 'Proveedor', recommended: 'Recomendado', bookingNotes: 'Notas',
-      bt_flight: 'Vuelo', bt_hotel: 'Hotel', bt_airbnb: 'Alquiler vacacional', bt_attraction: 'Atracción / entradas', bt_restaurant: 'Restaurante', bt_tour: 'Tour', bt_parking: 'Estacionamiento', bt_rental_car: 'Auto de alquiler', bt_bus: 'Autobús', bt_ride: 'Transporte',
-      bs_research_needed: 'Investigar', bs_researching: 'Investigando', bs_ready_to_book: 'Listo para reservar', bs_user_approval_needed: 'Requiere aprobación', bs_booked: 'Reservado', bs_skipped: 'Omitido',
+      bt_flight: 'Vuelo', bt_hotel: 'Hotel', bt_airbnb: 'Alquiler vacacional', bt_attraction: 'Atracción / entradas', bt_restaurant: 'Restaurante', bt_tour: 'Tour', bt_parking: 'Estacionamiento', bt_rental_car: 'Auto de alquiler', bt_bus: 'Autobús', bt_ride: 'Transporte', bt_packing: 'Equipaje', bt_payment: 'Pago', bt_confirmation: 'Confirmación', bt_other: 'Otro',
+      bs_research_needed: 'Investigar', bs_researching: 'Investigando', bs_ready_to_book: 'Listo para reservar', bs_user_approval_needed: 'Requiere aprobación', bs_booked: 'Reservado', bs_skipped: 'Omitido', bs_paid: 'Pagado', bs_not_needed: 'No necesario',
+      pri_P0: 'P0 · Urgente', pri_P1: 'P1', pri_P2: 'P2', taskUnassigned: 'Sin asignar', taskDue: 'Fecha límite', taskCost: 'Costo est.', taskBook: 'Reservar', taskConfirmRide: 'Confirmar transporte', taskChoose: 'Elegir/votar', tf_all: 'Todo', tf_urgent: 'Urgente', tf_mine: 'Mías', tf_unpaid: 'Sin pagar', tf_bookings: 'Reservas', tf_done: 'Completadas',
       shareTrip: 'Compartir viaje', shareModalTitle: 'Invita a tu grupo', shareLinkLabel: 'Enlace del viaje', sharePasscodeLabel: 'Código', copyPasscode: 'Copiar código', passcodeCopied: '¡Código copiado!',
       regeneratePasscode: 'Regenerar enlace + código', shareRegenWarn: 'Esto crea un nuevo enlace y código; los anteriores dejan de funcionar.', disableSharing: 'Desactivar', enableSharing: 'Activar', sharingDisabled: 'El compartir está DESACTIVADO.', shareGenerating: 'Creando invitación segura…',
       sharePermInfo: 'Cualquiera con el enlace Y el código puede iniciar sesión para ver, votar, sugerir y añadir su familia. Solo tú puedes editar el viaje, aprobar sugerencias y gestionar miembros. Nadie puede eliminar el viaje ni hacer compras.',
@@ -1122,7 +1125,7 @@
   };
   // ── Booking Concierge providers (mock/fallback: build official/search links only;
   // NEVER fake prices, availability, or confirmations; the app never purchases) ──────
-  var BOOKING_TYPES = ['flight', 'hotel', 'airbnb', 'attraction', 'restaurant', 'tour', 'parking', 'rental_car', 'bus', 'ride'];
+  var BOOKING_TYPES = ['flight', 'hotel', 'airbnb', 'attraction', 'restaurant', 'tour', 'parking', 'rental_car', 'bus', 'ride', 'packing', 'payment', 'confirmation', 'other'];
   function gsearch(q) { return 'https://www.google.com/search?q=' + encodeURIComponent(q); }
   var BookingLinkProvider = {
     // Returns { officialUrl, searchUrl } for a booking item; prefers a known official
@@ -1147,12 +1150,16 @@
     },
   };
   function newBooking(type, title, extra) {
+    var vt = BOOKING_TYPES.indexOf(type) !== -1 ? type : 'attraction';
     var b = {
       id: uid('bk'), tripId: state.trip && state.trip.id, destinationId: '', dayId: '', placeId: '',
-      type: BOOKING_TYPES.indexOf(type) !== -1 ? type : 'attraction', title: title || '', provider: '',
+      type: vt, title: title || '', provider: '',
       officialUrl: '', searchUrl: '', priceRange: '', selectedOption: '', recommendedOption: '',
       deadline: '', bookingStatus: 'research_needed', confirmationNumber: '', bookedBy: '', notes: '',
       cancellationPolicy: '', refundPolicy: '', dataSource: 'user_entered', lastVerifiedAt: '',
+      // Task Tracker fields (additive; legacy bookings still valid):
+      priority: (root.TCTasks ? root.TCTasks.priority(vt) : 'P2'), assignedToFamily: '', dueDate: '',
+      costEstimate: '', actualCost: '', paidBy: '', splitMode: '', splitBetween: [], linkedSegmentId: '',
     };
     if (extra) for (var k in extra) b[k] = extra[k];
     return b;
@@ -1167,10 +1174,13 @@
     // Pinned must-do activities → ticket/reservation checklist items (any destination).
     (trip.pinnedActivities || []).forEach(function (pin) {
       if (!pin || !(pin.title || '').trim()) return;
-      add(newBooking('attraction', pin.title, { city: pin.destination || trip.destination || '', recommendedOption: t('pinnedBookingNote'), dataSource: 'pinned_must_do' }));
+      var pt = (pin.title || '').toLowerCase();
+      var isFood = pin.preferredTimeOfDay === 'dinner' || pin.preferredTimeOfDay === 'lunch' || pin.preferredTimeOfDay === 'breakfast' || /\bfood\b|dinner|lunch|breakfast|restaurant|cuisine|vietnamese|pho|dining/.test(pt);
+      if (isFood) add(newBooking('restaurant', t('taskChoose') + ': ' + pin.title, { city: pin.destination || trip.destination || '', priority: 'P1', dataSource: 'pinned_food_choice' })); // a "choose/vote" dining task (card shows a vote row)
+      else add(newBooking('attraction', pin.title, { city: pin.destination || trip.destination || '', recommendedOption: t('pinnedBookingNote'), dataSource: 'pinned_must_do' }));
     });
     (trip.destinations || []).forEach(function (d) {
-      if (!(d.city || '').trim()) return;
+      if (!(d.city || '').trim() || d.hotelNeeded === false) return; // skip meal-stops / pass-throughs (no overnight)
       add(newBooking('hotel', (t('bt_hotel') + ' — ' + d.city), { destinationId: d.id, city: d.city, dataSource: 'derived_from_itinerary' }));
     });
     (plan.transportation || []).forEach(function (tp) {
@@ -1193,6 +1203,34 @@
     });
     return out;
   }
+  // Task Tracker generators (deterministic, V2/V3 data — deriveBookingChecklist's plan.transportation
+  // is legacy). Idempotent via bookingKey; never clobber user edits/booked status.
+  function lockedLegsTasks(tr) {
+    var out = [];
+    (tr.lockedLegs || []).forEach(function (lg) {
+      var from = String(lg.fromCity || '').split(',')[0], to = String(lg.toCity || '').split(',')[0];
+      if (!to) return;
+      var isRide = lg.transportMode === 'private_ride' || /michael|dulichcali|du lich cali|\bdlc\b/i.test(lg.provider || '');
+      var type = isRide ? 'ride' : (lg.transportMode === 'flight' ? 'flight' : 'bus');
+      var verb = isRide ? t('taskConfirmRide') : t('taskBook');
+      out.push(newBooking(type, verb + ' ' + (lg.provider ? lg.provider + ' · ' : '') + from + ' → ' + to,
+        { city: to, provider: lg.provider || '', deadline: lg.date || '', dueDate: lg.date || '', linkedSegmentId: (lg.fromCity || '') + '>' + (lg.toCity || ''), dataSource: 'derived_from_locked_leg' }));
+    });
+    return out;
+  }
+  function transportChoiceTasks(tr) {
+    var out = [];
+    (tr.transport || []).forEach(function (leg, i) {
+      var mode = chosenMode(leg, i);
+      if (!mode || mode === 'personal_car') return;
+      var type = (mode === 'flight') ? 'flight' : (mode === 'dlc_ride') ? 'ride' : 'bus';
+      var from = String(leg.fromCity || '').split(',')[0], to = String(leg.toCity || '').split(',')[0];
+      var opt = (leg.options || []).filter(function (o) { return o.mode === mode; })[0] || {};
+      out.push(newBooking(type, t('taskBook') + ' ' + (opt.provider ? opt.provider + ' · ' : '') + from + ' → ' + to,
+        { city: to, provider: opt.provider || '', priceRange: opt.totalCostRange || '', linkedSegmentId: legKeyOf(leg, i), dataSource: 'derived_from_transport_choice' }));
+    });
+    return out;
+  }
   // Merge derived/AI items into trip.bookings WITHOUT clobbering user edits or
   // re-adding items the user already has (matched by bookingKey).
   function mergeBookings(trip, incoming) {
@@ -1200,6 +1238,16 @@
     var have = {}; trip.bookings.forEach(function (b) { have[bookingKey(b)] = 1; });
     (incoming || []).forEach(function (b) { if (!have[bookingKey(b)]) { have[bookingKey(b)] = 1; trip.bookings.push(b); } });
     return trip.bookings;
+  }
+  // One-call deterministic task generation — used on Tasks-tab open/rebuild + the acceptance test.
+  // Idempotent (mergeBookings dedups by bookingKey); never clobbers user-edited tasks.
+  function deriveTripTasks(tr) {
+    if ((!tr.lockedLegs || !tr.lockedLegs.length) && tr.parsedJourney) { try { applyParsedJourneyToTrip(tr, tr.parsedJourney); } catch (e) {} }
+    mergeBookings(tr, deriveBookingChecklist(tr));
+    mergeBookings(tr, lockedLegsTasks(tr));
+    mergeBookings(tr, transportChoiceTasks(tr));
+    if (typeof ticketedAttractionBookings === 'function') mergeBookings(tr, ticketedAttractionBookings(tr));
+    return tr.bookings;
   }
   // AI booking research callable (Gemini grounded). Never blocks; returns [] on failure.
   function researchBookings(trip) {
@@ -7107,8 +7155,8 @@
   }
 
   // ── Bookings tab: human-approval-gated booking checklist (never purchases) ──
-  function bookingTypeIcon(type) { return ({ flight: '✈', hotel: '🏨', airbnb: '🏠', attraction: '🎟', restaurant: '🍽', tour: '🧭', parking: '🅿️', rental_car: '🚗', bus: '🚌', ride: '🚙' })[type] || '📌'; }
-  function bookingStatusClass(s) { return ({ booked: 'tc-bstat--booked', ready_to_book: 'tc-bstat--ready', user_approval_needed: 'tc-bstat--approve', skipped: 'tc-bstat--skip' })[s] || 'tc-bstat--research'; }
+  function bookingTypeIcon(type) { return ({ flight: '✈', hotel: '🏨', airbnb: '🏠', attraction: '🎟', restaurant: '🍽', tour: '🧭', parking: '🅿️', rental_car: '🚗', bus: '🚌', ride: '🚙', packing: '🎒', payment: '💳', confirmation: '📋', other: '📝' })[type] || '📌'; }
+  function bookingStatusClass(s) { return ({ booked: 'tc-bstat--booked', paid: 'tc-bstat--booked', ready_to_book: 'tc-bstat--ready', user_approval_needed: 'tc-bstat--approve', skipped: 'tc-bstat--skip', not_needed: 'tc-bstat--skip' })[s] || 'tc-bstat--research'; }
   function bookingForPlace(p) {
     if (!p || !state.trip || !Array.isArray(state.trip.bookings)) return null;
     var pid = p.id, name = (p.name || '').trim().toLowerCase();
@@ -7117,7 +7165,7 @@
   function renderBookings(plan) {
     var tr = state.trip;
     normalizeDestinations(tr);
-    if (!tr.bookings.length) mergeBookings(tr, deriveBookingChecklist(tr)); // seed from itinerary on first open
+    if (!tr.bookings.length) deriveTripTasks(tr); // seed tasks from itinerary + locked legs + chosen transport on first open
     var wrap = el('div', 'tc-bookings');
     wrap.appendChild(el('strong', 'tc-bookings__t', '🎟 ' + t('bookingsTitle')));
     wrap.appendChild(el('p', 'tc-bookings__sub', t('bookingsSub')));
@@ -7134,13 +7182,39 @@
       });
       actions.appendChild(research);
       var rebuild = el('button', 'tc-addbtn', t('rebuildChecklist')); rebuild.type = 'button';
-      rebuild.addEventListener('click', function () { mergeBookings(tr, deriveBookingChecklist(tr)); saveTrip(tr); render(); });
+      rebuild.addEventListener('click', function () { deriveTripTasks(tr); saveTrip(tr); render(); });
       actions.appendChild(rebuild);
       wrap.appendChild(actions);
     }
+    if (tr.bookings.length) {
+      var FILTERS = ['all', 'urgent', 'mine', 'unpaid', 'bookings', 'done'];
+      var fbar = el('div', 'tc-taskfilters');
+      FILTERS.forEach(function (fk) {
+        var fb = el('button', 'tc-pbtn' + ((state._taskFilter || 'all') === fk ? ' tc-pbtn--on' : ''), t('tf_' + fk)); fb.type = 'button';
+        fb.addEventListener('click', function () { state._taskFilter = fk; render(); });
+        fbar.appendChild(fb);
+      });
+      wrap.appendChild(fbar);
+    }
     if (isResearching('bookings') && !tr.bookings.length) wrap.appendChild(researchBanner('researchingBookings'));
     else if (!tr.bookings.length) wrap.appendChild(el('p', 'tc-empty', t('noBookings')));
-    else tr.bookings.forEach(function (b, i) { wrap.appendChild(bookingCard(b, i)); });
+    else {
+      var _flt = state._taskFilter || 'all', _me = getMe();
+      var _doneSet = { booked: 1, paid: 1, skipped: 1, not_needed: 1 };
+      var _bkTypes = { flight: 1, hotel: 1, airbnb: 1, attraction: 1, restaurant: 1, tour: 1, rental_car: 1, bus: 1, ride: 1 };
+      var _shown = 0;
+      tr.bookings.forEach(function (b, i) {
+        var _p = b.priority || (root.TCTasks ? root.TCTasks.priority(b.type) : 'P2');
+        var _show = _flt === 'all'
+          || (_flt === 'urgent' && _p === 'P0')
+          || (_flt === 'mine' && b.assignedToFamily && b.assignedToFamily === _me)
+          || (_flt === 'unpaid' && b.bookingStatus !== 'paid' && (b.costEstimate || b.actualCost || b.priceRange))
+          || (_flt === 'bookings' && _bkTypes[b.type])
+          || (_flt === 'done' && _doneSet[b.bookingStatus]);
+        if (_show) { wrap.appendChild(bookingCard(b, i)); _shown++; }
+      });
+      if (!_shown) wrap.appendChild(el('p', 'tc-empty', t('noBookings')));
+    }
     if (!tr._demo && !state.readonly) {
       var addRow = el('div', 'tc-bookings__add');
       var typeSel = selectFrom(BOOKING_TYPES, 'attraction', function (o) { return t('bt_' + o); }); typeSel.className = 'tc-input';
@@ -7159,6 +7233,8 @@
     var head = el('div', 'tc-bk__head');
     head.appendChild(el('span', 'tc-bk__type', bookingTypeIcon(b.type) + ' ' + t('bt_' + b.type)));
     head.appendChild(el('span', 'tc-bk__stat ' + bookingStatusClass(b.bookingStatus), t('bs_' + (b.bookingStatus || 'research_needed'))));
+    var _pr = b.priority || (root.TCTasks ? root.TCTasks.priority(b.type) : 'P2');
+    head.appendChild(el('span', 'tc-bk__pri tc-bk__pri--' + _pr, t('pri_' + _pr)));
     c.appendChild(head);
     c.appendChild(el('strong', 'tc-bk__title', b.title));
     if (b.provider) c.appendChild(el('p', 'tc-bk__meta', t('providerLabel') + ': ' + b.provider));
@@ -7172,9 +7248,12 @@
     c.appendChild(acts);
     if (!ro) {
       var ctrls = el('div', 'tc-bk__ctrls');
-      var ssel = selectFrom(['research_needed', 'researching', 'ready_to_book', 'user_approval_needed', 'booked', 'skipped'], b.bookingStatus || 'research_needed', function (o) { return t('bs_' + o); });
+      var ssel = selectFrom(['research_needed', 'researching', 'ready_to_book', 'user_approval_needed', 'booked', 'paid', 'skipped', 'not_needed'], b.bookingStatus || 'research_needed', function (o) { return t('bs_' + o); });
       ssel.className = 'tc-input'; ssel.addEventListener('change', function () { b.bookingStatus = ssel.value; saveTrip(tr); render(); });
       ctrls.appendChild(ssel);
+      var _fam = selectFrom([''].concat(tripFamilies().map(function (f) { return f.id; })), b.assignedToFamily || '', function (id) { if (!id) return t('taskUnassigned'); var ff = tripFamilies().filter(function (x) { return x.id === id; })[0]; return ff ? (ff.name || t('taskUnassigned')) : id; });
+      _fam.className = 'tc-input'; _fam.addEventListener('change', function () { b.assignedToFamily = _fam.value; saveTrip(tr); render(); });
+      ctrls.appendChild(_fam);
       var mb = el('button', 'tc-pbtn' + (b.bookingStatus === 'booked' ? ' tc-pbtn--accent' : ''), b.bookingStatus === 'booked' ? t('undoBooked') : t('markBooked')); mb.type = 'button';
       mb.addEventListener('click', function () { b.bookingStatus = (b.bookingStatus === 'booked') ? 'ready_to_book' : 'booked'; if (b.bookingStatus === 'booked') b.bookedBy = (getMe() ? famName(getMe()) : ''); saveTrip(tr); render(); });
       ctrls.appendChild(mb);
@@ -7185,6 +7264,10 @@
         var cn = input(b.confirmationNumber, t('confirmationNumber')); cn.addEventListener('input', function () { b.confirmationNumber = cn.value; }); cn.addEventListener('change', function () { saveTrip(tr); });
         c.appendChild(field(t('confirmationNumber'), cn));
       }
+      var _due = input(b.dueDate || b.deadline || '', t('taskDue'), 'date'); _due.addEventListener('change', function () { b.dueDate = _due.value; b.deadline = _due.value; saveTrip(tr); });
+      c.appendChild(field(t('taskDue'), _due));
+      var _cost = input(b.costEstimate || '', t('taskCost')); _cost.addEventListener('input', function () { b.costEstimate = _cost.value; }); _cost.addEventListener('change', function () { saveTrip(tr); });
+      c.appendChild(field(t('taskCost'), _cost));
       var nt = input(b.notes, t('bookingNotes')); nt.addEventListener('input', function () { b.notes = nt.value; }); nt.addEventListener('change', function () { saveTrip(tr); });
       c.appendChild(field(t('bookingNotes'), nt));
     }
@@ -7505,7 +7588,7 @@
     }
   }
 
-  root.TravelConcierge = { init: init, setLang: setLang, _state: state, _strings: T, _mockPlan: mockPlan, _generatePlan: generatePlan, _generatePlanSmart: generatePlanSmart, _tripLegCount: tripLegCount, _normalizeDestinations: normalizeDestinations, _newTrip: newTrip, _research: researchHighlights, _TCAuth: TCAuth, _realUser: realUser, _MapLinkProvider: MapLinkProvider, _TravelTicketProvider: TravelTicketProvider, _BusTicketProvider: BusTicketProvider, _BookingLinkProvider: BookingLinkProvider, _deriveBookingChecklist: deriveBookingChecklist, _newBooking: newBooking, _researchBookings: researchBookings, _TripShare: TripShare, _isOwnerOfTrip: isOwnerOfTrip, _shareLinkFor: shareLinkFor, _newDestination: newDestination, _applyDestRole: applyDestRole, _roleDefaults: roleDefaults, _researchStays: researchStays, _StayLinkProvider: StayLinkProvider, _researchRestaurants: researchRestaurants, _FoodLinkProvider: FoodLinkProvider, _runConciergeResearch: runConciergeResearch, _isResearching: isResearching, _goDashboard: goDashboard, _renderDashboard: renderDashboard, _applyVerifiedRoute: applyVerifiedRoute, _routePath: routePath, _verifyRoute: verifyRoute, _parseTripDates: parseTripDates, _finalizePlanDays: finalizePlanDays, _assignDayTypes: assignDayTypes,
+  root.TravelConcierge = { init: init, setLang: setLang, _state: state, _strings: T, _mockPlan: mockPlan, _generatePlan: generatePlan, _generatePlanSmart: generatePlanSmart, _tripLegCount: tripLegCount, _normalizeDestinations: normalizeDestinations, _newTrip: newTrip, _research: researchHighlights, _TCAuth: TCAuth, _realUser: realUser, _MapLinkProvider: MapLinkProvider, _TravelTicketProvider: TravelTicketProvider, _BusTicketProvider: BusTicketProvider, _BookingLinkProvider: BookingLinkProvider, _deriveBookingChecklist: deriveBookingChecklist, _newBooking: newBooking, _deriveTripTasks: deriveTripTasks, _lockedLegsTasks: lockedLegsTasks, _transportChoiceTasks: transportChoiceTasks, _mergeBookings: mergeBookings, _researchBookings: researchBookings, _TripShare: TripShare, _isOwnerOfTrip: isOwnerOfTrip, _shareLinkFor: shareLinkFor, _newDestination: newDestination, _applyDestRole: applyDestRole, _roleDefaults: roleDefaults, _researchStays: researchStays, _StayLinkProvider: StayLinkProvider, _researchRestaurants: researchRestaurants, _FoodLinkProvider: FoodLinkProvider, _runConciergeResearch: runConciergeResearch, _isResearching: isResearching, _goDashboard: goDashboard, _renderDashboard: renderDashboard, _applyVerifiedRoute: applyVerifiedRoute, _routePath: routePath, _verifyRoute: verifyRoute, _parseTripDates: parseTripDates, _finalizePlanDays: finalizePlanDays, _assignDayTypes: assignDayTypes,
     _buildDayView: buildDayView, _setItemPlacement: setItemPlacement, _moveToDay: moveToDay, _moveToSlot: moveToSlot, _moveUpDown: moveUpDown, _dropItem: dropItem, _addPlaceToDay: addPlaceToDay, _removeAdded: removeAdded, _togglePin: togglePin, _isPinned: isPinned, _resetDayToAI: resetDayToAI, _fixTimingOnly: fixTimingOnly, _regenerateSingleDay: regenerateSingleDay, _finalDayMode: finalDayMode, _normSlot: normSlot, _TIME_SLOTS: TIME_SLOTS, _laneItems: laneItems, _ensureOverride: ensureOverride,
     _researchTransport: researchTransport, _tpPick: tpPick, _chosenMode: chosenMode, _chooseTransport: chooseTransport, _requestDlcRide: requestDlcRide, _totalTravelers: totalTravelers, _legKeyOf: legKeyOf,
     _fetchPhotoClient: fetchPhotoClient, _whenGoogleMaps: whenGoogleMaps,

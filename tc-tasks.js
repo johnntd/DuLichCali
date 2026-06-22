@@ -1,0 +1,63 @@
+/* Trip Task Tracker — pure helpers (browser IIFE + node-testable, like tc-media.js / tc-tasks.test.js).
+ * priority(type)        — P0 urgent / P1 important / P2 optional, per the spec's tiers.
+ * computeBalances(...)  — (P2) per-family owed/paid/balance + total-paid/remaining rollup.
+ * No DOM / Firebase deps. */
+(function (root) {
+  'use strict';
+  var P0 = { flight: 1, bus: 1, train: 1, rental_car: 1, hotel: 1, airbnb: 1, attraction: 1 };
+  var P1 = { ride: 1, restaurant: 1, parking: 1, tour: 1 };
+
+  // Priority for a task type. opts.priority (P0/P1/P2) is an explicit user/AI override.
+  function priority(type, opts) {
+    opts = opts || {};
+    if (opts.priority === 'P0' || opts.priority === 'P1' || opts.priority === 'P2') return opts.priority;
+    var t = String(type || '').toLowerCase();
+    if (P0[t]) return 'P0';
+    if (P1[t]) return 'P1';
+    return 'P2'; // packing, payment, confirmation, album, clips, backup, other, unknown
+  }
+
+  // (P2) Reconcile estimates/payments into per-family balances.
+  //   tasks   = [{ costEstimate?, actualCost?, paidBy?(familyId), splitMode?, splitBetween?[] }]
+  //   families= [{ id, name, travelers }] ; split = { mode } default 'per_person'
+  //   ledger  = [{ familyId, amount, paid }]  (ad-hoc payments)
+  // Returns { perFamily:[{id,name,owed,paid,balance}], totalEstimated, totalActual, totalPaid, remaining }.
+  function computeBalances(tasks, families, split, ledger) {
+    tasks = tasks || []; families = families || []; split = split || { mode: 'per_person' }; ledger = ledger || [];
+    var totalTravelers = families.reduce(function (s, f) { return s + (f.travelers || 1); }, 0) || 1;
+    var owed = {}, paid = {};
+    families.forEach(function (f) { owed[f.id] = 0; paid[f.id] = 0; });
+    function num(x) { var m = String(x == null ? '' : x).replace(/[, $]/g, '').match(/\d+(\.\d+)?/); return m ? parseFloat(m[0]) : 0; }
+    var totalEstimated = 0, totalActual = 0;
+    tasks.forEach(function (tk) {
+      var est = num(tk.costEstimate), act = num(tk.actualCost);
+      totalEstimated += est; totalActual += act;
+      var amount = act || est; if (!(amount > 0)) return;
+      // who owes this task's amount: explicit splitBetween, else the trip split mode.
+      var sb = (Array.isArray(tk.splitBetween) && tk.splitBetween.length) ? tk.splitBetween : null;
+      var mode = tk.splitMode || split.mode || 'per_person';
+      var targets = sb ? families.filter(function (f) { return sb.indexOf(f.id) !== -1; }) : families;
+      if (!targets.length) targets = families;
+      var tt = targets.reduce(function (s, f) { return s + (f.travelers || 1); }, 0) || 1;
+      targets.forEach(function (f) {
+        var share = (mode === 'equal') ? amount / targets.length
+          : (mode === 'owner_pays') ? 0
+          : amount * (f.travelers || 1) / tt; // per_person / per_family default → headcount
+        if (owed[f.id] != null) owed[f.id] += share;
+      });
+      if (mode === 'owner_pays' && targets[0] && owed[targets[0].id] != null) owed[targets[0].id] += amount;
+      // who PAID this task: the paidBy family (actual amount).
+      if (tk.paidBy && paid[tk.paidBy] != null && act > 0) paid[tk.paidBy] += act;
+    });
+    // ad-hoc ledger payments
+    ledger.forEach(function (e) { if (e && e.paid && paid[e.familyId] != null) paid[e.familyId] += (+e.amount || 0); });
+    var perFamily = families.map(function (f) {
+      var o = Math.round(owed[f.id] || 0), p = Math.round(paid[f.id] || 0);
+      return { id: f.id, name: f.name || '', owed: o, paid: p, balance: o - p };
+    });
+    var totalPaid = perFamily.reduce(function (s, f) { return s + f.paid; }, 0);
+    return { perFamily: perFamily, totalEstimated: Math.round(totalEstimated), totalActual: Math.round(totalActual), totalPaid: totalPaid, remaining: Math.max(0, Math.round(totalActual || totalEstimated) - totalPaid) };
+  }
+
+  root.TCTasks = { priority: priority, computeBalances: computeBalances };
+})(typeof window !== 'undefined' ? window : this);

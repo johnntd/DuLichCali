@@ -63,6 +63,14 @@ var r3 = G.build(n3);
 ok('unscheduled custom node is not blocked', byId(r3, 'x_custom').blocked === false);
 ok('unscheduled node does not become next action over the chain root', r3.nextAction.id === 't_bus1');
 
+// ── no journey legs at all (every node unscheduled) → still surface a next action ──
+var loose = [
+  { id: 'l_hotel', kind: 'lodging', city: '', journeyIndex: Infinity, status: 'research_needed', title: 'Hotel' },
+  { id: 'l_food', kind: 'food', city: '', journeyIndex: Infinity, status: 'research_needed', title: 'Dinner' },
+];
+var rl = G.build(loose);
+ok('all-unscheduled trip still has a next action (highest priority)', rl.nextAction && rl.nextAction.id === 'l_hotel');
+
 // ── all done → no next action ──
 var nAll = trip().map(function (x) { x.status = 'booked'; return x; });
 ok('all done → nextAction null', G.build(nAll).nextAction === null && G.build(nAll).progress.overall === 100);

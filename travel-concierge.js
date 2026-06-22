@@ -4411,7 +4411,8 @@
     var tasks = []; try { tasks = deriveTripTasks(tr) || []; } catch (e) { tasks = tr.bookings || []; }
     if (tasks.length) {
       var rdc = root.TCOverview.readiness(tasks), todoN = rdc.totalCount - rdc.doneCount;
-      var na = root.TCOverview.nextAction(tasks);
+      // V6: dependency-aware next action (matches the Tasks-tab Next-Action card) instead of the flat one.
+      var na = (function () { try { return buildDepNodes(tr).nextAction; } catch (e) { return root.TCOverview.nextAction(tasks); } })();
       var taskCol = ovCollapse('tasks', '✅ ' + t('tab_tasks'), todoN + ' ' + t('ovToDo') + ' · ' + rdc.doneCount + ' ' + t('ovDone'), false);
       var tkBody = el('div', 'tc-ov-collapse__body');
       if (na) tkBody.appendChild(el('p', 'tc-ov-next', '→ ' + t('ovNext') + ': ' + na.title));

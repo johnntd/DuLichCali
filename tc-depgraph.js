@@ -72,20 +72,21 @@
   }
 
   function nextAction(nodes) {
-    var actionable = (nodes || []).filter(function (n) { return !isDone(n) && !n.blocked && idx(n) < 1e9; });
-    if (!actionable.length) {
-      // fall back to the earliest not-done scheduled node (the unblocking prerequisite)
-      var rest = (nodes || []).filter(function (n) { return !isDone(n) && idx(n) < 1e9; })
-        .sort(function (a, b) { return seq(a) - seq(b); });
-      return rest[0] || null;
+    nodes = nodes || [];
+    var actionable = nodes.filter(function (n) { return !isDone(n) && !n.blocked && idx(n) < 1e9; });
+    if (actionable.length) {
+      // The next thing to do = the earliest step in the journey (transport→lodging→tickets within a
+      // segment). A sooner-due item can jump ahead within the same journey segment (urgency tiebreak).
+      actionable.sort(function (a, b) { if (seq(a) !== seq(b)) return seq(a) - seq(b); return (b.priorityScore || 0) - (a.priorityScore || 0); });
+      return actionable[0];
     }
-    // The next thing to do = the earliest step in the journey (transport→lodging→tickets within a
-    // segment). A sooner-due item can jump ahead within the same journey segment (urgency tiebreak).
-    actionable.sort(function (a, b) {
-      if (seq(a) !== seq(b)) return seq(a) - seq(b);
-      return (b.priorityScore || 0) - (a.priorityScore || 0);
-    });
-    return actionable[0];
+    // No actionable scheduled node — try the earliest not-done scheduled node (the prerequisite).
+    var sched = nodes.filter(function (n) { return !isDone(n) && idx(n) < 1e9; }).sort(function (a, b) { return seq(a) - seq(b); });
+    if (sched.length) return sched[0];
+    // No scheduled nodes at all (e.g. no transport legs yet) — surface the highest-priority not-done
+    // task so an early/loose trip still always has a "next thing to do".
+    var loose = nodes.filter(function (n) { return !isDone(n) && !n.blocked; }).sort(function (a, b) { return (b.priorityScore || 0) - (a.priorityScore || 0); });
+    return loose[0] || null;
   }
 
   function progress(nodes) {

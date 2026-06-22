@@ -3713,6 +3713,44 @@ function tcHoangServiceCity(city) {
   for (let i = 0; i < HUBS.length; i++) { if (s.indexOf(HUBS[i]) >= 0) return true; }
   return false;
 }
+// Map a USER-LOCKED journey leg (transportMode + provider the traveler explicitly chose) to the
+// transport-tab option mode. A named driver / "private ride" → dlc_ride; a named coach → hoang_bus
+// when it's clearly Xe Đò Hoàng or both endpoints are on its network, else generic bus. No override
+// for vague modes (train/walk/other) — those fall back to the AI heuristic. Nothing hardcoded.
+function tcMapLockedMode(lg) {
+  const m = String(lg.transportMode || '').toLowerCase(), p = String(lg.provider || '').toLowerCase();
+  if (m === 'private_ride' || /michael|du ?lich ?cali|dulichcali|\bdlc\b/.test(p)) return 'dlc_ride';
+  if (m === 'bus') return (/hoang|hoàng|xe ?đò|xe ?do/.test(p) || (tcHoangServiceCity(lg.fromCity) && tcHoangServiceCity(lg.toCity))) ? 'hoang_bus' : 'bus';
+  if (m === 'flight') return 'flight';
+  if (m === 'car') return 'personal_car';
+  return '';
+}
+// Minimal, HONEST option for a user-locked mode the heuristic builder didn't already produce
+// (e.g. a Hoàng leg outside the usual mileage band). No fabricated price/schedule — fare on
+// request, real Hoàng links/phones, drive distance/time carried from the verified route leg.
+function tcMinimalOption(mode, l) {
+  const base = {
+    mode, provider: '', status: l.source === 'google_maps' ? 'verified' : 'estimated',
+    distanceText: l.distanceText || '', durationText: l.durationTrafficText || l.durationText || '',
+    totalCostRange: '', perTravelerCost: '', perFamilyCost: '',
+    luggageSuitability: 'good', childSuitability: 'good', seniorSuitability: 'good',
+    prosKeys: [], consKeys: [], whyKey: 'tpwhy_' + mode, bookingLink: '', mapLink: l.mapLink || '',
+    convenience: 4, confidence: 'medium', canBookViaDLC: mode === 'dlc_ride', affectsItinerary: true, source: l.source || 'estimated',
+  };
+  if (mode === 'hoang_bus') {
+    base.provider = 'Xe Đò Hoàng'; base.wifiAvailable = true; base.website = 'https://xedohoang.com';
+    base.phoneNumbers = ['714-839-3500', '408-729-7885', '888-834-9336']; base.bookingLink = 'https://xedohoang.com/en/plan-trip';
+    base.bookingLinks = [{ labelKey: 'tpHoangBook', url: 'https://xedohoang.com/en/plan-trip' }, { labelKey: 'tpHoangGuide', url: 'https://xedohoang.com/en/ticket-booking-guide' }, { labelKey: 'tpHoangSite', url: 'https://xedohoang.com' }];
+    base.prosKeys = ['tpro_vietnamese', 'tpro_nodriving', 'tpro_rest']; base.consKeys = ['tcon_schedule']; base.noteKeys = ['tpHoangStation']; base.confidence = 'low';
+  } else if (mode === 'dlc_ride') {
+    base.provider = 'Du Lich Cali'; base.prosKeys = ['tpro_private', 'tpro_door', 'tpro_kidssenior']; base.consKeys = ['tcon_highercost'];
+  } else if (mode === 'bus') {
+    base.provider = 'Greyhound / FlixBus'; base.prosKeys = ['tpro_nodriving']; base.consKeys = ['tcon_schedule']; base.confidence = 'low';
+  } else if (mode === 'flight') {
+    base.prosKeys = ['tpro_fastest']; base.consKeys = ['tcon_airporttime']; base.confidence = 'low';
+  }
+  return base;
+}
 function tcBuildTransportLegs(route, trip) {
   const fams = summarizeFamiliesForTrip(trip.families);
   const travelers = fams.reduce((s, f) => s + (f.travelers || 0), 0) || 1;
@@ -3827,12 +3865,29 @@ function tcBuildTransportLegs(route, trip) {
     const hasHoang = options.some((o) => o.mode === 'hoang_bus');
     if (hasHoang && miles >= 150 && travelers <= 9 && (seniors > 0 || (lowBudget && (seniors > 0 || kids > 0)))) recommendedMode = 'hoang_bus';
     else if (miles >= 450 && travelers <= 5 && kids === 0 && options.some((o) => o.mode === 'flight')) recommendedMode = 'flight';
-    const recReasonKey = recommendedMode === 'hoang_bus' ? 'tprec_hoang' : (recommendedMode === 'flight' ? 'tprec_flight_long' : (miles < 150 ? 'tprec_car_short' : 'tprec_car_group'));
+    let recReasonKey = recommendedMode === 'hoang_bus' ? 'tprec_hoang' : (recommendedMode === 'flight' ? 'tprec_flight_long' : (miles < 150 ? 'tprec_car_short' : 'tprec_car_group'));
+    // USER-LOCKED transport WINS — when the traveler explicitly chose this leg's mode/provider
+    // ("by Bus Hoang", "Michael will take us"), it becomes the Recommended/Chosen option and the
+    // AI heuristic above is overridden. Car/flight stay in `options` as alternatives (shown below),
+    // but never as the primary, and a locked leg is NEVER overridden on cost. No fabricated data.
+    if (l.userLocked && l.userMode) {
+      let opt = options.filter((o) => o.mode === l.userMode)[0];
+      if (!opt) { opt = tcMinimalOption(l.userMode, l); options.push(opt); }
+      if (opt) {
+        if (l.userProvider) opt.provider = l.userProvider;
+        opt.userChosen = true; opt.lockedByUser = true;
+        if (opt.confidence === 'low') opt.confidence = 'medium';
+        opt.convenience = Math.max(opt.convenience || 4, 5);
+        recommendedMode = l.userMode;
+        recReasonKey = 'tprec_userlocked';
+      }
+    }
     return {
       fromCity: l.fromCity, toCity: l.toCity, legType: legType,
       dayHint: miles >= 300 ? 'transit' : (miles >= 120 ? 'half' : 'activity'),
       driveDistanceText: l.distanceText || '', driveDurationText: l.durationTrafficText || l.durationText || '', driveSource: l.source || 'estimated', mapLink: l.mapLink || '',
       options: options, recommendedMode: recommendedMode, recommendationReason: '', recReasonKey: recReasonKey,
+      userLocked: !!l.userLocked, userMode: l.userMode || '', userProvider: l.userProvider || '',
     };
   });
 }
@@ -3847,15 +3902,36 @@ exports.researchTripTransport = onCall(
     const origin = String(trip.departureCity || '').trim();
     const destCities = (Array.isArray(trip.destinations) ? trip.destinations : [])
       .map((d) => String((d && d.city) || '').trim()).filter(Boolean);
-    if (!origin || !destCities.length) return { ok: false, debugCode: 'NO_ROUTE', legs: [] };
-    // Build the major-leg path: origin -> dest1 -> ... -> destN -> origin, collapsing repeats.
-    const path = [origin].concat(destCities);
-    path.push(origin); // return home
-    const cities = path.filter((c, i) => i === 0 || c.toLowerCase() !== path[i - 1].toLowerCase());
+    // USER-LOCKED LEGS (from the Natural-Language Journey Builder) take priority for the route
+    // shape: they preserve the EXACT sequence the traveler described — including same-day
+    // waypoints (e.g. San Jose →(bus)→ Orange County →(ride)→ San Diego) that the overnight-city
+    // list collapses away. legMeta carries each leg's chosen mode/provider into the builder.
+    const lockedLegs = (Array.isArray(trip.lockedLegs) ? trip.lockedLegs : [])
+      .filter((lg) => lg && String(lg.fromCity || '').trim() && String(lg.toCity || '').trim()).slice(0, 12);
+    let cities, legMeta = [];
+    if (lockedLegs.length) {
+      const chain = [];
+      lockedLegs.forEach((lg) => {
+        const from = String(lg.fromCity).trim(), to = String(lg.toCity).trim();
+        if (!chain.length) chain.push(from);
+        else if (chain[chain.length - 1].toLowerCase() !== from.toLowerCase()) chain.push(from);
+        chain.push(to);
+      });
+      cities = chain.slice(0, 13);
+      legMeta = lockedLegs.map((lg) => ({ userMode: tcMapLockedMode(lg), userProvider: lg.provider || '', userLocked: !!lg.lockedByUser }));
+    } else {
+      if (!origin || !destCities.length) return { ok: false, debugCode: 'NO_ROUTE', legs: [] };
+      // Build the major-leg path: origin -> dest1 -> ... -> destN -> origin, collapsing repeats.
+      const path = [origin].concat(destCities);
+      path.push(origin); // return home
+      cities = path.filter((c, i) => i === 0 || c.toLowerCase() !== path[i - 1].toLowerCase()).slice(0, 12);
+    }
     if (cities.length < 2) return { ok: false, debugCode: 'NO_ROUTE', legs: [] };
     // AUTHORITATIVE per-leg drive distance/time (Google Distance Matrix, or a labelled
     // haversine estimate when the key is absent) -- the SAME route code used elsewhere.
-    const route = await tcComputeRouteLegs(cities.slice(0, 12), GOOGLE_MAPS_API_KEY.value());
+    const route = await tcComputeRouteLegs(cities, GOOGLE_MAPS_API_KEY.value());
+    // Attach each leg's user-locked mode/provider (by order) so the builder honors it.
+    route.legs.forEach((rl, i) => { if (legMeta[i]) { rl.userMode = legMeta[i].userMode; rl.userProvider = legMeta[i].userProvider; rl.userLocked = legMeta[i].userLocked; } });
     // Deterministic comparison -- ALWAYS returns car + (long->) flight + (intercity->) bus +
     // a private DLC ride per leg. No AI dependency, so the tab can never come up empty.
     const legs = tcBuildTransportLegs(route, trip);

@@ -249,6 +249,7 @@
       tpro_rest: 'Everyone can rest', tpro_wifi: 'Free Wi-Fi onboard', tpro_vietnamese: 'Vietnamese-speaking staff', tpro_avoidtraffic: 'Skips SoCal traffic', tcon_slowerthancar: 'Slower than driving',
       tpwhy_personal_car: 'Drive: full flexibility, door-to-door, and the cheapest way to keep the group together with luggage.', tpwhy_dlc_ride: 'Private DuLichCali ride: a door-to-door driver — easiest with kids, seniors and luggage, no parking.', tpwhy_flight: 'Fly: by far the fastest on a long leg — add a rental car or rideshare at the destination.', tpwhy_bus: 'Greyhound / FlixBus: the lowest-cost no-driving option, on a fixed schedule.', tpwhy_hoang_bus: 'Xe Đò Hoàng: the coach Vietnamese families love — everyone rests, free Wi-Fi, Vietnamese-speaking staff, and it skips the driving and SoCal traffic.',
       tprec_hoang: 'Xe Đò Hoàng is recommended: with seniors and kids, the whole family can rest with Wi-Fi instead of an 8-hour drive, and it avoids Southern California traffic.',
+      tprec_userlocked: 'You chose this for this leg, so it’s set as your plan — schedule, cost and booking are added around it. The options below are just alternatives.',
       routeOpsTitle: 'Route opportunities', routeOpsSub: 'Optional discoveries along this leg — add what your group likes, skip the rest.', findRouteOps: 'Discover route stops (AI)', researchingRouteOps: 'Finding interesting stops along the way…', routeOpAdded: 'Added to this day', roYourStops: 'Your stops for this day', roAdd: 'Add to day', roMustSee: 'Must see', roMin: 'min detour', roNoneFilter: 'No matches for this filter — try another.',
       roAll: 'All', roFood: '🍽 Food', roBeachScenic: '🏖 Beach & scenic', roHidden: '💎 Hidden gems', roKid: '🧒 Kid-friendly', roLowEnergy: '😌 Low-energy', roRainy: '🌧 Rainy-day',
       roins_food_stop: 'Food stop', roins_short_stop: 'Short stop', roins_half_day: 'Half-day stop', roins_overnight: 'Overnight', roins_scenic_stop: 'Scenic stop', roins_shopping_stop: 'Shopping stop', roins_beach_stop: 'Beach stop', roins_kid_stop: 'Kid stop', roins_teen_stop: 'Teen stop', roins_senior_stop: 'Senior stop', roins_photo_stop: 'Photo stop',
@@ -504,6 +505,7 @@
       tpro_rest: 'Mọi người được nghỉ', tpro_wifi: 'Wi-Fi miễn phí trên xe', tpro_vietnamese: 'Nhân viên nói tiếng Việt', tpro_avoidtraffic: 'Tránh kẹt xe Nam Cali', tcon_slowerthancar: 'Chậm hơn tự lái',
       tpwhy_personal_car: 'Tự lái: linh hoạt hoàn toàn, tận nơi, và là cách rẻ nhất để cả nhóm đi cùng nhau với hành lý.', tpwhy_dlc_ride: 'Xe riêng Du Lịch Cali: tài xế đưa đón tận nơi — dễ nhất với trẻ em, người lớn tuổi và hành lý, khỏi lo đậu xe.', tpwhy_flight: 'Bay: nhanh nhất cho chặng dài — thuê xe hoặc đi chung tại điểm đến.', tpwhy_bus: 'Greyhound / FlixBus: lựa chọn rẻ nhất không phải lái, theo lịch cố định.', tpwhy_hoang_bus: 'Xe Đò Hoàng: tuyến xe các gia đình Việt yêu thích — mọi người được nghỉ ngơi, Wi-Fi miễn phí, nhân viên nói tiếng Việt, khỏi lái xe và tránh kẹt xe Nam Cali.',
       tprec_hoang: 'Đề xuất Xe Đò Hoàng: có người lớn tuổi và trẻ em, cả nhà được nghỉ ngơi với Wi-Fi thay vì lái 8 tiếng, và tránh kẹt xe Nam California.',
+      tprec_userlocked: 'Bạn đã chọn phương án này cho chặng này, nên nó được đặt làm kế hoạch của bạn — lịch trình, chi phí và đặt chỗ được thêm quanh đó. Các lựa chọn bên dưới chỉ là phương án thay thế.',
       routeOpsTitle: 'Cơ hội dọc đường', routeOpsSub: 'Những điểm khám phá tùy chọn trên chặng này — thêm điều nhóm bạn thích, bỏ phần còn lại.', findRouteOps: 'Tìm điểm dừng dọc đường (AI)', researchingRouteOps: 'Đang tìm những điểm thú vị dọc đường…', routeOpAdded: 'Đã thêm vào ngày này', roYourStops: 'Điểm dừng của bạn cho ngày này', roAdd: 'Thêm vào ngày', roMustSee: 'Nên xem', roMin: 'phút vòng thêm', roNoneFilter: 'Không có kết quả cho bộ lọc này — thử bộ lọc khác.',
       roAll: 'Tất cả', roFood: '🍽 Ẩm thực', roBeachScenic: '🏖 Biển & cảnh đẹp', roHidden: '💎 Điểm ẩn', roKid: '🧒 Hợp trẻ em', roLowEnergy: '😌 Nhẹ nhàng', roRainy: '🌧 Ngày mưa',
       roins_food_stop: 'Điểm ăn', roins_short_stop: 'Dừng ngắn', roins_half_day: 'Dừng nửa ngày', roins_overnight: 'Qua đêm', roins_scenic_stop: 'Ngắm cảnh', roins_shopping_stop: 'Mua sắm', roins_beach_stop: 'Ra biển', roins_kid_stop: 'Cho trẻ em', roins_teen_stop: 'Cho thiếu niên', roins_senior_stop: 'Cho người lớn tuổi', roins_photo_stop: 'Chụp ảnh',
@@ -759,6 +761,7 @@
       tpro_rest: 'Todos pueden descansar', tpro_wifi: 'Wi-Fi gratis a bordo', tpro_vietnamese: 'Personal que habla vietnamita', tpro_avoidtraffic: 'Evita el tráfico del sur de CA', tcon_slowerthancar: 'Más lento que conducir',
       tpwhy_personal_car: 'Conducir: máxima flexibilidad, puerta a puerta y la forma más barata de mantener al grupo junto con el equipaje.', tpwhy_dlc_ride: 'Viaje privado DuLichCali: un conductor puerta a puerta — lo más fácil con niños, mayores y equipaje, sin estacionamiento.', tpwhy_flight: 'Volar: lo más rápido en un tramo largo — agrega un auto de alquiler o viaje compartido en el destino.', tpwhy_bus: 'Greyhound / FlixBus: la opción más económica sin conducir, con horario fijo.', tpwhy_hoang_bus: 'Xe Đò Hoàng: el autobús que prefieren las familias vietnamitas — todos descansan, Wi-Fi gratis, personal que habla vietnamita, y evita conducir y el tráfico del sur de California.',
       tprec_hoang: 'Se recomienda Xe Đò Hoàng: con mayores y niños, toda la familia puede descansar con Wi-Fi en vez de conducir 8 horas, y evita el tráfico del sur de California.',
+      tprec_userlocked: 'Elegiste esto para este tramo, así que queda como tu plan — horario, costo y reserva se agregan en torno a ello. Las opciones de abajo son solo alternativas.',
       routeOpsTitle: 'Oportunidades en ruta', routeOpsSub: 'Descubrimientos opcionales en este tramo — agrega lo que le guste a tu grupo, omite el resto.', findRouteOps: 'Descubrir paradas en ruta (IA)', researchingRouteOps: 'Buscando paradas interesantes en el camino…', routeOpAdded: 'Agregado a este día', roYourStops: 'Tus paradas para este día', roAdd: 'Agregar al día', roMustSee: 'Imperdible', roMin: 'min de desvío', roNoneFilter: 'Sin resultados para este filtro — prueba otro.',
       roAll: 'Todo', roFood: '🍽 Comida', roBeachScenic: '🏖 Playa y paisajes', roHidden: '💎 Joyas ocultas', roKid: '🧒 Para niños', roLowEnergy: '😌 Tranquilo', roRainy: '🌧 Día lluvioso',
       roins_food_stop: 'Parada de comida', roins_short_stop: 'Parada corta', roins_half_day: 'Parada de medio día', roins_overnight: 'Noche', roins_scenic_stop: 'Parada escénica', roins_shopping_stop: 'Compras', roins_beach_stop: 'Playa', roins_kid_stop: 'Para niños', roins_teen_stop: 'Para adolescentes', roins_senior_stop: 'Para mayores', roins_photo_stop: 'Foto',
@@ -1235,7 +1238,7 @@
   function researchTransport(trip) {
     var c = mkCallable('researchTripTransport', 50000);
     if (!c) return Promise.resolve({ legs: [] });
-    return c({ trip: { departureCity: trip.departureCity, destinations: trip.destinations, dateRange: trip.dateRange, budget: trip.budget, tripStyle: trip.tripStyle, families: trip.families, returnTransportPreference: trip.returnTransportPreference || 'any', returnProvider: trip.returnProvider || '' }, lang: state.lang })
+    return c({ trip: { departureCity: trip.departureCity, destinations: trip.destinations, dateRange: trip.dateRange, budget: trip.budget, tripStyle: trip.tripStyle, families: trip.families, returnTransportPreference: trip.returnTransportPreference || 'any', returnProvider: trip.returnProvider || '', lockedLegs: trip.lockedLegs || [] }, lang: state.lang })
       .then(function (r) { var d = (r && r.data) || {}; return { legs: d.legs || [], source: d.source || 'estimated' }; })
       .catch(function () { return { legs: [] }; });
   }
@@ -2987,6 +2990,23 @@
     if (ret) { tr.returnTransportPreference = modeToTransportPref(ret.transportMode) || 'any'; tr.returnProvider = ret.provider || ''; }
     if (startIso && endIso) tr.dateRange = startIso + ' - ' + endIso;
     normalizeDestinations(tr);
+    // 1b) LOCKED TRANSPORT LEGS — the user's EXACT leg sequence (incl. same-day waypoints the
+    // overnight-city list drops, e.g. SJ →bus→ OC →ride→ SD). The transport agent uses these as
+    // the chosen/primary route (car only as an alternative). Origin back-filled from the prior place.
+    var lockedLegs = [], lastPlace = (tr.departureCity || '').trim();
+    segs.forEach(function (s) {
+      if (s.segmentType === 'stay' || s.segmentType === 'activity' || s.segmentType === 'food' || s.segmentType === 'free_time') {
+        var p = (s.destination || s.origin || '').trim(); if (p) lastPlace = p; return;
+      }
+      if (s.segmentType === 'transport' || s.segmentType === 'transfer' || s.segmentType === 'return') {
+        var from = (s.origin || '').trim() || lastPlace, to = (s.destination || '').trim();
+        if (from && to) {
+          lockedLegs.push({ fromCity: from, toCity: to, date: s.date || '', transportMode: s.transportMode || '', provider: s.provider || '', lockedByUser: !!s.lockedByUser, needsResearch: !!s.needsResearch, needsBooking: !!s.needsBooking, title: s.title || '', segmentType: s.segmentType });
+          lastPlace = to;
+        }
+      }
+    });
+    tr.lockedLegs = lockedLegs;
     // 2) Fixed / flexible activities + food → pinned anchors (the planner honors these).
     var startD = parseSegDate(startIso);
     function dayNumFor(iso) { var d = parseSegDate(iso); if (!d || !startD) return ''; var n = nightsBetween(startD, d) + 1; return n > 0 ? String(n) : ''; }

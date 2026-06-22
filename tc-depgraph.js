@@ -107,5 +107,26 @@
     };
   }
 
-  root.TCDepGraph = { build: build, nextAction: nextAction, progress: progress, isDone: isDone, _KIND_WEIGHT: KIND_WEIGHT };
+  // Smart warnings — the "AI secretary" nudges, derived from the graph (no fabrication). Returns
+  // [{key, level, ...context}]. Trip-level checks that need leg knowledge (return_missing) are added
+  // by the caller; these are the node-derivable ones.
+  function warnings(nodes) {
+    nodes = nodes || [];
+    var out = [], hotelCities = {};
+    nodes.forEach(function (n) {
+      // a not-done ticket/activity/food blocked specifically on its (not-done) hotel
+      if (!isDone(n) && n.blocked && n.blockedReason === 'missing_stay' && n.city && !hotelCities[n.city]) {
+        hotelCities[n.city] = 1; out.push({ key: 'warn_hotel_first', level: 'warn', city: n.city });
+      }
+      // a not-done ticket or transport due soon → book before it sells out / fills up
+      if (!isDone(n) && (n.kind === 'ticket' || n.kind === 'transport') && typeof n.daysUntilDue === 'number' && n.daysUntilDue >= 0 && n.daysUntilDue <= 7) {
+        out.push({ key: 'warn_book_soon', level: 'warn', title: n.title || '', days: n.daysUntilDue });
+      }
+    });
+    var unscheduled = nodes.filter(function (n) { return !isDone(n) && idx(n) >= 1e9; }).length;
+    if (unscheduled) out.push({ key: 'warn_unscheduled', level: 'info', count: unscheduled });
+    return out;
+  }
+
+  root.TCDepGraph = { build: build, nextAction: nextAction, progress: progress, warnings: warnings, isDone: isDone, _KIND_WEIGHT: KIND_WEIGHT };
 })(typeof window !== 'undefined' ? window : this);

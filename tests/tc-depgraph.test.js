@@ -63,6 +63,17 @@ var r3 = G.build(n3);
 ok('unscheduled custom node is not blocked', byId(r3, 'x_custom').blocked === false);
 ok('unscheduled node does not become next action over the chain root', r3.nextAction.id === 't_bus1');
 
+// ── smart warnings ──
+var rW = G.build(mark(trip(), 't_michael1', 'booked')); // SD transport done, hotel not → tickets blocked on stay
+var w1 = G.warnings(rW.nodes);
+ok('warn: hotel before tickets (once per city)', w1.filter(function (x) { return x.key === 'warn_hotel_first' && x.city === 'SD'; }).length === 1);
+var soon = trip(); soon.forEach(function (x) { if (x.id === 'a_zoo') x.daysUntilDue = 3; });
+var w2 = G.warnings(G.build(soon).nodes);
+ok('warn: book soon (due ≤7d ticket)', w2.some(function (x) { return x.key === 'warn_book_soon'; }));
+var unsT = trip(); unsT.push({ id: 'x', kind: 'optional', city: '', journeyIndex: Infinity, status: 'research_needed', title: 'loose' });
+ok('warn: unscheduled item', G.warnings(G.build(unsT).nodes).some(function (x) { return x.key === 'warn_unscheduled' && x.count === 1; }));
+ok('no warnings when all done', G.warnings(G.build(trip().map(function (x) { x.status = 'booked'; return x; })).nodes).filter(function (x) { return x.level === 'warn'; }).length === 0);
+
 // ── no journey legs at all (every node unscheduled) → still surface a next action ──
 var loose = [
   { id: 'l_hotel', kind: 'lodging', city: '', journeyIndex: Infinity, status: 'research_needed', title: 'Hotel' },

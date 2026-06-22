@@ -184,6 +184,8 @@
       naTitle: 'Next', naAllSet: "You're all set", naResearch: 'Research options',
       blkTransport: 'Waiting for transportation', blkStay: 'Hotel not booked yet', blkPrior: 'Waiting on an earlier step', blkDep: 'Waiting on a prerequisite',
       progTransport: 'Transport', progHotels: 'Hotels', progTickets: 'Tickets', progActivities: 'Activities', progFood: 'Food',
+      warnHotelFirst: 'Book the hotel in {city} before its tickets & activities.', warnBookSoon: '{title} — book soon, it may sell out.', warnReturnMissing: 'Your trip home is still missing — add the return transport.', warnUnscheduled: '{n} item(s) not yet placed in your trip.',
+      depMapTitle: 'Dependency map', depMapSub: 'What depends on what — the order to lock things in',
       pri_P0: 'P0 · Urgent', pri_P1: 'P1', pri_P2: 'P2', taskUnassigned: 'Unassigned', taskDue: 'Due date', taskCost: 'Est. cost', taskBook: 'Book', taskConfirmRide: 'Confirm ride', taskChoose: 'Choose/vote', taskActual: 'Actual cost', taskPaidBy: 'Paid by', taskPaidByNone: 'Not paid', taskBalanceTitle: 'Per-family balance', taskOwed: 'owed', taskOwes: 'owes', taskAhead: 'ahead', taskPaidTotal: 'Total paid', taskRemaining: 'remaining', tf_all: 'All', tf_urgent: 'Urgent', tf_mine: 'My tasks', tf_unpaid: 'Unpaid', tf_bookings: 'Bookings', tf_done: 'Completed',
       // Shared trip access (invite link + passcode + roles)
       shareTrip: 'Share Trip', shareModalTitle: 'Invite your group', shareLinkLabel: 'Trip link', sharePasscodeLabel: 'Passcode', copyPasscode: 'Copy passcode', passcodeCopied: 'Passcode copied!',
@@ -468,6 +470,8 @@
       naTitle: 'Tiếp theo', naAllSet: 'Mọi thứ đã sẵn sàng', naResearch: 'Tìm lựa chọn',
       blkTransport: 'Đang chờ phương tiện di chuyển', blkStay: 'Chưa đặt khách sạn', blkPrior: 'Đang chờ bước trước', blkDep: 'Đang chờ điều kiện trước',
       progTransport: 'Di chuyển', progHotels: 'Khách sạn', progTickets: 'Vé', progActivities: 'Hoạt động', progFood: 'Ẩm thực',
+      warnHotelFirst: 'Đặt khách sạn ở {city} trước khi mua vé & hoạt động.', warnBookSoon: '{title} — nên đặt sớm, có thể hết chỗ.', warnReturnMissing: 'Chưa có chuyến về — hãy thêm phương tiện trở về.', warnUnscheduled: '{n} mục chưa được xếp vào chuyến đi.',
+      depMapTitle: 'Sơ đồ phụ thuộc', depMapSub: 'Việc gì phụ thuộc việc gì — thứ tự cần chốt',
       pri_P0: 'P0 · Khẩn', pri_P1: 'P1', pri_P2: 'P2', taskUnassigned: 'Chưa giao', taskDue: 'Hạn chót', taskCost: 'Chi phí ước tính', taskBook: 'Đặt', taskConfirmRide: 'Xác nhận xe', taskChoose: 'Chọn/bình chọn', taskActual: 'Chi phí thực tế', taskPaidBy: 'Người trả', taskPaidByNone: 'Chưa trả', taskBalanceTitle: 'Số dư theo gia đình', taskOwed: 'nợ', taskOwes: 'còn nợ', taskAhead: 'trả dư', taskPaidTotal: 'Tổng đã trả', taskRemaining: 'còn lại', tf_all: 'Tất cả', tf_urgent: 'Khẩn', tf_mine: 'Của tôi', tf_unpaid: 'Chưa trả', tf_bookings: 'Đặt chỗ', tf_done: 'Hoàn tất',
       shareTrip: 'Chia sẻ chuyến đi', shareModalTitle: 'Mời nhóm của bạn', shareLinkLabel: 'Liên kết chuyến đi', sharePasscodeLabel: 'Mật mã', copyPasscode: 'Sao chép mật mã', passcodeCopied: 'Đã sao chép mật mã!',
       regeneratePasscode: 'Tạo lại liên kết + mật mã', shareRegenWarn: 'Việc này tạo liên kết và mật mã mới; cái cũ sẽ ngừng hoạt động.', disableSharing: 'Tắt chia sẻ', enableSharing: 'Bật chia sẻ', sharingDisabled: 'Chia sẻ hiện đang TẮT.', shareGenerating: 'Đang tạo lời mời an toàn…',
@@ -751,6 +755,8 @@
       naTitle: 'Siguiente', naAllSet: 'Todo listo', naResearch: 'Buscar opciones',
       blkTransport: 'Esperando el transporte', blkStay: 'Hotel aún no reservado', blkPrior: 'Esperando un paso anterior', blkDep: 'Esperando un requisito previo',
       progTransport: 'Transporte', progHotels: 'Hoteles', progTickets: 'Entradas', progActivities: 'Actividades', progFood: 'Comida',
+      warnHotelFirst: 'Reserva el hotel en {city} antes de sus entradas y actividades.', warnBookSoon: '{title} — reserva pronto, puede agotarse.', warnReturnMissing: 'Falta tu viaje de regreso — añade el transporte de vuelta.', warnUnscheduled: '{n} elemento(s) aún sin ubicar en tu viaje.',
+      depMapTitle: 'Mapa de dependencias', depMapSub: 'Qué depende de qué — el orden para confirmar',
       pri_P0: 'P0 · Urgente', pri_P1: 'P1', pri_P2: 'P2', taskUnassigned: 'Sin asignar', taskDue: 'Fecha límite', taskCost: 'Costo est.', taskBook: 'Reservar', taskConfirmRide: 'Confirmar transporte', taskChoose: 'Elegir/votar', taskActual: 'Costo real', taskPaidBy: 'Pagado por', taskPaidByNone: 'Sin pagar', taskBalanceTitle: 'Saldo por familia', taskOwed: 'debe', taskOwes: 'debe', taskAhead: 'a favor', taskPaidTotal: 'Total pagado', taskRemaining: 'restante', tf_all: 'Todo', tf_urgent: 'Urgente', tf_mine: 'Mías', tf_unpaid: 'Sin pagar', tf_bookings: 'Reservas', tf_done: 'Completadas',
       shareTrip: 'Compartir viaje', shareModalTitle: 'Invita a tu grupo', shareLinkLabel: 'Enlace del viaje', sharePasscodeLabel: 'Código', copyPasscode: 'Copiar código', passcodeCopied: '¡Código copiado!',
       regeneratePasscode: 'Regenerar enlace + código', shareRegenWarn: 'Esto crea un nuevo enlace y código; los anteriores dejan de funcionar.', disableSharing: 'Desactivar', enableSharing: 'Activar', sharingDisabled: 'El compartir está DESACTIVADO.', shareGenerating: 'Creando invitación segura…',
@@ -1337,9 +1343,12 @@
     });
     var dg = root.TCDepGraph.build(mapped);
     var depById = {}; dg.nodes.forEach(function (n) { depById[n.id] = n; });
-    tasks.forEach(function (b) { var n = depById[b.id]; b._dep = n ? { blocked: n.blocked, reason: n.blockedReason, score: n.priorityScore, deps: n.dependencies, kind: n.kind } : null; });
+    tasks.forEach(function (b) { var n = depById[b.id]; b._dep = n ? { blocked: n.blocked, reason: n.blockedReason, score: n.priorityScore, deps: n.dependencies, kind: n.kind, idx: n.journeyIndex } : null; });
     var na = dg.nextAction ? tasks.filter(function (b) { return b.id === dg.nextAction.id; })[0] : null;
-    return { tasks: tasks, nextAction: na || null, progress: dg.progress };
+    var warns = root.TCDepGraph.warnings(dg.nodes);
+    // return-trip check (needs leg knowledge): the journey doesn't end where it started → missing the way home
+    if (legs.length && legs[0].fromCity && legs[0].fromCity !== legs[legs.length - 1].toCity) warns.push({ key: 'warn_return_missing', level: 'warn' });
+    return { tasks: tasks, nextAction: na || null, progress: dg.progress, warnings: warns };
   }
   // AI booking research callable (Gemini grounded). Never blocks; returns [] on failure.
   function researchBookings(trip) {
@@ -7732,6 +7741,13 @@
     var pid = p.id, name = (p.name || '').trim().toLowerCase();
     return state.trip.bookings.filter(function (b) { return (pid && b.placeId === pid) || (name && String(b.title || '').trim().toLowerCase() === name); })[0] || null;
   }
+  function warnText(w) {
+    if (w.key === 'warn_hotel_first') return t('warnHotelFirst').replace('{city}', w.city || '');
+    if (w.key === 'warn_book_soon') return t('warnBookSoon').replace('{title}', w.title || '');
+    if (w.key === 'warn_return_missing') return t('warnReturnMissing');
+    if (w.key === 'warn_unscheduled') return t('warnUnscheduled').replace('{n}', String(w.count || 0));
+    return '';
+  }
   // V6 Next-Action hero — the single next thing to do (dependency-aware). Null booking → all set.
   function naCard(b, tr) {
     if (!b) {
@@ -7774,6 +7790,17 @@
     wrap.appendChild(el('p', 'tc-bookings__sub', t('bookingsSub')));
     // V6 Next-Action: the single next thing to do (dependency-aware), as the focal point.
     if (tr.bookings.length) wrap.appendChild(naCard(_dg.nextAction, tr));
+    // V6 smart warnings — the "secretary" nudges (derived from the graph; nothing fabricated).
+    if (_dg.warnings && _dg.warnings.length) {
+      var ws = el('div', 'tc-warnings');
+      _dg.warnings.slice(0, 5).forEach(function (w) {
+        var row = el('div', 'tc-warn tc-warn--' + (w.level || 'warn'));
+        row.appendChild(el('span', 'tc-warn__ic', w.level === 'info' ? 'ℹ️' : '⚠'));
+        row.appendChild(el('span', null, warnText(w)));
+        ws.appendChild(row);
+      });
+      wrap.appendChild(ws);
+    }
     wrap.appendChild(el('div', 'tc-bnotice', '🔒 ' + t('bookingApprovalNotice')));
     if (!tr._demo && !state.readonly) {
       var actions = el('div', 'tc-bookings__actions');
@@ -7848,6 +7875,28 @@
         if (_show) { wrap.appendChild(bookingCard(b, i)); _shown++; }
       });
       if (!_shown) wrap.appendChild(el('p', 'tc-empty', t('noBookings')));
+      // V6 Dependency Map — the trip as a vertical what-depends-on-what chain (journey-ordered),
+      // kept SEPARATE from the day-by-day Timeline. Collapsed by default.
+      if (tr.bookings.length > 1) {
+        var KR = { transport: 0, lodging: 1, ticket: 2, activity: 3, food: 4, optional: 5 };
+        var chain = tr.bookings.slice().sort(function (a, b) {
+          var ai = (a._dep && typeof a._dep.idx === 'number') ? a._dep.idx : 1e9, bi = (b._dep && typeof b._dep.idx === 'number') ? b._dep.idx : 1e9;
+          if (ai !== bi) return ai - bi;
+          return (KR[a._dep && a._dep.kind] || 5) - (KR[b._dep && b._dep.kind] || 5);
+        });
+        var mapCol = ovCollapse('depmap', '🔗 ' + t('depMapTitle'), t('depMapSub'), false);
+        var mb = el('div', 'tc-ov-collapse__body'), dl = el('div', 'tc-depmap');
+        chain.forEach(function (b, i) {
+          var bdone = root.TCTasks && root.TCTasks.isDone(b), blk = !!(b._dep && b._dep.blocked) && !bdone;
+          var isNext = _dg.nextAction && b.id === _dg.nextAction.id;
+          var nd = el('div', 'tc-dep' + (bdone ? ' tc-dep--done' : '') + (blk ? ' tc-dep--blocked' : '') + (isNext ? ' tc-dep--next' : ''));
+          nd.appendChild(el('span', 'tc-dep__ic', bdone ? '✓' : (blk ? '⚠' : (isNext ? '▶' : '○'))));
+          nd.appendChild(el('span', 'tc-dep__t', b.title || ''));
+          dl.appendChild(nd);
+          if (i < chain.length - 1) dl.appendChild(el('div', 'tc-dep__conn', '↓'));
+        });
+        mb.appendChild(dl); mapCol.appendChild(mb); wrap.appendChild(mapCol);
+      }
     }
     if (!tr._demo && !state.readonly) {
       var addRow = el('div', 'tc-bookings__add');

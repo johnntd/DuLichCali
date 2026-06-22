@@ -3980,24 +3980,47 @@
     else if (state.activeTab === 'album') { s.appendChild(renderAlbum(plan)); s.appendChild(renderClips(plan)); } // Clips merged into Album
     else if (state.activeTab === 'clips') s.appendChild(renderClips(plan));
     else s.appendChild(renderGroup(plan));
-    // Bottom Back to My Trips + mobile sticky action bar.
+    // V5 bottom navigation — Trips / AI Concierge / Share / Profile. Replaces the old action bar +
+    // the redundant "Back to My Trips" button; folds the floating concierge FAB into one entry.
+    // Shown on mobile AND desktop (slim centered bar via CSS). Demo previews keep it hidden.
     if (!tr._demo) {
-      var backBottom = el('button', 'tc-backbtn tc-backbtn--bottom', t('backToMyTrips')); backBottom.type = 'button';
-      backBottom.addEventListener('click', function () { goDashboard(); });
-      s.appendChild(backBottom);
-      var bar = el('div', 'tc-actionbar');
-      bar.appendChild(abBtn('🗂', t('dashTitle'), function () { goDashboard(); }));
-      if (isOwnerOfTrip()) {
-        bar.appendChild(abBtn('✏️', t('editTripBtn'), function () { state.screen = 'create'; render(); }));
-        bar.appendChild(abBtn('🔗', t('shareTrip'), function () { openShareModal(); }));
-      }
-      bar.appendChild(abBtn('⋯', t('moreActions'), function () { openMoreSheet(); }));
+      var bar = el('div', 'tc-actionbar tc-bottomnav');
+      bar.appendChild(abBtn('🗂', t('navTrips'), function () { goDashboard(); }));
+      bar.appendChild(abBtn('🤖', t('navConcierge'), function () { openConciergeSheet(tr); }));
+      if (isOwnerOfTrip()) bar.appendChild(abBtn('🔗', t('navShare'), function () { openShareModal(); }));
+      else bar.appendChild(abBtn('⋯', t('moreActions'), function () { openMoreSheet(); }));
+      bar.appendChild(abBtn('👤', t('navProfile'), function () { openProfileSheet(); }));
       s.appendChild(bar);
-      // Floating AI Concierge — available on every tab (lives on the plan-screen container, not
-      // the tab body). Editable, non-demo trips only (mirrors the command-bar's own gating).
-      if (!state.readonly && plan && Array.isArray(plan.days) && plan.days.length) s.appendChild(conciergeFab(tr));
     }
     return s;
+  }
+  // Profile sheet — account status (login/logout) + language (vi/en/es). Reuses realUser/
+  // requireLogin/setLang/auth().signOut — no new auth path. Account-only per the V5 decision.
+  function openProfileSheet() {
+    if (doc.querySelector('.tc-ov-sheet')) return;
+    var ov = el('div', 'tc-ov-sheet');
+    var card = el('div', 'tc-ov-sheet__card');
+    var head = el('div', 'tc-ov-sheet__head');
+    head.appendChild(el('strong', 'tc-ov-sheet__t', '👤 ' + t('navProfile')));
+    var x = el('button', 'tc-ov-sheet__x', '✕'); x.type = 'button';
+    x.addEventListener('click', function () { if (ov.parentNode) ov.parentNode.removeChild(ov); }); head.appendChild(x);
+    card.appendChild(head);
+    var u = realUser();
+    card.appendChild(el('p', 'tc-ov-sheet__acct', u ? ('👤 ' + (u.email || '')) : t('signIn')));
+    var langs = el('div', 'tc-ov-sheet__quick');
+    [['en', 'EN'], ['vi', 'VI'], ['es', 'ES']].forEach(function (l) {
+      var lb = el('button', 'tc-ov-sheet__chip' + (state.lang === l[0] ? ' tc-ov-sheet__chip--on' : ''), l[1]); lb.type = 'button';
+      lb.addEventListener('click', function () { setLang(l[0]); if (ov.parentNode) ov.parentNode.removeChild(ov); });
+      langs.appendChild(lb);
+    });
+    card.appendChild(langs);
+    var row = el('div', 'tc-ov-sheet__row');
+    if (u) { var out = el('button', 'tc-ov-sheet__go', t('logout')); out.type = 'button'; out.addEventListener('click', function () { try { auth().signOut(); } catch (e) {} if (ov.parentNode) ov.parentNode.removeChild(ov); }); row.appendChild(out); }
+    else { var login = el('button', 'tc-ov-sheet__go', t('signIn')); login.type = 'button'; login.addEventListener('click', function () { if (ov.parentNode) ov.parentNode.removeChild(ov); requireLogin(function () { state._myTrips = null; render(); }); }); row.appendChild(login); }
+    card.appendChild(row);
+    ov.appendChild(card);
+    ov.addEventListener('click', function (e) { if (e.target === ov && ov.parentNode) ov.parentNode.removeChild(ov); });
+    doc.body.appendChild(ov);
   }
   // Floating concierge entry point. Opens a sheet whose quick-intent chips + free-text input
   // drive the SAME engine the Journey tab uses (interpretCommand → editPlanPreview → applyEditPlan).

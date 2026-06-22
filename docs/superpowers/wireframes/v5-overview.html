@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Travel Concierge V5 — Experience-First Wireframe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy-900:#0a1626; --navy-800:#101f36; --navy-700:#16263f;
+    --cream:#f6efe2; --muted:#9fb0c8; --border:rgba(255,255,255,.10);
+    --gold:#f1c265; --gold-deep:#d6a13e;
+    --glass:rgba(255,255,255,.07); --glass-brd:rgba(255,255,255,.14);
+    --glow-gold:0 16px 40px -16px rgba(214,161,62,.6);
+    --font-d:'Bodoni Moda',serif; --font-b:'Jost',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--navy-900);color:var(--cream);font-family:var(--font-b);-webkit-font-smoothing:antialiased;}
+  .page{max-width:1180px;margin:0 auto;padding-bottom:84px;}
+  /* App bar */
+  .appbar{display:flex;align-items:center;justify-content:space-between;padding:.7rem 1rem;position:sticky;top:0;z-index:30;background:rgba(10,22,38,.82);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);}
+  .brand{font-family:var(--font-d);font-size:1.05rem;color:var(--cream);}
+  .lang{display:flex;gap:.3rem;}
+  .lang span{font-size:.66rem;font-weight:600;padding:.25rem .5rem;border-radius:99px;border:1px solid var(--border);color:var(--muted);}
+  .lang .on{background:rgba(241,194,101,.16);border-color:var(--gold);color:var(--gold);}
+  /* 5-tab sticky nav */
+  .tabs{position:sticky;top:48px;z-index:29;display:flex;gap:.4rem;padding:.6rem 1rem;background:rgba(10,22,38,.82);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);}
+  .tab{flex:1;text-align:center;min-height:40px;line-height:40px;border-radius:12px;border:1px solid var(--border);background:var(--navy-800);color:var(--muted);font-weight:600;font-size:.84rem;}
+  .tab.on{background:rgba(241,194,101,.14);border-color:var(--gold);color:var(--gold);}
+  /* Cinematic hero */
+  .hero{position:relative;margin:1rem;border-radius:22px;overflow:hidden;min-height:clamp(380px,62vh,560px);display:flex;}
+  .hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+  .hero .scrim{position:absolute;inset:0;background:linear-gradient(to top,rgba(8,18,36,.96) 0%,rgba(8,18,36,.55) 38%,rgba(8,18,36,.05) 72%,rgba(8,18,36,.35) 100%);}
+  .hero .inner{position:relative;z-index:2;margin-top:auto;width:100%;padding:1.4rem;display:flex;flex-direction:column;gap:.7rem;}
+  .hero .eyebrow{font-weight:600;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);}
+  .hero .title{font-family:var(--font-d);font-weight:500;font-size:clamp(2.6rem,9vw,4.6rem);line-height:1;margin:0;color:#fff;text-shadow:0 6px 36px rgba(0,0,0,.55);}
+  .hero .sub{font-size:1rem;color:#e7eef7;margin:0;opacity:.95;}
+  .teasers{display:flex;flex-wrap:wrap;gap:.45rem;}
+  .teaser{display:inline-flex;align-items:center;gap:.35rem;background:var(--glass);border:1px solid var(--glass-brd);backdrop-filter:blur(8px);border-radius:99px;padding:.34rem .8rem;font-size:.82rem;color:#fff;}
+  .cta{align-self:flex-start;margin-top:.3rem;min-height:48px;border:0;border-radius:99px;background:linear-gradient(135deg,var(--gold),var(--gold-deep));color:#241803;font-weight:700;font-size:.95rem;padding:0 1.4rem;box-shadow:var(--glow-gold);cursor:pointer;}
+  /* Section scaffold */
+  section{padding:.4rem 0 1.4rem;}
+  .shead{display:flex;align-items:baseline;justify-content:space-between;padding:0 1rem;margin-bottom:.7rem;}
+  .shead h2{font-family:var(--font-d);font-weight:500;font-size:1.5rem;margin:0;color:var(--cream);}
+  .shead .more{color:var(--gold);font-weight:600;font-size:.86rem;}
+  .sub-note{padding:0 1rem;color:var(--muted);font-size:.82rem;margin:-.4rem 0 .7rem;}
+  /* Large card rail */
+  .rail{display:flex;gap:.85rem;overflow-x:auto;padding:.2rem 1rem 1rem;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;}
+  .rail::-webkit-scrollbar{display:none;}
+  .bigcard{scroll-snap-align:start;flex:0 0 86%;max-width:340px;background:var(--navy-800);border:1px solid var(--border);border-radius:18px;overflow:hidden;box-shadow:0 18px 40px -26px rgba(0,0,0,.9);}
+  .bigcard .ph{position:relative;height:230px;}
+  .bigcard .ph img{width:100%;height:100%;object-fit:cover;}
+  .badge{position:absolute;top:.7rem;left:.7rem;background:rgba(8,18,36,.7);backdrop-filter:blur(6px);border:1px solid var(--glass-brd);color:#fff;font-weight:600;font-size:.68rem;letter-spacing:.04em;text-transform:uppercase;padding:.28rem .6rem;border-radius:99px;}
+  .badge.gold{background:rgba(241,194,101,.92);color:#241803;border-color:transparent;}
+  .vphoto{position:absolute;bottom:.6rem;right:.6rem;font-size:.62rem;color:#cfe8d4;background:rgba(8,18,36,.6);padding:.16rem .45rem;border-radius:99px;}
+  .bigcard .body{padding:.85rem .95rem 1rem;}
+  .bigcard .name{font-family:var(--font-d);font-size:1.3rem;line-height:1.1;margin:0 0 .35rem;color:var(--cream);}
+  .meta{display:flex;align-items:center;gap:.5rem;color:var(--muted);font-size:.84rem;margin-bottom:.45rem;}
+  .meta .dot{opacity:.5;}
+  .desc{font-size:.88rem;line-height:1.45;color:#cfd9ea;margin:0 0 .7rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .links{display:flex;flex-wrap:wrap;gap:.45rem;}
+  .lnk{display:inline-flex;align-items:center;gap:.3rem;font-size:.78rem;font-weight:600;color:var(--cream);background:var(--navy-700);border:1px solid var(--border);border-radius:99px;padding:.34rem .7rem;}
+  .lnk.yt{color:#ffd0d0;}
+  .actions{display:flex;gap:.5rem;margin-top:.6rem;}
+  .act{flex:1;text-align:center;font-size:.8rem;font-weight:600;padding:.5rem;border-radius:10px;border:1px solid var(--border);background:var(--navy-700);color:var(--cream);}
+  .act.gold{background:rgba(241,194,101,.16);border-color:var(--gold);color:var(--gold);}
+  /* Memories strip */
+  .memstrip{display:flex;gap:.6rem;overflow-x:auto;padding:.2rem 1rem 1rem;}
+  .memstrip::-webkit-scrollbar{display:none;}
+  .mem{flex:0 0 130px;height:150px;border-radius:14px;overflow:hidden;position:relative;}
+  .mem img{width:100%;height:100%;object-fit:cover;}
+  .mem .play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.6rem;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.6);}
+  /* Collapsibles */
+  .collapse{margin:0 1rem .7rem;border:1px solid var(--border);border-radius:16px;background:var(--navy-800);overflow:hidden;}
+  details>summary{list-style:none;cursor:pointer;padding:.95rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:.6rem;}
+  details>summary::-webkit-details-marker{display:none;}
+  .csum{display:flex;flex-direction:column;gap:.15rem;}
+  .csum .k{font-family:var(--font-d);font-size:1.12rem;color:var(--cream);}
+  .csum .v{font-size:.8rem;color:var(--muted);}
+  .chev{color:var(--muted);transition:transform .2s;}
+  details[open] .chev{transform:rotate(180deg);}
+  .cbody{padding:0 1rem 1rem;border-top:1px solid var(--border);}
+  .day{display:flex;align-items:center;justify-content:space-between;padding:.85rem 1rem;border-bottom:1px solid var(--border);}
+  .day:last-child{border-bottom:0;}
+  .day .dl{display:flex;flex-direction:column;gap:.2rem;}
+  .day .dl b{font-family:var(--font-d);font-weight:500;font-size:1.05rem;}
+  .day .dl span{font-size:.82rem;color:var(--muted);}
+  .taskrow{display:flex;align-items:center;gap:.6rem;padding:.6rem 0;border-bottom:1px solid var(--border);font-size:.9rem;}
+  .taskrow:last-child{border-bottom:0;}
+  .pri{font-size:.62rem;font-weight:700;padding:.16rem .42rem;border-radius:6px;}
+  .pri.p0{background:rgba(251,146,60,.18);color:#fed7aa;}
+  .pri.done{background:rgba(132,204,22,.16);color:#d9f0a8;}
+  .tmeta{margin-left:auto;color:var(--muted);font-size:.76rem;}
+  .costgrid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-top:.4rem;}
+  .costcell{background:var(--navy-700);border:1px solid var(--border);border-radius:12px;padding:.7rem;}
+  .costcell .cl{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+  .costcell .cv{font-family:var(--font-d);font-size:1.3rem;color:var(--cream);}
+  .detrow{display:flex;align-items:center;justify-content:space-between;padding:.7rem 0;border-bottom:1px solid var(--border);font-size:.9rem;color:var(--cream);}
+  .detrow:last-child{border-bottom:0;}
+  .detrow .arr{color:var(--muted);}
+  /* Bottom nav */
+  .bottomnav{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;justify-content:space-around;padding:.5rem .4rem calc(.5rem + env(safe-area-inset-bottom));background:rgba(10,22,38,.94);backdrop-filter:blur(14px);border-top:1px solid var(--border);}
+  .bn{display:flex;flex-direction:column;align-items:center;gap:.2rem;color:var(--muted);font-size:.66rem;font-weight:600;min-width:60px;}
+  .bn .bi{font-size:1.25rem;}
+  .bn.on{color:var(--gold);}
+  .ann{margin:0 1rem;padding:.5rem .8rem;border-left:3px solid var(--gold);background:rgba(241,194,101,.06);color:var(--muted);font-size:.72rem;border-radius:6px;}
+  @media(min-width:1000px){
+    .hero{min-height:64vh;}
+    .bigcard{flex-basis:38%;max-width:400px;}
+    .bigcard .ph{height:260px;}
+    .mem{flex-basis:180px;height:200px;}
+    .bottomnav{max-width:560px;margin:0 auto;border-radius:18px 18px 0 0;border:1px solid var(--border);border-bottom:0;}
+    .costgrid{grid-template-columns:repeat(4,1fr);}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="appbar"><div class="brand">✦ Du Lich Cali</div><div class="lang"><span class="on">EN</span><span>VI</span><span>ES</span></div></div>
+
+  <div class="tabs">
+    <div class="tab on">Overview</div><div class="tab">Days</div><div class="tab">Tasks</div><div class="tab">Album</div><div class="tab">More</div>
+  </div>
+
+  <div class="ann">WIREFRAME — photos are stock placeholders to show the photo-forward layout. The build uses <b>placeMedia()</b> (real Google Places / Wikipedia photos → honest navy-gradient fallback). No illustrations / no fabricated ratings.</div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <img src="https://picsum.photos/seed/sandiegobay/900/700" alt="">
+    <div class="scrim"></div>
+    <div class="inner">
+      <div class="eyebrow">San Diego · Orange County</div>
+      <h1 class="title">Summer 2026</h1>
+      <p class="sub">July 1–4 &nbsp;·&nbsp; 3 families &nbsp;·&nbsp; 10 travelers</p>
+      <div class="teasers">
+        <span class="teaser">🦁 San Diego Zoo</span>
+        <span class="teaser">🦭 Seal Tour</span>
+        <span class="teaser">🍜 Little Saigon</span>
+        <span class="teaser">🏖 Huntington Beach</span>
+      </div>
+      <button class="cta">Continue Planning →</button>
+    </div>
+  </div>
+
+  <!-- HIGHLIGHTS (dominant) -->
+  <section>
+    <div class="shead"><h2>Highlights</h2><span class="more">See all →</span></div>
+    <div class="rail">
+      <div class="bigcard">
+        <div class="ph"><img src="https://picsum.photos/seed/zoo/700/500" alt=""><span class="badge gold">Must See</span><span class="vphoto">✓ verified photo</span></div>
+        <div class="body">
+          <h3 class="name">San Diego Zoo</h3>
+          <div class="meta"><span>⭐ 4.8</span><span class="dot">·</span><span>⏱ 6 hrs</span><span class="dot">·</span><span>🎟 ~$74</span></div>
+          <p class="desc">World-famous zoo in Balboa Park — pandas, a skyfari gondola and easy stroller paths the whole group can do together.</p>
+          <div class="links"><span class="lnk">Official ↗</span><span class="lnk yt">▶ YouTube review</span><span class="lnk">Maps</span></div>
+        </div>
+      </div>
+      <div class="bigcard">
+        <div class="ph"><img src="https://picsum.photos/seed/seal/700/500" alt=""><span class="badge">Top Pick</span></div>
+        <div class="body">
+          <h3 class="name">Seal Tour</h3>
+          <div class="meta"><span>⭐ 4.6</span><span class="dot">·</span><span>⏱ 1.5 hrs</span><span class="dot">·</span><span>🎟 pending</span></div>
+          <p class="desc">Amphibious land-and-sea tour past the bay's sea lions — a hit with kids and grandparents alike.</p>
+          <div class="links"><span class="lnk">Official ↗</span><span class="lnk yt">▶ YouTube</span><span class="lnk">Reviews</span></div>
+        </div>
+      </div>
+      <div class="bigcard">
+        <div class="ph"><img src="https://picsum.photos/seed/saigon/700/500" alt=""><span class="badge gold">Must See</span></div>
+        <div class="body">
+          <h3 class="name">Little Saigon Food Night</h3>
+          <div class="meta"><span>🍜 Phở 79</span><span class="dot">·</span><span>Brodard</span><span class="dot">·</span><span>Vạn's</span></div>
+          <p class="desc">An evening crawl through Westminster's best — phở, nem nướng and Vietnamese coffee.</p>
+          <div class="links"><span class="lnk yt">▶ Video review</span><span class="lnk">Maps</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI DISCOVERIES -->
+  <section>
+    <div class="shead"><h2>AI Discoveries</h2><span class="more">refresh ↻</span></div>
+    <div class="sub-note">Fresh picks the AI found near your stops — add or swap any of them.</div>
+    <div class="rail">
+      <div class="bigcard">
+        <div class="ph"><img src="https://picsum.photos/seed/sunsetcliffs/700/500" alt=""><span class="badge">📸 Viewpoint</span></div>
+        <div class="body">
+          <h3 class="name">Sunset Cliffs</h3>
+          <div class="meta"><span>⭐ 4.7</span><span class="dot">·</span><span>$ free</span><span class="dot">·</span><span>⏱ 1 hr</span></div>
+          <p class="desc">Dramatic ocean bluffs — the best free sunset in San Diego, 10 min from the hotel.</p>
+          <div class="links"><span class="lnk">Maps</span><span class="lnk yt">▶ YouTube</span><span class="lnk">Tripadvisor</span></div>
+          <div class="actions"><span class="act gold">＋ Add to trip</span><span class="act">⇄ Replace</span></div>
+        </div>
+      </div>
+      <div class="bigcard">
+        <div class="ph"><img src="https://picsum.photos/seed/donut/700/500" alt=""><span class="badge">🍩 Breakfast</span></div>
+        <div class="body">
+          <h3 class="name">Donut Bar</h3>
+          <div class="meta"><span>⭐ 4.5</span><span class="dot">·</span><span>$$</span><span class="dot">·</span><span>quick bite</span></div>
+          <p class="desc">Cult downtown donuts — go early, they sell out. Great Day 2 breakfast stop.</p>
+          <div class="links"><span class="lnk">Official ↗</span><span class="lnk">Maps</span><span class="lnk">Reviews</span></div>
+          <div class="actions"><span class="act gold">＋ Add to trip</span><span class="act">⇄ Replace</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MEMORIES / ALBUM teaser -->
+  <section>
+    <div class="shead"><h2>Memories</h2><span class="more">Album →</span></div>
+    <div class="memstrip">
+      <div class="mem"><img src="https://picsum.photos/seed/m1/300/360" alt=""></div>
+      <div class="mem"><img src="https://picsum.photos/seed/m2/300/360" alt=""><div class="play">▶</div></div>
+      <div class="mem"><img src="https://picsum.photos/seed/m3/300/360" alt=""></div>
+      <div class="mem"><img src="https://picsum.photos/seed/m4/300/360" alt=""></div>
+    </div>
+  </section>
+
+  <!-- COLLAPSED: TIMELINE -->
+  <div class="collapse"><details open>
+    <summary><div class="csum"><span class="k">Your days</span><span class="v">4 days · Jul 1–4</span></div><span class="chev">▼</span></summary>
+    <div class="cbody" style="padding-top:0;">
+      <div class="day"><div class="dl"><b>Day 1 · San Diego</b><span>🦭 Seal Tour · 🦁 Zoo · 🍜 Dinner</span></div><span class="chev">▼</span></div>
+      <div class="day"><div class="dl"><b>Day 2 · San Diego</b><span>🌅 Sunset Cliffs · 🏛 Balboa Park</span></div><span class="chev">▼</span></div>
+      <div class="day"><div class="dl"><b>Day 3 · Orange County</b><span>🎢 Theme park · 🍜 Little Saigon</span></div><span class="chev">▼</span></div>
+      <div class="day"><div class="dl"><b>Day 4 · Drive home</b><span>🏖 Huntington Beach · checkout</span></div><span class="chev">▼</span></div>
+    </div>
+  </details></div>
+
+  <!-- COLLAPSED: TASK CENTER -->
+  <div class="collapse"><details>
+    <summary><div class="csum"><span class="k">Tasks</span><span class="v">5 to do · 3 done</span></div><span class="chev">▼</span></summary>
+    <div class="cbody">
+      <div class="taskrow"><span class="pri p0">P0</span> Book Xe Đò Hoàng <span class="tmeta">due Jun 25 · ~$120 · Bố</span></div>
+      <div class="taskrow"><span class="pri p0">P0</span> Reserve hotel (2 nights) <span class="tmeta">~$540 · Mẹ</span></div>
+      <div class="taskrow"><span class="pri p0">P0</span> Buy Zoo tickets ×10 <span class="tmeta">~$740 · Chị Lan</span></div>
+      <div class="taskrow"><span class="pri done">✓</span> Michael ride booked <span class="tmeta">$140 · done</span></div>
+      <div class="taskrow"><span class="pri done">✓</span> Seal Tour booked <span class="tmeta">done</span></div>
+    </div>
+  </details></div>
+
+  <!-- COLLAPSED: COST CENTER -->
+  <div class="collapse"><details>
+    <summary><div class="csum"><span class="k">Costs</span><span class="v">~$2,400 total · ~$800/family</span></div><span class="chev">▼</span></summary>
+    <div class="cbody">
+      <div class="costgrid">
+        <div class="costcell"><div class="cl">Estimated</div><div class="cv">~$2,400</div></div>
+        <div class="costcell"><div class="cl">Paid</div><div class="cv">$280</div></div>
+        <div class="costcell"><div class="cl">Remaining</div><div class="cv">~$2,120</div></div>
+        <div class="costcell"><div class="cl">Per family</div><div class="cv">~$800</div></div>
+      </div>
+      <div style="margin-top:.7rem;font-size:.84rem;color:var(--muted);">Split: per person · Family A owes $260 · Family B even · Family C +$140</div>
+    </div>
+  </details></div>
+
+  <!-- COLLAPSED: DETAILS -->
+  <div class="collapse"><details>
+    <summary><div class="csum"><span class="k">More details</span><span class="v">Transport · Stay · Food · Events · Group</span></div><span class="chev">▼</span></summary>
+    <div class="cbody">
+      <div class="detrow">🚐 Transportation <span class="arr">→</span></div>
+      <div class="detrow">🏨 Where to stay <span class="arr">→</span></div>
+      <div class="detrow">🍽 Food picks <span class="arr">→</span></div>
+      <div class="detrow">🎉 Events <span class="arr">→</span></div>
+      <div class="detrow">👥 Group votes <span class="arr">→</span></div>
+    </div>
+  </details></div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottomnav">
+  <div class="bn on"><span class="bi">🗂</span>Trips</div>
+  <div class="bn"><span class="bi">🤖</span>AI Concierge</div>
+  <div class="bn"><span class="bi">🔗</span>Share</div>
+  <div class="bn"><span class="bi">👤</span>Profile</div>
+</div>
+</body>
+</html>

@@ -181,6 +181,9 @@
       bt_flight: 'Flight', bt_hotel: 'Hotel', bt_airbnb: 'Vacation rental', bt_attraction: 'Attraction / tickets', bt_restaurant: 'Restaurant', bt_tour: 'Tour', bt_parking: 'Parking', bt_rental_car: 'Rental car', bt_bus: 'Bus', bt_ride: 'Ride', bt_packing: 'Packing', bt_payment: 'Payment', bt_confirmation: 'Confirmation', bt_other: 'Other',
       bs_research_needed: 'Research needed', bs_researching: 'Researching', bs_ready_to_book: 'Ready to book', bs_user_approval_needed: 'Needs approval', bs_booked: 'Booked', bs_skipped: 'Skipped', bs_paid: 'Paid', bs_not_needed: 'Not needed', bs_completed: 'Completed',
       tf_todo: 'To do', tf_completed: 'Completed', markDone: 'Mark done', taskCompletedBy: 'Completed by',
+      naTitle: 'Next', naAllSet: "You're all set", naResearch: 'Research options',
+      blkTransport: 'Waiting for transportation', blkStay: 'Hotel not booked yet', blkPrior: 'Waiting on an earlier step', blkDep: 'Waiting on a prerequisite',
+      progTransport: 'Transport', progHotels: 'Hotels', progTickets: 'Tickets', progActivities: 'Activities', progFood: 'Food',
       pri_P0: 'P0 · Urgent', pri_P1: 'P1', pri_P2: 'P2', taskUnassigned: 'Unassigned', taskDue: 'Due date', taskCost: 'Est. cost', taskBook: 'Book', taskConfirmRide: 'Confirm ride', taskChoose: 'Choose/vote', taskActual: 'Actual cost', taskPaidBy: 'Paid by', taskPaidByNone: 'Not paid', taskBalanceTitle: 'Per-family balance', taskOwed: 'owed', taskOwes: 'owes', taskAhead: 'ahead', taskPaidTotal: 'Total paid', taskRemaining: 'remaining', tf_all: 'All', tf_urgent: 'Urgent', tf_mine: 'My tasks', tf_unpaid: 'Unpaid', tf_bookings: 'Bookings', tf_done: 'Completed',
       // Shared trip access (invite link + passcode + roles)
       shareTrip: 'Share Trip', shareModalTitle: 'Invite your group', shareLinkLabel: 'Trip link', sharePasscodeLabel: 'Passcode', copyPasscode: 'Copy passcode', passcodeCopied: 'Passcode copied!',
@@ -462,6 +465,9 @@
       bt_flight: 'Chuyến bay', bt_hotel: 'Khách sạn', bt_airbnb: 'Nhà cho thuê', bt_attraction: 'Tham quan / vé', bt_restaurant: 'Nhà hàng', bt_tour: 'Tour', bt_parking: 'Bãi đỗ xe', bt_rental_car: 'Thuê xe', bt_bus: 'Xe khách', bt_ride: 'Đưa đón', bt_packing: 'Hành lý', bt_payment: 'Thanh toán', bt_confirmation: 'Xác nhận', bt_other: 'Khác',
       bs_research_needed: 'Cần tìm hiểu', bs_researching: 'Đang tìm hiểu', bs_ready_to_book: 'Sẵn sàng đặt', bs_user_approval_needed: 'Cần phê duyệt', bs_booked: 'Đã đặt', bs_skipped: 'Bỏ qua', bs_paid: 'Đã thanh toán', bs_not_needed: 'Không cần', bs_completed: 'Hoàn tất',
       tf_todo: 'Cần làm', tf_completed: 'Hoàn tất', markDone: 'Đánh dấu xong', taskCompletedBy: 'Hoàn tất bởi',
+      naTitle: 'Tiếp theo', naAllSet: 'Mọi thứ đã sẵn sàng', naResearch: 'Tìm lựa chọn',
+      blkTransport: 'Đang chờ phương tiện di chuyển', blkStay: 'Chưa đặt khách sạn', blkPrior: 'Đang chờ bước trước', blkDep: 'Đang chờ điều kiện trước',
+      progTransport: 'Di chuyển', progHotels: 'Khách sạn', progTickets: 'Vé', progActivities: 'Hoạt động', progFood: 'Ẩm thực',
       pri_P0: 'P0 · Khẩn', pri_P1: 'P1', pri_P2: 'P2', taskUnassigned: 'Chưa giao', taskDue: 'Hạn chót', taskCost: 'Chi phí ước tính', taskBook: 'Đặt', taskConfirmRide: 'Xác nhận xe', taskChoose: 'Chọn/bình chọn', taskActual: 'Chi phí thực tế', taskPaidBy: 'Người trả', taskPaidByNone: 'Chưa trả', taskBalanceTitle: 'Số dư theo gia đình', taskOwed: 'nợ', taskOwes: 'còn nợ', taskAhead: 'trả dư', taskPaidTotal: 'Tổng đã trả', taskRemaining: 'còn lại', tf_all: 'Tất cả', tf_urgent: 'Khẩn', tf_mine: 'Của tôi', tf_unpaid: 'Chưa trả', tf_bookings: 'Đặt chỗ', tf_done: 'Hoàn tất',
       shareTrip: 'Chia sẻ chuyến đi', shareModalTitle: 'Mời nhóm của bạn', shareLinkLabel: 'Liên kết chuyến đi', sharePasscodeLabel: 'Mật mã', copyPasscode: 'Sao chép mật mã', passcodeCopied: 'Đã sao chép mật mã!',
       regeneratePasscode: 'Tạo lại liên kết + mật mã', shareRegenWarn: 'Việc này tạo liên kết và mật mã mới; cái cũ sẽ ngừng hoạt động.', disableSharing: 'Tắt chia sẻ', enableSharing: 'Bật chia sẻ', sharingDisabled: 'Chia sẻ hiện đang TẮT.', shareGenerating: 'Đang tạo lời mời an toàn…',
@@ -742,6 +748,9 @@
       bt_flight: 'Vuelo', bt_hotel: 'Hotel', bt_airbnb: 'Alquiler vacacional', bt_attraction: 'Atracción / entradas', bt_restaurant: 'Restaurante', bt_tour: 'Tour', bt_parking: 'Estacionamiento', bt_rental_car: 'Auto de alquiler', bt_bus: 'Autobús', bt_ride: 'Transporte', bt_packing: 'Equipaje', bt_payment: 'Pago', bt_confirmation: 'Confirmación', bt_other: 'Otro',
       bs_research_needed: 'Investigar', bs_researching: 'Investigando', bs_ready_to_book: 'Listo para reservar', bs_user_approval_needed: 'Requiere aprobación', bs_booked: 'Reservado', bs_skipped: 'Omitido', bs_paid: 'Pagado', bs_not_needed: 'No necesario', bs_completed: 'Completado',
       tf_todo: 'Por hacer', tf_completed: 'Completado', markDone: 'Marcar hecho', taskCompletedBy: 'Completado por',
+      naTitle: 'Siguiente', naAllSet: 'Todo listo', naResearch: 'Buscar opciones',
+      blkTransport: 'Esperando el transporte', blkStay: 'Hotel aún no reservado', blkPrior: 'Esperando un paso anterior', blkDep: 'Esperando un requisito previo',
+      progTransport: 'Transporte', progHotels: 'Hoteles', progTickets: 'Entradas', progActivities: 'Actividades', progFood: 'Comida',
       pri_P0: 'P0 · Urgente', pri_P1: 'P1', pri_P2: 'P2', taskUnassigned: 'Sin asignar', taskDue: 'Fecha límite', taskCost: 'Costo est.', taskBook: 'Reservar', taskConfirmRide: 'Confirmar transporte', taskChoose: 'Elegir/votar', taskActual: 'Costo real', taskPaidBy: 'Pagado por', taskPaidByNone: 'Sin pagar', taskBalanceTitle: 'Saldo por familia', taskOwed: 'debe', taskOwes: 'debe', taskAhead: 'a favor', taskPaidTotal: 'Total pagado', taskRemaining: 'restante', tf_all: 'Todo', tf_urgent: 'Urgente', tf_mine: 'Mías', tf_unpaid: 'Sin pagar', tf_bookings: 'Reservas', tf_done: 'Completadas',
       shareTrip: 'Compartir viaje', shareModalTitle: 'Invita a tu grupo', shareLinkLabel: 'Enlace del viaje', sharePasscodeLabel: 'Código', copyPasscode: 'Copiar código', passcodeCopied: '¡Código copiado!',
       regeneratePasscode: 'Regenerar enlace + código', shareRegenWarn: 'Esto crea un nuevo enlace y código; los anteriores dejan de funcionar.', disableSharing: 'Desactivar', enableSharing: 'Activar', sharingDisabled: 'El compartir está DESACTIVADO.', shareGenerating: 'Creando invitación segura…',
@@ -7722,13 +7731,48 @@
     var pid = p.id, name = (p.name || '').trim().toLowerCase();
     return state.trip.bookings.filter(function (b) { return (pid && b.placeId === pid) || (name && String(b.title || '').trim().toLowerCase() === name); })[0] || null;
   }
+  // V6 Next-Action hero — the single next thing to do (dependency-aware). Null booking → all set.
+  function naCard(b, tr) {
+    if (!b) {
+      var done = el('div', 'tc-na tc-na--done');
+      done.appendChild(el('span', 'tc-na__k', '✓ ' + t('naTitle')));
+      done.appendChild(el('strong', 'tc-na__t', t('naAllSet')));
+      return done;
+    }
+    var c = el('div', 'tc-na');
+    c.appendChild(el('span', 'tc-na__k', '➡ ' + t('naTitle')));
+    c.appendChild(el('strong', 'tc-na__t', b.title || ''));
+    var meta = el('div', 'tc-na__meta');
+    var p = b.priority || (root.TCTasks ? root.TCTasks.priority(b.type) : 'P2');
+    meta.appendChild(el('span', 'tc-na__pri tc-na__pri--' + String(p).toLowerCase(), t('pri_' + p)));
+    if (b.city) meta.appendChild(el('span', 'tc-na__chip', '📍 ' + b.city));
+    if (b.dueDate) meta.appendChild(el('span', 'tc-na__chip', '⏰ ' + b.dueDate));
+    var cost = b.actualCost || b.costEstimate || b.priceRange;
+    if (cost) meta.appendChild(el('span', 'tc-na__chip', '💵 ' + (b.actualCost ? '' : '~') + String(cost).replace(/^\$?/, '$')));
+    if (b.assignedToFamily) { var fam = famName(b.assignedToFamily); if (fam) meta.appendChild(el('span', 'tc-na__chip', '👤 ' + fam)); }
+    c.appendChild(meta);
+    if (!state.readonly && !tr._demo) {
+      var acts = el('div', 'tc-na__acts');
+      var links = BookingLinkProvider.links(b, tr);
+      var url = links.officialUrl || links.searchUrl;
+      if (url) acts.appendChild(linkBtn('🔎 ' + t('naResearch'), url, 'tc-na__btn'));
+      var mk = el('button', 'tc-na__btn tc-na__btn--gold', '✓ ' + t('markBooked')); mk.type = 'button';
+      mk.addEventListener('click', function () { if (root.TCTasks) root.TCTasks.setDone(b, true, { by: getMe() || '', byName: (getMe() ? famName(getMe()) : ''), nowIso: new Date().toISOString() }); saveTrip(tr); tcNotifyTask('completed', b.title); render(); });
+      acts.appendChild(mk);
+      c.appendChild(acts);
+    }
+    return c;
+  }
   function renderBookings(plan) {
     var tr = state.trip;
     normalizeDestinations(tr);
     if (!tr.bookings.length) deriveTripTasks(tr); // seed tasks from itinerary + locked legs + chosen transport on first open
+    var _dg = buildDepNodes(tr); // V6: dependency graph — enriches tr.bookings with _dep, gives nextAction + progress
     var wrap = el('div', 'tc-bookings');
     wrap.appendChild(el('strong', 'tc-bookings__t', '🎟 ' + t('bookingsTitle')));
     wrap.appendChild(el('p', 'tc-bookings__sub', t('bookingsSub')));
+    // V6 Next-Action: the single next thing to do (dependency-aware), as the focal point.
+    if (tr.bookings.length) wrap.appendChild(naCard(_dg.nextAction, tr));
     wrap.appendChild(el('div', 'tc-bnotice', '🔒 ' + t('bookingApprovalNotice')));
     if (!tr._demo && !state.readonly) {
       var actions = el('div', 'tc-bookings__actions');
@@ -7755,6 +7799,19 @@
       pline.appendChild(el('span', 'tc-bookings__progpct', _rd.pct + '%'));
       prog.appendChild(pline);
       var barwrap = el('div', 'tc-bookings__bar'); var fill = el('div', 'tc-bookings__barfill'); fill.style.width = _rd.pct + '%'; barwrap.appendChild(fill); prog.appendChild(barwrap);
+      // V6 per-group booking progress (only groups that have tasks).
+      if (_dg.progress) {
+        var _kinds = {}; tr.bookings.forEach(function (b) { if (b._dep) _kinds[b._dep.kind] = 1; });
+        var gp = el('div', 'tc-bookings__groups');
+        [['transport', 'transport', 'progTransport'], ['hotels', 'lodging', 'progHotels'], ['tickets', 'ticket', 'progTickets'], ['activities', 'activity', 'progActivities'], ['food', 'food', 'progFood']].forEach(function (g) {
+          if (!_kinds[g[1]]) return;
+          var chip = el('span', 'tc-bookings__gchip');
+          chip.appendChild(el('span', 'tc-bookings__gk', t(g[2])));
+          chip.appendChild(el('span', 'tc-bookings__gv', _dg.progress[g[0]] + '%'));
+          gp.appendChild(chip);
+        });
+        if (gp.children.length) prog.appendChild(gp);
+      }
       wrap.appendChild(prog);
       // Filters — All / To do / Completed / Urgent / My tasks.
       var FILTERS = ['all', 'todo', 'completed', 'urgent', 'mine'];
@@ -7771,7 +7828,15 @@
     else {
       var _flt = state._taskFilter || 'all', _me = getMe();
       var _shown = 0;
-      tr.bookings.forEach(function (b, i) {
+      // V6: order by dependency-aware priorityScore (transport→…→optional, blocked sink lower);
+      // keep the ORIGINAL index for delete (bookingCard splices tr.bookings[idx]).
+      var _ordered = tr.bookings.map(function (b, i) { return { b: b, i: i }; }).sort(function (x, y) {
+        var bx = (x.b._dep && x.b._dep.blocked) ? 1 : 0, by = (y.b._dep && y.b._dep.blocked) ? 1 : 0;
+        if (bx !== by) return bx - by; // actionable before blocked
+        return ((y.b._dep && y.b._dep.score) || 0) - ((x.b._dep && x.b._dep.score) || 0);
+      });
+      _ordered.forEach(function (o) {
+        var b = o.b, i = o.i;
         var _p = b.priority || (root.TCTasks ? root.TCTasks.priority(b.type) : 'P2');
         var _done = root.TCTasks ? root.TCTasks.isDone(b) : false;
         var _show = _flt === 'all'
@@ -7805,8 +7870,11 @@
   function bookingCard(b, idx) {
     var tr = state.trip, ro = (state.readonly || tr._demo);
     var done = root.TCTasks ? root.TCTasks.isDone(b) : false;
+    var blocked = !!(b._dep && b._dep.blocked) && !done;
     var links = BookingLinkProvider.links(b, tr);
-    var c = el('article', 'tc-bk' + (done ? ' tc-bk--done' : ''));
+    var c = el('article', 'tc-bk' + (done ? ' tc-bk--done' : '') + (blocked ? ' tc-bk--blocked' : ''));
+    // V6: dependency-blocked badge — this task is waiting on a prerequisite (transport/hotel/leg).
+    if (blocked) { var rk = { missing_transport: 'blkTransport', missing_stay: 'blkStay', missing_prior_leg: 'blkPrior', missing_dependency: 'blkDep' }[b._dep.reason] || 'blkDep'; c.appendChild(el('div', 'tc-bk__blocked', '⚠ ' + t(rk))); }
     var head = el('div', 'tc-bk__head');
     // Large mobile-friendly completion checkbox (left). Check → 'completed' + completedAt/By;
     // uncheck → restore prior status. Persisted to Firestore via saveTrip; trip members see it.

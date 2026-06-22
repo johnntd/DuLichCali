@@ -1628,3 +1628,27 @@ select.tc-input { appearance: none; background-image: linear-gradient(45deg, tra
 .tc-bk--done .tc-bk__title { text-decoration: line-through; text-decoration-color: var(--muted); }
 .tc-bk__donemeta { font-family: var(--font-b); font-size: .78rem; color: #d9f0a8; margin: .15rem 0 .3rem; }
 @media (prefers-reduced-motion: reduce) { .tc-bookings__barfill { transition: none; } }
+
+/* ── V6 Dependency Graph — Next-Action hero, blocked badge, per-group progress ── */
+.tc-na { background: radial-gradient(140% 120% at 0% 0%, rgba(241,194,101,.16), transparent 55%), var(--navy-800); border: 1px solid rgba(241,194,101,.45); border-radius: 16px; padding: 1rem 1.05rem; margin: 0 0 .9rem; box-shadow: var(--tc-glow-gold); }
+.tc-na--done { background: var(--navy-800); border-color: rgba(132,204,22,.4); box-shadow: none; display: flex; align-items: center; gap: .5rem; }
+.tc-na__k { display: block; font-family: var(--font-b); font-weight: 700; font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; color: var(--tc-gold); margin-bottom: .25rem; }
+.tc-na--done .tc-na__k { margin: 0; color: #d9f0a8; }
+.tc-na__t { display: block; font-family: var(--font-d); font-weight: 400; font-size: 1.4rem; line-height: 1.15; color: var(--cream); }
+.tc-na--done .tc-na__t { font-size: 1.05rem; }
+.tc-na__meta { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; margin-top: .5rem; }
+.tc-na__pri { font-family: var(--font-b); font-weight: 700; font-size: .62rem; padding: .16rem .5rem; border-radius: 99px; background: var(--navy-900); border: 1px solid var(--border); color: var(--muted); }
+.tc-na__pri--p0 { background: rgba(251,146,60,.2); color: #fed7aa; border-color: rgba(251,146,60,.5); }
+.tc-na__pri--p1 { background: rgba(56,189,248,.16); color: #bae6fd; border-color: rgba(56,189,248,.4); }
+.tc-na__chip { font-family: var(--font-b); font-size: .8rem; color: #cfd9ea; }
+.tc-na__acts { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .75rem; }
+.tc-na__btn { display: inline-flex; align-items: center; gap: .3rem; font-family: var(--font-b); font-weight: 600; font-size: .84rem; padding: .55rem .9rem; border-radius: 10px; border: 1px solid var(--border); background: var(--navy-900); color: var(--cream); cursor: pointer; text-decoration: none; min-height: 40px; }
+.tc-na__btn--gold { background: linear-gradient(135deg, var(--tc-gold), var(--tc-gold-deep)); color: #241803; border-color: transparent; font-weight: 700; }
+/* blocked task card */
+.tc-bk--blocked { opacity: .82; border-style: dashed; }
+.tc-bk__blocked { font-family: var(--font-b); font-weight: 600; font-size: .76rem; color: #fed7aa; background: rgba(251,146,60,.14); border: 1px solid rgba(251,146,60,.4); border-radius: 8px; padding: .35rem .6rem; margin-bottom: .5rem; }
+/* per-group booking progress chips */
+.tc-bookings__groups { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .5rem; }
+.tc-bookings__gchip { display: inline-flex; align-items: baseline; gap: .3rem; background: var(--navy-900); border: 1px solid var(--border); border-radius: 99px; padding: .25rem .6rem; }
+.tc-bookings__gk { font-family: var(--font-b); font-size: .72rem; color: var(--muted); }
+.tc-bookings__gv { font-family: var(--font-d); font-size: .9rem; color: var(--cream); }

@@ -170,7 +170,7 @@
       confirmationNumber: 'Confirmation #', cancellationPolicy: 'Cancellation policy', refundPolicy: 'Refund policy', deadlineLabel: 'Book by', providerLabel: 'Provider', recommended: 'Recommended', bookingNotes: 'Notes',
       bt_flight: 'Flight', bt_hotel: 'Hotel', bt_airbnb: 'Vacation rental', bt_attraction: 'Attraction / tickets', bt_restaurant: 'Restaurant', bt_tour: 'Tour', bt_parking: 'Parking', bt_rental_car: 'Rental car', bt_bus: 'Bus', bt_ride: 'Ride', bt_packing: 'Packing', bt_payment: 'Payment', bt_confirmation: 'Confirmation', bt_other: 'Other',
       bs_research_needed: 'Research needed', bs_researching: 'Researching', bs_ready_to_book: 'Ready to book', bs_user_approval_needed: 'Needs approval', bs_booked: 'Booked', bs_skipped: 'Skipped', bs_paid: 'Paid', bs_not_needed: 'Not needed',
-      pri_P0: 'P0 · Urgent', pri_P1: 'P1', pri_P2: 'P2', taskUnassigned: 'Unassigned', taskDue: 'Due date', taskCost: 'Est. cost', taskBook: 'Book', taskConfirmRide: 'Confirm ride', taskChoose: 'Choose/vote', tf_all: 'All', tf_urgent: 'Urgent', tf_mine: 'My tasks', tf_unpaid: 'Unpaid', tf_bookings: 'Bookings', tf_done: 'Completed',
+      pri_P0: 'P0 · Urgent', pri_P1: 'P1', pri_P2: 'P2', taskUnassigned: 'Unassigned', taskDue: 'Due date', taskCost: 'Est. cost', taskBook: 'Book', taskConfirmRide: 'Confirm ride', taskChoose: 'Choose/vote', taskActual: 'Actual cost', taskPaidBy: 'Paid by', taskPaidByNone: 'Not paid', taskBalanceTitle: 'Per-family balance', taskOwed: 'owed', taskOwes: 'owes', taskAhead: 'ahead', taskPaidTotal: 'Total paid', taskRemaining: 'remaining', tf_all: 'All', tf_urgent: 'Urgent', tf_mine: 'My tasks', tf_unpaid: 'Unpaid', tf_bookings: 'Bookings', tf_done: 'Completed',
       // Shared trip access (invite link + passcode + roles)
       shareTrip: 'Share Trip', shareModalTitle: 'Invite your group', shareLinkLabel: 'Trip link', sharePasscodeLabel: 'Passcode', copyPasscode: 'Copy passcode', passcodeCopied: 'Passcode copied!',
       regeneratePasscode: 'Regenerate link + passcode', shareRegenWarn: 'This creates a new link and passcode; the old ones stop working.', disableSharing: 'Disable sharing', enableSharing: 'Enable sharing', sharingDisabled: 'Sharing is currently OFF.', shareGenerating: 'Creating secure invite…',
@@ -440,7 +440,7 @@
       confirmationNumber: 'Mã xác nhận', cancellationPolicy: 'Chính sách hủy', refundPolicy: 'Chính sách hoàn tiền', deadlineLabel: 'Đặt trước', providerLabel: 'Nhà cung cấp', recommended: 'Đề xuất', bookingNotes: 'Ghi chú',
       bt_flight: 'Chuyến bay', bt_hotel: 'Khách sạn', bt_airbnb: 'Nhà cho thuê', bt_attraction: 'Tham quan / vé', bt_restaurant: 'Nhà hàng', bt_tour: 'Tour', bt_parking: 'Bãi đỗ xe', bt_rental_car: 'Thuê xe', bt_bus: 'Xe khách', bt_ride: 'Đưa đón', bt_packing: 'Hành lý', bt_payment: 'Thanh toán', bt_confirmation: 'Xác nhận', bt_other: 'Khác',
       bs_research_needed: 'Cần tìm hiểu', bs_researching: 'Đang tìm hiểu', bs_ready_to_book: 'Sẵn sàng đặt', bs_user_approval_needed: 'Cần phê duyệt', bs_booked: 'Đã đặt', bs_skipped: 'Bỏ qua', bs_paid: 'Đã thanh toán', bs_not_needed: 'Không cần',
-      pri_P0: 'P0 · Khẩn', pri_P1: 'P1', pri_P2: 'P2', taskUnassigned: 'Chưa giao', taskDue: 'Hạn chót', taskCost: 'Chi phí ước tính', taskBook: 'Đặt', taskConfirmRide: 'Xác nhận xe', taskChoose: 'Chọn/bình chọn', tf_all: 'Tất cả', tf_urgent: 'Khẩn', tf_mine: 'Của tôi', tf_unpaid: 'Chưa trả', tf_bookings: 'Đặt chỗ', tf_done: 'Hoàn tất',
+      pri_P0: 'P0 · Khẩn', pri_P1: 'P1', pri_P2: 'P2', taskUnassigned: 'Chưa giao', taskDue: 'Hạn chót', taskCost: 'Chi phí ước tính', taskBook: 'Đặt', taskConfirmRide: 'Xác nhận xe', taskChoose: 'Chọn/bình chọn', taskActual: 'Chi phí thực tế', taskPaidBy: 'Người trả', taskPaidByNone: 'Chưa trả', taskBalanceTitle: 'Số dư theo gia đình', taskOwed: 'nợ', taskOwes: 'còn nợ', taskAhead: 'trả dư', taskPaidTotal: 'Tổng đã trả', taskRemaining: 'còn lại', tf_all: 'Tất cả', tf_urgent: 'Khẩn', tf_mine: 'Của tôi', tf_unpaid: 'Chưa trả', tf_bookings: 'Đặt chỗ', tf_done: 'Hoàn tất',
       shareTrip: 'Chia sẻ chuyến đi', shareModalTitle: 'Mời nhóm của bạn', shareLinkLabel: 'Liên kết chuyến đi', sharePasscodeLabel: 'Mật mã', copyPasscode: 'Sao chép mật mã', passcodeCopied: 'Đã sao chép mật mã!',
       regeneratePasscode: 'Tạo lại liên kết + mật mã', shareRegenWarn: 'Việc này tạo liên kết và mật mã mới; cái cũ sẽ ngừng hoạt động.', disableSharing: 'Tắt chia sẻ', enableSharing: 'Bật chia sẻ', sharingDisabled: 'Chia sẻ hiện đang TẮT.', shareGenerating: 'Đang tạo lời mời an toàn…',
       sharePermInfo: 'Bất kỳ ai có liên kết VÀ mật mã đều có thể đăng nhập để xem, bình chọn, đề xuất và thêm gia đình. Chỉ bạn mới có thể sửa chuyến đi, duyệt đề xuất và quản lý thành viên. Không ai xóa được chuyến đi hay mua hàng.',
@@ -709,7 +709,7 @@
       confirmationNumber: 'N.º de confirmación', cancellationPolicy: 'Política de cancelación', refundPolicy: 'Política de reembolso', deadlineLabel: 'Reservar antes de', providerLabel: 'Proveedor', recommended: 'Recomendado', bookingNotes: 'Notas',
       bt_flight: 'Vuelo', bt_hotel: 'Hotel', bt_airbnb: 'Alquiler vacacional', bt_attraction: 'Atracción / entradas', bt_restaurant: 'Restaurante', bt_tour: 'Tour', bt_parking: 'Estacionamiento', bt_rental_car: 'Auto de alquiler', bt_bus: 'Autobús', bt_ride: 'Transporte', bt_packing: 'Equipaje', bt_payment: 'Pago', bt_confirmation: 'Confirmación', bt_other: 'Otro',
       bs_research_needed: 'Investigar', bs_researching: 'Investigando', bs_ready_to_book: 'Listo para reservar', bs_user_approval_needed: 'Requiere aprobación', bs_booked: 'Reservado', bs_skipped: 'Omitido', bs_paid: 'Pagado', bs_not_needed: 'No necesario',
-      pri_P0: 'P0 · Urgente', pri_P1: 'P1', pri_P2: 'P2', taskUnassigned: 'Sin asignar', taskDue: 'Fecha límite', taskCost: 'Costo est.', taskBook: 'Reservar', taskConfirmRide: 'Confirmar transporte', taskChoose: 'Elegir/votar', tf_all: 'Todo', tf_urgent: 'Urgente', tf_mine: 'Mías', tf_unpaid: 'Sin pagar', tf_bookings: 'Reservas', tf_done: 'Completadas',
+      pri_P0: 'P0 · Urgente', pri_P1: 'P1', pri_P2: 'P2', taskUnassigned: 'Sin asignar', taskDue: 'Fecha límite', taskCost: 'Costo est.', taskBook: 'Reservar', taskConfirmRide: 'Confirmar transporte', taskChoose: 'Elegir/votar', taskActual: 'Costo real', taskPaidBy: 'Pagado por', taskPaidByNone: 'Sin pagar', taskBalanceTitle: 'Saldo por familia', taskOwed: 'debe', taskOwes: 'debe', taskAhead: 'a favor', taskPaidTotal: 'Total pagado', taskRemaining: 'restante', tf_all: 'Todo', tf_urgent: 'Urgente', tf_mine: 'Mías', tf_unpaid: 'Sin pagar', tf_bookings: 'Reservas', tf_done: 'Completadas',
       shareTrip: 'Compartir viaje', shareModalTitle: 'Invita a tu grupo', shareLinkLabel: 'Enlace del viaje', sharePasscodeLabel: 'Código', copyPasscode: 'Copiar código', passcodeCopied: '¡Código copiado!',
       regeneratePasscode: 'Regenerar enlace + código', shareRegenWarn: 'Esto crea un nuevo enlace y código; los anteriores dejan de funcionar.', disableSharing: 'Desactivar', enableSharing: 'Activar', sharingDisabled: 'El compartir está DESACTIVADO.', shareGenerating: 'Creando invitación segura…',
       sharePermInfo: 'Cualquiera con el enlace Y el código puede iniciar sesión para ver, votar, sugerir y añadir su familia. Solo tú puedes editar el viaje, aprobar sugerencias y gestionar miembros. Nadie puede eliminar el viaje ni hacer compras.',
@@ -6896,6 +6896,21 @@
     shares.forEach(function (fs) {
       var row = el('div', 'tc-costrow'); row.appendChild(el('span', 'tc-costrow__k', fs.name + ' (' + fs.travelers + ')')); row.appendChild(el('strong', 'tc-costrow__v', money(fs.share))); wrap.appendChild(row);
     });
+    // Task payment balance (P2): per-family owed (from task actual/estimate costs) − actually paid;
+    // total paid / remaining unpaid. Reuses the split mode + the who-paid ledger.
+    if (root.TCTasks && Array.isArray(tr.bookings) && tr.bookings.length) {
+      var _bal = root.TCTasks.computeBalances(tr.bookings, shares.map(function (f) { return { id: f.id, name: f.name, travelers: f.travelers }; }), split, costLedger(tr));
+      if (_bal.totalEstimated || _bal.totalActual || _bal.totalPaid) {
+        wrap.appendChild(el('strong', 'tc-costs__h', t('taskBalanceTitle')));
+        _bal.perFamily.forEach(function (fb) {
+          var row = el('div', 'tc-costrow');
+          row.appendChild(el('span', 'tc-costrow__k', fb.name + ' · ' + t('taskOwed') + ' ' + money(fb.owed) + ' · ' + t('costPaid') + ' ' + money(fb.paid)));
+          row.appendChild(el('strong', 'tc-costrow__v', (fb.balance > 0 ? t('taskOwes') + ' ' : (fb.balance < 0 ? t('taskAhead') + ' ' : '')) + money(Math.abs(fb.balance))));
+          wrap.appendChild(row);
+        });
+        var totRow = el('div', 'tc-costrow'); totRow.appendChild(el('span', 'tc-costrow__k', t('taskPaidTotal'))); totRow.appendChild(el('strong', 'tc-costrow__v', money(_bal.totalPaid) + ' · ' + t('taskRemaining') + ' ' + money(_bal.remaining))); wrap.appendChild(totRow);
+      }
+    }
     // Who paid / owes ledger
     wrap.appendChild(el('strong', 'tc-costs__h', t('costLedgerTitle')));
     var led = costLedger(tr);
@@ -7268,6 +7283,11 @@
       c.appendChild(field(t('taskDue'), _due));
       var _cost = input(b.costEstimate || '', t('taskCost')); _cost.addEventListener('input', function () { b.costEstimate = _cost.value; }); _cost.addEventListener('change', function () { saveTrip(tr); });
       c.appendChild(field(t('taskCost'), _cost));
+      var _act = input(b.actualCost || '', t('taskActual')); _act.addEventListener('input', function () { b.actualCost = _act.value; }); _act.addEventListener('change', function () { saveTrip(tr); render(); });
+      c.appendChild(field(t('taskActual'), _act));
+      var _paid = selectFrom([''].concat(tripFamilies().map(function (f) { return f.id; })), b.paidBy || '', function (id) { if (!id) return t('taskPaidByNone'); var ff = tripFamilies().filter(function (x) { return x.id === id; })[0]; return ff ? (ff.name || id) : id; });
+      _paid.className = 'tc-input'; _paid.addEventListener('change', function () { b.paidBy = _paid.value; saveTrip(tr); render(); });
+      c.appendChild(field(t('taskPaidBy'), _paid));
       var nt = input(b.notes, t('bookingNotes')); nt.addEventListener('input', function () { b.notes = nt.value; }); nt.addEventListener('change', function () { saveTrip(tr); });
       c.appendChild(field(t('bookingNotes'), nt));
     }

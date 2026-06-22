@@ -1494,3 +1494,56 @@ select.tc-input { appearance: none; background-image: linear-gradient(45deg, tra
   .tc-ov-card { flex-basis: 31%; max-width: 320px; } /* approved: rail still scrolls horizontally, no wrap */
   .tc-ov-fab { right: 2rem; bottom: 2rem; }
 }
+
+/* ── V5 Experience-First reset — overrides the V4 block above (source order wins) ───────── */
+/* Cinematic hero */
+.tc-ov-hero { min-height: clamp(380px, 62vh, 560px); border-radius: 22px; }
+.tc-ov-hero__inner { padding: 1.4rem; gap: .65rem;
+  background: linear-gradient(to top, rgba(8,18,36,.96) 0%, rgba(8,18,36,.55) 38%, rgba(8,18,36,.05) 72%, rgba(8,18,36,.35) 100%); }
+.tc-ov-hero__eyebrow { align-self: flex-start; font-family: var(--font-b); font-weight: 600; font-size: .7rem; letter-spacing: .14em; text-transform: uppercase; color: var(--tc-gold); }
+.tc-ov-hero__title { font-family: var(--font-d); font-weight: 500; font-size: clamp(2.6rem, 9vw, 4.6rem); line-height: 1; color: #fff; text-shadow: 0 6px 36px rgba(0,0,0,.55); margin: 0; }
+.tc-ov-hero__sub { font-size: 1rem; color: #e7eef7; }
+.tc-ov-hero__teasers { display: flex; flex-wrap: wrap; gap: .45rem; }
+.tc-ov-hero__teaser { display: inline-flex; align-items: center; gap: .35rem; background: var(--tc-glass); border: 1px solid var(--tc-glass-brd); backdrop-filter: blur(8px); border-radius: 99px; padding: .34rem .8rem; font-family: var(--font-b); font-size: .8rem; color: #fff; }
+.tc-ov-hero__cta { margin-top: .3rem; min-height: 48px; padding: 0 1.4rem; font-size: .95rem; }
+
+/* Large photo-first card */
+.tc-ov-rail { gap: .85rem; padding: .2rem 1rem 1rem; }
+.tc-ov-rail::-webkit-scrollbar { display: none; }
+.tc-ov-card--lg { flex: 0 0 86%; max-width: 340px; border-radius: 18px; box-shadow: 0 18px 40px -26px rgba(0,0,0,.9); }
+.tc-ov-card--lg .tc-ov-card__media { height: 230px; }
+.tc-ov-card--lg .tc-ov-card__media .tc-place__img { height: 230px; }
+.tc-ov-card__badge { position: absolute; top: .7rem; left: .7rem; z-index: 2; background: rgba(8,18,36,.7); backdrop-filter: blur(6px); border: 1px solid var(--tc-glass-brd); color: #fff; font-family: var(--font-b); font-weight: 600; font-size: .66rem; letter-spacing: .04em; text-transform: uppercase; padding: .28rem .6rem; border-radius: 99px; }
+.tc-ov-card__badge--gold { background: rgba(241,194,101,.94); color: #241803; border-color: transparent; }
+.tc-ov-card--lg .tc-ov-card__body { padding: .85rem .95rem 1rem; gap: .35rem; }
+.tc-ov-card--lg .tc-ov-card__name { font-size: 1.3rem; }
+.tc-ov-card__meta { display: flex; align-items: center; flex-wrap: wrap; gap: .45rem; color: var(--muted); font-family: var(--font-b); font-size: .84rem; }
+.tc-ov-card__dot { opacity: .5; }
+.tc-ov-card__links { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .55rem; }
+.tc-ov-card__lnk { display: inline-flex; align-items: center; gap: .3rem; font-family: var(--font-b); font-weight: 600; font-size: .76rem; color: var(--cream); background: var(--navy-700, var(--navy-900)); border: 1px solid var(--border); border-radius: 99px; padding: .34rem .7rem; text-decoration: none; }
+.tc-ov-card__lnk--yt { color: #ffd0d0; }
+
+/* Sticky 5-tab bar */
+.tc-tabs { position: sticky; top: 0; z-index: 26; margin: 0 -1rem .9rem; padding: .55rem 1rem; background: rgba(10,22,38,.82); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+.tc-tab--on { background: rgba(241,194,101,.16); border-color: var(--tc-gold); color: var(--tc-gold); }
+
+/* Bottom nav (Trips / AI Concierge / Share / Profile) — replaces the old action bar; visible on
+   mobile AND desktop (slim centered). Higher-specificity selector beats `.tc-actionbar{display:none}`. */
+.tc-bottomnav { z-index: 40; padding-top: .5rem; padding-bottom: calc(.5rem + env(safe-area-inset-bottom)); }
+.tc-plan { padding-bottom: 84px; }
+.tc-ov-sheet__acct { font-family: var(--font-b); font-size: .9rem; color: var(--cream); margin: 0 0 .7rem; }
+.tc-ov-sheet__chip--on { background: rgba(241,194,101,.3); border-color: var(--tc-gold); color: var(--tc-gold); }
+
+@media (min-width: 768px) {
+  .tc-ov-card--lg { flex-basis: 46%; }
+  .tc-ov-card--lg .tc-ov-card__media, .tc-ov-card--lg .tc-ov-card__media .tc-place__img { height: 250px; }
+  /* keep the bottom nav visible on desktop as a slim centered bar (overrides .tc-actionbar{display:none}) */
+  .tc-actionbar.tc-bottomnav { display: flex; left: 50%; right: auto; transform: translateX(-50%); max-width: 520px; border: 1px solid var(--border); border-bottom: 0; border-radius: 16px 16px 0 0; }
+  .tc-plan { padding-bottom: 84px; }
+}
+@media (min-width: 1200px) {
+  .tc-ov-card--lg { flex-basis: 31%; max-width: 380px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tc-tabs { backdrop-filter: none; }
+}

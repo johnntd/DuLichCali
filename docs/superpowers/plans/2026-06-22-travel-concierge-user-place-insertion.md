@@ -15,7 +15,7 @@
 - **i18n:** every new UI string added to the module-level `T` object in **en (~L37) + vi (~L314) + es (~L581)** in the *same commit*; access only via `t('key')`. Never write a literal to the DOM.
 - **Mobile-first:** verify 375px then 1280px.
 - **Version bump:** when `travel-concierge.js` changes, bump `?v=` in `travel-concierge.html` (the only HTML consumer) to the next **unused** string (verify with `git log --all -p` first), in the same commit.
-- **Gate each phase:** `npm run test:rules` → `bash scripts/ai/targeted_dry_run.sh travel` → `scripts/ai/full_system_dry_run.sh` must end `FINAL: PASS`. **Do not deploy** until all 4 phases pass and the user confirms.
+- **Gate each phase:** `npm run test:userplace` (the new node unit tests — **the dry-run gate does NOT run them**, so run them explicitly) → `npm run test:rules` → `bash scripts/ai/targeted_dry_run.sh travel` → `scripts/ai/full_system_dry_run.sh` must end `FINAL: PASS`. **Do not deploy** until all 4 phases pass and the user confirms. (Optional hardening: add `node tests/travel-place-utils.test.js && node tests/user-place-sanitize.test.js` to the `travel)` branch of `scripts/ai/targeted_dry_run.sh` so the sanitizer honesty invariants run inside the gate.)
 - **Commit frequently** (per task). Branch is `travel-concierge`.
 
 ---
@@ -102,7 +102,7 @@ Create `functions/lib/userPlaceSanitize.js`:
 // Mirrors the .map() clamp in researchTripStays (functions/index.js): every
 // ungrounded field is blanked, never guessed; AI output is always pending verification.
 
-var PRICE_RE = /^\s*(\${1,3}|\d[\d,]*\s*(?:[-–]\s*\$?\d[\d,]*)?)\s*$/; // $/$$/$$$ or a numeric range
+var PRICE_RE = /^\s*(\${1,3}|\$?\d[\d,]*\s*(?:[-–]\s*\$?\d[\d,]*)?)\s*$/; // $/$$/$$$ or an optionally $-prefixed numeric range
 var OFFICIAL_HOSTS = [
   'opentable.com', 'resy.com', 'yelp.com', 'tripadvisor.com', 'google.com',
   'toasttab.com', 'exploretock.com', 'ubereats.com', 'doordash.com', 'grubhub.com',
@@ -282,6 +282,8 @@ exports.researchUserPlace = onCall(
 );
 ```
 
+> **Server-auth note:** `researchUserPlace` gates on `tripCallerRole(tripId, uid)`, which resolves via the `tripMembers/{tripId}/members/{uid}` doc (written by the join/share flow) — NOT the trip's `families` array. The admin-SDK callable bypasses Firestore rules, so passing the Task 1.8 client rules check does **not** imply the server accepts the call. Ensure anyone reaching the Add-my-place UI has joined via the share flow so `tripCallerRole` resolves non-null.
+
 - [ ] **Step 2: Lint-check the file parses**
 
 Run: `node -e "require('./functions/lib/userPlaceSanitize.js'); console.log('sanitizer ok')"`
@@ -345,7 +347,7 @@ Create `tests/travel-place-utils.test.js`:
 // node tests/travel-place-utils.test.js — loads the browser IIFE like tests/pricing.test.js does.
 const fs = require('fs'), path = require('path');
 const src = fs.readFileSync(path.join(__dirname, '..', 'travel-place-utils.js'), 'utf8') + '\nreturn window.TCPlaceUtils;';
-const U = new Function('window', 'var w = window || {}; (function(){' + src.replace('return window.TCPlaceUtils;', '') + '})(); return w.TCPlaceUtils;')({});
+const w = {}; const U = new Function('window', src)(w); // same loader pattern as tests/pricing.test.js
 let pass = 0, fail = 0;
 function ok(n, c) { c ? pass++ : fail++; console.log((c ? '  PASS ' : '  FAIL ') + n); }
 
@@ -719,15 +721,15 @@ git commit -m "feat(travel-concierge): 9-type Add-my-place expander + 3-step int
 - Modify: `travel-concierge.js` — add `submitUserPlace`, `runUserPlaceResearch`, `retryUserPlaceResearch`, and a resume hook in the trip-load path; reuse `addedPlaces`, `saveTrip`, `render`, `laneMaxOrder`, `uid`, `curUid`, the Firebase callable bridge.
 - i18n: toast keys.
 
-- [ ] **Step 1: Find the callable bridge**
+- [ ] **Step 1: Confirm the callable bridge**
 
-Search for how the frontend invokes an existing trip callable (e.g. `researchTripStays`). Run:
+The frontend bridge is `mkCallable(name, timeout)` (travel-concierge.js:~1501) → `root.firebase.functions().httpsCallable(name, { timeout })`, invoked with a **bare** payload and read as `r.data` (the callable SDK adds the `{data:...}` envelope itself). Verify:
 
 ```bash
-grep -n "researchTripStays\|httpsCallable\|functions()" travel-concierge.js | head
+grep -n "mkCallable" travel-concierge.js | head
 ```
 
-Use the same mechanism (a `callFn('researchUserPlace', data)` style wrapper or `root.dlcFns.httpsCallable('researchUserPlace')`). The steps below call it as `tcCallable('researchUserPlace', payload)` — bind that name to the existing wrapper you find (if the existing call is inline, factor a 2-line `tcCallable` helper next to it).
+The steps below call `tcCallable('researchUserPlace', payload)` — a thin wrapper over `mkCallable` defined in Step 4.
 
 - [ ] **Step 2: Add toast i18n keys** (en/vi/es)
 
@@ -767,7 +769,7 @@ Use the same mechanism (a `callFn('researchUserPlace', data)` style wrapper or `
     entry.researchAttempts = (entry.researchAttempts || 0) + 1;
     var payload = { tripId: state.trip.id, name: entry.name, area: entry.locationHint, placeType: entry.category, mealType: entry.mealType, notes: entry.notes, lang: state.lang, tripContext: tcTripContext() };
     return tcCallable('researchUserPlace', payload).then(function (res) {
-      var r = (res && res.data) || res || {};
+      var r = res || {}; // tcCallable already returns the unwrapped data object
       if (!r.ok || !r.place) { return failUserPlaceResearch(entry); }
       var mapped = TCPlaceUtils.researchToPlace(r.place, entry);
       Object.keys(mapped).forEach(function (k) { entry[k] = mapped[k]; }); // forward enriched fields onto the entry
@@ -810,14 +812,15 @@ Use the same mechanism (a `callFn('researchUserPlace', data)` style wrapper or `
   }
 ```
 
-- [ ] **Step 4: Define `tcCallable` (if not already present from Step 1) and call `resumeUserPlaceResearch` after a trip loads**
+- [ ] **Step 4: Define the `tcCallable` wrapper over `mkCallable`, and call `resumeUserPlaceResearch` after a trip loads**
 
-If no reusable wrapper exists, add next to the other Firebase calls:
+Add next to the other Firebase calls:
 
 ```js
   function tcCallable(name, data) {
-    if (root.dlcFns && root.dlcFns.httpsCallable) return root.dlcFns.httpsCallable(name)({ data: data }).then(function (r) { return r.data; });
-    return Promise.reject(new Error('functions unavailable'));
+    var c = mkCallable(name, 60000); // mkCallable(name, timeout) → root.firebase.functions().httpsCallable(name, { timeout })
+    if (!c) return Promise.reject(new Error('functions unavailable'));
+    return c(data).then(function (r) { return (r && r.data) || {}; }); // pass the BARE payload; the SDK wraps it as {data:...}
   }
 ```
 
@@ -849,16 +852,16 @@ git commit -m "feat(travel-concierge): optimistic insert + background researchUs
 
 Run: `grep -n "groupTrips\|tripMember\|member-collaborate\|stranger" tests/rules/firestore-rules.test.js | head -30` and read ~L206-246 to match the exact `allowed(...)`/`denied(...)` helper names and the context variable names used there.
 
-- [ ] **Step 2: Add the cases** (match the file's existing helper + context names — shown here as `allowed`/`denied` with `memberDb`/`strangerDb`/`tripId` from ~L209-212; rename to match the file)
+- [ ] **Step 2: Add the cases** — the file's real contexts are `tripper` / `tripMember` / `tripMember2` / `stranger`; helpers are `allowed(name, p)` / `denied(name, p)`; the seeded trip doc is the literal `'groupTrips/trip-1'`; calls use the **single-string** path form `doc(tripMember, 'groupTrips/trip-1')`. NOTE: the `groupTrips` update rule does **no** field-level validation (owner/member may write any field), so these cases are **documentation-only** — they assert nothing the existing `notes` allow/deny cases don't. Keep them as living docs of intent; do not claim new rule coverage.
 
 ```js
-  // ── User Place Insertion: members write userChoice fields on the trip doc ──
+  // ── User Place Insertion: members write userChoice fields on the trip doc (documentation-only) ──
   await allowed('member adds a userChoice place (addedPlaces)',
-    updateDoc(doc(memberDb, 'groupTrips', tripId), { addedPlaces: [{ id: 'add_1', name: 'Pho 79', userChoice: true, ucAction: 'add', proposed: false, verificationStatus: 'researching' }] }));
+    updateDoc(doc(tripMember, 'groupTrips/trip-1'), { addedPlaces: [{ id: 'add_1', name: 'Pho 79', userChoice: true, ucAction: 'add', proposed: false, verificationStatus: 'researching' }] }));
   await allowed('member writes a placeOverride replacement',
-    updateDoc(doc(memberDb, 'groupTrips', tripId), { placeOverrides: { 'pho 79': { action: 'replaced', replacement: { name: 'Pho 79', userChoice: true } } } }));
+    updateDoc(doc(tripMember, 'groupTrips/trip-1'), { placeOverrides: { 'pho 79': { action: 'replaced', replacement: { name: 'Pho 79', userChoice: true } } } }));
   await denied('stranger cannot write userChoice place',
-    updateDoc(doc(strangerDb, 'groupTrips', tripId), { addedPlaces: [{ id: 'add_x', name: 'X', userChoice: true }] }));
+    updateDoc(doc(stranger, 'groupTrips/trip-1'), { addedPlaces: [{ id: 'add_x', name: 'X', userChoice: true }] }));
 ```
 
 - [ ] **Step 3: Run the rules suite**
@@ -944,17 +947,14 @@ In `addMyChoiceForm` Step 2, change `var actions = ['add', 'backup'];` to `var a
 
 (Re-render is needed when the action changes to reveal the picker — add an `actSel.addEventListener('change', function(){ draft.action = actSel.value; render(); })`.)
 
-- [ ] **Step 3: Add per-card menu actions** in `cardMenuPanel` (after the existing Replace/Skip items, for non-added controllable cards)
+- [ ] **Step 3: Add per-card menu actions** in `cardMenuPanel` — every existing item is appended via the panel container (`<panel>.appendChild(pbtn(...))`, ~L5134). Confirm the local container variable name and match it. Add (for non-added controllable cards, inside the branch where `ctx.p` exists):
 
 ```js
-    pbtn(t('ucReplaceMine'), '', function () { state._cardMenu = null; state._ucForm = { day: ctx.day, step: 1, draft: { placeType: 'restaurant', action: 'replace', replaceTargetKey: placeKey(ctx.p) } }; render(); });
+    panel.appendChild(pbtn(t('ucReplaceMine'), '', function () { state._cardMenu = null; state._ucForm = { day: ctx.day, step: 1, draft: { placeType: 'restaurant', action: 'replace', replaceTargetKey: placeKey(ctx.p) } }; render(); }));
+    panel.appendChild(pbtn(t('ucAddToDay'), '', function () { state._cardMenu = null; state._ucForm = { day: ctx.day, step: 1, draft: { placeType: 'restaurant', action: 'add' } }; render(); }));
 ```
 
-And a generic "Add to this day" entry-point on the day (already covered by the day expander; the per-card variant just preselects the day) — add to the per-card menu:
-
-```js
-    pbtn(t('ucAddToDay'), '', function () { state._cardMenu = null; state._ucForm = { day: ctx.day, step: 1, draft: { placeType: 'restaurant', action: 'add' } }; render(); });
-```
+(Replace `panel` with the file's actual container variable.)
 
 - [ ] **Step 4: Commit**
 
@@ -1066,7 +1066,7 @@ Scope: "Ask group to vote" → a Proposed (voting) lane on the target day; new `
 
 - [ ] **Step 2: Split the day-actions gate**
 
-In the day render, replace the single `if (canEditPlan()) wrap.appendChild(dayActionsBar(di2));` with logic so `dayActionsBar` renders for `canSuggestPlace()`, but inside `dayActionsBar` only show Regenerate/Re-optimize when `canEditPlan()`:
+There are **TWO** `if (canEditPlan()) wrap.appendChild(dayActionsBar(di2));` call sites — one inside the empty-lanes early return (~L4304) and one after the lanes loop (~L4325). Change **both** to `canSuggestPlace()` (the day-index var is `di2` at both sites):
 
 ```js
     if (canSuggestPlace()) wrap.appendChild(dayActionsBar(di2));
@@ -1228,7 +1228,7 @@ git commit -m "feat(travel-concierge): user-place cost line-items roll into comp
       var stub = { id: uid('add'), name: draft.name, category: draft.placeType, userChoice: true, ucAction: 'food', locationHint: draft.area, verificationStatus: 'researching', dataSource: 'user_entered' };
       toast(t('ucToastResearching').replace('{name}', draft.name));
       tcCallable('researchUserPlace', { tripId: state.trip.id, name: draft.name, area: draft.area, placeType: draft.placeType, lang: state.lang, tripContext: tcTripContext() }).then(function (res) {
-        var r = (res && res.data) || res || {}; var pl = r.place || {};
+        var r = res || {}; var pl = r.place || {}; // tcCallable returns the unwrapped data object
         var bucketCity = (draft.area || '').split(',')[0].trim() || t('ucMyPicks');
         var tr = state.trip; tr.food = tr.food || [];
         var bucket = tr.food.filter(function (f) { return (f.city || '').toLowerCase() === bucketCity.toLowerCase(); })[0];

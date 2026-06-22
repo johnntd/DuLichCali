@@ -3910,18 +3910,21 @@
       shareBtn.addEventListener('click', function () { openShareModal(); });
       s.appendChild(shareBtn);
     }
-    // Hero
-    var hero = el('div', 'tc-planhero');
-    hero.appendChild(el('span', 'tc-planhero__chip', plan.destination || tr.destination));
-    hero.appendChild(el('h1', 'tc-planhero__title', plan.groupName || tr.groupName));
-    hero.appendChild(el('p', 'tc-planhero__dates', (plan.dateRange || tr.dateRange) + (plan.departureCity ? ' · ' + plan.departureCity : '')));
-    if (plan.summary) hero.appendChild(el('p', 'tc-planhero__summary', plan.summary));
-    var meta = el('div', 'tc-planhero__meta');
-    if (plan.totalEstimatedCostRange) meta.appendChild(chip('tc-chip--cost', t('costRange') + ': ' + plan.totalEstimatedCostRange));
-    if (plan.meetupPoint) meta.appendChild(chip('tc-chip--meet', '📍 ' + t('meetup') + ': ' + plan.meetupPoint + (plan.meetupTime ? ' · ' + plan.meetupTime : '')));
-    hero.appendChild(meta);
-    if (tr._fallback || (plan.dataSource && /pending/.test(plan.dataSource))) hero.appendChild(el('p', 'tc-unverified', t('unverified')));
-    s.appendChild(hero);
+    // Compact context hero — shown on the detail tabs. On the Overview tab the immersive
+    // tc-ov-hero replaces it, so we suppress this one to avoid a redundant double hero.
+    if (state.activeTab !== 'overview') {
+      var hero = el('div', 'tc-planhero');
+      hero.appendChild(el('span', 'tc-planhero__chip', plan.destination || tr.destination));
+      hero.appendChild(el('h1', 'tc-planhero__title', plan.groupName || tr.groupName));
+      hero.appendChild(el('p', 'tc-planhero__dates', (plan.dateRange || tr.dateRange) + (plan.departureCity ? ' · ' + plan.departureCity : '')));
+      if (plan.summary) hero.appendChild(el('p', 'tc-planhero__summary', plan.summary));
+      var meta = el('div', 'tc-planhero__meta');
+      if (plan.totalEstimatedCostRange) meta.appendChild(chip('tc-chip--cost', t('costRange') + ': ' + plan.totalEstimatedCostRange));
+      if (plan.meetupPoint) meta.appendChild(chip('tc-chip--meet', '📍 ' + t('meetup') + ': ' + plan.meetupPoint + (plan.meetupTime ? ' · ' + plan.meetupTime : '')));
+      hero.appendChild(meta);
+      if (tr._fallback || (plan.dataSource && /pending/.test(plan.dataSource))) hero.appendChild(el('p', 'tc-unverified', t('unverified')));
+      s.appendChild(hero);
+    }
     // Concierge auto-research banner: visible while hotels/food/bookings/transport load.
     if (state._cResearch && (state._cResearch.stays || state._cResearch.food || state._cResearch.bookings || state._cResearch.transport || state._cResearch.attractions || state._cResearch.events || state._cResearch.stopovers)) s.appendChild(researchBanner('conciergeWorking'));
     // "You are this family" — attributes votes/suggestions per family (no login).

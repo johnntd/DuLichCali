@@ -2068,7 +2068,7 @@
     renderGenerating(t('generating'));
     loadTrip(id).then(function (tr) {
       if (tr && tr.deleted === true) { toast(t('tripDeleted')); goDashboard(); return; }
-      if (tr && tr.plan) { state.trip = tr; normalizeDestinations(state.trip); state.trip._demo = false; state.readonly = false; state.screen = 'plan'; state.activeDay = 0; state.activeTab = 'itinerary'; pushTripUrl(id); resolveMyRole().then(render); }
+      if (tr && tr.plan) { state.trip = tr; normalizeDestinations(state.trip); state.trip._demo = false; state.readonly = false; state.screen = 'plan'; state.activeDay = 0; state.activeTab = 'overview'; pushTripUrl(id); resolveMyRole().then(render); }
       else { toast(t('genFail')); state.screen = 'hero'; render(); }
     });
   }
@@ -2095,7 +2095,7 @@
       if (!tr || tr.deleted === true) { toast(t('tripDeleted')); goDashboard(); return; }
       if (!tr.plan && then !== 'create') { toast(t('genFail')); goDashboard(); return; }
       state.trip = tr; normalizeDestinations(state.trip); state.trip._demo = false; state.readonly = false;
-      state.activeDay = 0; state.activeTab = 'itinerary'; pushTripUrl(id);
+      state.activeDay = 0; state.activeTab = 'overview'; pushTripUrl(id);
       resolveMyRole().then(function () {
         if (then === 'create') { state.screen = 'create'; render(); }
         else if (then === 'share') { state.screen = 'plan'; render(); openShareModal(); }
@@ -2652,7 +2652,7 @@
     state.trip.destinations = [{ id: uid('dest'), order: 0, city: sample.destination, startDate: '', endDate: '', hotel: null, notes: '' }];
     normalizeDestinations(state.trip);
     state.trip._demo = true; state.readonly = true; // read-only local preview, no login/Firestore
-    state.screen = 'plan'; state.activeDay = 0; state.activeTab = 'itinerary';
+    state.screen = 'plan'; state.activeDay = 0; state.activeTab = 'overview';
     pushTripUrl(null); render();
   }
 
@@ -3546,7 +3546,7 @@
       // parser dropped them, never silently show a car route: send the user back to confirm/fix.
       if (lockedRouteIssue(state.trip)) { state.generating = false; state.trip._routeIssue = true; toast(t('nlRouteFail')); state.screen = 'nlreview'; render(); return; }
       state.trip._routeIssue = false;
-      state.screen = 'plan'; state.activeDay = 0; state.activeTab = 'itinerary';
+      state.screen = 'plan'; state.activeDay = 0; state.activeTab = 'overview';
       saveTrip(state.trip); pushTripUrl(state.trip.id);
       try { learnFromTrip(state.trip); } catch (e) {} // cross-trip memory: learn budget/pace/cuisines/group shape from this plan
       resolveMyRole().then(function () { render(); runConciergeResearch(state.trip); });
@@ -3599,7 +3599,7 @@
       }
       tr.lastOptimizedSignature = votesSignature(tr); // clears the "votes changed" nudge
       try { tr.bookings = []; mergeBookings(tr, deriveBookingChecklist(tr)); } catch (e) {} // re-derive (rejected already filtered)
-      state.activeTab = 'itinerary'; state.activeDay = 0;
+      state.activeTab = 'overview'; state.activeDay = 0;
       saveTrip(tr);
       runConciergeResearch(tr); // re-research every supporting tab with the latest consensus
       toast(t('optimizeDone'));
@@ -3929,8 +3929,8 @@
     // One streamlined pipeline of tabs. The old "Family Arrival Plan" tab was removed (it
     // duplicated Stay's hotels + Transport's logistics); arrival logistics live in Transport,
     // hotels in Stay, and travelers + live coordination in Group. Stopovers reads as Discoveries.
-    var TAB_PAIRS = [['itinerary', 'tab_itinerary'], ['journey', 'tab_journey'], ['transport', 'tab_transport'], ['stay', 'tab_stay'], ['food', 'tab_food'], ['events', 'tab_events'], ['stopovers', 'tab_stopovers'], ['costs', 'tab_costs'], ['bookings', 'tab_bookings'], ['album', 'tab_album'], ['clips', 'tab_clips'], ['group', 'tab_group']];
-    if (!TAB_PAIRS.some(function (p) { return p[0] === state.activeTab; })) state.activeTab = 'itinerary'; // heal stale 'arrival'/'live'
+    var TAB_PAIRS = [['overview', 'tab_overview'], ['itinerary', 'tab_itinerary'], ['journey', 'tab_journey'], ['transport', 'tab_transport'], ['stay', 'tab_stay'], ['food', 'tab_food'], ['events', 'tab_events'], ['stopovers', 'tab_stopovers'], ['costs', 'tab_costs'], ['bookings', 'tab_bookings'], ['album', 'tab_album'], ['clips', 'tab_clips'], ['group', 'tab_group']];
+    if (!TAB_PAIRS.some(function (p) { return p[0] === state.activeTab; })) state.activeTab = 'overview'; // heal stale 'arrival'/'live'/'itinerary'
     var tabs = el('div', 'tc-tabs');
     TAB_PAIRS.forEach(function (pair) {
       var b = el('button', 'tc-tab' + (state.activeTab === pair[0] ? ' tc-tab--on' : ''), t(pair[1])); b.type = 'button';
@@ -3938,7 +3938,8 @@
       tabs.appendChild(b);
     });
     s.appendChild(tabs);
-    if (state.activeTab === 'itinerary') s.appendChild(renderItinerary(plan));
+    if (state.activeTab === 'overview') s.appendChild(renderOverview(plan));
+    else if (state.activeTab === 'itinerary') s.appendChild(renderItinerary(plan));
     else if (state.activeTab === 'journey') s.appendChild(renderJourney(plan));
     else if (state.activeTab === 'transport') s.appendChild(renderTransport(plan));
     else if (state.activeTab === 'stay') s.appendChild(renderStays(plan));
@@ -6056,7 +6057,7 @@
       if ((r.role || 'member') !== 'owner') rememberJoinedTrip(r.tripId);
       state._joinedTrips = null;
       loadTrip(r.tripId).then(function (tr) {
-        if (tr && tr.plan) { state.trip = tr; normalizeDestinations(state.trip); state.trip._demo = false; state.readonly = false; state.screen = 'plan'; state.activeTab = 'itinerary'; resolveMyRole().then(render); }
+        if (tr && tr.plan) { state.trip = tr; normalizeDestinations(state.trip); state.trip._demo = false; state.readonly = false; state.screen = 'plan'; state.activeTab = 'overview'; resolveMyRole().then(render); }
         else { newTrip(); state.screen = 'hero'; render(); }
       });
     }).catch(function () { state._joinError = 'bad_passcode'; state.screen = 'sharejoin'; render(); });
@@ -7812,7 +7813,7 @@
   function loadSharedTrip(id) {
     loadTrip(id).then(function (tr) {
       if (tr && tr.deleted === true) { toast(t('tripDeleted')); goDashboard(); return; }
-      if (tr && tr.plan) { state.trip = tr; normalizeDestinations(state.trip); try { migrateLegacyTripToSegments(state.trip); } catch (e) {} state.trip._demo = false; state.readonly = false; state.screen = 'plan'; state.activeTab = 'itinerary'; try { reconcileRideResult(state.trip); } catch (e) {} resolveMyRole().then(function (role) { if (role && role !== 'owner') rememberJoinedTrip(id); else { try { learnFromTrip(state.trip); } catch (e) {} } render(); }); }
+      if (tr && tr.plan) { state.trip = tr; normalizeDestinations(state.trip); try { migrateLegacyTripToSegments(state.trip); } catch (e) {} state.trip._demo = false; state.readonly = false; state.screen = 'plan'; state.activeTab = 'overview'; try { reconcileRideResult(state.trip); } catch (e) {} resolveMyRole().then(function (role) { if (role && role !== 'owner') rememberJoinedTrip(id); else { try { learnFromTrip(state.trip); } catch (e) {} } render(); }); }
       else { newTrip(); state.screen = 'hero'; render(); }
     });
   }

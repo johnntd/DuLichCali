@@ -26,5 +26,11 @@ ok('dataSource forced pending', S.sanitizeUserPlace({ name: 'X', dataSource: 've
 // no photos field can come from the model (photos are added separately, deterministically)
 ok('model photos dropped', S.sanitizeUserPlace({ name: 'X', photos: [{ url: 'http://ai.example/img' }] }, {}).photos === undefined);
 
+// rating/reviewCount: only grounded-looking values survive; prose blanked
+ok('rating star kept', S.sanitizeUserPlace({ rating: '4.6★' }, {}).rating === '4.6★');
+ok('rating prose blanked', S.sanitizeUserPlace({ rating: '5.0★ BEST IN OC' }, {}).rating === '');
+ok('reviewCount 2k+ kept', S.sanitizeUserPlace({ reviewCount: '2k+' }, {}).reviewCount === '2k+');
+ok('reviewCount prose blanked', S.sanitizeUserPlace({ reviewCount: 'millions of reviews' }, {}).reviewCount === '');
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

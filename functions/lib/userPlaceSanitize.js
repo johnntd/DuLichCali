@@ -4,6 +4,8 @@
 // ungrounded field is blanked, never guessed; AI output is always pending verification.
 
 var PRICE_RE = /^\s*(\${1,3}|\$?\d[\d,]*\s*(?:[-–]\s*\$?\d[\d,]*)?)\s*$/; // $/$$/$$$ or an optionally $-prefixed numeric range
+var RATING_RE = /^\s*\d(\.\d)?\s*(★|\/\s*5|stars?)?\s*$/i;                 // "4.6", "4.6★", "5/5"
+var REVIEWCOUNT_RE = /^\s*\d[\d,]*\s*(k\+?|\+)?\s*(reviews?|ratings?)?\s*$/i; // "1,234", "2k+", "300 reviews"
 var OFFICIAL_HOSTS = [
   'opentable.com', 'resy.com', 'yelp.com', 'tripadvisor.com', 'google.com',
   'toasttab.com', 'exploretock.com', 'ubereats.com', 'doordash.com', 'grubhub.com',
@@ -23,7 +25,7 @@ function isAllowedUrl(u) {
   u = String(u || '').trim();
   if (!/^https:\/\//i.test(u)) return false;
   var host = '';
-  try { host = u.replace(/^https:\/\//i, '').split('/')[0].toLowerCase(); } catch (e) { return false; }
+  try { host = new URL(u).hostname.toLowerCase(); } catch (e) { return false; } // strips port/fragment/credentials; Node 10+
   return OFFICIAL_HOSTS.some(function (h) { return host === h || host.indexOf('.' + h) !== -1 || host === 'www.' + h; });
 }
 
@@ -35,8 +37,8 @@ function sanitizeUserPlace(parsed, input) {
   var out = {
     name: cleanStr(parsed.name, 120),
     address: cleanStr(parsed.address, 160),
-    rating: cleanStr(parsed.rating, 24),            // model may ground this; kept as-is text, blank if absent
-    reviewCount: cleanStr(parsed.reviewCount, 16),
+    rating: RATING_RE.test(String(parsed.rating || '').trim()) ? cleanStr(parsed.rating, 24) : '',           // only a grounded-looking score survives; ungrounded prose blanked
+    reviewCount: REVIEWCOUNT_RE.test(String(parsed.reviewCount || '').trim()) ? cleanStr(parsed.reviewCount, 16) : '',
     hours: cleanStr(parsed.hours, 120),
     popularDishes: (Array.isArray(parsed.popularDishes) ? parsed.popularDishes : []).slice(0, 4).map(function (x) { return cleanStr(x, 60); }),
     priceRange: PRICE_RE.test(price) ? price.slice(0, 40) : 'pending verification',
@@ -57,4 +59,4 @@ function sanitizeUserPlace(parsed, input) {
   return out;
 }
 
-module.exports = { sanitizeUserPlace: sanitizeUserPlace, buildMapsUrls: buildMapsUrls, isAllowedUrl: isAllowedUrl, PRICE_RE: PRICE_RE, OFFICIAL_HOSTS: OFFICIAL_HOSTS };
+module.exports = { sanitizeUserPlace: sanitizeUserPlace, buildMapsUrls: buildMapsUrls, isAllowedUrl: isAllowedUrl, PRICE_RE: PRICE_RE, RATING_RE: RATING_RE, REVIEWCOUNT_RE: REVIEWCOUNT_RE, OFFICIAL_HOSTS: OFFICIAL_HOSTS };

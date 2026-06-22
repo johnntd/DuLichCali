@@ -1983,7 +1983,13 @@
   }
 
   // ── Persistence (localStorage + Firestore once logged in) ──────────────
-  function stripRuntime(trip) { var c = {}; for (var k in trip) { if (k === '_demo' || k === '_fallback') continue; c[k] = trip[k]; } return c; }
+  function stripRuntime(trip) {
+    var c = {}; for (var k in trip) { if (k === '_demo' || k === '_fallback') continue; c[k] = trip[k]; }
+    // _prevStatus is a transient checkbox-undo hint — keep it in memory (same-session uncheck) but
+    // never persist it. Map to shallow copies so the live booking objects keep _prevStatus.
+    if (Array.isArray(c.bookings)) c.bookings = c.bookings.map(function (b) { if (b && b._prevStatus !== undefined) { var nb = {}; for (var bk in b) { if (bk !== '_prevStatus') nb[bk] = b[bk]; } return nb; } return b; });
+    return c;
+  }
   function saveTrip(trip) {
     try { trip.updatedAt = new Date().toISOString(); } catch (e) {}
     var clean = stripRuntime(trip);
@@ -7716,7 +7722,7 @@
           || (_flt === 'todo' && !_done)
           || (_flt === 'completed' && _done)
           || (_flt === 'urgent' && _p === 'P0' && !_done)
-          || (_flt === 'mine' && b.assignedToFamily && b.assignedToFamily === _me);
+          || (_flt === 'mine' && _me && b.assignedToFamily && b.assignedToFamily === _me);
         if (_show) { wrap.appendChild(bookingCard(b, i)); _shown++; }
       });
       if (!_shown) wrap.appendChild(el('p', 'tc-empty', t('noBookings')));
@@ -7778,8 +7784,16 @@
     c.appendChild(acts);
     if (!ro) {
       var ctrls = el('div', 'tc-bk__ctrls');
-      var ssel = selectFrom(['research_needed', 'researching', 'ready_to_book', 'user_approval_needed', 'booked', 'paid', 'skipped', 'not_needed'], b.bookingStatus || 'research_needed', function (o) { return t('bs_' + o); });
-      ssel.className = 'tc-input'; ssel.addEventListener('change', function () { b.bookingStatus = ssel.value; saveTrip(tr); if (ssel.value === 'booked' || ssel.value === 'paid') tcNotifyTask(ssel.value, b.title); render(); });
+      // 'completed' is included so a checkbox-completed task shows the right value here (not blank),
+      // and the dropdown stays consistent with the checkbox: → completed stamps completedAt/By;
+      // leaving completed clears them (routes through TCTasks.setDone so both controls agree).
+      var ssel = selectFrom(['research_needed', 'researching', 'ready_to_book', 'user_approval_needed', 'booked', 'paid', 'completed', 'skipped', 'not_needed'], b.bookingStatus || 'research_needed', function (o) { return t('bs_' + o); });
+      ssel.className = 'tc-input'; ssel.addEventListener('change', function () {
+        var v = ssel.value;
+        if (v === 'completed') { root.TCTasks.setDone(b, true, { by: getMe() || '', byName: (getMe() ? famName(getMe()) : ''), nowIso: new Date().toISOString() }); }
+        else { if (b.bookingStatus === 'completed') { root.TCTasks.setDone(b, false, {}); } b.bookingStatus = v; }
+        saveTrip(tr); if (v === 'booked' || v === 'paid' || v === 'completed') tcNotifyTask(v, b.title); render();
+      });
       ctrls.appendChild(ssel);
       var _fam = selectFrom([''].concat(tripFamilies().map(function (f) { return f.id; })), b.assignedToFamily || '', function (id) { if (!id) return t('taskUnassigned'); var ff = tripFamilies().filter(function (x) { return x.id === id; })[0]; return ff ? (ff.name || t('taskUnassigned')) : id; });
       _fam.className = 'tc-input'; _fam.addEventListener('change', function () { b.assignedToFamily = _fam.value; saveTrip(tr); if (_fam.value) tcNotifyTask('assigned', b.title, famName(_fam.value)); render(); });

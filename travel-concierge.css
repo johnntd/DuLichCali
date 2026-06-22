@@ -1624,7 +1624,7 @@ select.tc-input { appearance: none; background-image: linear-gradient(45deg, tra
 .tc-bk__checkmark { font-size: 1.3rem; line-height: 1; color: transparent; pointer-events: none; }
 .tc-bk__check--on { background: linear-gradient(135deg, var(--tc-gold), var(--tc-gold-deep)); border-color: var(--tc-gold); }
 .tc-bk__check--on .tc-bk__checkmark { color: #241803; }
-.tc-bk--done { opacity: .62; }
+.tc-bk--done { opacity: .74; } /* dim completed cards but keep text ≥ WCAG AA on navy */
 .tc-bk--done .tc-bk__title { text-decoration: line-through; text-decoration-color: var(--muted); }
 .tc-bk__donemeta { font-family: var(--font-b); font-size: .78rem; color: #d9f0a8; margin: .15rem 0 .3rem; }
 @media (prefers-reduced-motion: reduce) { .tc-bookings__barfill { transition: none; } }

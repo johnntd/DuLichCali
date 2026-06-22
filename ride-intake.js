@@ -1462,6 +1462,18 @@ window.RideIntake = (function () {
     return DLCRideAvail.check(dateStr, timeStr, regionId, durationMins);
   }
 
+  // Guarantee an authenticated session before the auth-gated dispatch writes (rideNotifications,
+  // dispatchQueue require request.auth != null). The host page (airport.html / index.html) signs in
+  // anonymously, but that's async/best-effort — this awaits it so dispatch reliably reaches drivers.
+  // Never rejects (best-effort): a sign-in failure just leaves request.auth null and the dispatch
+  // writes degrade to no-ops, while the booking itself is already saved.
+  function _ensureRideAuth() {
+    try {
+      if (typeof firebase === 'undefined' || !firebase.auth) return Promise.resolve();
+      if (firebase.auth().currentUser) return Promise.resolve();
+      return firebase.auth().signInAnonymously().then(function () {}, function () {});
+    } catch (e) { return Promise.resolve(); }
+  }
   function _doFirestoreSubmit(btn, availResult) {
     var bookingId = generateId();
     var data      = buildBookingData(bookingId);
@@ -1528,39 +1540,36 @@ window.RideIntake = (function () {
         }
       })
       .then(function () {
-        // Admin notification
-        return db.collection('vendors').doc('admin-dlc').collection('notifications').add({
-          type: 'new_booking', title: '🚐 New Booking — ' + svcLabel(),
-          message: buildAdminMsg(data), bookingId: bookingId, read: false, createdAt: ts,
-        });
-      })
-      .then(function () {
-        // Driver notification — active drivers will see this in their dashboard
-        return db.collection('rideNotifications').add({
-          bookingId:    bookingId,
-          serviceType:  data.serviceType,
-          serviceLabel: svcLabel(),
-          passengers:   data.passengers || 1,
-          customerName: data.customerName || '',
-          estimatedPrice: data.estimatedPrice || null,
-          estimatedMiles: data.estimatedMiles || null,
-          airport:        data.airport || null,
-          arrivalDate:    data.arrivalDate || data.departureDate || null,
-          arrivalTime:    data.arrivalTime || data.departureTime || null,
-          pickupAddress:  data.pickupAddress  || null,
-          dropoffAddress: data.dropoffAddress || null,
-          status:         'new',
-          createdAt:      ts,
-        });
-      })
-      .then(function () {
-        // Phase 13: trigger automatic driver dispatch
-        return db.collection('dispatchQueue').doc(bookingId + '_0').set({
-          bookingId:     bookingId,
-          skipDriverIds: [],
-          attempt:       1,
-          status:        'pending',
-          createdAt:     firebase.firestore.FieldValue.serverTimestamp(),
+        // Fan-out side-effects (admin notification + driver dispatch). The booking doc is ALREADY
+        // saved by the guarded write above, so a permission error here must NOT tell the customer
+        // "Booking failed" (the old chain rejected on the FIRST denied write — the admin-notification
+        // write, which the tightened vendors/{vendorId}/{sub=**} rule denies to non-vendor customers
+        // — so EVERY web booking failed and the dispatch writes never ran → drivers like Michael were
+        // never notified). Now: ensure an (anonymous) auth session so the auth-gated dispatch writes
+        // succeed, then attempt all three side-effects best-effort, swallowing individual failures.
+        // (The admin notification still can't be written client-side under the tightened rule — it
+        // should move to a bookings onCreate Cloud Function; see the report.)
+        return _ensureRideAuth().then(function () {
+          var addNotif = db.collection('vendors').doc('admin-dlc').collection('notifications').add({
+            type: 'new_booking', title: '🚐 New Booking — ' + svcLabel(),
+            message: buildAdminMsg(data), bookingId: bookingId, read: false, createdAt: ts,
+          }).catch(function (e) { try { console.warn('[ride-intake] admin notification skipped:', e && e.code); } catch (_) {} });
+          // Driver notification + dispatch enqueue (onDispatchQueue Cloud Function matches a driver) —
+          // these only require an authenticated session, which _ensureRideAuth guarantees.
+          var addRideNotif = db.collection('rideNotifications').add({
+            bookingId: bookingId, serviceType: data.serviceType, serviceLabel: svcLabel(),
+            passengers: data.passengers || 1, customerName: data.customerName || '',
+            estimatedPrice: data.estimatedPrice || null, estimatedMiles: data.estimatedMiles || null,
+            airport: data.airport || null, arrivalDate: data.arrivalDate || data.departureDate || null,
+            arrivalTime: data.arrivalTime || data.departureTime || null,
+            pickupAddress: data.pickupAddress || null, dropoffAddress: data.dropoffAddress || null,
+            status: 'new', createdAt: ts,
+          }).catch(function (e) { try { console.warn('[ride-intake] ride notification skipped:', e && e.code); } catch (_) {} });
+          var addDispatch = db.collection('dispatchQueue').doc(bookingId + '_0').set({
+            bookingId: bookingId, skipDriverIds: [], attempt: 1, status: 'pending',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          }).catch(function (e) { try { console.warn('[ride-intake] dispatch enqueue skipped:', e && e.code); } catch (_) {} });
+          return Promise.all([addNotif, addRideNotif, addDispatch]);
         });
       })
       .then(function () { onSuccess(bookingId); })

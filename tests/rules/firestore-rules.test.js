@@ -153,6 +153,15 @@ async function denied(name, p) { try { await assertFails(p); rec(name, true); } 
     'anonymous customer CANNOT list bookings',
     getDocs(query(collection(anon, 'bookings'), where('ownerId', '==', 'michael-nguyen')))
   );
+  // ── Ride dispatch fan-out (root cause of the "Booking failed" bug) ──
+  // The web ride-intake fans out 4 writes after the booking. These document which the customer
+  // (authed-anonymous) may perform. The admin-notification write is DENIED (vendor-member/admin
+  // only) — that denial used to reject the whole submit chain → "Booking failed" + no dispatch.
+  // The fix makes the fan-out best-effort; the auth-gated dispatch writes below succeed for an
+  // (anonymous) authed session, so onDispatchQueue can reach drivers like Michael.
+  await allowed('authed-anon CAN enqueue ride dispatch (rideNotifications)', setDoc(doc(anon, 'rideNotifications/rn1'), { bookingId: 'new1', status: 'new', passengers: 10 }));
+  await allowed('authed-anon CAN enqueue ride dispatch (dispatchQueue)', setDoc(doc(anon, 'dispatchQueue/new1_0'), { bookingId: 'new1', status: 'pending', attempt: 1 }));
+  await denied('customer CANNOT write the admin-dlc notification (root cause — must move server-side)', setDoc(doc(anon, 'vendors/admin-dlc/notifications/n1'), { type: 'new_booking', bookingId: 'new1' }));
 
   await allowed('driverA reads own travel assignment', getDoc(doc(driverA, 'travelAssignments/taA')));
   await denied('driverA CANNOT read driverB travel assignment', getDoc(doc(driverA, 'travelAssignments/taB')));

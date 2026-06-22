@@ -106,6 +106,7 @@
       tab_days: 'Days', tab_tasks: 'Tasks', tab_more: 'More', moreNavTitle: 'All sections', continuePlanning: 'Continue Planning',
       navTrips: 'Trips', navConcierge: 'AI Concierge', navShare: 'Share', navProfile: 'Profile', mustSee: 'Must See', topPick: 'Top Pick',
       ovToDo: 'to do', ovDone: 'done', ovTotalLc: 'total', ovFamilyLc: 'family', ovEstimated: 'Estimated', ovRemaining: 'Remaining',
+      ovMemories: 'Memories', ovAddToTrip: 'Add to trip', ovReplace: 'Replace', ovReplaceCmd: 'Add {name} to the trip and swap out a similar lower-priority spot',
       tab_itinerary: 'Itinerary', tab_arrival: 'Family Arrival Plan', tab_group: 'Group',
       tab_journey: 'Journey', journeyTitle: 'Your journey', journeySub: 'Every stop, stay and ride as a node. Lock what you love 🔒 — the AI only replans around it.', jnNoPlan: 'Generate the trip first — your journey timeline appears here.', jnLock: 'Lock', jnUnlock: 'Unlock', jnLocked: 'Locked', jnImprove: 'Improve around this', jnImproving: 'Replanning this day (keeping locked items)…', jnAddAfter: 'Add after', jnReplanDay: 'Replan this day', jnReplanKeep: 'keeps 🔒 locked', jnReplanned: 'Day replanned — locked items kept', jnTransportNode: 'Transport', jnViewTransport: 'Compare transport', jnNodeMenu: 'Options', jnAddPh: 'Add a place / activity', jnAdd: 'Add',
       cmdPh: 'Tell the concierge what to change…', cmdGo: 'Ask AI', cmdBusy: 'Understanding your request…', cmdPlanTitle: 'Here’s what I’ll change', cmdNone: 'I couldn’t turn that into an edit — try rephrasing (e.g. “skip the zoo”, “add Disneyland day 2”, “find another Vietnamese dinner”).', cmdFail: 'Couldn’t interpret that right now — try again.', cmdDays: 'Replans day {d}', cmdApply: 'Apply changes', cmdApplied: 'Trip updated', cmdCancel: 'Cancel',
@@ -389,6 +390,7 @@
       tab_days: 'Ngày', tab_tasks: 'Nhiệm vụ', tab_more: 'Thêm', moreNavTitle: 'Tất cả mục', continuePlanning: 'Tiếp tục lên kế hoạch',
       navTrips: 'Chuyến đi', navConcierge: 'Trợ lý AI', navShare: 'Chia sẻ', navProfile: 'Tài khoản', mustSee: 'Nên xem', topPick: 'Lựa chọn hàng đầu',
       ovToDo: 'cần làm', ovDone: 'xong', ovTotalLc: 'tổng', ovFamilyLc: 'gia đình', ovEstimated: 'Ước tính', ovRemaining: 'Còn lại',
+      ovMemories: 'Kỷ niệm', ovAddToTrip: 'Thêm vào chuyến đi', ovReplace: 'Thay thế', ovReplaceCmd: 'Thêm {name} vào chuyến đi và thay một điểm tương tự ít ưu tiên hơn',
       tab_itinerary: 'Lịch trình', tab_arrival: 'Kế Hoạch Đến Nơi', tab_group: 'Nhóm',
       tab_journey: 'Hành trình', journeyTitle: 'Hành trình của bạn', journeySub: 'Mỗi điểm dừng, nơi ở và chuyến xe là một nút. Khóa thứ bạn thích 🔒 — AI chỉ tối ưu xung quanh.', jnNoPlan: 'Hãy tạo chuyến đi trước — dòng thời gian hành trình sẽ hiện ở đây.', jnLock: 'Khóa', jnUnlock: 'Mở khóa', jnLocked: 'Đã khóa', jnImprove: 'Cải thiện quanh mục này', jnImproving: 'Đang lên lại ngày này (giữ mục đã khóa)…', jnAddAfter: 'Thêm sau', jnReplanDay: 'Lên lại ngày này', jnReplanKeep: 'giữ 🔒 đã khóa', jnReplanned: 'Đã lên lại ngày — giữ mục đã khóa', jnTransportNode: 'Di chuyển', jnViewTransport: 'So sánh di chuyển', jnNodeMenu: 'Tùy chọn', jnAddPh: 'Thêm địa điểm / hoạt động', jnAdd: 'Thêm',
       cmdPh: 'Nói cho trợ lý biết bạn muốn đổi gì…', cmdGo: 'Hỏi AI', cmdBusy: 'Đang hiểu yêu cầu của bạn…', cmdPlanTitle: 'Đây là những thay đổi tôi sẽ làm', cmdNone: 'Tôi chưa chuyển được thành chỉnh sửa — hãy thử diễn đạt lại (vd: “bỏ sở thú”, “thêm Disneyland ngày 2”, “tìm bữa tối Việt khác”).', cmdFail: 'Hiện chưa hiểu được — vui lòng thử lại.', cmdDays: 'Lên lại ngày {d}', cmdApply: 'Áp dụng thay đổi', cmdApplied: 'Đã cập nhật chuyến đi', cmdCancel: 'Hủy',
@@ -667,6 +669,7 @@
       tab_days: 'Días', tab_tasks: 'Tareas', tab_more: 'Más', moreNavTitle: 'Todas las secciones', continuePlanning: 'Seguir planeando',
       navTrips: 'Viajes', navConcierge: 'Concierge IA', navShare: 'Compartir', navProfile: 'Perfil', mustSee: 'Imprescindible', topPick: 'Top',
       ovToDo: 'por hacer', ovDone: 'hecho', ovTotalLc: 'total', ovFamilyLc: 'familia', ovEstimated: 'Estimado', ovRemaining: 'Restante',
+      ovMemories: 'Recuerdos', ovAddToTrip: 'Añadir al viaje', ovReplace: 'Reemplazar', ovReplaceCmd: 'Añade {name} al viaje y cambia un lugar similar de menor prioridad',
       tab_itinerary: 'Itinerario', tab_arrival: 'Plan de Llegada', tab_group: 'Grupo',
       tab_journey: 'Recorrido', journeyTitle: 'Tu recorrido', journeySub: 'Cada parada, alojamiento y viaje como un nodo. Bloquea lo que te gusta 🔒 — la IA solo replanifica alrededor.', jnNoPlan: 'Genera el viaje primero — tu línea de tiempo aparecerá aquí.', jnLock: 'Bloquear', jnUnlock: 'Desbloquear', jnLocked: 'Bloqueado', jnImprove: 'Mejorar alrededor de esto', jnImproving: 'Replanificando este día (manteniendo lo bloqueado)…', jnAddAfter: 'Agregar después', jnReplanDay: 'Replanificar este día', jnReplanKeep: 'mantiene 🔒 bloqueado', jnReplanned: 'Día replanificado — se mantuvo lo bloqueado', jnTransportNode: 'Transporte', jnViewTransport: 'Comparar transporte', jnNodeMenu: 'Opciones', jnAddPh: 'Agregar un lugar / actividad', jnAdd: 'Agregar',
       cmdPh: 'Dile al concierge qué cambiar…', cmdGo: 'Preguntar a la IA', cmdBusy: 'Entendiendo tu solicitud…', cmdPlanTitle: 'Esto es lo que cambiaré', cmdNone: 'No pude convertirlo en una edición — reformula (ej. “omite el zoológico”, “agrega Disneyland día 2”, “busca otra cena vietnamita”).', cmdFail: 'No se pudo interpretar ahora — inténtalo de nuevo.', cmdDays: 'Replanifica el día {d}', cmdApply: 'Aplicar cambios', cmdApplied: 'Viaje actualizado', cmdCancel: 'Cancelar',
@@ -4200,8 +4203,20 @@
     var meta = ovCardMeta(x); if (meta) body.appendChild(meta);
     if (x.note || x.why) body.appendChild(el('p', 'tc-ov-card__why', x.note || x.why));
     body.appendChild(ovCardLinks(x, mediaTypeForPlace(x), x.city || ''));
+    // Add to trip / Replace existing — editable trips only. Add = pin the place (real); Replace =
+    // route through the existing concierge command engine (it decides what to swap). No fake action.
+    if (canEditPlan()) {
+      var acts = el('div', 'tc-ov-card__actions');
+      var add = el('button', 'tc-ov-card__act tc-ov-card__act--gold', '＋ ' + t('ovAddToTrip')); add.type = 'button';
+      add.addEventListener('click', function (e) { e.stopPropagation(); pinAttraction({ name: x.name, why: x.note || x.why || '' }, x.city || ''); });
+      acts.appendChild(add);
+      var rep = el('button', 'tc-ov-card__act', '⇄ ' + t('ovReplace')); rep.type = 'button';
+      rep.addEventListener('click', function (e) { e.stopPropagation(); runConcierge(state.trip, t('ovReplaceCmd').replace('{name}', x.name)); });
+      acts.appendChild(rep);
+      body.appendChild(acts);
+    }
     c.appendChild(body);
-    c.addEventListener('click', function (e) { if (e.target && e.target.closest && e.target.closest('a')) return; try { openPlaceModal(ovWithCity(x, '')); } catch (err) {} });
+    c.addEventListener('click', function (e) { if (e.target && e.target.closest && e.target.closest('a, button')) return; try { openPlaceModal(ovWithCity(x, '')); } catch (err) {} });
     return c;
   }
   function renderOverview(plan) {
@@ -4275,6 +4290,32 @@
       hl.slice(0, 8).forEach(function (x) { drail.appendChild(ovDiscoveryCard(x)); });
       dsec.appendChild(drail);
       wrap.appendChild(dsec);
+    }
+
+    // ── Memories teaser — REAL uploaded trip photos/clips only (no AI art); hidden when none. ──
+    if (!tr._demo && realUser() && state._mediaLoadedFor !== tr.id) {
+      state._mediaLoadedFor = tr.id;
+      loadMedia().then(function () { if (state.screen === 'plan' && state.activeTab === 'overview') render(); });
+    }
+    var memories = (!tr._demo && realUser()) ? visibleMedia() : [];
+    if (memories.length) {
+      var msec = el('section', 'tc-ov-sec');
+      var mhead = el('div', 'tc-ov-sec__head');
+      mhead.appendChild(el('h2', 'tc-ov-sec__t', t('ovMemories')));
+      var amore = el('button', 'tc-ov-sec__more', t('tab_album') + ' →'); amore.type = 'button';
+      amore.addEventListener('click', function () { state.activeTab = 'album'; render(); });
+      mhead.appendChild(amore); msec.appendChild(mhead);
+      var strip = el('div', 'tc-ov-memstrip');
+      memories.slice().sort(function (a, b) { return (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0); }).slice(0, 10).forEach(function (m) {
+        var cell = el('button', 'tc-ov-mem'); cell.type = 'button';
+        var url = m.thumbnailUrl || m.publicUrl || m.url;
+        if (url) { var img = doc.createElement('img'); img.className = 'tc-ov-mem__img'; img.src = url; img.loading = 'lazy'; img.alt = m.caption || ''; cell.appendChild(img); }
+        if ((m.mediaType || '') === 'video' || m.mediaType === 'clip') cell.appendChild(el('span', 'tc-ov-mem__play', '▶'));
+        cell.addEventListener('click', function () { state.activeTab = 'album'; render(); });
+        strip.appendChild(cell);
+      });
+      msec.appendChild(strip);
+      wrap.appendChild(msec);
     }
 
     // ── Logistics, COLLAPSED (experience first): Timeline → Tasks → Costs → Details. ──

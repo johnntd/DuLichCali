@@ -1522,6 +1522,16 @@ select.tc-input { appearance: none; background-image: linear-gradient(45deg, tra
 .tc-ov-card__links { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .55rem; }
 .tc-ov-card__lnk { display: inline-flex; align-items: center; gap: .3rem; font-family: var(--font-b); font-weight: 600; font-size: .76rem; color: var(--cream); background: var(--navy-700, var(--navy-900)); border: 1px solid var(--border); border-radius: 99px; padding: .34rem .7rem; text-decoration: none; }
 .tc-ov-card__lnk--yt { color: #ffd0d0; }
+/* P2 — discovery card Add/Replace actions */
+.tc-ov-card__actions { display: flex; gap: .5rem; margin-top: .6rem; }
+.tc-ov-card__act { flex: 1; text-align: center; font-family: var(--font-b); font-weight: 600; font-size: .8rem; padding: .5rem; border-radius: 10px; border: 1px solid var(--border); background: var(--navy-700, var(--navy-900)); color: var(--cream); cursor: pointer; }
+.tc-ov-card__act--gold { background: rgba(241,194,101,.16); border-color: var(--tc-gold); color: var(--tc-gold); }
+/* P2 — Memories teaser strip (real photos/clips only) */
+.tc-ov-memstrip { display: flex; gap: .6rem; overflow-x: auto; padding: .2rem .1rem .5rem; -webkit-overflow-scrolling: touch; }
+.tc-ov-memstrip::-webkit-scrollbar { display: none; }
+.tc-ov-mem { flex: 0 0 130px; height: 150px; border-radius: 14px; overflow: hidden; position: relative; padding: 0; border: 1px solid var(--border); background: var(--navy-900); cursor: pointer; }
+.tc-ov-mem__img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.tc-ov-mem__play { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,.6); }
 
 /* Sticky 5-tab bar */
 .tc-tabs { position: sticky; top: 0; z-index: 26; margin: 0 -1rem .9rem; padding: .55rem 1rem; background: rgba(10,22,38,.82); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }

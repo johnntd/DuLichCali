@@ -52,6 +52,7 @@ const GOOGLE_MAPS_API_KEY = defineSecret('GOOGLE_MAPS_API_KEY');
 const _userPlaceSanitize = require('./lib/userPlaceSanitize.js');
 const _placeMediaSanitize = require('./lib/placeMediaSanitize.js');
 const _driverRanking = require('./lib/driverRanking.js');
+const _dealThreshold = require('./lib/dealThreshold.js');
 
 // Email provider secret (Resend — https://resend.com)
 const RESEND_API_KEY      = defineSecret('RESEND_API_KEY');
@@ -4247,7 +4248,8 @@ exports.monitorDealWatchTrips = onSchedule(
           if (!best) return;
           const key = 'fare:' + (lf.from || '') + '>' + (lf.to || '');
           const prev = snapshot[key];
-          if (prev && prev.cost && best.cost < prev.cost - 1) newAlerts.push({ route: (lf.from || '').split(',')[0] + '→' + (lf.to || '').split(',')[0], oldCost: prev.cost, newCost: best.cost, mode: best.mode, ts: Date.now() });
+          // Jitter guard: only alert on a MEANINGFUL drop (≥$25 AND ≥10%), not estimate-range noise.
+          if (prev && prev.cost && _dealThreshold.isMeaningfulDrop(prev.cost, best.cost)) newAlerts.push({ route: (lf.from || '').split(',')[0] + '→' + (lf.to || '').split(',')[0], oldCost: prev.cost, newCost: best.cost, mode: best.mode, ts: Date.now() });
           snapshot[key] = { cost: best.cost, mode: best.mode, ts: Date.now() };
         });
         const existing = Array.isArray(trip.dealAlerts) ? trip.dealAlerts : [];

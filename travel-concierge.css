@@ -1380,6 +1380,7 @@ select.tc-input { appearance: none; background-image: linear-gradient(45deg, tra
 .tc-dealwatch { border: 1px solid var(--border); border-radius: 14px; padding: .7rem .8rem; margin: .6rem 0 1rem; background: var(--navy-900); }
 .tc-dealwatch__row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
 .tc-dealwatch__ts { font-family: var(--font-b); font-size: .76rem; color: var(--muted); margin: .5rem 0 .2rem; }
+.tc-dealwatch__saved { font-family: var(--font-b); font-size: .84rem; font-weight: 700; color: #6ee7a0; margin: .35rem 0 .2rem; }
 .tc-deal { border: 1px solid rgba(110,231,160,.45); background: rgba(16,185,129,.1); border-radius: 12px; padding: .7rem .8rem; margin-top: .6rem; }
 .tc-deal__t { display: block; font-family: var(--font-b); font-weight: 700; font-size: .92rem; color: #bbf7d0; }
 .tc-deal__d { font-family: var(--font-b); font-size: .85rem; line-height: 1.5; color: var(--cream); margin: .3rem 0 .55rem; }

@@ -246,7 +246,7 @@
       tpBestKids: 'Best with kids', tpBestSeniors: 'Best for seniors', tpLeastTiring: 'Least tiring', tpBestLuggage: 'Best for luggage', tpScenic: 'Most scenic',
       nlPriority: 'Priority', nlprio_required: 'Required (locked)', nlprio_preferred: 'Preferred', nlprio_ai_decide: 'AI decides', nlprio_avoid: 'Avoid this mode',
       tprec_userpref: 'You prefer this for this leg, so it leads the comparison — alternatives stay below.', tprec_avoided: 'Picked to avoid the mode you asked to skip on this leg.',
-      dealWatchOn: 'Watching for deals', dealWatchOff: 'Watch for deals', dealCheckNow: 'Check now', dealWatchHint: 'AI re-checks transport when you tap “Check now” and alerts you if a cheaper option appears — it never changes your plan on its own. Prices come from research and booking links; nothing is fabricated.', dealNoBetter: 'No better deal right now', dealBetterFound: 'Better deal found', dealWas: 'was', dealNow: 'now', dealSave: 'save', dealKeep: 'Keep itinerary', dealSwitch: 'Switch', researchedAt: 'Researched',
+      dealWatchOn: 'Watching for deals', dealWatchOff: 'Watch for deals', dealCheckNow: 'Check now', dealWatchHint: 'AI re-checks transport when you tap “Check now” and alerts you if a cheaper option appears — it never changes your plan on its own. Prices come from research and booking links; nothing is fabricated.', dealNoBetter: 'No better deal right now', dealBetterFound: 'Better deal found', dealWas: 'was', dealNow: 'now', dealSave: 'save', dealKeep: 'Keep itinerary', dealSwitch: 'Switch', dealSwitchSaved: 'Switched — saving ~{amt} (est.)', dealSavingsTotal: 'Deal savings so far', researchedAt: 'Researched',
       dealResearchFares: 'Research current fares', dealNoFares: 'No current fares found — try the booking links.', dealFaresTitle: 'Current fares (researched · pending verification)', dealWhileAway: 'found while you were away',
       pushEnable: 'Enable phone alerts', pushOn: 'Phone alerts on', pushEnabled: 'Phone alerts enabled — we’ll notify you of better deals.', pushDenied: 'Notifications are blocked — enable them in your browser/phone settings.', pushUnsupported: 'Phone alerts aren’t available on this device/browser.',
       tm_any: 'Any · compare all', tm_greyhound: 'Greyhound', tm_flixbus: 'FlixBus', tm_shuttle: 'Shuttle',
@@ -287,6 +287,7 @@
       impRelaxing: '😌 Most relaxing', impScenic: '🌄 Most scenic', impThemePark: '🎢 Theme parks', impSeniorFriendly: '🧓 Senior-friendly', impRainyBackup: '🌧 Rainy-day backup',
       tpRequestPickup: 'Request airport pickup', tpRequestTransfer: 'Request transfer to hotel',
       dlcInq_ride: 'DuLichCali ride inquiry (from your trip)', dlcInq_van_transfer: 'DuLichCali van transfer inquiry (from your trip)', dlcInq_tour: 'DuLichCali tour inquiry (from your trip)', dlcInq_airport_pickup: 'DuLichCali airport pickup inquiry (from your trip)',
+      pickupAfterProvider: 'Pickup after {provider} arrival', pickupAfterArrival: 'Pickup after your arrival at the drop-off',
       tpAffectsItin: 'Saved — this affects your itinerary timing. Open Itinerary to re-optimize.', tpChosen: 'Transport choice saved',
       tpReturnTitle: 'Return journey (final day)', tpReturnHint: 'Checkout, buffer, and the trip home — consistent with how you got there.', tpDraftFromTrip: 'Draft from your trip',
       // Destination Signature Attraction Intelligence
@@ -531,7 +532,7 @@
       tpBestKids: 'Hợp với trẻ em', tpBestSeniors: 'Hợp người lớn tuổi', tpLeastTiring: 'Ít mệt nhất', tpBestLuggage: 'Hợp nhiều hành lý', tpScenic: 'Cảnh đẹp nhất',
       nlPriority: 'Ưu tiên', nlprio_required: 'Bắt buộc (khóa)', nlprio_preferred: 'Ưu tiên', nlprio_ai_decide: 'Để AI quyết định', nlprio_avoid: 'Tránh phương án này',
       tprec_userpref: 'Bạn ưu tiên phương án này cho chặng này nên nó dẫn đầu so sánh — các lựa chọn khác ở bên dưới.', tprec_avoided: 'Đã chọn để tránh phương án bạn muốn bỏ qua ở chặng này.',
-      dealWatchOn: 'Đang theo dõi ưu đãi', dealWatchOff: 'Theo dõi ưu đãi', dealCheckNow: 'Kiểm tra ngay', dealWatchHint: 'AI kiểm tra lại phương tiện khi bạn nhấn “Kiểm tra ngay” và báo nếu có lựa chọn rẻ hơn — không bao giờ tự đổi kế hoạch. Giá đến từ nghiên cứu và liên kết đặt chỗ; không bịa đặt.', dealNoBetter: 'Hiện chưa có ưu đãi tốt hơn', dealBetterFound: 'Đã tìm thấy ưu đãi tốt hơn', dealWas: 'trước', dealNow: 'nay', dealSave: 'tiết kiệm', dealKeep: 'Giữ lịch trình', dealSwitch: 'Đổi', researchedAt: 'Tra cứu lúc',
+      dealWatchOn: 'Đang theo dõi ưu đãi', dealWatchOff: 'Theo dõi ưu đãi', dealCheckNow: 'Kiểm tra ngay', dealWatchHint: 'AI kiểm tra lại phương tiện khi bạn nhấn “Kiểm tra ngay” và báo nếu có lựa chọn rẻ hơn — không bao giờ tự đổi kế hoạch. Giá đến từ nghiên cứu và liên kết đặt chỗ; không bịa đặt.', dealNoBetter: 'Hiện chưa có ưu đãi tốt hơn', dealBetterFound: 'Đã tìm thấy ưu đãi tốt hơn', dealWas: 'trước', dealNow: 'nay', dealSave: 'tiết kiệm', dealKeep: 'Giữ lịch trình', dealSwitch: 'Đổi', dealSwitchSaved: 'Đã đổi — tiết kiệm ~{amt} (ước tính)', dealSavingsTotal: 'Đã tiết kiệm nhờ ưu đãi', researchedAt: 'Tra cứu lúc',
       dealResearchFares: 'Tra giá vé hiện tại', dealNoFares: 'Không tìm thấy giá hiện tại — thử các liên kết đặt chỗ.', dealFaresTitle: 'Giá vé hiện tại (đã tra cứu · chờ xác minh)', dealWhileAway: 'tìm thấy khi bạn vắng mặt',
       pushEnable: 'Bật thông báo điện thoại', pushOn: 'Đã bật thông báo', pushEnabled: 'Đã bật thông báo — chúng tôi sẽ báo khi có ưu đãi tốt hơn.', pushDenied: 'Thông báo đang bị chặn — hãy bật trong cài đặt trình duyệt/điện thoại.', pushUnsupported: 'Thiết bị/trình duyệt này không hỗ trợ thông báo.',
       tm_any: 'Bất kỳ · so sánh tất cả', tm_greyhound: 'Greyhound', tm_flixbus: 'FlixBus', tm_shuttle: 'Xe trung chuyển',
@@ -572,6 +573,7 @@
       impRelaxing: '😌 Thư giãn nhất', impScenic: '🌄 Cảnh đẹp nhất', impThemePark: '🎢 Công viên giải trí', impSeniorFriendly: '🧓 Hợp người lớn tuổi', impRainyBackup: '🌧 Dự phòng ngày mưa',
       tpRequestPickup: 'Yêu cầu đón sân bay', tpRequestTransfer: 'Yêu cầu đưa về khách sạn',
       dlcInq_ride: 'Yêu cầu xe Du Lịch Cali (từ chuyến đi)', dlcInq_van_transfer: 'Yêu cầu xe van Du Lịch Cali (từ chuyến đi)', dlcInq_tour: 'Yêu cầu tour Du Lịch Cali (từ chuyến đi)', dlcInq_airport_pickup: 'Yêu cầu đón sân bay Du Lịch Cali (từ chuyến đi)',
+      pickupAfterProvider: 'Đón sau khi {provider} đến', pickupAfterArrival: 'Đón sau khi bạn đến điểm trả khách',
       tpAffectsItin: 'Đã lưu — ảnh hưởng giờ giấc lịch trình. Mở Lịch trình để tối ưu lại.', tpChosen: 'Đã lưu lựa chọn di chuyển',
       tpReturnTitle: 'Hành trình về (ngày cuối)', tpReturnHint: 'Trả phòng, thời gian dự phòng và đường về — đồng nhất với lượt đi.', tpDraftFromTrip: 'Nháp từ chuyến đi của bạn',
       // Trí tuệ điểm tham quan biểu tượng theo điểm đến
@@ -816,7 +818,7 @@
       tpBestKids: 'Mejor con niños', tpBestSeniors: 'Mejor para mayores', tpLeastTiring: 'Menos cansado', tpBestLuggage: 'Mejor para equipaje', tpScenic: 'Más panorámico',
       nlPriority: 'Prioridad', nlprio_required: 'Obligatorio (fijado)', nlprio_preferred: 'Preferido', nlprio_ai_decide: 'La IA decide', nlprio_avoid: 'Evitar este modo',
       tprec_userpref: 'Prefieres esto para este tramo, así que encabeza la comparación — las alternativas quedan abajo.', tprec_avoided: 'Elegido para evitar el modo que pediste omitir en este tramo.',
-      dealWatchOn: 'Vigilando ofertas', dealWatchOff: 'Vigilar ofertas', dealCheckNow: 'Revisar ahora', dealWatchHint: 'La IA revisa el transporte cuando tocas “Revisar ahora” y te avisa si aparece una opción más barata — nunca cambia tu plan por su cuenta. Los precios vienen de la investigación y enlaces de reserva; nada se inventa.', dealNoBetter: 'No hay mejor oferta por ahora', dealBetterFound: 'Mejor oferta encontrada', dealWas: 'antes', dealNow: 'ahora', dealSave: 'ahorra', dealKeep: 'Mantener itinerario', dealSwitch: 'Cambiar', researchedAt: 'Investigado',
+      dealWatchOn: 'Vigilando ofertas', dealWatchOff: 'Vigilar ofertas', dealCheckNow: 'Revisar ahora', dealWatchHint: 'La IA revisa el transporte cuando tocas “Revisar ahora” y te avisa si aparece una opción más barata — nunca cambia tu plan por su cuenta. Los precios vienen de la investigación y enlaces de reserva; nada se inventa.', dealNoBetter: 'No hay mejor oferta por ahora', dealBetterFound: 'Mejor oferta encontrada', dealWas: 'antes', dealNow: 'ahora', dealSave: 'ahorra', dealKeep: 'Mantener itinerario', dealSwitch: 'Cambiar', dealSwitchSaved: 'Cambiado — ahorras ~{amt} (est.)', dealSavingsTotal: 'Ahorro en ofertas hasta ahora', researchedAt: 'Investigado',
       dealResearchFares: 'Buscar tarifas actuales', dealNoFares: 'No se encontraron tarifas actuales — prueba los enlaces de reserva.', dealFaresTitle: 'Tarifas actuales (investigadas · pendiente de verificación)', dealWhileAway: 'encontrado mientras no estabas',
       pushEnable: 'Activar alertas en el teléfono', pushOn: 'Alertas activadas', pushEnabled: 'Alertas activadas — te avisaremos de mejores ofertas.', pushDenied: 'Las notificaciones están bloqueadas — actívalas en los ajustes del navegador/teléfono.', pushUnsupported: 'Las alertas no están disponibles en este dispositivo/navegador.',
       tm_any: 'Cualquiera · comparar todo', tm_greyhound: 'Greyhound', tm_flixbus: 'FlixBus', tm_shuttle: 'Shuttle',
@@ -857,6 +859,7 @@
       impRelaxing: '😌 Más relajante', impScenic: '🌄 Más escénico', impThemePark: '🎢 Parques temáticos', impSeniorFriendly: '🧓 Apto para mayores', impRainyBackup: '🌧 Plan para lluvia',
       tpRequestPickup: 'Solicitar recogida en aeropuerto', tpRequestTransfer: 'Solicitar traslado al hotel',
       dlcInq_ride: 'Consulta de viaje DuLichCali (de tu viaje)', dlcInq_van_transfer: 'Consulta de traslado en van DuLichCali (de tu viaje)', dlcInq_tour: 'Consulta de tour DuLichCali (de tu viaje)', dlcInq_airport_pickup: 'Consulta de recogida en aeropuerto DuLichCali (de tu viaje)',
+      pickupAfterProvider: 'Recogida tras la llegada de {provider}', pickupAfterArrival: 'Recogida tras tu llegada al punto de bajada',
       tpAffectsItin: 'Guardado — afecta los horarios del itinerario. Abre Itinerario para reoptimizar.', tpChosen: 'Elección de transporte guardada',
       tpReturnTitle: 'Viaje de regreso (último día)', tpReturnHint: 'Salida, margen y el regreso a casa — coherente con la ida.', tpDraftFromTrip: 'Borrador de tu viaje',
       // Inteligencia de atracciones emblemáticas por destino
@@ -6740,16 +6743,32 @@
   function chosenMode(leg, i) { var key = legKeyOf(leg, i); var ch = (state.trip.transportChoice || {})[key]; return ch || leg.recommendedMode || ((leg.options || [])[0] || {}).mode || ''; }
   function chooseTransport(leg, i, mode) {
     var tr = state.trip; tr.transportChoice = tr.transportChoice || {};
+    var prevMode = chosenMode(leg, i); // current choice BEFORE overwrite — for switch-savings feedback
     tr.transportChoice[legKeyOf(leg, i)] = mode;
     // Outbound choice drives each family's travel method (return-day plan + summaries use it).
     if (leg.legType === 'outbound' && Array.isArray(tr.families)) tr.families.forEach(function (f) { f.transport = f.transport || {}; f.transport.method = tpNormMethod(mode); });
     var opt = (leg.options || []).filter(function (o) { return o.mode === mode; })[0];
+    // Switch savings: if the new option is cheaper than the prior choice, RECORD + SURFACE the
+    // estimated saving. Costs recompute on render (computeTripCosts reads transportChoice) so the
+    // cheaper number flows into the Costs tab; this just makes the win explicit. Informational only
+    // — NOT a ledger entry, so who-owes balances stay untouched. Estimates, never fabricated.
+    var saved = 0;
+    if (prevMode && prevMode !== mode) {
+      var prevOpt = (leg.options || []).filter(function (o) { return o.mode === prevMode; })[0];
+      var oldC = prevOpt ? tpParseCost(prevOpt) : Infinity, newC = opt ? tpParseCost(opt) : Infinity;
+      if (oldC !== Infinity && newC !== Infinity && oldC - newC >= 1) {
+        saved = Math.round(oldC - newC);
+        var routeLbl = (leg.fromCity || '').split(',')[0] + '→' + (leg.toCity || '').split(',')[0];
+        tr.dealSavingsLog = (tr.dealSavingsLog || []).concat([{ route: routeLbl, from: prevMode, to: mode, saved: saved, ts: Date.now() }]).slice(-20);
+      }
+    }
     saveTrip(tr);
     // If the choice changes arrival/return timing, offer the itinerary replan options on that day.
     if (opt && opt.affectsItinerary && tr.plan && Array.isArray(tr.plan.days) && tr.plan.days.length) {
       state._replanDay = (leg.legType === 'return') ? (tr.plan.days.length - 1) : 0;
-      toast(t('tpAffectsItin'));
-    } else { toast(t('tpChosen')); }
+      toast(t('tpAffectsItin') + (saved ? (' · ' + t('dealSwitchSaved').replace('{amt}', '$' + saved)) : ''));
+    } else if (saved) { toast(t('dealSwitchSaved').replace('{amt}', '$' + saved)); }
+    else { toast(t('tpChosen')); }
     render();
   }
   // ── Deal Hunter / continuous deal watch (V3) ──────────────────────────────
@@ -6762,6 +6781,16 @@
     var best = null; (leg.options || []).forEach(function (o) { var v = tpParseCost(o); if (v !== Infinity && (!best || v < best.cost)) best = { cost: v, mode: o.mode }; });
     return best;
   }
+  // Jitter guard — mirrors functions/lib/dealThreshold.js (keep in sync). Only a MEANINGFUL drop
+  // (≥$25 AND ≥10% of the prior price) is alert-worthy; estimate ranges wobble run-to-run, so a
+  // small swing is noise, not a deal. Prices are estimates — the guard only decides what to surface.
+  var DEAL_MIN_DROP_ABS = 25, DEAL_MIN_DROP_PCT = 0.10;
+  function meaningfulDrop(prevCost, newCost) {
+    var prev = Number(prevCost), cur = Number(newCost);
+    if (!isFinite(prev) || !isFinite(cur) || prev <= 0 || cur < 0) return false;
+    var drop = prev - cur;
+    return drop > 0 && drop >= DEAL_MIN_DROP_ABS && drop >= prev * DEAL_MIN_DROP_PCT;
+  }
   function checkDealDrops(tr) {
     var legs = tr.transport || []; if (!legs.length) return;
     tr.dealSnapshot = tr.dealSnapshot || {};
@@ -6769,7 +6798,7 @@
     legs.forEach(function (lg, i) {
       var key = legKeyOf(lg, i), cur = cheapestCostForLeg(lg); if (!cur) return;
       var prev = tr.dealSnapshot[key];
-      if (tr.dealWatch && prev && prev.cost && cur.cost < prev.cost - 1) {
+      if (tr.dealWatch && prev && prev.cost && meaningfulDrop(prev.cost, cur.cost)) {
         alerts.push({ route: (lg.fromCity || '').split(',')[0] + '→' + (lg.toCity || '').split(',')[0], oldCost: prev.cost, newCost: cur.cost, mode: cur.mode, leg: lg, i: i });
       }
       tr.dealSnapshot[key] = { cost: cur.cost, mode: cur.mode, ts: Date.now() };
@@ -6832,6 +6861,10 @@
       }
     }
     if (tr.transportResearchedAt) box.appendChild(el('p', 'tc-dealwatch__ts', '🕒 ' + t('researchedAt') + ' ' + tpResearchedLabel(tr.transportResearchedAt)));
+    // Cumulative estimated savings from accepted deal switches — makes the win persistent + visible
+    // (the cheaper option already flows into the Costs tab via computeTripCosts). Informational only.
+    var _savedTotal = (tr.dealSavingsLog || []).reduce(function (s, x) { return s + (+x.saved || 0); }, 0);
+    if (_savedTotal > 0) box.appendChild(el('p', 'tc-dealwatch__saved', '💰 ' + t('dealSavingsTotal') + ': ~$' + Math.round(_savedTotal)));
     box.appendChild(el('p', 'tc-hint', t('dealWatchHint')));
     // Grounded current-fare research (honest estimates, pending verification, with source + time).
     if (tr.legFares && tr.legFares.length) {
@@ -6907,6 +6940,10 @@
     var noteBits = [t('dlcInq_' + kind) || t('tpDraftFromTrip'), 'Trip ' + (tr.id || '')];
     if (opts.label) noteBits.push(opts.label);
     if (pickup || dropoff) noteBits.push((pickup || '') + ' → ' + (dropoff || ''));
+    // §0b dependency hand-off: this ride starts where an earlier leg (e.g. Bus Hoàng) drops the
+    // group off, so tell the driver to pick up AFTER that arrival. Honest: a known date may be
+    // prefilled below, but we never fabricate a precise arrival minute.
+    if (opts.afterArrival) noteBits.push((opts.afterArrivalProvider || '').trim() ? t('pickupAfterProvider').replace('{provider}', opts.afterArrivalProvider.trim()) : t('pickupAfterArrival'));
     if (ks.kids) noteBits.push(ks.kids + ' ' + t('childrenLabel').toLowerCase());
     if (ks.seniors) noteBits.push(ks.seniors + ' ' + t('seniors').toLowerCase());
     var legRef = opts.legRef || ((pickup || '') + '→' + (dropoff || ''));
@@ -6916,7 +6953,7 @@
     var draft = {
       serviceType: (kind === 'airport_pickup' ? 'pickup' : 'ride'), inquiryKind: kind,
       pickup: pickup, dropoff: dropoff,
-      date: '', time: '', dateHint: firstDate,
+      date: opts.date || '', time: '', dateHint: opts.date || firstDate,
       passengers: totalTravelers(), customerName: '', customerPhone: '',
       notes: noteBits.join(' · '),
       // Clean handoff contract → ride-intake emits a result + returns to returnUrl; TC reconciles it.
@@ -6957,7 +6994,19 @@
     saveTrip(tr);
     toast(requested ? t('rideRequestedToast') : t('rideBookedToast'));
   }
-  function requestDlcRide(leg) { requestDlcInquiry({ kind: 'ride', pickup: leg.fromCity || '', dropoff: leg.toCity || '' }); }
+  function requestDlcRide(leg) {
+    var tr = state.trip, opts = { kind: 'ride', pickup: leg.fromCity || '', dropoff: leg.toCity || '' };
+    // §0b: this ride STARTS where an earlier leg drops the group off. Prefill the pickup DATE from
+    // that stop's arrival date and name the inbound provider (e.g. Xe Đò Hoàng), so Michael's
+    // service gets the arrival info. Only the KNOWN date flows through — never an invented time.
+    var fc = (leg.fromCity || '').trim().toLowerCase();
+    var seg = fc ? (tr.destinations || []).filter(function (d) { return (d.city || '').trim().toLowerCase() === fc; })[0] : null;
+    if (seg) {
+      var arr = segArrival(seg);
+      if (arr) { opts.date = arr; opts.afterArrival = true; opts.afterArrivalProvider = (seg.preferredProvider || '').trim(); }
+    }
+    requestDlcInquiry(opts);
+  }
   function transportOptionCard(o, leg, i, isChosen) {
     var c = el('article', 'tc-tpopt' + (isChosen ? ' tc-tpopt--chosen' : ''));
     var head = el('div', 'tc-tpopt__head');

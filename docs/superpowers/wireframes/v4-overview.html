@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>V4 Trip Overview — wireframe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500;6..96,700&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0c1a30; --navy2:#12243f; --navy3:#0a1626;
+    --gold:#caa24a; --gold2:#e7c976; --ink:#eaf0f8; --mut:#9fb1c9; --line:rgba(255,255,255,.10);
+    --ok:#46c08a; --warn:#e8b54b; --sky:#46a0e6;
+    --d:Bodoni Moda, Georgia, serif; --b:Jost, system-ui, sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--navy3);color:var(--ink);font-family:var(--b);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 18px 120px}
+  h1,h2,h3{font-family:var(--d);font-weight:700;margin:0}
+  .muted{color:var(--mut)}
+  .pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:99px;padding:6px 12px;font-size:13px;background:rgba(255,255,255,.04)}
+  /* top bar */
+  .top{position:sticky;top:0;z-index:30;background:rgba(10,22,38,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .top__in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:16px;padding:12px 18px}
+  .brand{font-family:var(--d);font-weight:700;color:var(--gold2);font-size:18px;white-space:nowrap}
+  .tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{flex:0 0 auto;padding:8px 13px;border-radius:99px;font-size:13.5px;color:var(--mut);white-space:nowrap;cursor:pointer;border:1px solid transparent}
+  .tab--on{color:var(--navy3);background:linear-gradient(135deg,var(--gold2),var(--gold));font-weight:600}
+  .tab__grp{margin-left:8px;padding-left:8px;border-left:1px solid var(--line);display:flex;gap:4px}
+  /* hero */
+  .hero{position:relative;border-radius:22px;overflow:hidden;margin-top:18px;min-height:340px;display:flex;align-items:flex-end;
+    background:radial-gradient(120% 130% at 75% 8%,rgba(70,160,230,.40),transparent 55%),linear-gradient(135deg,#1b3a63,#0b1a30 70%)}
+  .hero__photoNote{position:absolute;top:12px;left:14px;font-size:11px;letter-spacing:.04em;color:rgba(255,255,255,.55);text-transform:uppercase}
+  .hero__scrim{position:absolute;inset:0;background:linear-gradient(to top,rgba(6,13,26,.92) 6%,rgba(6,13,26,.30) 55%,transparent)}
+  .hero__in{position:relative;z-index:2;padding:26px;display:grid;grid-template-columns:1fr auto;gap:20px;width:100%;align-items:end}
+  .hero__chip{color:var(--gold2);font-size:13px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px;display:block}
+  .hero__title{font-size:40px;line-height:1.05}
+  .hero__sub{margin:8px 0 14px;color:#d6e2f2;font-size:16px}
+  .hero__chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip--ok{border-color:rgba(70,192,138,.5);color:#bdf0d6}
+  .chip--warn{border-color:rgba(232,181,75,.55);color:#f3dca2}
+  .hero__cta{margin-top:16px;display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,var(--gold2),var(--gold));color:var(--navy3);
+    font-weight:700;border:0;border-radius:14px;padding:13px 18px;font-size:15.5px;cursor:pointer;box-shadow:0 8px 26px rgba(202,162,74,.35)}
+  .hero__cta small{display:block;font-weight:500;font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.7}
+  /* readiness ring */
+  .ready{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+  .ring{--p:80;width:104px;height:104px;border-radius:50%;display:grid;place-items:center;
+    background:conic-gradient(var(--gold2) calc(var(--p)*1%),rgba(255,255,255,.12) 0)}
+  .ring__in{width:80px;height:80px;border-radius:50%;background:var(--navy);display:grid;place-items:center}
+  .ring__pct{font-family:var(--d);font-weight:700;font-size:24px;color:var(--gold2)}
+  .ready__lab{font-size:12px;color:var(--mut);letter-spacing:.06em;text-transform:uppercase}
+  .budget{font-family:var(--d);font-size:20px;color:#fff}
+  /* section heading */
+  .sec{margin-top:34px}
+  .sec__h{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px}
+  .sec__h h2{font-size:24px}
+  .sec__h a{color:var(--gold2);font-size:13.5px;text-decoration:none;cursor:pointer}
+  /* highlight rail */
+  .rail{display:grid;grid-auto-flow:column;grid-auto-columns:300px;gap:16px;overflow-x:auto;padding-bottom:8px;scroll-snap-type:x mandatory;scrollbar-width:thin}
+  .hl{scroll-snap-align:start;border-radius:18px;overflow:hidden;background:var(--navy2);border:1px solid var(--line);display:flex;flex-direction:column}
+  .hl__img{position:relative;height:178px;display:grid;place-items:center;
+    background:radial-gradient(120% 120% at 25% 0%,rgba(70,160,230,.30),transparent 60%),linear-gradient(135deg,#163457,#0c1a30)}
+  .hl__img--real{background-size:cover;background-position:center}
+  .hl__emoji{font-size:52px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.4))}
+  .hl__badge{position:absolute;top:10px;left:10px;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;background:linear-gradient(135deg,var(--gold2),var(--gold));color:var(--navy3);border-radius:8px;padding:4px 8px}
+  .hl__vbadge{position:absolute;bottom:10px;right:10px;font-size:11px;color:#bdf0d6;background:rgba(8,20,36,.8);border:1px solid rgba(70,192,138,.5);border-radius:8px;padding:3px 8px}
+  .hl__ph{position:absolute;bottom:10px;right:10px;font-size:11px;color:var(--mut);background:rgba(8,20,36,.8);border:1px solid var(--line);border-radius:8px;padding:3px 8px}
+  .hl__body{padding:14px;display:flex;flex-direction:column;gap:7px;flex:1}
+  .hl__name{font-family:var(--d);font-size:19px;font-weight:700}
+  .hl__why{font-size:13.5px;color:#c6d4e6;line-height:1.45}
+  .hl__meta{display:flex;flex-wrap:wrap;gap:6px;font-size:12px;color:var(--mut)}
+  .hl__meta .pill{padding:3px 9px;font-size:12px}
+  .hl__acts{display:flex;gap:8px;margin-top:auto;padding-top:6px;align-items:center}
+  .btn{border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--ink);border-radius:10px;padding:8px 12px;font-size:13px;cursor:pointer;font-family:var(--b)}
+  .btn--g{background:linear-gradient(135deg,var(--gold2),var(--gold));color:var(--navy3);font-weight:600;border:0}
+  .ico{margin-left:auto;display:flex;gap:6px}
+  .ico button{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--ink);font-size:15px;cursor:pointer}
+  /* timeline */
+  .day{border:1px solid var(--line);border-radius:14px;margin-bottom:10px;overflow:hidden;background:var(--navy2)}
+  .day__h{display:flex;align-items:center;gap:12px;padding:15px 16px;cursor:pointer}
+  .day__n{font-family:var(--d);font-weight:700;font-size:17px}
+  .day__sum{color:var(--mut);font-size:13.5px;flex:1}
+  .day__chev{color:var(--gold2)}
+  .day__body{padding:0 16px 14px 16px;display:flex;flex-direction:column;gap:8px}
+  .step{display:flex;align-items:center;gap:11px;font-size:14px;color:#d6e2f2}
+  .step__ic{width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.06);display:grid;place-items:center;flex:0 0 auto}
+  .step--travel .step__ic{background:rgba(70,160,230,.16)}
+  /* discoveries (smaller image-first) */
+  .disc{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .dc{border-radius:16px;overflow:hidden;background:var(--navy2);border:1px solid var(--line)}
+  .dc__img{height:120px;position:relative;display:grid;place-items:center;background:radial-gradient(120% 120% at 30% 0%,rgba(70,160,230,.26),transparent 60%),linear-gradient(135deg,#15324f,#0c1a30)}
+  .dc__img--real{background-size:cover;background-position:center}
+  .dc__emoji{font-size:38px}
+  .dc__b{padding:12px;display:flex;flex-direction:column;gap:5px}
+  .dc__n{font-family:var(--d);font-size:16px;font-weight:700}
+  .dc__why{font-size:12.5px;color:#c6d4e6}
+  .dc__meta{font-size:11.5px;color:var(--mut);display:flex;gap:8px;flex-wrap:wrap}
+  .dc__acts{display:flex;gap:6px;margin-top:4px}
+  .dc__acts button{flex:1;font-size:12px;padding:7px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--ink);cursor:pointer}
+  /* honesty note */
+  .honest{margin-top:26px;font-size:12px;color:var(--mut);border-top:1px solid var(--line);padding-top:14px}
+  /* floating concierge */
+  .fab{position:fixed;right:20px;bottom:20px;z-index:40;display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+  .fab__bar{display:flex;align-items:center;gap:8px;background:rgba(10,22,38,.96);border:1px solid var(--line);border-radius:14px;padding:8px;box-shadow:0 14px 40px rgba(0,0,0,.5);max-width:360px}
+  .fab__bar input{flex:1;background:transparent;border:0;color:var(--ink);font-size:14px;outline:none;font-family:var(--b);min-width:140px}
+  .fab__bar .btn--g{padding:9px 12px}
+  .fab__btn{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--gold2),var(--gold));color:var(--navy3);font-weight:700;border:0;border-radius:99px;padding:13px 18px;font-size:15px;cursor:pointer;box-shadow:0 12px 34px rgba(202,162,74,.45)}
+  .fab__hint{font-size:11px;color:var(--mut);background:rgba(10,22,38,.9);border:1px solid var(--line);border-radius:8px;padding:5px 9px}
+  @media (max-width:560px){
+    .wrap{padding:0 12px 130px}
+    .hero{min-height:0}
+    .hero__in{grid-template-columns:1fr;gap:14px}
+    .hero__title{font-size:30px}
+    .ready{flex-direction:row;gap:14px;justify-content:flex-start}
+    .ring{width:84px;height:84px}.ring__in{width:64px;height:64px}.ring__pct{font-size:20px}
+    .disc{grid-template-columns:1fr 1fr}
+    .rail{grid-auto-columns:80%}
+    .brand{display:none}
+    .fab__bar{max-width:calc(100vw - 40px)}
+  }
+</style>
+</head>
+<body>
+<div class="top"><div class="top__in">
+  <span class="brand">Du Lịch Cali</span>
+  <div class="tabs">
+    <span class="tab tab--on">Overview</span>
+    <span class="tab">Itinerary</span>
+    <span class="tab">Stays</span>
+    <span class="tab">Food</span>
+    <span class="tab__grp">
+      <span class="tab">Tasks</span><span class="tab">Bookings</span><span class="tab">Costs</span>
+      <span class="tab">Album</span><span class="tab">Clips</span><span class="tab">Live</span>
+    </span>
+  </div>
+</div></div>
+
+<div class="wrap">
+  <!-- SECTION 1 — HERO -->
+  <section class="hero">
+    <span class="hero__photoNote">◗ real destination photo (San Diego) · honest gradient when none</span>
+    <div class="hero__scrim"></div>
+    <div class="hero__in">
+      <div>
+        <span class="hero__chip">🌴 San Diego &amp; Orange County</span>
+        <h1 class="hero__title">San Diego Family Trip</h1>
+        <p class="hero__sub">Jul 1 – 4 · 3 families · 10 travelers · 4 days</p>
+        <div class="hero__chips">
+          <span class="pill chip--ok">✓ Hotels booked</span>
+          <span class="pill chip--ok">✓ Bus Hoàng booked</span>
+          <span class="pill chip--warn">⚠ Zoo tickets pending</span>
+          <span class="pill chip--warn">⚠ Michael ride to confirm</span>
+        </div>
+        <button class="hero__cta"><span>🎟 Buy San Diego Zoo tickets <small>Next action · tap to open Tasks</small></span></button>
+      </div>
+      <div class="ready">
+        <div class="ring"><div class="ring__in"><span class="ring__pct">80%</span></div></div>
+        <span class="ready__lab">Trip ready</span>
+        <span class="budget">$2,350</span>
+        <span class="ready__lab" style="cursor:pointer">est · $235/person ›</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 2 — HIGHLIGHTS -->
+  <section class="sec">
+    <div class="sec__h"><h2>Trip highlights</h2><a>See all ›</a></div>
+    <div class="rail">
+      <article class="hl">
+        <div class="hl__img"><span class="hl__emoji">🐼</span><span class="hl__badge">Must-see</span><span class="hl__vbadge">✓ Verified photo</span></div>
+        <div class="hl__body">
+          <div class="hl__name">San Diego Zoo</div>
+          <div class="hl__why">World-famous pandas &amp; kids' zone — the trip's centerpiece day.</div>
+          <div class="hl__meta"><span class="pill">🎟 Tickets</span><span class="pill">🧒 Great for kids</span><span class="pill">★ 4.7</span></div>
+          <div class="hl__acts"><button class="btn btn--g">Learn more</button><span class="ico"><button>👍</button><button>❤️</button></span></div>
+        </div>
+      </article>
+      <article class="hl">
+        <div class="hl__img"><span class="hl__emoji">🦭</span><span class="hl__badge">Top pick</span><span class="hl__ph">Find photos ›</span></div>
+        <div class="hl__body">
+          <div class="hl__name">San Diego SEAL Tour</div>
+          <div class="hl__why">Land-and-sea amphibious tour — teens &amp; kids love it.</div>
+          <div class="hl__meta"><span class="pill">🎟 Tickets</span><span class="pill">⏱ 90 min</span><span class="pill">🧑 Teens</span></div>
+          <div class="hl__acts"><button class="btn btn--g">Learn more</button><span class="ico"><button>👍</button><button>❤️</button></span></div>
+        </div>
+      </article>
+      <article class="hl">
+        <div class="hl__img"><span class="hl__emoji">🌅</span><span class="hl__badge">Must-see</span><span class="hl__vbadge">✓ Verified photo</span></div>
+        <div class="hl__body">
+          <div class="hl__name">La Jolla Cove</div>
+          <div class="hl__why">Sea lions, kayaking, tide pools — easy walking, all ages.</div>
+          <div class="hl__meta"><span class="pill">🗺 Map</span><span class="pill">🌅 Best at sunset</span><span class="pill">★ 4.8</span></div>
+          <div class="hl__acts"><button class="btn btn--g">Learn more</button><span class="ico"><button>👍</button><button>❤️</button></span></div>
+        </div>
+      </article>
+      <article class="hl">
+        <div class="hl__img"><span class="hl__emoji">🍜</span><span class="hl__badge">Worth it</span><span class="hl__ph">Find photos ›</span></div>
+        <div class="hl__body">
+          <div class="hl__name">Little Saigon Food Night</div>
+          <div class="hl__why">Garden Grove phở &amp; bánh mì — your group's must-eat.</div>
+          <div class="hl__meta"><span class="pill">🍽 Dinner</span><span class="pill">🗳 Vote a spot</span></div>
+          <div class="hl__acts"><button class="btn btn--g">Learn more</button><span class="ico"><button>👍</button><button>❤️</button></span></div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- SECTION 3 — DAILY TIMELINE (collapsed) -->
+  <section class="sec">
+    <div class="sec__h"><h2>Daily timeline</h2><a>Open itinerary ›</a></div>
+    <div class="day"><div class="day__h"><span class="day__n">Day 1</span><span class="day__sum">🚌 Bus Hoàng → 🚙 Michael pickup → 🏨 San Diego hotel</span><span class="day__chev">▸</span></div></div>
+    <div class="day">
+      <div class="day__h"><span class="day__n">Day 2</span><span class="day__sum">Zoo · Dinner · Seal Tour</span><span class="day__chev">▾</span></div>
+      <div class="day__body">
+        <div class="step"><span class="step__ic">🐼</span><span>Morning — San Diego Zoo (tickets pending)</span></div>
+        <div class="step"><span class="step__ic">🍽</span><span>Lunch — Balboa Park café</span></div>
+        <div class="step"><span class="step__ic">🦭</span><span>Afternoon — SEAL Tour</span></div>
+        <div class="step"><span class="step__ic">🌅</span><span>Evening — La Jolla Cove sunset</span></div>
+      </div>
+    </div>
+    <div class="day"><div class="day__h"><span class="day__n">Day 3</span><span class="day__sum">🚗 SD morning → Orange County → 🍜 Vietnamese dinner</span><span class="day__chev">▸</span></div></div>
+    <div class="day"><div class="day__h"><span class="day__n">Day 4</span><span class="day__sum">🚌 Bus Hoàng home to San Jose</span><span class="day__chev">▸</span></div></div>
+  </section>
+
+  <!-- SECTION 4 — AI DISCOVERIES -->
+  <section class="sec">
+    <div class="sec__h"><h2>✨ AI discoveries</h2><a>Show hidden gems ›</a></div>
+    <div class="disc">
+      <article class="dc"><div class="dc__img"><span class="dc__emoji">🌇</span><span class="hl__vbadge">✓</span></div><div class="dc__b"><div class="dc__n">Sunset Cliffs</div><div class="dc__why">Dramatic clifftop sunset, free.</div><div class="dc__meta"><span>📍 12 min</span><span>🌅 6:30pm</span></div><div class="dc__acts"><button>Learn more</button><button>❤️</button></div></div></article>
+      <article class="dc"><div class="dc__img"><span class="dc__emoji">☕</span><span class="hl__ph">photos ›</span></div><div class="dc__b"><div class="dc__n">Better Buzz Coffee</div><div class="dc__why">Local favorite, kid-friendly.</div><div class="dc__meta"><span>📍 6 min</span><span>★ 4.6</span></div><div class="dc__acts"><button>Learn more</button><button>❤️</button></div></div></article>
+      <article class="dc"><div class="dc__img"><span class="dc__emoji">🍩</span><span class="hl__ph">photos ›</span></div><div class="dc__b"><div class="dc__n">Donut Bar</div><div class="dc__why">Famous oversized donuts.</div><div class="dc__meta"><span>📍 9 min</span><span>★ 4.7</span></div><div class="dc__acts"><button>Learn more</button><button>❤️</button></div></div></article>
+      <article class="dc"><div class="dc__img"><span class="dc__emoji">🏖</span><span class="hl__vbadge">✓</span></div><div class="dc__b"><div class="dc__n">Coronado Beach</div><div class="dc__why">Golden sand, gentle waves.</div><div class="dc__meta"><span>📍 15 min</span><span>🌤 AM best</span></div><div class="dc__acts"><button>Learn more</button><button>❤️</button></div></div></article>
+    </div>
+  </section>
+
+  <p class="honest">Photos are real (Google Places / Wikipedia) or shown as a labeled gradient + icon — never AI-generated. Ratings/prices show only when verified, else “pending verification.”</p>
+</div>
+
+<!-- SECTION 11 — FLOATING AI CONCIERGE (shown expanded) -->
+<div class="fab">
+  <span class="fab__hint">“Add Disneyland” · “Replace dinner” · “Find cheaper flights” · “Optimize this trip”</span>
+  <div class="fab__bar">
+    <span style="font-size:18px">✨</span>
+    <input placeholder="Tell the concierge what to change…" value="">
+    <button class="btn--g">Ask AI</button>
+  </div>
+</div>
+</body>
+</html>

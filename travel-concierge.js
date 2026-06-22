@@ -3982,16 +3982,15 @@
     else s.appendChild(renderGroup(plan));
     // V5 bottom navigation — Trips / AI Concierge / Share / Profile. Replaces the old action bar +
     // the redundant "Back to My Trips" button; folds the floating concierge FAB into one entry.
-    // Shown on mobile AND desktop (slim centered bar via CSS). Demo previews keep it hidden.
-    if (!tr._demo) {
-      var bar = el('div', 'tc-actionbar tc-bottomnav');
-      bar.appendChild(abBtn('🗂', t('navTrips'), function () { goDashboard(); }));
-      bar.appendChild(abBtn('🤖', t('navConcierge'), function () { openConciergeSheet(tr); }));
-      if (isOwnerOfTrip()) bar.appendChild(abBtn('🔗', t('navShare'), function () { openShareModal(); }));
-      else bar.appendChild(abBtn('⋯', t('moreActions'), function () { openMoreSheet(); }));
-      bar.appendChild(abBtn('👤', t('navProfile'), function () { openProfileSheet(); }));
-      s.appendChild(bar);
-    }
+    // Shown on mobile AND desktop (slim centered bar via CSS), including the demo preview (so a
+    // previewer can navigate / log in via Profile). Owner-only Share falls back to More otherwise.
+    var bar = el('div', 'tc-actionbar tc-bottomnav');
+    bar.appendChild(abBtn('🗂', t('navTrips'), function () { goDashboard(); }));
+    bar.appendChild(abBtn('🤖', t('navConcierge'), function () { openConciergeSheet(tr); }));
+    if (!tr._demo && isOwnerOfTrip()) bar.appendChild(abBtn('🔗', t('navShare'), function () { openShareModal(); }));
+    else bar.appendChild(abBtn('⋯', t('moreActions'), function () { openMoreSheet(); }));
+    bar.appendChild(abBtn('👤', t('navProfile'), function () { openProfileSheet(); }));
+    s.appendChild(bar);
     return s;
   }
   // Profile sheet — account status (login/logout) + language (vi/en/es). Reuses realUser/

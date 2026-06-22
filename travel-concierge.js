@@ -295,7 +295,7 @@
       liveEnableTrip: 'Enable trip location sharing', liveOff: 'Trip location sharing is off. The organizer can turn it on.', livePrivacy: 'Private to trip members only — never public. Auto-expires and is deleted after the trip; only the latest position is stored.',
       liveYouSharing: 'You are sharing', liveExpires: 'expires in', liveStop: 'Stop sharing', liveShareMine: 'Share your location with the group:', liveShareTrip: 'Until trip ends', liveShareToday: 'For today', liveShareHour: 'For 1 hour', liveSharingOn: 'Sharing your location', liveStopped: 'Stopped sharing',
       livestatus_on_the_way: 'On the way', livestatus_arrived: 'Arrived', livestatus_delayed: 'Delayed', livestatus_break: 'On a break',
-      actFeedTitle: 'Trip activity & alerts', actNone: 'No alerts right now — votes needed, booking reminders and arrivals show up here.', actSuggested: '{who} suggested “{what}” — needs a vote', actBookReminder: 'Book {what} by {when} — not reserved yet', actBookSoon: 'Book {what} — not reserved yet', actArrived: '{who} arrived', actDelayed: '{who} is delayed', actInApp: 'In-app alerts — push notifications are coming soon.',
+      actFeedTitle: 'Trip activity & alerts', actNone: 'No alerts right now — votes needed, booking reminders and arrivals show up here.', actSuggested: '{who} suggested “{what}” — needs a vote', actBookReminder: 'Book {what} by {when} — not reserved yet', actBookSoon: 'Book {what} — not reserved yet', actTaskMine: '{what} — assigned to you', actArrived: '{who} arrived', actDelayed: '{who} is delayed', actInApp: 'In-app alerts — push notifications are coming soon.',
       liveNavNext: 'Navigate to next stop', liveNavHotel: 'Navigate to hotel', liveGroup: 'Sharing now', liveNobody: 'No one is sharing yet — tap a share option above.', liveMember: 'Member', liveHere: 'here', liveViewMap: 'View on map', liveNavTo: 'Navigate',
       // Experience Optimizer
       improveTitle: 'Improve this trip with AI', improveSub: 'AI optimizes using your group\'s votes, favorites & preferences — then suggests concrete changes you can add.', improveWorking: 'Looking for ways to make this trip better…', improveNone: 'No suggestions right now — try another goal.',
@@ -564,7 +564,7 @@
       liveEnableTrip: 'Bật chia sẻ vị trí chuyến đi', liveOff: 'Chia sẻ vị trí đang tắt. Người tổ chức có thể bật.', livePrivacy: 'Chỉ riêng thành viên chuyến đi — không công khai. Tự hết hạn và bị xóa sau chuyến đi; chỉ lưu vị trí mới nhất.',
       liveYouSharing: 'Bạn đang chia sẻ', liveExpires: 'hết hạn sau', liveStop: 'Ngừng chia sẻ', liveShareMine: 'Chia sẻ vị trí của bạn với nhóm:', liveShareTrip: 'Đến hết chuyến', liveShareToday: 'Trong hôm nay', liveShareHour: 'Trong 1 giờ', liveSharingOn: 'Đang chia sẻ vị trí', liveStopped: 'Đã ngừng chia sẻ',
       livestatus_on_the_way: 'Đang đến', livestatus_arrived: 'Đã đến', livestatus_delayed: 'Bị trễ', livestatus_break: 'Đang nghỉ',
-      actFeedTitle: 'Hoạt động & cảnh báo chuyến đi', actNone: 'Hiện chưa có cảnh báo — cần bình chọn, nhắc đặt chỗ và thông báo đến nơi sẽ hiện ở đây.', actSuggested: '{who} đề xuất “{what}” — cần bình chọn', actBookReminder: 'Đặt {what} trước {when} — chưa đặt chỗ', actBookSoon: 'Đặt {what} — chưa đặt chỗ', actArrived: '{who} đã đến', actDelayed: '{who} bị trễ', actInApp: 'Cảnh báo trong ứng dụng — thông báo đẩy sắp ra mắt.',
+      actFeedTitle: 'Hoạt động & cảnh báo chuyến đi', actNone: 'Hiện chưa có cảnh báo — cần bình chọn, nhắc đặt chỗ và thông báo đến nơi sẽ hiện ở đây.', actSuggested: '{who} đề xuất “{what}” — cần bình chọn', actBookReminder: 'Đặt {what} trước {when} — chưa đặt chỗ', actBookSoon: 'Đặt {what} — chưa đặt chỗ', actTaskMine: '{what} — giao cho bạn', actArrived: '{who} đã đến', actDelayed: '{who} bị trễ', actInApp: 'Cảnh báo trong ứng dụng — thông báo đẩy sắp ra mắt.',
       liveNavNext: 'Chỉ đường đến điểm kế', liveNavHotel: 'Chỉ đường đến khách sạn', liveGroup: 'Đang chia sẻ', liveNobody: 'Chưa ai chia sẻ — nhấn một tùy chọn ở trên.', liveMember: 'Thành viên', liveHere: 'ở đây', liveViewMap: 'Xem bản đồ', liveNavTo: 'Chỉ đường',
       // Trình tối ưu trải nghiệm
       improveTitle: 'Cải thiện chuyến đi bằng AI', improveSub: 'AI tối ưu dựa trên bình chọn, yêu thích & sở thích của nhóm — rồi gợi ý thay đổi cụ thể để bạn thêm.', improveWorking: 'Đang tìm cách làm chuyến đi tốt hơn…', improveNone: 'Hiện chưa có gợi ý — thử mục tiêu khác.',
@@ -833,7 +833,7 @@
       liveEnableTrip: 'Activar ubicación del viaje', liveOff: 'El compartir ubicación está desactivado. El organizador puede activarlo.', livePrivacy: 'Privado solo para miembros del viaje — nunca público. Expira y se elimina tras el viaje; solo se guarda la última posición.',
       liveYouSharing: 'Estás compartiendo', liveExpires: 'expira en', liveStop: 'Dejar de compartir', liveShareMine: 'Comparte tu ubicación con el grupo:', liveShareTrip: 'Hasta el fin del viaje', liveShareToday: 'Por hoy', liveShareHour: 'Por 1 hora', liveSharingOn: 'Compartiendo tu ubicación', liveStopped: 'Dejaste de compartir',
       livestatus_on_the_way: 'En camino', livestatus_arrived: 'Llegó', livestatus_delayed: 'Retrasado', livestatus_break: 'En descanso',
-      actFeedTitle: 'Actividad y alertas del viaje', actNone: 'Sin alertas ahora — votos pendientes, recordatorios de reserva y llegadas aparecerán aquí.', actSuggested: '{who} sugirió “{what}” — necesita un voto', actBookReminder: 'Reserva {what} antes del {when} — aún sin reservar', actBookSoon: 'Reserva {what} — aún sin reservar', actArrived: '{who} llegó', actDelayed: '{who} está retrasado', actInApp: 'Alertas en la app — las notificaciones push llegarán pronto.',
+      actFeedTitle: 'Actividad y alertas del viaje', actNone: 'Sin alertas ahora — votos pendientes, recordatorios de reserva y llegadas aparecerán aquí.', actSuggested: '{who} sugirió “{what}” — necesita un voto', actBookReminder: 'Reserva {what} antes del {when} — aún sin reservar', actBookSoon: 'Reserva {what} — aún sin reservar', actTaskMine: '{what} — asignada a ti', actArrived: '{who} llegó', actDelayed: '{who} está retrasado', actInApp: 'Alertas en la app — las notificaciones push llegarán pronto.',
       liveNavNext: 'Navegar a la próxima parada', liveNavHotel: 'Navegar al hotel', liveGroup: 'Compartiendo ahora', liveNobody: 'Nadie comparte aún — toca una opción arriba.', liveMember: 'Miembro', liveHere: 'aquí', liveViewMap: 'Ver en el mapa', liveNavTo: 'Navegar',
       // Optimizador de experiencia
       improveTitle: 'Mejora este viaje con IA', improveSub: 'La IA optimiza con los votos, favoritos y preferencias de tu grupo — y sugiere cambios concretos para agregar.', improveWorking: 'Buscando formas de mejorar este viaje…', improveNone: 'No hay sugerencias ahora — prueba otro objetivo.',
@@ -7043,9 +7043,10 @@
     var items = [];
     (tr.bookings || []).forEach(function (b) {
       var st = b.bookingStatus || '';
-      if (st === 'booked' || st === 'skipped') return;
+      if (st === 'booked' || st === 'paid' || st === 'skipped' || st === 'not_needed') return;
       var what = b.title || b.name || ''; if (!what) return;
-      if (b.deadline) items.push({ ic: '📌', txt: t('actBookReminder').replace('{what}', what).replace('{when}', b.deadline) });
+      if (b.assignedToFamily && b.assignedToFamily === getMe()) items.push({ ic: '🙋', txt: t('actTaskMine').replace('{what}', what) });
+      else if (b.deadline || b.dueDate) items.push({ ic: '📌', txt: t('actBookReminder').replace('{what}', what).replace('{when}', b.dueDate || b.deadline) });
       else items.push({ ic: '📌', txt: t('actBookSoon').replace('{what}', what) });
     });
     (tr.suggestions || []).forEach(function (sg) {

@@ -92,6 +92,7 @@ async function denied(name, p) { try { await assertFails(p); rec(name, true); } 
   const driverB = testEnv.authenticatedContext('driverB', nonAnonToken).firestore();
   const michael = testEnv.authenticatedContext('michael-uid', nonAnonToken).firestore();
   const anon = testEnv.authenticatedContext('anon-customer', anonToken).firestore();
+  const unauth = testEnv.unauthenticatedContext().firestore();
   const admin = testEnv.authenticatedContext('admin-uid', { email: 'johnntd@gmail.com', firebase: { sign_in_provider: 'password' } }).firestore();
   // Owner operator account (iCloud) — must be in the isAdmin() allowlist alongside the gmail account.
   const adminIcloud = testEnv.authenticatedContext('admin-icloud-uid', { email: 'johnntd21@icloud.com', firebase: { sign_in_provider: 'password' } }).firestore();
@@ -162,6 +163,10 @@ async function denied(name, p) { try { await assertFails(p); rec(name, true); } 
   await allowed('authed-anon CAN enqueue ride dispatch (rideNotifications)', setDoc(doc(anon, 'rideNotifications/rn1'), { bookingId: 'new1', status: 'new', passengers: 10 }));
   await allowed('authed-anon CAN enqueue ride dispatch (dispatchQueue)', setDoc(doc(anon, 'dispatchQueue/new1_0'), { bookingId: 'new1', status: 'pending', attempt: 1 }));
   await denied('customer CANNOT write the admin-dlc notification (root cause — must move server-side)', setDoc(doc(anon, 'vendors/admin-dlc/notifications/n1'), { type: 'new_booking', bookingId: 'new1' }));
+  // ── Booking conflict locks (the "Booking failed" root cause: guard transaction was default-denied) ──
+  await allowed('authed-anon CAN write a booking conflict lock (guard transaction)', setDoc(doc(anon, 'bookingConflictLocks/michael-nguyen_ride_x'), { ownerId: 'michael-nguyen', serviceType: 'ride', createdAt: '2026-07-01T10:00:00Z' }));
+  await allowed('authed-anon CAN read a booking conflict lock', getDoc(doc(anon, 'bookingConflictLocks/michael-nguyen_ride_x')));
+  await denied('UNauthenticated client CANNOT touch booking conflict locks', setDoc(doc(unauth, 'bookingConflictLocks/evil'), { ownerId: 'x' }));
 
   await allowed('driverA reads own travel assignment', getDoc(doc(driverA, 'travelAssignments/taA')));
   await denied('driverA CANNOT read driverB travel assignment', getDoc(doc(driverA, 'travelAssignments/taB')));

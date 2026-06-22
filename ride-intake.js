@@ -1530,15 +1530,23 @@ window.RideIntake = (function () {
       }
       return ref.set(data);
     }
-    var guardPromise;
-    if (window.BookingGuard && data.ownerId) {
-      guardPromise = window.BookingGuard.guardedWrite(guardReq, writeRideBooking, { db: db });
-    } else {
-      if (window.BookingGuard && !data.ownerId && window.console) {
-        console.warn('[ride-intake] booking guard skipped - no ownerId resolved');
+    // ROOT CAUSE of "Booking failed": the BookingGuard runs a Firestore transaction that writes a
+    // lock doc to `bookingConflictLocks`, which (a) requires an auth session and (b) had no rule
+    // (default-deny) → the transaction was rejected → the whole submit failed for EVERY customer ride.
+    // Fix: (1) ensure an (anonymous) auth session BEFORE the guard, and (2) make the guard NON-FATAL —
+    // if its conflict transaction still throws, write the booking directly (`bookings` create is open),
+    // so a valid booking is never blocked by conflict-detection plumbing.
+    var guardPromise = _ensureRideAuth().then(function () {
+      if (window.BookingGuard && data.ownerId) {
+        return window.BookingGuard.guardedWrite(guardReq, writeRideBooking, { db: db })
+          .catch(function (e) {
+            try { console.warn('[ride-intake] guard failed → writing booking directly:', e && (e.code || e.message)); } catch (_) {}
+            return writeRideBooking().then(function () { return { ok: true, disposition: 'confirm', guardFallback: true }; });
+          });
       }
-      guardPromise = writeRideBooking().then(function() { return { ok: true }; });
-    }
+      if (window.BookingGuard && !data.ownerId && window.console) console.warn('[ride-intake] booking guard skipped - no ownerId resolved');
+      return writeRideBooking().then(function () { return { ok: true }; });
+    });
     guardPromise
       .then(function (guardResult) {
         if (guardResult && guardResult.disposition === 'block') throw new Error('booking_guard_' + guardResult.reason);

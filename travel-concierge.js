@@ -7242,6 +7242,14 @@
     }
     return wrap;
   }
+  // Fire a push notification (to other members' devices) when a member makes an important task change.
+  function tcNotifyTask(kind, title, familyName) {
+    try {
+      var tr = state.trip; if (!tr || tr._demo || state.readonly || !realUser() || !title) return;
+      var fn = mkCallable('notifyTripTask', 30000); if (!fn) return;
+      fn({ tripId: tr.id, kind: kind, title: title, familyName: familyName || '' }).catch(function () {});
+    } catch (e) {}
+  }
   function bookingCard(b, idx) {
     var tr = state.trip, ro = (state.readonly || tr._demo);
     var links = BookingLinkProvider.links(b, tr);
@@ -7265,13 +7273,13 @@
     if (!ro) {
       var ctrls = el('div', 'tc-bk__ctrls');
       var ssel = selectFrom(['research_needed', 'researching', 'ready_to_book', 'user_approval_needed', 'booked', 'paid', 'skipped', 'not_needed'], b.bookingStatus || 'research_needed', function (o) { return t('bs_' + o); });
-      ssel.className = 'tc-input'; ssel.addEventListener('change', function () { b.bookingStatus = ssel.value; saveTrip(tr); render(); });
+      ssel.className = 'tc-input'; ssel.addEventListener('change', function () { b.bookingStatus = ssel.value; saveTrip(tr); if (ssel.value === 'booked' || ssel.value === 'paid') tcNotifyTask(ssel.value, b.title); render(); });
       ctrls.appendChild(ssel);
       var _fam = selectFrom([''].concat(tripFamilies().map(function (f) { return f.id; })), b.assignedToFamily || '', function (id) { if (!id) return t('taskUnassigned'); var ff = tripFamilies().filter(function (x) { return x.id === id; })[0]; return ff ? (ff.name || t('taskUnassigned')) : id; });
-      _fam.className = 'tc-input'; _fam.addEventListener('change', function () { b.assignedToFamily = _fam.value; saveTrip(tr); render(); });
+      _fam.className = 'tc-input'; _fam.addEventListener('change', function () { b.assignedToFamily = _fam.value; saveTrip(tr); if (_fam.value) tcNotifyTask('assigned', b.title, famName(_fam.value)); render(); });
       ctrls.appendChild(_fam);
       var mb = el('button', 'tc-pbtn' + (b.bookingStatus === 'booked' ? ' tc-pbtn--accent' : ''), b.bookingStatus === 'booked' ? t('undoBooked') : t('markBooked')); mb.type = 'button';
-      mb.addEventListener('click', function () { b.bookingStatus = (b.bookingStatus === 'booked') ? 'ready_to_book' : 'booked'; if (b.bookingStatus === 'booked') b.bookedBy = (getMe() ? famName(getMe()) : ''); saveTrip(tr); render(); });
+      mb.addEventListener('click', function () { b.bookingStatus = (b.bookingStatus === 'booked') ? 'ready_to_book' : 'booked'; if (b.bookingStatus === 'booked') { b.bookedBy = (getMe() ? famName(getMe()) : ''); tcNotifyTask('booked', b.title); } saveTrip(tr); render(); });
       ctrls.appendChild(mb);
       var del = el('button', 'tc-pbtn', '🗑'); del.type = 'button'; del.addEventListener('click', function () { tr.bookings.splice(idx, 1); saveTrip(tr); render(); });
       ctrls.appendChild(del);

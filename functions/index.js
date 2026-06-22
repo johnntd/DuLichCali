@@ -2658,6 +2658,41 @@ function buildRestaurantResearchPrompt(lang) {
     'BE CONCISE so the JSON stays valid: 4-6 picks per destination; address = street + city only; every text field ONE short phrase; dishes/mustTry at most 2 each; no trailing commas. Write all human-readable text in ' + langName + '. Output ONE compact valid JSON object only.',
   ].join('\n');
 }
+// Push notification on an important task change (assigned / booked / paid / due). Member-triggered
+// from the client; reuses the trip's pushSubscriptions + the shared VAPID/webpush stack. Never
+// notifies the actor; prunes dead subscriptions (404/410).
+exports.notifyTripTask = onCall(
+  { region: 'us-central1', secrets: [VAPID_PRIVATE_KEY], timeoutSeconds: 30, memory: '256MiB', cors: true },
+  async (request) => {
+    const uid = tripRequireAuth(request);
+    const d = request.data || {};
+    const tripId = String(d.tripId || '');
+    const role = await tripCallerRole(tripId, uid);
+    if (!role) throw new HttpsError('permission-denied', 'Join this trip.');
+    const title = String(d.title || '').replace(/\s+/g, ' ').trim().slice(0, 120);
+    if (!title) return { ok: false, debugCode: 'NO_TITLE' };
+    const kind = ['assigned', 'booked', 'paid', 'due'].indexOf(String(d.kind)) !== -1 ? String(d.kind) : 'update';
+    const fam = String(d.familyName || '').slice(0, 60).trim();
+    const priv = VAPID_PRIVATE_KEY.value();
+    let webpush = null; try { webpush = require('web-push'); } catch (e) {}
+    if (!webpush || !priv) return { ok: false, debugCode: 'NO_PUSH' };
+    try { webpush.setVapidDetails('mailto:dulichcali21@gmail.com', VAPID_PUBLIC_KEY, priv); } catch (e) { return { ok: false, debugCode: 'NO_PUSH' }; }
+    const verb = ({ assigned: (fam ? fam + ' · ' : '') + 'Assigned', booked: 'Booked', paid: 'Paid', due: 'Due soon', update: 'Updated' })[kind];
+    const payload = JSON.stringify({ title: '✅ Trip task', body: verb + ': ' + title, url: '/travel-concierge?trip=' + tripId, tag: 'task-' + tripId });
+    let sent = 0;
+    try {
+      const subsSnap = await db.collection('groupTrips').doc(tripId).collection('pushSubscriptions').get();
+      await Promise.all(subsSnap.docs.map(async (sd) => {
+        const s = sd.data() || {};
+        if (!s.endpoint || !s.keys || s.uid === uid) return; // skip the actor's own devices
+        try { await webpush.sendNotification({ endpoint: s.endpoint, keys: s.keys }, payload, { TTL: 3600 }); sent++; }
+        catch (err) { const code = err && err.statusCode; if (code === 404 || code === 410) await sd.ref.delete().catch(function () {}); }
+      }));
+    } catch (e) { console.warn('[notifyTripTask] failed', tripId, e && e.message); }
+    return { ok: true, sent: sent };
+  }
+);
+
 // Curate research links + notes for ONE recommended place ("Learn more" media enrichment).
 // Gemini decides which link types matter + crafts search queries; placeMediaSanitize enforces
 // honesty (videos → search links only; official/menu/ticket validated; reviews/map deterministic;

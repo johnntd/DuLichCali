@@ -2681,7 +2681,7 @@ exports.researchPlaceMedia = onCall(
     const userContent = 'Curate research links + notes for ONE place the app is recommending. Input JSON:\n' + JSON.stringify({ name: name, placeType: placeType, city: city });
     const prompt = [
       'You are a LOCAL travel concierge for Du Lich Cali. For ONE recommended place, decide which research links are MOST useful for this place type, plus a short why-it-fits + group-fit + best-time + time-needed. You ONLY research — never reserve or charge.',
-      'Return ONLY valid JSON (no markdown): { "media":[ { "type"(official_site|menu|ticket|google_reviews|yelp_reviews|tripadvisor|youtube_search|tiktok|photos|map|blog_guide), "title"(short label), "url"(a REAL official/menu/ticket/blog URL ONLY for official_site|menu|ticket|blog_guide and ONLY if you actually know it from current search — else omit), "query"(for youtube_search/tiktok: the best SEARCH phrase, e.g. "San Diego SEAL Tour review"), "reason"(one short phrase) } ], "why"(one sentence), "groupFit"(short), "bestTime"(short or ""), "timeNeeded"(e.g. "1-2 hours" or ""), "popularDishes":[up to 4 for restaurants, else []] }',
+      'Return ONLY valid JSON (no markdown): { "media":[ { "type"(official_site|menu|ticket|google_reviews|yelp_reviews|tripadvisor|youtube_search|tiktok|photos|map|blog_guide), "title"(short label), "url"(a REAL official/menu/ticket/blog URL ONLY for official_site|menu|ticket|blog_guide and ONLY if you actually know it from current search — else omit), "query"(for youtube_search/tiktok: the best SEARCH phrase, e.g. "San Diego SEAL Tour review"), "reason"(one short phrase) } ], "why"(one sentence), "groupFit"(short), "bestTime"(short or ""), "timeNeeded"(e.g. "1-2 hours" or ""), "popularDishes":[up to 4 for restaurants, else []], "parking"(short note or ""), "walkingDifficulty"(short or ""), "waitTime"(short or ""), "safety"(short note or ""), "weatherBackup"(short or "") }',
       'HARD RULES: NEVER invent a video — for any video give a SEARCH "query", never a watch/embed URL. NEVER output exact prices, ratings, review counts, availability, hours, or phone numbers. For official_site/menu/ticket/blog_guide give a url ONLY if it is the real, current official URL you found; if unsure, omit url (the app builds a search link). Prioritize by type: restaurants -> menu/reviews/yelp/youtube food review/photos; tours -> official/ticket/youtube/reviews; beaches/scenic -> map/youtube travel guide/reviews; events -> official/ticket/map; hotels -> reviews/tripadvisor/photos.',
       'Write human text (title/why/groupFit/bestTime/reason) in ' + (lang === 'vi' ? 'Vietnamese' : (lang === 'es' ? 'Spanish' : 'English')) + '. Output ONE compact valid JSON object.',
     ].join('\n');
@@ -2701,6 +2701,11 @@ exports.researchPlaceMedia = onCall(
         bestTime: String(parsed.bestTime || '').slice(0, 120),
         timeNeeded: String(parsed.timeNeeded || '').slice(0, 60),
         popularDishes: (Array.isArray(parsed.popularDishes) ? parsed.popularDishes : []).slice(0, 4).map(function (x) { return String(x).slice(0, 60); }),
+        parking: String(parsed.parking || '').slice(0, 120),
+        walkingDifficulty: String(parsed.walkingDifficulty || '').slice(0, 90),
+        waitTime: String(parsed.waitTime || '').slice(0, 90),
+        safety: String(parsed.safety || '').slice(0, 120),
+        weatherBackup: String(parsed.weatherBackup || '').slice(0, 120),
         dataSource: 'ai_researched_pending_verification',
       };
     } catch (e2) {

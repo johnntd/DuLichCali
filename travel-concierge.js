@@ -289,6 +289,7 @@
       optimizeTrip: 'Optimize Trip', optimizing: 'Rebuilding your trip from the group\'s votes…', optimizeDone: 'Trip rebuilt from your group\'s votes', optimizeNudge: 'Your group\'s votes changed — re-optimize the whole trip.', optimizeRebuildHint: 'Regenerates the itinerary, food, stays, events, stopovers, transport, costs & bookings from all your votes. Your pins & skips are kept.',
       mem_title: 'What we remember', mem_sub: 'Preferences learned from your past trips — used to start new ones smarter.', mem_cuisines: 'Cuisines you like', mem_liked: 'Places you liked', mem_never: 'Never suggest again', mem_transport: 'Preferred transport', mem_budget: 'Usual budget', mem_pace: 'Usual pace', mem_trips: 'Trips remembered', mem_clear: 'Clear memory', mem_cleared: 'Travel memory cleared',
       nightOne: 'night', nightMany: 'nights',
+      journeyLabel: 'Your journey', journeyHint: 'Add each stop with the dates you want there. We figure out transport, hotels and the day-by-day plan within your stops.', addSegment: 'Add stop', arrivalDate: 'Arrival', departureDate: 'Departure', sameDay: 'Same-day', segTransportDetails: 'Transport & details (optional)', howArrive: 'How you arrive in {city}', preferredProvider: 'Preferred provider', providerPh: 'e.g. Xe Đò Hoàng, Michael', overnightStay: 'Stay overnight here', segNotesPh: 'e.g. coming from the bus drop-off', homeOrigin: 'Home', viaLabel: 'via', viaAI: 'AI picks the best way', thisStop: 'this stop', returnTransport: 'Getting home', journeyEmpty: 'Add your first stop to see the journey', homeBy: 'home', quickEntry: 'Quick entry — one date range for the whole trip', quickEntryHint: 'Optional. Used only if you leave the per-stop dates blank — the AI will split the nights.', tp_any: 'AI decides', tp_bus: 'Bus', tp_private_ride: 'Private ride', tp_flight: 'Flight', tp_car: 'Own car', tp_train: 'Train', segRideBooked: 'Ride booked', segRidePending: 'Ride pending',
       impGeneral: '✨ Improve this trip', impDiscoveries: '💎 Find more discoveries', impLowerCost: '💲 Lower cost', impKidsFun: '🧒 More fun for kids', impFoodFocused: '🍽 More food-focused',
       impSelected: '{n} selected', impRun: 'Run AI Improvement', impClear: 'Clear all',
       rejVote: 'Removed — the group voted to skip this', rejMajority: 'Removed — most families voted to skip this', rejNotNeeded: 'Removed — marked not needed',
@@ -539,6 +540,7 @@
       optimizeTrip: 'Tối ưu chuyến đi', optimizing: 'Đang dựng lại chuyến đi theo bình chọn của nhóm…', optimizeDone: 'Đã dựng lại chuyến đi theo bình chọn của nhóm', optimizeNudge: 'Bình chọn của nhóm đã thay đổi — tối ưu lại toàn bộ chuyến đi.', optimizeRebuildHint: 'Tạo lại lịch trình, ẩm thực, nơi ở, sự kiện, điểm dừng, di chuyển, chi phí & đặt chỗ theo tất cả bình chọn. Mục ghim & bỏ qua được giữ lại.',
       mem_title: 'Những gì chúng tôi ghi nhớ', mem_sub: 'Sở thích học được từ các chuyến đi trước — dùng để bắt đầu chuyến mới thông minh hơn.', mem_cuisines: 'Ẩm thực bạn thích', mem_liked: 'Địa điểm bạn thích', mem_never: 'Không gợi ý lại', mem_transport: 'Phương tiện ưa thích', mem_budget: 'Ngân sách thường dùng', mem_pace: 'Nhịp độ thường dùng', mem_trips: 'Số chuyến đã ghi nhớ', mem_clear: 'Xóa bộ nhớ', mem_cleared: 'Đã xóa bộ nhớ du lịch',
       nightOne: 'đêm', nightMany: 'đêm',
+      journeyLabel: 'Hành trình của bạn', journeyHint: 'Thêm từng điểm dừng với ngày bạn muốn ở đó. Chúng tôi lo phương tiện, khách sạn và lịch trình từng ngày trong các điểm dừng của bạn.', addSegment: 'Thêm điểm dừng', arrivalDate: 'Ngày đến', departureDate: 'Ngày đi', sameDay: 'Trong ngày', segTransportDetails: 'Phương tiện & chi tiết (tùy chọn)', howArrive: 'Cách bạn đến {city}', preferredProvider: 'Nhà cung cấp ưu tiên', providerPh: 'vd: Xe Đò Hoàng, Michael', overnightStay: 'Nghỉ qua đêm ở đây', segNotesPh: 'vd: đến từ điểm trả khách của xe', homeOrigin: 'Nhà', viaLabel: 'bằng', viaAI: 'AI chọn cách tốt nhất', thisStop: 'điểm này', returnTransport: 'Về nhà', journeyEmpty: 'Thêm điểm dừng đầu tiên để xem hành trình', homeBy: 'về', quickEntry: 'Nhập nhanh — một khoảng ngày cho cả chuyến', quickEntryHint: 'Tùy chọn. Chỉ dùng khi bạn để trống ngày từng điểm — AI sẽ chia số đêm.', tp_any: 'AI quyết định', tp_bus: 'Xe buýt', tp_private_ride: 'Xe riêng', tp_flight: 'Máy bay', tp_car: 'Xe nhà', tp_train: 'Tàu hỏa', segRideBooked: 'Đã đặt xe', segRidePending: 'Xe đang chờ',
       impGeneral: '✨ Cải thiện chuyến đi', impDiscoveries: '💎 Tìm thêm khám phá', impLowerCost: '💲 Giảm chi phí', impKidsFun: '🧒 Vui hơn cho trẻ', impFoodFocused: '🍽 Tập trung ẩm thực',
       impSelected: 'Đã chọn {n}', impRun: 'Chạy cải thiện AI', impClear: 'Xóa tất cả',
       rejVote: 'Đã bỏ — cả nhóm bình chọn bỏ qua', rejMajority: 'Đã bỏ — đa số gia đình bình chọn bỏ qua', rejNotNeeded: 'Đã bỏ — đánh dấu không cần',
@@ -789,6 +791,7 @@
       optimizeTrip: 'Optimizar viaje', optimizing: 'Reconstruyendo tu viaje según los votos del grupo…', optimizeDone: 'Viaje reconstruido según los votos del grupo', optimizeNudge: 'Los votos de tu grupo cambiaron — vuelve a optimizar todo el viaje.', optimizeRebuildHint: 'Regenera el itinerario, comida, alojamiento, eventos, paradas, transporte, costos y reservas usando todos tus votos. Tus fijados y omitidos se conservan.',
       mem_title: 'Lo que recordamos', mem_sub: 'Preferencias aprendidas de tus viajes anteriores — para empezar los nuevos de forma más inteligente.', mem_cuisines: 'Cocinas que te gustan', mem_liked: 'Lugares que te gustaron', mem_never: 'No sugerir de nuevo', mem_transport: 'Transporte preferido', mem_budget: 'Presupuesto habitual', mem_pace: 'Ritmo habitual', mem_trips: 'Viajes recordados', mem_clear: 'Borrar memoria', mem_cleared: 'Memoria de viaje borrada',
       nightOne: 'noche', nightMany: 'noches',
+      journeyLabel: 'Tu recorrido', journeyHint: 'Agrega cada parada con las fechas que quieres estar allí. Nosotros resolvemos el transporte, los hoteles y el plan día a día dentro de tus paradas.', addSegment: 'Agregar parada', arrivalDate: 'Llegada', departureDate: 'Salida', sameDay: 'El mismo día', segTransportDetails: 'Transporte y detalles (opcional)', howArrive: 'Cómo llegas a {city}', preferredProvider: 'Proveedor preferido', providerPh: 'p. ej. Xe Đò Hoàng, Michael', overnightStay: 'Pernoctar aquí', segNotesPh: 'p. ej. llegando desde la parada del autobús', homeOrigin: 'Casa', viaLabel: 'vía', viaAI: 'La IA elige la mejor forma', thisStop: 'esta parada', returnTransport: 'Regreso a casa', journeyEmpty: 'Agrega tu primera parada para ver el recorrido', homeBy: 'en casa', quickEntry: 'Entrada rápida — un rango de fechas para todo el viaje', quickEntryHint: 'Opcional. Se usa solo si dejas en blanco las fechas por parada — la IA dividirá las noches.', tp_any: 'La IA decide', tp_bus: 'Autobús', tp_private_ride: 'Viaje privado', tp_flight: 'Vuelo', tp_car: 'Auto propio', tp_train: 'Tren', segRideBooked: 'Viaje reservado', segRidePending: 'Viaje pendiente',
       impGeneral: '✨ Mejorar este viaje', impDiscoveries: '💎 Más descubrimientos', impLowerCost: '💲 Reducir costo', impKidsFun: '🧒 Más diversión para niños', impFoodFocused: '🍽 Más enfocado en comida',
       impSelected: '{n} seleccionados', impRun: 'Ejecutar mejora con IA', impClear: 'Borrar todo',
       rejVote: 'Eliminado — el grupo votó por omitirlo', rejMajority: 'Eliminado — la mayoría votó por omitirlo', rejNotNeeded: 'Eliminado — marcado como no necesario',
@@ -1220,7 +1223,7 @@
   function researchTransport(trip) {
     var c = mkCallable('researchTripTransport', 50000);
     if (!c) return Promise.resolve({ legs: [] });
-    return c({ trip: { departureCity: trip.departureCity, destinations: trip.destinations, dateRange: trip.dateRange, budget: trip.budget, tripStyle: trip.tripStyle, families: trip.families }, lang: state.lang })
+    return c({ trip: { departureCity: trip.departureCity, destinations: trip.destinations, dateRange: trip.dateRange, budget: trip.budget, tripStyle: trip.tripStyle, families: trip.families, returnTransportPreference: trip.returnTransportPreference || 'any', returnProvider: trip.returnProvider || '' }, lang: state.lang })
       .then(function (r) { var d = (r && r.data) || {}; return { legs: d.legs || [], source: d.source || 'estimated' }; })
       .catch(function () { return { legs: [] }; });
   }
@@ -1230,7 +1233,7 @@
   function researchTransportStrategies(trip) {
     var c = mkCallable('researchTransportStrategies', 90000); // server may make 2 grounded attempts
     if (!c) return Promise.resolve({ ok: false, modes: [], transferHubs: [], strategies: [], returnIntelligence: {} });
-    return callWithRetry(c, { trip: { departureCity: trip.departureCity, destinations: trip.destinations, dateRange: trip.dateRange, budget: trip.budget, tripStyle: trip.tripStyle, families: trip.families }, transportPreference: trip.transportPreference || 'any', lang: state.lang })
+    return callWithRetry(c, { trip: { departureCity: trip.departureCity, destinations: trip.destinations, dateRange: trip.dateRange, budget: trip.budget, tripStyle: trip.tripStyle, families: trip.families, returnTransportPreference: trip.returnTransportPreference || 'any', returnProvider: trip.returnProvider || '' }, transportPreference: trip.transportPreference || 'any', lang: state.lang })
       .then(function (r) { var d = (r && r.data) || {}; return { ok: d.ok === true, connectionPlan: d.connectionPlan || null, modes: d.modes || [], transferHubs: d.transferHubs || [], strategies: d.strategies || [], returnIntelligence: d.returnIntelligence || {}, preference: d.preference || '', driveSource: d.driveSource || '' }; })
       .catch(function () { return { ok: false, connectionPlan: null, modes: [], transferHubs: [], strategies: [], returnIntelligence: {} }; });
   }
@@ -1555,7 +1558,7 @@
     var M = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11 };
     var loc = state.lang === 'vi' ? 'vi-VN' : (state.lang === 'es' ? 'es-ES' : 'en-US');
     function fmt(dt) { try { return dt.toLocaleDateString(loc, { month: 'short', day: 'numeric' }); } catch (e) { return ''; } }
-    function build(a, b) { if (!a || !b || isNaN(a.getTime()) || isNaN(b.getTime())) return null; var n = Math.round((b - a) / 86400000) + 1; if (n < 1 || n > 30) return null; var ds = []; for (var i = 0; i < n; i++) ds.push(fmt(new Date(a.getTime() + i * 86400000))); return { count: n, dates: ds }; }
+    function build(a, b) { if (!a || !b || isNaN(a.getTime()) || isNaN(b.getTime())) return null; var n = Math.round((b - a) / 86400000) + 1; if (n < 1 || n > 30) return null; var ds = []; for (var i = 0; i < n; i++) ds.push(fmt(new Date(a.getTime() + i * 86400000))); return { count: n, dates: ds, start: a, end: b }; }
     var iso = s.match(/(\d{4})-(\d{2})-(\d{2})[^\d]+(\d{4})-(\d{2})-(\d{2})/);
     if (iso) return build(new Date(+iso[1], +iso[2] - 1, +iso[3]), new Date(+iso[4], +iso[5] - 1, +iso[6]));
     var mn = s.toLowerCase().match(/([a-z]{3,})\.?\s+(\d{1,2})\s*-\s*(?:([a-z]{3,})\.?\s+)?(\d{1,2})(?:,?\s*(\d{4}))?/);
@@ -1639,6 +1642,41 @@
     });
     return parts;
   }
+  // MIGRATION (Step E) — back-fill per-segment dates on a LEGACY trip (one global dateRange,
+  // no segment dates) so it shows in the Journey Builder. Deterministic, in-memory, idempotent,
+  // best-effort: single-stop → exact range bounds; multi-stop → derive each stop's window from
+  // the existing plan's day→destinationIndex mapping; otherwise leave it legacy (still works via
+  // the dateRange path — no AI call, no destructive write). NEVER throws.
+  function migrateLegacyTripToSegments(trip) {
+    if (!trip || trip._segMigrated) return trip;
+    try {
+      normalizeDestinations(trip);
+      if (buildSegmentDayPlan(trip)) { trip._segMigrated = true; return trip; } // already has segment dates
+      var segs = segments(trip).filter(function (d) { return (d.city || '').trim(); });
+      if (!segs.length) return trip;
+      var pd = parseTripDates(trip.dateRange);
+      if (!pd || !pd.start || !pd.end) return trip; // no usable range → stay legacy (defer AI split)
+      var dayMs = 86400000;
+      if (segs.length === 1) {
+        segs[0].arrivalDate = isoOfDate(pd.start); segs[0].startDate = segs[0].arrivalDate;
+        segs[0].departureDate = isoOfDate(pd.end); segs[0].endDate = segs[0].departureDate;
+        trip._segMigrated = true; normalizeDestinations(trip); return trip;
+      }
+      var days = (trip.plan && Array.isArray(trip.plan.days)) ? trip.plan.days : null;
+      if (!days || !days.length) return trip; // can't split multi-stop deterministically without a plan
+      var byIdx = {};
+      days.forEach(function (d, i) { var li = d.destinationIndex || 0; if (!byIdx[li]) byIdx[li] = { first: i, last: i }; else byIdx[li].last = i; });
+      segs.forEach(function (seg, li) {
+        var b = byIdx[li]; if (!b) return;
+        var a = new Date(pd.start.getTime() + b.first * dayMs);
+        var dep = new Date(pd.start.getTime() + (b.last + 1) * dayMs); // exclusive: morning after the last night
+        seg.arrivalDate = isoOfDate(a); seg.startDate = seg.arrivalDate;
+        seg.departureDate = isoOfDate(dep); seg.endDate = seg.departureDate;
+      });
+      trip._segMigrated = true; normalizeDestinations(trip);
+    } catch (e) { /* best-effort — legacy path keeps working */ }
+    return trip;
+  }
   // Day-type model: arrival_day | main_activity_day | transfer_day | return_day | mixed_day.
   // Generic — never hardcoded to any city/date. The Final-Day mode (Issue #3) shapes the last day.
   function assignDayTypes(plan, trip) {
@@ -1702,63 +1740,80 @@
       liveHighlights: trip.liveHighlights || [], dataSource: 'ai_generated_pending_verification',
     };
   }
+  // Build a DETERMINISTIC skeleton from the user's segments (Step C) — same shape the AI
+  // skeleton produces, but day→segment dates/order are fixed by buildSegmentDayPlan (the AI
+  // never reassigns them). Carries per-segment transport prefs through to the leg payload.
+  function deterministicSkeleton(trip, segPlan) {
+    var dests = segments(trip).map(function (d, i) {
+      return { index: i, city: (d.city || '').trim(), startDate: segArrival(d), endDate: segDeparture(d),
+        role: d.role || (i === 0 ? 'main_destination' : 'overnight_destination'),
+        hotelNeeded: (d.overnightStay !== false) && (d.hotelNeeded !== false), hotelSuggestion: null,
+        transportPreference: d.transportPreference || 'any', preferredProvider: d.preferredProvider || '' };
+    });
+    var days = segPlan.map(function (st, idx) {
+      return { dayNumber: idx + 1, _k: idx, destinationIndex: st.destinationIndex, date: st.date, isTravelDay: !!st.isTravelDay, isReturnDay: !!st.isReturnDay, title: '' };
+    });
+    return { summary: '', destinations: dests, routeOverview: null, days: days, _deterministic: true };
+  }
+  // Shared leg loop: ONE generateLegDays call per day (small/fast, ≤2 concurrent), then stitch.
+  // Used by BOTH the deterministic-segment path and the legacy AI-skeleton path.
+  function runLegDaysFromSkeleton(trip, sk, onStage) {
+    sk.days.forEach(function (day, i) { if (day._k == null) day._k = i; });
+    var byLeg = {};
+    sk.days.forEach(function (day) { var li = day.destinationIndex || 0; (byLeg[li] = byLeg[li] || []).push(day); });
+    var batches = [];
+    Object.keys(byLeg).map(Number).sort(function (a, b) { return a - b; }).forEach(function (li) {
+      var stubs = byLeg[li];
+      for (var i = 0; i < stubs.length; i += 1) batches.push({ li: li, stubs: stubs.slice(i, i + 1) });
+    });
+    var legFn = mkCallable('generateLegDays', 75000);
+    var total = batches.length, started = 0;
+    if (!legFn || !total) return Promise.resolve({ plan: stitchPlan(trip, sk, {}), fallback: false });
+    onStage(t('genLegOf').replace('{n}', '1').replace('{total}', String(total)));
+    return promisePool(batches, function (b) {
+      var li = b.li;
+      var dest = (sk.destinations && sk.destinations[li]) || { index: li, city: destNameFromTrip(trip, li) };
+      // Match the trip's destination (for role/flags) by CITY first, then index — robust
+      // even if the skeleton re-indexes or drops a city.
+      var skCity = String(dest.city || '').trim().toLowerCase();
+      var td = (skCity && (trip.destinations || []).filter(function (x) { return (x.city || '').trim().toLowerCase() === skCity; })[0]) || (trip.destinations || [])[li] || {};
+      return legFn({
+        trip: { tripStyle: trip.tripStyle, budget: trip.budget, families: trip.families, preferences: trip.preferences, departureCity: trip.departureCity, lastDayFull: !!trip.lastDayFull, finalDayMode: finalDayMode(trip) },
+        lang: state.lang,
+        leg: { index: li, city: dest.city || td.city || destNameFromTrip(trip, li), startDate: dest.startDate || td.startDate || '', endDate: dest.endDate || td.endDate || '', hotelSuggestion: dest.hotelSuggestion || null, role: dest.role || td.role || 'main_destination', hotelNeeded: (dest.hotelNeeded != null ? dest.hotelNeeded !== false : td.hotelNeeded !== false), mealOnly: !!td.mealOnly, suggestFood: td.suggestFood !== false, suggestActivities: td.suggestActivities !== false, hoursToSpend: td.hoursToSpend || '', priority: td.priority || 'required', transportPreference: dest.transportPreference || td.transportPreference || 'any', preferredProvider: dest.preferredProvider || td.preferredProvider || '' },
+        daySpecs: b.stubs, liveHighlights: trip.liveHighlights || [], avoidPlaces: rejectedNames(trip), preferredPlaces: preferredNames(trip), pinnedActivities: trip.pinnedActivities || [],
+      }).then(function (rr) {
+        started = Math.min(started + 1, total); onStage(t('genLegOf').replace('{n}', String(Math.min(started + 1, total))).replace('{total}', String(total)));
+        var dd = (rr && rr.data) || {};
+        return { stubs: b.stubs, days: (dd.ok && Array.isArray(dd.days)) ? dd.days : null };
+      }).catch(function () { return { stubs: b.stubs, days: null }; });
+    }, 2).then(function (results) {
+      // Zip each returned day back to its stub by position (the prompt details stubs in order).
+      var detailByK = {};
+      (results || []).filter(Boolean).forEach(function (res) {
+        if (!res.days) return;
+        res.stubs.forEach(function (stub, j) {
+          var det = res.days[j];
+          if (det) { if (det.destinationIndex == null) det.destinationIndex = stub.destinationIndex || 0; if (det.isTravelDay == null) det.isTravelDay = !!stub.isTravelDay; if (det.isReturnDay == null) det.isReturnDay = !!stub.isReturnDay; if (!det.date) det.date = stub.date; detailByK[stub._k] = det; }
+        });
+      });
+      return { plan: stitchPlan(trip, sk, detailByK), fallback: false };
+    });
+  }
   function generateMultiLegPlan(trip, onStage) {
+    onStage(t('genSkeleton'));
+    // DETERMINISTIC path (Step C): explicit per-segment dates → fixed day→segment map; the AI
+    // fills each day's content but never the date/order assignment (no re-index/drop bug).
+    var segPlan = buildSegmentDayPlan(trip);
+    if (segPlan && segPlan.length) return runLegDaysFromSkeleton(trip, deterministicSkeleton(trip, segPlan), onStage);
+    // LEGACY path: a single global dateRange → the AI skeleton splits the nights.
     var skelFn = mkCallable('generateTripSkeleton', 45000);
     if (!skelFn) { onStage(t('generating')); return generatePlan(trip); }
-    onStage(t('genSkeleton'));
     return skelFn({ trip: trip, lang: state.lang, dateList: (parseTripDates(trip.dateRange) || {}).dates || [], avoidPlaces: rejectedNames(trip), preferredPlaces: preferredNames(trip) }).then(function (r) {
       var d = (r && r.data) || {};
-      // Skeleton failed → degrade to a mock sample (do NOT retry as one big multi-dest
-      // call — that re-creates the timeout/truncation case the server comment warns of).
+      // Skeleton failed → degrade to a mock sample (do NOT retry as one big multi-dest call).
       if (!d.ok || !d.skeleton || !Array.isArray(d.skeleton.days) || !d.skeleton.days.length) return { plan: mockPlan(trip), fallback: true };
-      var sk = d.skeleton;
-      sk.days.forEach(function (day, i) { day._k = i; });
-      // Group day stubs by destination leg, then make ONE call PER DAY so each leg call
-      // stays small/fast — a full rich day (4–6 cards + alternatives) is already near the
-      // per-call budget, and 2 rich days in one call exceeded the function timeout (504).
-      // Concurrency is capped at 2 so a 4-day trip still finishes in ~2 waves.
-      var byLeg = {};
-      sk.days.forEach(function (day) { var li = day.destinationIndex || 0; (byLeg[li] = byLeg[li] || []).push(day); });
-      var batches = [];
-      Object.keys(byLeg).map(Number).sort(function (a, b) { return a - b; }).forEach(function (li) {
-        var stubs = byLeg[li];
-        for (var i = 0; i < stubs.length; i += 1) batches.push({ li: li, stubs: stubs.slice(i, i + 1) });
-      });
-      var legFn = mkCallable('generateLegDays', 75000);
-      var total = batches.length, started = 0;
-      if (!legFn || !total) return { plan: stitchPlan(trip, sk, {}), fallback: false };
-      onStage(t('genLegOf').replace('{n}', '1').replace('{total}', String(total)));
-      return promisePool(batches, function (b) {
-        var li = b.li;
-        var dest = (sk.destinations && sk.destinations[li]) || { index: li, city: destNameFromTrip(trip, li) };
-        // Match the trip's destination (for role/flags) by CITY first, then index — robust
-        // even if the skeleton re-indexes or drops a city.
-        var skCity = String(dest.city || '').trim().toLowerCase();
-        var td = (skCity && (trip.destinations || []).filter(function (x) { return (x.city || '').trim().toLowerCase() === skCity; })[0]) || (trip.destinations || [])[li] || {};
-        return legFn({
-          trip: { tripStyle: trip.tripStyle, budget: trip.budget, families: trip.families, preferences: trip.preferences, departureCity: trip.departureCity, lastDayFull: !!trip.lastDayFull, finalDayMode: finalDayMode(trip) },
-          lang: state.lang,
-          // V2: the SKELETON determines role/hotelNeeded (the user no longer sets them); fall
-          // back to any legacy trip-destination value, then to a sensible default.
-          leg: { index: li, city: dest.city || td.city || destNameFromTrip(trip, li), startDate: dest.startDate || td.startDate || '', endDate: dest.endDate || td.endDate || '', hotelSuggestion: dest.hotelSuggestion || null, role: dest.role || td.role || 'main_destination', hotelNeeded: (dest.hotelNeeded != null ? dest.hotelNeeded !== false : td.hotelNeeded !== false), mealOnly: !!td.mealOnly, suggestFood: td.suggestFood !== false, suggestActivities: td.suggestActivities !== false, hoursToSpend: td.hoursToSpend || '', priority: td.priority || 'required' },
-          daySpecs: b.stubs, liveHighlights: trip.liveHighlights || [], avoidPlaces: rejectedNames(trip), preferredPlaces: preferredNames(trip), pinnedActivities: trip.pinnedActivities || [],
-        }).then(function (rr) {
-          started = Math.min(started + 1, total); onStage(t('genLegOf').replace('{n}', String(Math.min(started + 1, total))).replace('{total}', String(total)));
-          var dd = (rr && rr.data) || {};
-          return { stubs: b.stubs, days: (dd.ok && Array.isArray(dd.days)) ? dd.days : null };
-        }).catch(function () { return { stubs: b.stubs, days: null }; });
-      }, 2).then(function (results) {
-        // Zip each returned day back to its stub by position (the prompt details stubs in order).
-        var detailByK = {};
-        (results || []).filter(Boolean).forEach(function (res) {
-          if (!res.days) return;
-          res.stubs.forEach(function (stub, j) {
-            var det = res.days[j];
-            if (det) { if (det.destinationIndex == null) det.destinationIndex = stub.destinationIndex || 0; if (det.isTravelDay == null) det.isTravelDay = !!stub.isTravelDay; if (det.isReturnDay == null) det.isReturnDay = !!stub.isReturnDay; if (!det.date) det.date = stub.date; detailByK[stub._k] = det; }
-          });
-        });
-        return { plan: stitchPlan(trip, sk, detailByK), fallback: false };
-      });
+      return runLegDaysFromSkeleton(trip, d.skeleton, onStage);
     }).catch(function () { return { plan: mockPlan(trip), fallback: true }; });
   }
 
@@ -2459,6 +2514,7 @@
       tripStyle: 'balanced', budget: 'moderate', lastDayFull: false, finalDayMode: 'ai_decide', families: [newFamily()], preferences: defaultPrefs(),
       plan: null, votes: {}, notes: [], booking: {}, transportStatus: {}, hotelStatus: {}, suggestions: [], bookings: [], placeOverrides: {}, addedPlaces: [], dayTiming: {}, pinnedActivities: [],
       memberFamily: {}, liveHighlights: [], liveSourceNote: '', ownerUid: '', createdAt: Date.now(),
+      returnTransportPreference: 'any', returnProvider: '', // final leg home (Journey Builder)
     };
     normalizeDestinations(state.trip);
     state.readonly = false;
@@ -2655,6 +2711,124 @@
     rerender();
     return wrap;
   }
+  // ── JOURNEY BUILDER (Step B) — Home → Segment 1…N → Return. The user defines WHERE +
+  //    WHEN per stop (arrival/departure → nights auto) + how they arrive (transport pref +
+  //    preferred provider); the AI optimizes WITHIN. Nothing hardcoded to a city/provider. ──
+  var TRANSPORT_PREFS = ['any', 'bus', 'private_ride', 'flight', 'car', 'train'];
+  function tcDateInput(val) {
+    var i = doc.createElement('input'); i.className = 'tc-input tc-seg2__date'; i.type = 'date';
+    var pd = parseSegDate(val); if (pd) i.value = isoOfDate(pd);
+    return i;
+  }
+  function transportPrefLabel(pref, provider) {
+    var via = [];
+    if (pref && pref !== 'any') via.push(t('tp_' + pref));
+    if (provider && provider.trim()) via.push(provider.trim());
+    return via.length ? (t('viaLabel') + ' ' + via.join(' · ')) : t('viaAI');
+  }
+  function transportLegRow(fromCity, toCity, pref, provider) {
+    var row = el('div', 'tc-leg');
+    row.appendChild(el('span', 'tc-leg__route', (fromCity || t('homeOrigin')) + '  →  ' + (toCity || '…')));
+    row.appendChild(el('span', 'tc-leg__via', transportPrefLabel(pref, provider)));
+    return row;
+  }
+  function returnLegRow(tr, fromCity, rerender) {
+    var box = el('details', 'tc-leg tc-leg--return');
+    box.appendChild(el('summary', 'tc-leg__sum', '🏠 ' + (fromCity || '…') + '  →  ' + (tr.departureCity || t('homeOrigin')) + '  ·  ' + transportPrefLabel(tr.returnTransportPreference, tr.returnProvider)));
+    var body = el('div', 'tc-leg__body');
+    body.appendChild(el('span', 'tc-field__lbl', t('returnTransport')));
+    body.appendChild(seg(TRANSPORT_PREFS, tr.returnTransportPreference || 'any', 'tp_', function (v) { tr.returnTransportPreference = v; rerender(); }));
+    var prov = input(tr.returnProvider, t('providerPh')); prov.addEventListener('input', function () { tr.returnProvider = prov.value; });
+    body.appendChild(field(t('preferredProvider'), prov));
+    box.appendChild(body);
+    return box;
+  }
+  function segmentCard(tr, d, i, rerender, refreshSummary) {
+    var card = el('article', 'tc-seg2');
+    var head = el('div', 'tc-seg2__head');
+    head.appendChild(el('span', 'tc-seg2__num', String(i + 1)));
+    head.appendChild(cityInput(d));
+    var ctrls = el('div', 'tc-seg2__ctrls');
+    if (i > 0) { var up = el('button', 'tc-seg2__move', '↑'); up.type = 'button'; up.setAttribute('aria-label', t('moveUp')); up.addEventListener('click', function () { swapDest(tr, i, i - 1); rerender(); }); ctrls.appendChild(up); }
+    if (i < tr.destinations.length - 1) { var dn = el('button', 'tc-seg2__move', '↓'); dn.type = 'button'; dn.setAttribute('aria-label', t('moveDown')); dn.addEventListener('click', function () { swapDest(tr, i, i + 1); rerender(); }); ctrls.appendChild(dn); }
+    if (tr.destinations.length > 1) { var rm = el('button', 'tc-seg2__rm', '×'); rm.type = 'button'; rm.setAttribute('aria-label', t('removeDestination')); rm.addEventListener('click', function () { tr.destinations.splice(i, 1); normalizeDestinations(tr); rerender(); }); ctrls.appendChild(rm); }
+    head.appendChild(ctrls);
+    card.appendChild(head);
+    // Per-segment booking status (Step D) — a DuLichCali ride attached to THIS segment.
+    var bst = segmentBookingStatus(state.trip, d.id);
+    if (bst === 'booked' || bst === 'user_approval_needed' || bst === 'planning') {
+      card.appendChild(el('span', 'tc-seg2__bk tc-seg2__bk--' + (bst === 'booked' ? 'booked' : 'pending'), '🚐 ' + t(bst === 'booked' ? 'segRideBooked' : 'segRidePending')));
+    }
+    // Dates → nights auto. Native date pickers commit on 'change' (focus loss is fine there).
+    var dates = el('div', 'tc-seg2__dates');
+    var aIn = tcDateInput(segArrival(d)), bIn = tcDateInput(segDeparture(d));
+    var nightsLbl = el('span', 'tc-seg2__nights');
+    function renderNights() { var n = segNights(d); nightsLbl.textContent = n > 0 ? (n + ' ' + (n === 1 ? t('nightOne') : t('nightMany'))) : t('sameDay'); }
+    function onDate() {
+      d.arrivalDate = aIn.value || ''; d.startDate = d.arrivalDate;
+      d.departureDate = bIn.value || ''; d.endDate = d.departureDate;
+      d.nights = segNights(d); renderNights(); refreshSummary && refreshSummary();
+    }
+    aIn.addEventListener('change', onDate); bIn.addEventListener('change', onDate);
+    dates.appendChild(field(t('arrivalDate'), aIn));
+    dates.appendChild(field(t('departureDate'), bIn));
+    card.appendChild(dates);
+    renderNights(); card.appendChild(nightsLbl);
+    // Collapsed: how you arrive + provider + overnight + notes.
+    var more = el('details', 'tc-seg2__more');
+    more.appendChild(el('summary', 'tc-seg2__moresum', t('segTransportDetails')));
+    var mb = el('div', 'tc-seg2__morebody');
+    mb.appendChild(el('span', 'tc-field__lbl', t('howArrive').replace('{city}', (d.city || '').trim() || t('thisStop'))));
+    mb.appendChild(seg(TRANSPORT_PREFS, d.transportPreference || 'any', 'tp_', function (v) { d.transportPreference = v; rerender(); }));
+    var prov = input(d.preferredProvider, t('providerPh')); prov.addEventListener('input', function () { d.preferredProvider = prov.value; });
+    mb.appendChild(field(t('preferredProvider'), prov));
+    var ovRow = el('label', 'tc-seg2__ov');
+    var ocb = doc.createElement('input'); ocb.type = 'checkbox'; ocb.checked = d.overnightStay !== false; ocb.addEventListener('change', function () { d.overnightStay = ocb.checked; });
+    ovRow.appendChild(ocb); ovRow.appendChild(el('span', null, t('overnightStay'))); mb.appendChild(ovRow);
+    var notes = input(d.notes, t('segNotesPh')); notes.addEventListener('input', function () { d.notes = notes.value; });
+    mb.appendChild(field(t('notes'), notes));
+    more.appendChild(mb); card.appendChild(more);
+    return card;
+  }
+  function journeySummaryStrip(tr) {
+    var strip = el('div', 'tc-jsummary');
+    var parts = journeySummary(tr);
+    if (!parts.length) { strip.appendChild(el('span', 'tc-jsummary__empty', t('journeyEmpty'))); return strip; }
+    parts.forEach(function (p, i) { if (i) strip.appendChild(el('span', 'tc-jsummary__sep', '·')); strip.appendChild(el('span', 'tc-jsummary__item', p)); });
+    var totalN = segments(tr).reduce(function (a, d) { return a + segNights(d); }, 0);
+    if (totalN > 0) {
+      var dr = deriveDateRange(tr), m = dr.match(/-\s*(\d{4}-\d{2}-\d{2})\s*$/), endIso = m ? m[1] : '';
+      var endLabel = endIso ? fmtSegDate(parseSegDate(endIso)) : '';
+      strip.appendChild(el('span', 'tc-jsummary__sep', '·'));
+      strip.appendChild(el('span', 'tc-jsummary__total', totalN + ' ' + (totalN === 1 ? t('nightOne') : t('nightMany')) + (endLabel ? ('  ·  ' + t('homeBy') + ' ' + endLabel) : '')));
+    }
+    return strip;
+  }
+  function journeyEditor(tr) {
+    var wrap = el('div', 'tc-journeyed');
+    var summaryHost = el('div', 'tc-jsummary-host');
+    function refreshSummary() { summaryHost.textContent = ''; summaryHost.appendChild(journeySummaryStrip(tr)); }
+    function rerender() {
+      wrap.textContent = '';
+      normalizeDestinations(tr);
+      summaryHost = el('div', 'tc-jsummary-host'); wrap.appendChild(summaryHost); refreshSummary();
+      var list = el('div', 'tc-seg2list');
+      tr.destinations.forEach(function (d, i) {
+        var fromCity = (i === 0) ? (tr.departureCity || t('homeOrigin')) : (((tr.destinations[i - 1] || {}).city || '').trim() || '…');
+        list.appendChild(transportLegRow(fromCity, (d.city || '').trim(), d.transportPreference, d.preferredProvider));
+        list.appendChild(segmentCard(tr, d, i, rerender, refreshSummary));
+      });
+      var lastCity = ((tr.destinations[tr.destinations.length - 1] || {}).city || '').trim();
+      list.appendChild(returnLegRow(tr, lastCity, rerender));
+      wrap.appendChild(list);
+      var add = el('button', 'tc-adddest', '+ ' + t('addSegment')); add.type = 'button';
+      add.addEventListener('click', function () { tr.destinations.push(newDestination(tr.destinations.length)); normalizeDestinations(tr); rerender(); });
+      wrap.appendChild(add);
+    }
+    rerender();
+    return wrap;
+  }
+
   // V2 STEP 1 — Trip basics ONLY: who/where/when + the vibe. AI infers everything else
   // (roles, hotels, transport, schedules, routes, return day). No roles, no hotel forms.
   function renderCreate() {
@@ -2663,14 +2837,22 @@
     var s = el('section', 'tc-screen'); s.appendChild(stepHeader(1));
     s.appendChild(el('h2', 'tc-screen__title', t('createTitle')));
     s.appendChild(el('p', 'tc-screen__sub', t('createSubV2')));
-    // Progressive disclosure — only the 3 essentials show first: Origin · Destination(s) · Dates.
+    // Journey Builder: Home → Segment 1…N → Return. Origin first, then per-stop dates/transport.
     var dep = input(tr.departureCity, 'San Jose, CA'); dep.addEventListener('input', function () { tr.departureCity = dep.value; });
-    s.appendChild(field(t('originLabel'), dep));
-    s.appendChild(el('span', 'tc-field__lbl', t('destinations')));
-    s.appendChild(el('p', 'tc-hint', t('destHintV2')));
-    s.appendChild(destinationsEditor(tr));
+    s.appendChild(field('🏠 ' + t('originLabel'), dep));
+    s.appendChild(el('span', 'tc-field__lbl', t('journeyLabel')));
+    s.appendChild(el('p', 'tc-hint', t('journeyHint')));
+    s.appendChild(journeyEditor(tr));
+    // Quick entry — one date range for the whole trip (used only when no per-segment dates are set;
+    // the AI then splits the nights). Per-segment dates always win.
+    var quick = el('details', 'tc-create__quick');
+    quick.appendChild(el('summary', 'tc-create__quicksum', t('quickEntry')));
+    var qb = el('div', 'tc-create__quickbody');
+    qb.appendChild(el('p', 'tc-hint', t('quickEntryHint')));
     var dates = input(tr.dateRange, 'Jul 2–5, 2026'); dates.addEventListener('input', function () { tr.dateRange = dates.value; });
-    s.appendChild(field(t('dates'), dates));
+    qb.appendChild(field(t('dates'), dates));
+    quick.appendChild(qb);
+    s.appendChild(quick);
     // Everything else is optional and AI-defaulted (budget Moderate / balanced pace) — collapsed.
     var more = el('details', 'tc-create__more');
     if (state._createMoreOpen) more.open = true;
@@ -5386,6 +5568,24 @@
   // General DuLichCali service INQUIRY (no payment — a draft handoff to the existing ride flow):
   // kind = ride | van_transfer | tour | airport_pickup. Reuses sessionStorage → /airport →
   // RideIntake.openWithPrefill. airport_pickup opens the pickup form; others open the ride form.
+  // Stable segment id for a city (Step D): a ride/booking attaches to the SEGMENT it arrives
+  // at, so it survives a later reorder/rename (legKey is positional and would break). The leg
+  // home maps to 'return'. Empty when the city isn't a stop.
+  function segmentIdForCity(tr, city) {
+    var c = String(city || '').trim().toLowerCase(); if (!tr || !c) return '';
+    var hit = (tr.destinations || []).filter(function (d) { return (d.city || '').trim().toLowerCase() === c; })[0];
+    if (hit) return hit.id || '';
+    if (String(tr.departureCity || '').trim().toLowerCase() === c) return 'return';
+    return '';
+  }
+  // Per-segment transport/booking status for the journey UI: a confirmed/pending DuLichCali ride
+  // attached to this segment, else the transportStatus mirror. '' = nothing yet.
+  function segmentBookingStatus(tr, segId) {
+    if (!tr || !segId) return '';
+    var bk = (tr.bookings || []).filter(function (b) { return b.type === 'ride' && b.segmentId === segId; })[0];
+    if (bk) return bk.bookingStatus === 'booked' ? 'booked' : 'user_approval_needed';
+    return (tr.transportStatus || {})[segId] || '';
+  }
   function requestDlcInquiry(opts) {
     opts = opts || {};
     var tr = state.trip, ks = groupKidsSeniors();
@@ -5398,6 +5598,7 @@
     if (ks.kids) noteBits.push(ks.kids + ' ' + t('childrenLabel').toLowerCase());
     if (ks.seniors) noteBits.push(ks.seniors + ' ' + t('seniors').toLowerCase());
     var legRef = opts.legRef || ((pickup || '') + '→' + (dropoff || ''));
+    var segmentId = opts.segmentId || segmentIdForCity(tr, dropoff) || ''; // attach to the arrival segment
     var returnUrl = '/travel-concierge?trip=' + encodeURIComponent(tr.id || '');
     try { returnUrl = root.location.origin + returnUrl; } catch (e) {}
     var draft = {
@@ -5407,7 +5608,7 @@
       passengers: totalTravelers(), customerName: '', customerPhone: '',
       notes: noteBits.join(' · '),
       // Clean handoff contract → ride-intake emits a result + returns to returnUrl; TC reconciles it.
-      tripId: tr.id || '', tripName: tr.groupName || '', legRef: legRef, legKey: opts.legKey || '',
+      tripId: tr.id || '', tripName: tr.groupName || '', legRef: legRef, legKey: opts.legKey || '', segmentId: segmentId,
       transportMode: opts.mode || (kind === 'van_transfer' ? 'dlc_ride' : 'ride'), luggage: opts.luggage || '',
       familyId: (typeof getMe === 'function' ? (getMe() || '') : ''), returnUrl: returnUrl, source: 'travel_concierge',
     };
@@ -5431,8 +5632,12 @@
       provider: 'DuLichCali', bookingStatus: requested ? 'user_approval_needed' : 'booked', confirmationNumber: res.bookingId,
       priceRange: res.priceEstimate || '', recommendedOption: res.route || '', selectedOption: res.mode || 'dlc_ride',
       notes: res.route || '', bookedBy: (typeof getMe === 'function' ? (getMe() || '') : ''), dataSource: 'dlc_ride_booking',
+      segmentId: res.segmentId || '', // Step D: stable attachment to the segment (survives reorder/rename)
     }));
-    if (res.legKey) { tr.transportStatus = tr.transportStatus || {}; tr.transportStatus[res.legKey] = requested ? 'planning' : 'booked'; }
+    // Mark transport status by stable segmentId (primary) AND legKey (back-compat).
+    tr.transportStatus = tr.transportStatus || {};
+    if (res.segmentId) tr.transportStatus[res.segmentId] = requested ? 'planning' : 'booked';
+    if (res.legKey) tr.transportStatus[res.legKey] = requested ? 'planning' : 'booked';
     var amt = parseInt(String(res.priceEstimate || '').replace(/[^\d]/g, ''), 10) || 0;
     if (amt) costLedger(tr).push({ id: uid('cl'), familyId: (typeof getMe === 'function' ? (getMe() || '') : ''), title: t('rideBookingTitle') + (res.route ? (' (' + res.route + ')') : ''), amount: amt, paid: false, notes: 'DuLichCali', createdAt: new Date().toISOString() });
     tr.notes = tr.notes || [];
@@ -6558,7 +6763,7 @@
   function loadSharedTrip(id) {
     loadTrip(id).then(function (tr) {
       if (tr && tr.deleted === true) { toast(t('tripDeleted')); goDashboard(); return; }
-      if (tr && tr.plan) { state.trip = tr; normalizeDestinations(state.trip); state.trip._demo = false; state.readonly = false; state.screen = 'plan'; state.activeTab = 'itinerary'; try { reconcileRideResult(state.trip); } catch (e) {} resolveMyRole().then(function (role) { if (role && role !== 'owner') rememberJoinedTrip(id); else { try { learnFromTrip(state.trip); } catch (e) {} } render(); }); }
+      if (tr && tr.plan) { state.trip = tr; normalizeDestinations(state.trip); try { migrateLegacyTripToSegments(state.trip); } catch (e) {} state.trip._demo = false; state.readonly = false; state.screen = 'plan'; state.activeTab = 'itinerary'; try { reconcileRideResult(state.trip); } catch (e) {} resolveMyRole().then(function (role) { if (role && role !== 'owner') rememberJoinedTrip(id); else { try { learnFromTrip(state.trip); } catch (e) {} } render(); }); }
       else { newTrip(); state.screen = 'hero'; render(); }
     });
   }
@@ -6617,7 +6822,10 @@
     _renderJourney: renderJourney, _journeyNodeCard: journeyNodeCard, _nodeIcon: nodeIcon,
     _interpretCommand: interpretCommand, _applyEditPlan: applyEditPlan, _commandBar: commandBar, _editPlanPreview: editPlanPreview, _resolveNodeByName: resolveNodeByName, _opLine: opLine,
     _emptyMemory: emptyMemory, _memUnion: memUnion, _normalizeMemory: normalizeMemory, _loadTravelMemory: loadTravelMemory, _saveTravelMemory: saveTravelMemory, _clearTravelMemory: clearTravelMemory, _learnFromTrip: learnFromTrip, _applyMemoryToNewTrip: applyMemoryToNewTrip, _hasTravelMemory: hasTravelMemory, _memoryPanel: memoryPanel,
-    _segments: segments, _segArrival: segArrival, _segDeparture: segDeparture, _parseSegDate: parseSegDate, _segNights: segNights, _nightsBetween: nightsBetween, _deriveDateRange: deriveDateRange, _buildSegmentDayPlan: buildSegmentDayPlan, _journeySummary: journeySummary, _isoOfDate: isoOfDate };
+    _segments: segments, _segArrival: segArrival, _segDeparture: segDeparture, _parseSegDate: parseSegDate, _segNights: segNights, _nightsBetween: nightsBetween, _deriveDateRange: deriveDateRange, _buildSegmentDayPlan: buildSegmentDayPlan, _journeySummary: journeySummary, _isoOfDate: isoOfDate,
+    _journeyEditor: journeyEditor, _segmentCard: segmentCard, _journeySummaryStrip: journeySummaryStrip, _transportLegRow: transportLegRow, _returnLegRow: returnLegRow, _renderCreate: renderCreate, _TRANSPORT_PREFS: TRANSPORT_PREFS,
+    _deterministicSkeleton: deterministicSkeleton, _runLegDaysFromSkeleton: runLegDaysFromSkeleton, _generateMultiLegPlan: generateMultiLegPlan,
+    _segmentIdForCity: segmentIdForCity, _segmentBookingStatus: segmentBookingStatus, _migrateLegacyTripToSegments: migrateLegacyTripToSegments };
 
   if (doc.readyState === 'loading') doc.addEventListener('DOMContentLoaded', init); else init();
 })(typeof window !== 'undefined' ? window : this);

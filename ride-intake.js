@@ -1767,7 +1767,7 @@ window.RideIntake = (function () {
       try {
         var fromL = (_lastOrigin || h.pickup || ''), toL = (_lastDest || h.dropoff || '');
         var result = {
-          tripId: h.tripId, legKey: h.legKey || '', legRef: h.legRef || '',
+          tripId: h.tripId, legKey: h.legKey || '', legRef: h.legRef || '', segmentId: h.segmentId || '',
           bookingId: bookingId, confirmationId: bookingId,
           status: pendingReview ? 'requested' : 'booked', vendor: 'DuLichCali',
           mode: h.transportMode || 'dlc_ride', pickup: fromL, dropoff: toL,

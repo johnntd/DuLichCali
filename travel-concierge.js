@@ -4080,21 +4080,50 @@
   }
   // Shallow copy + city merge — never mutate the source attraction/highlight object.
   function ovWithCity(o, city) { var p = {}; for (var k in o) { if (Object.prototype.hasOwnProperty.call(o, k)) p[k] = o[k]; } if (!p.city) p.city = city; return p; }
-  // Compact, image-first Highlights card. Real photo via placeMedia (honest fallback otherwise).
-  // Tap opens the existing detail modal — no duplicated detail logic.
+  // ── V5 large photo-first card shared bits ──
+  // Floating glass badge from tier. very_high/high → Must See (gold); medium → Top Pick; else none.
+  function ovTierBadge(tier) { if (tier === 'very_high' || tier === 'high') return { label: t('mustSee'), gold: true }; if (tier === 'medium') return { label: t('topPick'), gold: false }; return null; }
+  // Dotted meta line from EXISTING facts only — never fabricate rating/price/duration.
+  function ovCardMeta(a) {
+    var parts = [];
+    var rt = a.rating; if (rt != null && /^[\d.]+$/.test(String(rt))) parts.push('⭐ ' + rt);
+    var dur = a.duration || a.estimatedDuration || a.timeNeeded; if (dur) parts.push('⏱ ' + dur);
+    if (a.ticketed) parts.push('🎟 ' + t('ticketed'));
+    else if (a.ageFit) parts.push(t('fit_' + a.ageFit) || a.ageFit);
+    if (!parts.length) return null;
+    var m = el('div', 'tc-ov-card__meta');
+    parts.forEach(function (p, i) { if (i) m.appendChild(el('span', 'tc-ov-card__dot', '·')); m.appendChild(el('span', null, p)); });
+    return m;
+  }
+  function ovLinkLabel(m) {
+    return ({ official_site: 'Official ↗', youtube_search: '▶ YouTube', map: 'Maps', menu: 'Menu', google_reviews: 'Reviews', yelp_reviews: 'Yelp', tripadvisor: 'Tripadvisor', ticket: '🎟 Tickets', photos: '📷 Photos' })[m.type] || m.title || 'Link';
+  }
+  // Compact real-link row (up to 3): prefers Official / YouTube / Maps; honest search links only.
+  function ovCardLinks(item, type, city) {
+    var row = el('div', 'tc-ov-card__links');
+    var media = (root.TCMedia ? root.TCMedia.build(item, type, city) : []);
+    var picked = [], want = ['official_site', 'youtube_search', 'map', 'menu', 'google_reviews'];
+    want.forEach(function (ty) { if (picked.length < 3) { var m = media.filter(function (x) { return x.type === ty; })[0]; if (m && picked.indexOf(m) === -1) picked.push(m); } });
+    media.forEach(function (m) { if (picked.length < 3 && picked.indexOf(m) === -1) picked.push(m); });
+    picked.forEach(function (m) { if (m && m.url) { var a = el('a', 'tc-ov-card__lnk' + (m.type === 'youtube_search' ? ' tc-ov-card__lnk--yt' : ''), ovLinkLabel(m)); a.href = m.url; a.target = '_blank'; a.rel = 'noopener'; row.appendChild(a); } });
+    return row;
+  }
+  // Large, photo-first Highlights card (the soul of the page). Real photo via placeMedia (honest
+  // fallback). Floating Must-See/Top-Pick glass badge, dotted meta (facts only), why, real links.
+  // Card-body tap → detail modal; tapping a link opens that link (guarded so both don't fire).
   function ovHighlightCard(a, city) {
-    var c = el('article', 'tc-ov-card');
-    c.appendChild(placeMedia(a, 'tc-ov-card__media'));
+    var c = el('article', 'tc-ov-card tc-ov-card--lg');
+    var media = placeMedia(a, 'tc-ov-card__media');
+    var bdg = ovTierBadge(a.tier);
+    if (bdg) { var b = el('span', 'tc-ov-card__badge' + (bdg.gold ? ' tc-ov-card__badge--gold' : '')); b.textContent = bdg.label; media.appendChild(b); }
+    c.appendChild(media);
     var body = el('div', 'tc-ov-card__body');
-    if (a.tier) body.appendChild(el('span', 'tc-ov-card__tier tc-attr__tier--' + a.tier, t('tier_' + a.tier) || ''));
     body.appendChild(el('strong', 'tc-ov-card__name', a.name));
+    var meta = ovCardMeta(a); if (meta) body.appendChild(meta);
     if (a.why) body.appendChild(el('p', 'tc-ov-card__why', a.why));
-    var foot = el('div', 'tc-ov-card__foot');
-    if (a.ticketed) foot.appendChild(el('span', 'tc-ov-card__tix', '🎟 ' + t('ticketed')));
-    if (a.ageFit) foot.appendChild(el('span', 'tc-ov-card__fit', t('fit_' + a.ageFit) || a.ageFit));
-    if (foot.children.length) body.appendChild(foot);
+    body.appendChild(ovCardLinks(a, 'attraction', city));
     c.appendChild(body);
-    c.addEventListener('click', function () { try { openPlaceModal(ovWithCity(a, city)); } catch (e) {} });
+    c.addEventListener('click', function (e) { if (e.target && e.target.closest && e.target.closest('a')) return; try { openPlaceModal(ovWithCity(a, city)); } catch (err) {} });
     return c;
   }
   // One compact day row: Day N · city · up to 3 headline place chips. Tap → Itinerary at day i.
@@ -4119,14 +4148,18 @@
   // Image-first discovery card from a liveHighlights entry. Real image via placeMedia; honest
   // fallback otherwise. Tap opens the existing detail modal (search links live inside it).
   function ovDiscoveryCard(x) {
-    var c = el('article', 'tc-ov-card tc-ov-card--disc');
-    c.appendChild(placeMedia(x, 'tc-ov-card__media'));
+    var c = el('article', 'tc-ov-card tc-ov-card--lg tc-ov-card--disc');
+    var media = placeMedia(x, 'tc-ov-card__media');
+    var bd = el('span', 'tc-ov-card__badge'); bd.textContent = liveCatIcon(x.category) + ' ' + (x.category ? String(x.category).replace(/_/g, ' ') : t('ovDiscoveries'));
+    media.appendChild(bd);
+    c.appendChild(media);
     var body = el('div', 'tc-ov-card__body');
-    body.appendChild(el('span', 'tc-ov-card__tier', liveCatIcon(x.category) + ' ' + (x.category ? String(x.category).replace(/_/g, ' ') : '')));
     body.appendChild(el('strong', 'tc-ov-card__name', x.name || ''));
+    var meta = ovCardMeta(x); if (meta) body.appendChild(meta);
     if (x.note || x.why) body.appendChild(el('p', 'tc-ov-card__why', x.note || x.why));
+    body.appendChild(ovCardLinks(x, mediaTypeForPlace(x), x.city || ''));
     c.appendChild(body);
-    c.addEventListener('click', function () { try { openPlaceModal(ovWithCity(x, '')); } catch (e) {} });
+    c.addEventListener('click', function (e) { if (e.target && e.target.closest && e.target.closest('a')) return; try { openPlaceModal(ovWithCity(x, '')); } catch (err) {} });
     return c;
   }
   function renderOverview(plan) {

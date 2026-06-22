@@ -3964,8 +3964,59 @@
       }
       bar.appendChild(abBtn('⋯', t('moreActions'), function () { openMoreSheet(); }));
       s.appendChild(bar);
+      // Floating AI Concierge — available on every tab (lives on the plan-screen container, not
+      // the tab body). Editable, non-demo trips only (mirrors the command-bar's own gating).
+      if (!state.readonly && plan && Array.isArray(plan.days) && plan.days.length) s.appendChild(conciergeFab(tr));
     }
     return s;
+  }
+  // Floating concierge entry point. Opens a sheet whose quick-intent chips + free-text input
+  // drive the SAME engine the Journey tab uses (interpretCommand → editPlanPreview → applyEditPlan).
+  // Results render on the Journey tab (where the preview/apply UI already lives), so there is no
+  // stale detached state. No new AI path.
+  function conciergeFab(tr) {
+    var fab = el('button', 'tc-ov-fab'); fab.type = 'button';
+    fab.setAttribute('aria-label', t('ovConcierge'));
+    fab.appendChild(el('span', 'tc-ov-fab__ic', '🤖'));
+    fab.appendChild(el('span', 'tc-ov-fab__lbl', t('ovConcierge')));
+    fab.addEventListener('click', function () { openConciergeSheet(tr); });
+    return fab;
+  }
+  function closeConciergeSheet() { var s = doc.querySelector('.tc-ov-sheet'); if (s && s.parentNode) s.parentNode.removeChild(s); }
+  // Run an utterance through the existing engine, surfacing the preview on the Journey tab.
+  function runConcierge(tr, utterance) {
+    var u = (utterance || '').trim(); if (!u) return;
+    closeConciergeSheet();
+    state.activeTab = 'journey'; state._cmdBusy = true; state._editPlan = null; render();
+    interpretCommand(tr, u).then(function (pl) { state._cmdBusy = false; state._editPlan = (pl && pl.ok) ? pl : { error: true }; render(); });
+  }
+  function openConciergeSheet(tr) {
+    if (doc.querySelector('.tc-ov-sheet')) return;
+    var ov = el('div', 'tc-ov-sheet');
+    var card = el('div', 'tc-ov-sheet__card');
+    var head = el('div', 'tc-ov-sheet__head');
+    head.appendChild(el('strong', 'tc-ov-sheet__t', '🤖 ' + t('ovConcierge')));
+    var x = el('button', 'tc-ov-sheet__x', '✕'); x.type = 'button';
+    x.addEventListener('click', closeConciergeSheet); head.appendChild(x);
+    card.appendChild(head);
+    var quick = el('div', 'tc-ov-sheet__quick');
+    ['ovAskOptimize', 'ovAskGems', 'ovAskBook'].forEach(function (k) {
+      var qb = el('button', 'tc-ov-sheet__chip', t(k)); qb.type = 'button';
+      qb.addEventListener('click', function () { runConcierge(tr, t(k)); });
+      quick.appendChild(qb);
+    });
+    card.appendChild(quick);
+    var row = el('div', 'tc-ov-sheet__row');
+    var ci = input('', t('cmdPh')); ci.className = 'tc-input tc-ov-sheet__in';
+    var go = el('button', 'tc-ov-sheet__go', '✨ ' + t('cmdGo')); go.type = 'button';
+    go.addEventListener('click', function () { runConcierge(tr, ci.value); });
+    ci.addEventListener('keydown', function (e) { if (e.key === 'Enter') runConcierge(tr, ci.value); });
+    row.appendChild(ci); row.appendChild(go);
+    card.appendChild(row);
+    ov.appendChild(card);
+    ov.addEventListener('click', function (e) { if (e.target === ov) closeConciergeSheet(); });
+    doc.body.appendChild(ov);
+    try { ci.focus(); } catch (e) {}
   }
   function abBtn(icon, label, fn) { var b = el('button', 'tc-actionbar__btn'); b.type = 'button'; b.appendChild(el('span', 'tc-actionbar__ic', icon)); b.appendChild(el('span', 'tc-actionbar__lbl', label)); b.addEventListener('click', fn); return b; }
   function researchBanner(msgKey) { var b = el('div', 'tc-researching'); b.appendChild(el('span', 'tc-researching__dot')); b.appendChild(el('span', 'tc-researching__msg', t(msgKey))); return b; }

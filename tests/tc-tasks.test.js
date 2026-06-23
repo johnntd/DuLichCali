@@ -74,5 +74,14 @@ ok('unassigned tracked separately', mc.unassigned === 30);
 ok('total sums all costs', mc.total === 380);
 ok('member with no cost omitted', mc.perMember.every(function (r) { return r.owed > 0; }));
 
+// priceRange fallback (real bookings often have only a "$lo–$hi (est.)" range, no actual/estimate):
+// uses the LOW end conservatively.
+var mc2 = T.memberCosts([
+  { priceRange: '$80–$120 (est.)', assignedToMember: 'm3' },     // Khoa owes the low end → 80
+  { actualCost: '40', priceRange: '$999', assignedToMember: 'm1' }, // actual wins over priceRange → 40
+], famsM);
+ok('priceRange low end used when no actual/estimate', mc2.perMember.filter(function (x) { return x.id === 'm3'; })[0].owed === 80);
+ok('actualCost still wins over priceRange', mc2.perMember.filter(function (x) { return x.id === 'm1'; })[0].owed === 40);
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

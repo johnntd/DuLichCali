@@ -186,7 +186,7 @@
       progTransport: 'Transport', progHotels: 'Hotels', progTickets: 'Tickets', progActivities: 'Activities', progFood: 'Food',
       warnHotelFirst: 'Book the hotel in {city} before its tickets & activities.', warnBookSoon: '{title} — book soon, it may sell out.', warnReturnMissing: 'Your trip home is still missing — add the return transport.', warnUnscheduled: '{n} item(s) not yet placed in your trip.',
       depMapTitle: 'Dependency map', depMapSub: 'What depends on what — the order to lock things in',
-      pri_P0: 'P0 · Urgent', pri_P1: 'P1', pri_P2: 'P2', taskUnassigned: 'Unassigned', taskDue: 'Due date', taskCost: 'Est. cost', taskBook: 'Book', taskConfirmRide: 'Confirm ride', taskChoose: 'Choose/vote', taskActual: 'Actual cost', taskPaidBy: 'Paid by', taskPaidByNone: 'Not paid', taskBalanceTitle: 'Per-family balance', taskOwed: 'owed', taskOwes: 'owes', taskAhead: 'ahead', taskPaidTotal: 'Total paid', taskRemaining: 'remaining', tf_all: 'All', tf_urgent: 'Urgent', tf_mine: 'My tasks', tf_unpaid: 'Unpaid', tf_bookings: 'Bookings', tf_done: 'Completed',
+      pri_P0: 'P0 · Urgent', pri_P1: 'P1', pri_P2: 'P2', taskUnassigned: 'Unassigned', taskDue: 'Due date', taskCost: 'Est. cost', taskBook: 'Book', taskConfirmRide: 'Confirm ride', taskChoose: 'Choose/vote', taskActual: 'Actual cost', taskPaidBy: 'Paid by', taskPaidByNone: 'Not paid', taskBalanceTitle: 'Per-family balance', taskOwed: 'owed', taskOwes: 'owes', taskAhead: 'ahead', taskPaidTotal: 'Total paid', taskRemaining: 'remaining', taskWholeFamily: 'Whole family', memberCostTitle: 'Per-person owed', memberCostUnassigned: 'Unassigned (no person yet)', tf_all: 'All', tf_urgent: 'Urgent', tf_mine: 'My tasks', tf_unpaid: 'Unpaid', tf_bookings: 'Bookings', tf_done: 'Completed',
       // Shared trip access (invite link + passcode + roles)
       shareTrip: 'Share Trip', shareModalTitle: 'Invite your group', shareLinkLabel: 'Trip link', sharePasscodeLabel: 'Passcode', copyPasscode: 'Copy passcode', passcodeCopied: 'Passcode copied!',
       regeneratePasscode: 'Regenerate link + passcode', shareRegenWarn: 'This creates a new link and passcode; the old ones stop working.', disableSharing: 'Disable sharing', enableSharing: 'Enable sharing', sharingDisabled: 'Sharing is currently OFF.', shareGenerating: 'Creating secure invite…',
@@ -474,7 +474,7 @@
       progTransport: 'Di chuyển', progHotels: 'Khách sạn', progTickets: 'Vé', progActivities: 'Hoạt động', progFood: 'Ẩm thực',
       warnHotelFirst: 'Đặt khách sạn ở {city} trước khi mua vé & hoạt động.', warnBookSoon: '{title} — nên đặt sớm, có thể hết chỗ.', warnReturnMissing: 'Chưa có chuyến về — hãy thêm phương tiện trở về.', warnUnscheduled: '{n} mục chưa được xếp vào chuyến đi.',
       depMapTitle: 'Sơ đồ phụ thuộc', depMapSub: 'Việc gì phụ thuộc việc gì — thứ tự cần chốt',
-      pri_P0: 'P0 · Khẩn', pri_P1: 'P1', pri_P2: 'P2', taskUnassigned: 'Chưa giao', taskDue: 'Hạn chót', taskCost: 'Chi phí ước tính', taskBook: 'Đặt', taskConfirmRide: 'Xác nhận xe', taskChoose: 'Chọn/bình chọn', taskActual: 'Chi phí thực tế', taskPaidBy: 'Người trả', taskPaidByNone: 'Chưa trả', taskBalanceTitle: 'Số dư theo gia đình', taskOwed: 'nợ', taskOwes: 'còn nợ', taskAhead: 'trả dư', taskPaidTotal: 'Tổng đã trả', taskRemaining: 'còn lại', tf_all: 'Tất cả', tf_urgent: 'Khẩn', tf_mine: 'Của tôi', tf_unpaid: 'Chưa trả', tf_bookings: 'Đặt chỗ', tf_done: 'Hoàn tất',
+      pri_P0: 'P0 · Khẩn', pri_P1: 'P1', pri_P2: 'P2', taskUnassigned: 'Chưa giao', taskDue: 'Hạn chót', taskCost: 'Chi phí ước tính', taskBook: 'Đặt', taskConfirmRide: 'Xác nhận xe', taskChoose: 'Chọn/bình chọn', taskActual: 'Chi phí thực tế', taskPaidBy: 'Người trả', taskPaidByNone: 'Chưa trả', taskBalanceTitle: 'Số dư theo gia đình', taskOwed: 'nợ', taskOwes: 'còn nợ', taskAhead: 'trả dư', taskPaidTotal: 'Tổng đã trả', taskRemaining: 'còn lại', taskWholeFamily: 'Cả gia đình', memberCostTitle: 'Chi phí theo từng người', memberCostUnassigned: 'Chưa giao (chưa có người)', tf_all: 'Tất cả', tf_urgent: 'Khẩn', tf_mine: 'Của tôi', tf_unpaid: 'Chưa trả', tf_bookings: 'Đặt chỗ', tf_done: 'Hoàn tất',
       shareTrip: 'Chia sẻ chuyến đi', shareModalTitle: 'Mời nhóm của bạn', shareLinkLabel: 'Liên kết chuyến đi', sharePasscodeLabel: 'Mật mã', copyPasscode: 'Sao chép mật mã', passcodeCopied: 'Đã sao chép mật mã!',
       regeneratePasscode: 'Tạo lại liên kết + mật mã', shareRegenWarn: 'Việc này tạo liên kết và mật mã mới; cái cũ sẽ ngừng hoạt động.', disableSharing: 'Tắt chia sẻ', enableSharing: 'Bật chia sẻ', sharingDisabled: 'Chia sẻ hiện đang TẮT.', shareGenerating: 'Đang tạo lời mời an toàn…',
       sharePermInfo: 'Bất kỳ ai có liên kết VÀ mật mã đều có thể đăng nhập để xem, bình chọn, đề xuất và thêm gia đình. Chỉ bạn mới có thể sửa chuyến đi, duyệt đề xuất và quản lý thành viên. Không ai xóa được chuyến đi hay mua hàng.',
@@ -761,7 +761,7 @@
       progTransport: 'Transporte', progHotels: 'Hoteles', progTickets: 'Entradas', progActivities: 'Actividades', progFood: 'Comida',
       warnHotelFirst: 'Reserva el hotel en {city} antes de sus entradas y actividades.', warnBookSoon: '{title} — reserva pronto, puede agotarse.', warnReturnMissing: 'Falta tu viaje de regreso — añade el transporte de vuelta.', warnUnscheduled: '{n} elemento(s) aún sin ubicar en tu viaje.',
       depMapTitle: 'Mapa de dependencias', depMapSub: 'Qué depende de qué — el orden para confirmar',
-      pri_P0: 'P0 · Urgente', pri_P1: 'P1', pri_P2: 'P2', taskUnassigned: 'Sin asignar', taskDue: 'Fecha límite', taskCost: 'Costo est.', taskBook: 'Reservar', taskConfirmRide: 'Confirmar transporte', taskChoose: 'Elegir/votar', taskActual: 'Costo real', taskPaidBy: 'Pagado por', taskPaidByNone: 'Sin pagar', taskBalanceTitle: 'Saldo por familia', taskOwed: 'debe', taskOwes: 'debe', taskAhead: 'a favor', taskPaidTotal: 'Total pagado', taskRemaining: 'restante', tf_all: 'Todo', tf_urgent: 'Urgente', tf_mine: 'Mías', tf_unpaid: 'Sin pagar', tf_bookings: 'Reservas', tf_done: 'Completadas',
+      pri_P0: 'P0 · Urgente', pri_P1: 'P1', pri_P2: 'P2', taskUnassigned: 'Sin asignar', taskDue: 'Fecha límite', taskCost: 'Costo est.', taskBook: 'Reservar', taskConfirmRide: 'Confirmar transporte', taskChoose: 'Elegir/votar', taskActual: 'Costo real', taskPaidBy: 'Pagado por', taskPaidByNone: 'Sin pagar', taskBalanceTitle: 'Saldo por familia', taskOwed: 'debe', taskOwes: 'debe', taskAhead: 'a favor', taskPaidTotal: 'Total pagado', taskRemaining: 'restante', taskWholeFamily: 'Toda la familia', memberCostTitle: 'Adeudado por persona', memberCostUnassigned: 'Sin asignar (sin persona aún)', tf_all: 'Todo', tf_urgent: 'Urgente', tf_mine: 'Mías', tf_unpaid: 'Sin pagar', tf_bookings: 'Reservas', tf_done: 'Completadas',
       shareTrip: 'Compartir viaje', shareModalTitle: 'Invita a tu grupo', shareLinkLabel: 'Enlace del viaje', sharePasscodeLabel: 'Código', copyPasscode: 'Copiar código', passcodeCopied: '¡Código copiado!',
       regeneratePasscode: 'Regenerar enlace + código', shareRegenWarn: 'Esto crea un nuevo enlace y código; los anteriores dejan de funcionar.', disableSharing: 'Desactivar', enableSharing: 'Activar', sharingDisabled: 'El compartir está DESACTIVADO.', shareGenerating: 'Creando invitación segura…',
       sharePermInfo: 'Cualquiera con el enlace Y el código puede iniciar sesión para ver, votar, sugerir y añadir su familia. Solo tú puedes editar el viaje, aprobar sugerencias y gestionar miembros. Nadie puede eliminar el viaje ni hacer compras.',
@@ -3946,6 +3946,10 @@
     return s;
   }
   function famName(id) { var f = tripFamilies().filter(function (x) { return x.id === id; })[0]; return f ? f.name : ''; }
+  // V6 member roster helpers (per-member task assignment + cost rollup).
+  function famMembers(famId) { var f = ((state.trip && state.trip.families) || []).filter(function (x) { return x.id === famId; })[0]; return (f && Array.isArray(f.members)) ? f.members : []; }
+  function memberName(memId) { var n = ''; ((state.trip && state.trip.families) || []).forEach(function (f) { (f.members || []).forEach(function (m) { if (m && m.id === memId) n = m.name || ''; }); }); return n; }
+  function tripFamiliesWithMembers() { return ((state.trip && state.trip.families) || []).map(function (f, i) { return { id: f.id || ('f' + i), name: (f.name || '').trim() || ('#' + (i + 1)), members: Array.isArray(f.members) ? f.members : [] }; }); }
   function accountRow() {
     var u = realUser(); if (!u) return null;
     var r = el('div', 'tc-acct');
@@ -7532,6 +7536,20 @@
         });
         var totRow = el('div', 'tc-costrow'); totRow.appendChild(el('span', 'tc-costrow__k', t('taskPaidTotal'))); totRow.appendChild(el('strong', 'tc-costrow__v', money(_bal.totalPaid) + ' · ' + t('taskRemaining') + ' ' + money(_bal.remaining))); wrap.appendChild(totRow);
       }
+      // Per-MEMBER owed (V6): named-person rollup — a member-assigned task is owed in full; a
+      // family-assigned task with a named roster splits equally among that family's members.
+      // Honest estimate (actual → estimate → priceRange low); shown only when members are named.
+      var _mc = root.TCTasks.memberCosts(tr.bookings, tripFamiliesWithMembers());
+      if (_mc.perMember.length) {
+        wrap.appendChild(el('strong', 'tc-costs__h', t('memberCostTitle')));
+        _mc.perMember.forEach(function (pm) {
+          var row = el('div', 'tc-costrow');
+          row.appendChild(el('span', 'tc-costrow__k', '🙋 ' + pm.name + (pm.familyName ? ' · ' + pm.familyName : '')));
+          row.appendChild(el('strong', 'tc-costrow__v', money(pm.owed)));
+          wrap.appendChild(row);
+        });
+        if (_mc.unassigned > 0) { var _ur = el('div', 'tc-costrow'); _ur.appendChild(el('span', 'tc-costrow__k', t('memberCostUnassigned'))); _ur.appendChild(el('span', 'tc-costrow__v', money(_mc.unassigned))); wrap.appendChild(_ur); }
+      }
     }
     // Who paid / owes ledger
     wrap.appendChild(el('strong', 'tc-costs__h', t('costLedgerTitle')));
@@ -7826,6 +7844,7 @@
     var cost = b.actualCost || b.costEstimate || b.priceRange;
     if (cost) meta.appendChild(el('span', 'tc-na__chip', '💵 ' + (b.actualCost ? '' : '~') + String(cost).replace(/^\$?/, '$')));
     if (b.assignedToFamily) { var fam = famName(b.assignedToFamily); if (fam) meta.appendChild(el('span', 'tc-na__chip', '👤 ' + fam)); }
+    if (b.assignedToMember) { var _mn = memberName(b.assignedToMember); if (_mn) meta.appendChild(el('span', 'tc-na__chip', '🙋 ' + _mn)); }
     c.appendChild(meta);
     if (!state.readonly && !tr._demo) {
       var acts = el('div', 'tc-na__acts');
@@ -8029,8 +8048,20 @@
       });
       ctrls.appendChild(ssel);
       var _fam = selectFrom([''].concat(tripFamilies().map(function (f) { return f.id; })), b.assignedToFamily || '', function (id) { if (!id) return t('taskUnassigned'); var ff = tripFamilies().filter(function (x) { return x.id === id; })[0]; return ff ? (ff.name || t('taskUnassigned')) : id; });
-      _fam.className = 'tc-input'; _fam.addEventListener('change', function () { b.assignedToFamily = _fam.value; saveTrip(tr); if (_fam.value) tcNotifyTask('assigned', b.title, famName(_fam.value)); render(); });
+      _fam.className = 'tc-input'; _fam.addEventListener('change', function () {
+        b.assignedToFamily = _fam.value;
+        // A member assignment only makes sense within the chosen family — drop it on a family change.
+        if (b.assignedToMember && !famMembers(_fam.value).some(function (m) { return m.id === b.assignedToMember; })) b.assignedToMember = '';
+        saveTrip(tr); if (_fam.value) tcNotifyTask('assigned', b.title, famName(_fam.value)); render();
+      });
       ctrls.appendChild(_fam);
+      // Per-MEMBER assignment within the chosen family (only when that family has a named roster).
+      var _famMems = b.assignedToFamily ? famMembers(b.assignedToFamily) : [];
+      if (_famMems.length) {
+        var _mem = selectFrom([''].concat(_famMems.map(function (m) { return m.id; })), b.assignedToMember || '', function (id) { if (!id) return t('taskWholeFamily'); var mm = _famMems.filter(function (x) { return x.id === id; })[0]; return mm ? mm.name : id; });
+        _mem.className = 'tc-input'; _mem.addEventListener('change', function () { b.assignedToMember = _mem.value; saveTrip(tr); if (_mem.value) tcNotifyTask('assigned', b.title, memberName(_mem.value)); render(); });
+        ctrls.appendChild(_mem);
+      }
       var mb = el('button', 'tc-pbtn' + (b.bookingStatus === 'booked' ? ' tc-pbtn--accent' : ''), b.bookingStatus === 'booked' ? t('undoBooked') : t('markBooked')); mb.type = 'button';
       mb.addEventListener('click', function () { b.bookingStatus = (b.bookingStatus === 'booked') ? 'ready_to_book' : 'booked'; if (b.bookingStatus === 'booked') { b.bookedBy = (getMe() ? famName(getMe()) : ''); tcNotifyTask('booked', b.title); } saveTrip(tr); render(); });
       ctrls.appendChild(mb);

@@ -99,7 +99,9 @@
     function num(x) { var m = String(x == null ? '' : x).replace(/[, $]/g, '').match(/\d+(\.\d+)?/); return m ? parseFloat(m[0]) : 0; }
     var unassigned = 0, total = 0;
     tasks.forEach(function (tk) {
-      var amt = num(tk.actualCost) || num(tk.costEstimate); if (!(amt > 0)) return;
+      // Cost basis: what was actually paid → estimate → the low end of a "$lo–$hi" priceRange
+      // (conservative, so a member is never told they owe an inflated number).
+      var amt = num(tk.actualCost) || num(tk.costEstimate) || num(tk.priceRange); if (!(amt > 0)) return;
       total += amt;
       if (tk.assignedToMember && memById[tk.assignedToMember]) { owed[tk.assignedToMember] += amt; return; }
       if (tk.assignedToFamily && famById[tk.assignedToFamily]) {

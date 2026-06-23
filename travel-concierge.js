@@ -178,6 +178,7 @@
       tdealsTitle: 'Ticket deals', tdealsSub: 'Ways your group can pay less on paid attractions — researched, never auto-bought.', tdealsFind: 'Find ticket deals', tdealsRefresh: 'Refresh deals', tdealsResearching: 'Hunting ticket deals…', tdealsNone: 'No clear deals found right now', tdealsNoTickets: 'No ticketed attractions yet — rank attractions first (Highlights).', tdealsEmpty: 'No ticket deals yet.', tdealSave: 'save', tdealBookBy: 'buy', tdealOfficial: 'Official tickets', tdealSearch: 'Compare deals', tdeal_multi_day: 'Multi-day pass', tdeal_family_bundle: 'Family bundle', tdeal_early_bird: 'Early-bird / advance', tdeal_combo: 'Combo / bundle', tdeal_membership: 'Membership', tdeal_group: 'Group rate', tdeal_free_day: 'Free / discount day', tdeal_resident: 'Resident discount', tdeal_military_senior_student: 'Military / senior / student', tdeal_other: 'Deal',
       researchingBookings: 'Finding tickets & reservations to book…', conciergeWorking: 'Your AI concierge is doing the homework — hotels, food and bookings are loading.', refreshResearch: 'Refresh',
       bookingType: 'Type', openOfficial: 'Open official page', readyToBook: 'Ready to book', markBooked: 'Mark booked', undoBooked: 'Booked ✓ (tap to undo)',
+      iBookedThis: 'I booked this', confirmBookingTitle: 'Confirm your booking', confirmBookingIntro: 'Book on the operator’s site, then paste your confirmation number and the price you actually paid.', confirmBookingHonesty: 'Only what you enter is saved — we never auto-confirm or fetch prices.', confirmBookingSave: 'Save booking', confirmNeedNumber: 'Add the confirmation number first.', confirmationNumberPh: 'e.g. ABC123', actualPricePaid: 'Price you paid', actualPricePh: 'e.g. $420', confirmGoFlight: 'Search & book the flight', confirmGoHotel: 'Search & book the hotel', confirmFlightAirlineHint: 'Tip: book on the airline’s own site when prices match — easier changes.', selfBookedToast: 'Booking saved to your trip', selfBookedNote: 'Booked', selfBookedBy: 'Booked by', selfBookedLedgerNote: 'Self-booked',
       confirmationNumber: 'Confirmation #', cancellationPolicy: 'Cancellation policy', refundPolicy: 'Refund policy', deadlineLabel: 'Book by', providerLabel: 'Provider', recommended: 'Recommended', bookingNotes: 'Notes',
       bt_flight: 'Flight', bt_hotel: 'Hotel', bt_airbnb: 'Vacation rental', bt_attraction: 'Attraction / tickets', bt_restaurant: 'Restaurant', bt_tour: 'Tour', bt_parking: 'Parking', bt_rental_car: 'Rental car', bt_bus: 'Bus', bt_ride: 'Ride', bt_packing: 'Packing', bt_payment: 'Payment', bt_confirmation: 'Confirmation', bt_other: 'Other',
       bs_research_needed: 'Research needed', bs_researching: 'Researching', bs_ready_to_book: 'Ready to book', bs_user_approval_needed: 'Needs approval', bs_booked: 'Booked', bs_skipped: 'Skipped', bs_paid: 'Paid', bs_not_needed: 'Not needed', bs_completed: 'Completed',
@@ -247,8 +248,8 @@
       tpBestKids: 'Best with kids', tpBestSeniors: 'Best for seniors', tpLeastTiring: 'Least tiring', tpBestLuggage: 'Best for luggage', tpScenic: 'Most scenic',
       nlPriority: 'Priority', nlprio_required: 'Required (locked)', nlprio_preferred: 'Preferred', nlprio_ai_decide: 'AI decides', nlprio_avoid: 'Avoid this mode',
       tprec_userpref: 'You prefer this for this leg, so it leads the comparison — alternatives stay below.', tprec_avoided: 'Picked to avoid the mode you asked to skip on this leg.',
-      dealWatchOn: 'Watching for deals', dealWatchOff: 'Watch for deals', dealCheckNow: 'Check now', dealWatchHint: 'AI re-checks transport when you tap “Check now” and alerts you if a cheaper option appears — it never changes your plan on its own. Prices come from research and booking links; nothing is fabricated.', dealNoBetter: 'No better deal right now', dealBetterFound: 'Better deal found', dealWas: 'was', dealNow: 'now', dealSave: 'save', dealKeep: 'Keep itinerary', dealSwitch: 'Switch', dealSwitchSaved: 'Switched — saving ~{amt} (est.)', dealSavingsTotal: 'Deal savings so far', researchedAt: 'Researched',
-      dealResearchFares: 'Research current fares', dealNoFares: 'No current fares found — try the booking links.', dealFaresTitle: 'Current fares (researched · pending verification)', dealWhileAway: 'found while you were away',
+      dealWatchOn: 'Watching for deals', dealWatchOff: 'Watch for deals', dealCheckNow: 'Check now', dealWatchHint: 'AI re-checks transport, hotels and ticket deals and alerts you if a cheaper option or a new deal appears — it never changes your plan on its own. Prices come from research and booking links; nothing is fabricated.', dealNoBetter: 'No better deal right now', dealBetterFound: 'Better deal found', dealHotelDrop: 'Cheaper hotel found', dealTicketNew: 'New ticket deal', perNight: 'night', dealWas: 'was', dealNow: 'now', dealSave: 'save', dealKeep: 'Keep itinerary', dealSwitch: 'Switch', dealSwitchSaved: 'Switched — saving ~{amt} (est.)', dealSavingsTotal: 'Deal savings so far', researchedAt: 'Researched',
+      dealResearchFares: 'Research current fares', dealNoFares: 'No current fares found — try the booking links.', dealFaresTitle: 'Current fares (researched · pending verification)', dealFaresLive: 'Current fares (live)', fareLiveTag: 'live', dealWhileAway: 'found while you were away',
       pushEnable: 'Enable phone alerts', pushOn: 'Phone alerts on', pushEnabled: 'Phone alerts enabled — we’ll notify you of better deals.', pushDenied: 'Notifications are blocked — enable them in your browser/phone settings.', pushUnsupported: 'Phone alerts aren’t available on this device/browser.',
       tm_any: 'Any · compare all', tm_greyhound: 'Greyhound', tm_flixbus: 'FlixBus', tm_shuttle: 'Shuttle',
       // V3 Transport strategy + transfer intelligence
@@ -298,8 +299,11 @@
       tier_very_high: 'Must-see', tier_high: 'Top pick', tier_medium: 'Worth it',
       fit_kids: 'Great for kids', fit_teens: 'Great for teens', fit_seniors: 'Senior-friendly', fit_all_ages: 'All ages', fit_adults: 'Adults',
       // Events + Stopovers + Costs (Batch 1)
-      tab_events: 'Events', tab_stopovers: 'Discoveries', tab_costs: 'Costs',
-      eventsTitle: 'Events during your trip', eventsSub: 'Real events within your dates — pin any to your plan. Estimates labeled; nothing is booked.', findEvents: 'Find events (AI)', refreshEvents: 'Refresh events', researchingEvents: 'Searching events for your dates…', noEventsYet: 'Tap “Find events” to see what is on during your trip.', eventPending: 'Pending verification — confirm date & price', addToPlan: 'Add to plan',
+      tab_events: 'Events', tab_weather: 'Weather', tab_stopovers: 'Discoveries', tab_costs: 'Costs',
+      weatherTitle: 'Weather & packing', weatherSub: 'Real forecast for your dates (or seasonal normals when further out) — plus what to pack.', findWeather: 'Check the weather', refreshWeather: 'Refresh weather', researchingWeather: 'Checking the forecast…', noWeatherYet: 'No weather yet — tap to check the forecast.', wxPackingTitle: 'What to pack', wxSeasonalNote: 'Beyond the live forecast — showing typical weather for the season.', wxSeasonalLabel: 'typical for the season (est.)', wxUnavailable: 'Forecast not yet available — check closer to your dates.', wxRecOutdoor: 'Great for outdoor plans', wxRecIndoor: 'Plan an indoor day', wxRecMixed: 'Mixed — keep a backup',
+      wxcond_clear: 'Clear', wxcond_partly: 'Partly cloudy', wxcond_cloudy: 'Cloudy', wxcond_fog: 'Fog', wxcond_drizzle: 'Drizzle', wxcond_rain: 'Rain', wxcond_snow: 'Snow', wxcond_showers: 'Showers', wxcond_storm: 'Storms',
+      wxtip_pack_warm_layers: 'Warm layers — it gets chilly', wxtip_pack_light_breathable: 'Light, breathable clothes', wxtip_pack_sun: 'Sunscreen, hat & sunglasses', wxtip_pack_rain: 'Rain jacket or umbrella', wxtip_pack_layers_swing: 'Layers — big day-to-night temperature swing', wxtip_pack_snow: 'Snow gear & warm boots', wxtip_pack_hydrate: 'Bring water — stay hydrated',
+      eventsTitle: 'Events during your trip', eventsSub: 'Real events within your dates — pin any to your plan. Estimates labeled; nothing is booked.', findEvents: 'Find events (AI)', refreshEvents: 'Refresh events', researchingEvents: 'Searching events for your dates…', noEventsYet: 'Tap “Find events” to see what is on during your trip.', eventPending: 'Pending verification — confirm date & price', eventLiveOfficial: 'Live · official (Ticketmaster)', addToPlan: 'Add to plan',
       stopoversTitle: 'Stopovers on long drives', stopoversSub: 'Smart stops for meals, breaks, gas and scenery on long legs — paced for your group.', findStopovers: 'Find stopovers (AI)', refreshStopovers: 'Refresh stopovers', researchingStopovers: 'Planning stops for the long drives…', noStopoversYet: 'No long drives need stops — or tap “Find stopovers”.',
       stoptype_meal: 'Meal', stoptype_rest: 'Rest stop', stoptype_gas: 'Gas / charge', stoptype_coffee: 'Coffee', stoptype_attraction: 'Quick stop', stoptype_scenic: 'Scenic', stoptype_hotel: 'Overnight', soAdd: 'Add stop', soAdded: 'Added', soOptional: 'Optional', soSkip: 'Skip', soAlternatives: 'Alternatives', soPending: 'Pending verification',
       costsTitle: 'Trip cost estimate', costsSub: 'Editable estimates — not live prices. The organizer can adjust assumptions; everyone can view.', costEstTotal: 'Total (est.)', costPerFamilyAvg: 'Per family (avg)', costPerPerson: 'Per person', costPerDay: 'Per day', costPerPersonShort: 'person', costRangeLabel: 'Range', costExpected: 'expected', costByCategory: 'By category',
@@ -467,6 +471,7 @@
       tdealsTitle: 'Ưu đãi vé', tdealsSub: 'Cách để cả nhóm trả ít hơn cho các điểm tham quan có vé — chỉ tra cứu, không tự đặt.', tdealsFind: 'Tìm ưu đãi vé', tdealsRefresh: 'Làm mới ưu đãi', tdealsResearching: 'Đang tìm ưu đãi vé…', tdealsNone: 'Hiện chưa thấy ưu đãi rõ ràng', tdealsNoTickets: 'Chưa có điểm tham quan có vé — hãy xếp hạng điểm tham quan trước (Nổi bật).', tdealsEmpty: 'Chưa có ưu đãi vé.', tdealSave: 'tiết kiệm', tdealBookBy: 'mua', tdealOfficial: 'Vé chính thức', tdealSearch: 'So sánh ưu đãi', tdeal_multi_day: 'Vé nhiều ngày', tdeal_family_bundle: 'Gói gia đình', tdeal_early_bird: 'Mua sớm / trước', tdeal_combo: 'Gói combo', tdeal_membership: 'Thành viên', tdeal_group: 'Giá nhóm', tdeal_free_day: 'Ngày miễn phí / giảm giá', tdeal_resident: 'Giảm giá cư dân', tdeal_military_senior_student: 'Quân nhân / cao tuổi / sinh viên', tdeal_other: 'Ưu đãi',
       researchingBookings: 'Đang tìm vé & chỗ cần đặt trước…', conciergeWorking: 'Trợ lý AI đang làm bài tập — khách sạn, ẩm thực và đặt chỗ đang được tải.', refreshResearch: 'Làm mới',
       bookingType: 'Loại', openOfficial: 'Mở trang chính thức', readyToBook: 'Sẵn sàng đặt', markBooked: 'Đánh dấu đã đặt', undoBooked: 'Đã đặt ✓ (chạm để hoàn tác)',
+      iBookedThis: 'Tôi đã đặt', confirmBookingTitle: 'Xác nhận đặt chỗ', confirmBookingIntro: 'Đặt trên trang của nhà cung cấp, rồi dán mã xác nhận và số tiền bạn đã trả.', confirmBookingHonesty: 'Chỉ lưu những gì bạn nhập — chúng tôi không tự xác nhận hay lấy giá.', confirmBookingSave: 'Lưu đặt chỗ', confirmNeedNumber: 'Hãy nhập mã xác nhận trước.', confirmationNumberPh: 'vd: ABC123', actualPricePaid: 'Số tiền đã trả', actualPricePh: 'vd: $420', confirmGoFlight: 'Tìm & đặt chuyến bay', confirmGoHotel: 'Tìm & đặt khách sạn', confirmFlightAirlineHint: 'Mẹo: nên đặt trên trang hãng bay khi giá tương đương — dễ đổi vé hơn.', selfBookedToast: 'Đã lưu đặt chỗ vào chuyến đi', selfBookedNote: 'Đã đặt', selfBookedBy: 'Người đặt', selfBookedLedgerNote: 'Tự đặt',
       confirmationNumber: 'Mã xác nhận', cancellationPolicy: 'Chính sách hủy', refundPolicy: 'Chính sách hoàn tiền', deadlineLabel: 'Đặt trước', providerLabel: 'Nhà cung cấp', recommended: 'Đề xuất', bookingNotes: 'Ghi chú',
       bt_flight: 'Chuyến bay', bt_hotel: 'Khách sạn', bt_airbnb: 'Nhà cho thuê', bt_attraction: 'Tham quan / vé', bt_restaurant: 'Nhà hàng', bt_tour: 'Tour', bt_parking: 'Bãi đỗ xe', bt_rental_car: 'Thuê xe', bt_bus: 'Xe khách', bt_ride: 'Đưa đón', bt_packing: 'Hành lý', bt_payment: 'Thanh toán', bt_confirmation: 'Xác nhận', bt_other: 'Khác',
       bs_research_needed: 'Cần tìm hiểu', bs_researching: 'Đang tìm hiểu', bs_ready_to_book: 'Sẵn sàng đặt', bs_user_approval_needed: 'Cần phê duyệt', bs_booked: 'Đã đặt', bs_skipped: 'Bỏ qua', bs_paid: 'Đã thanh toán', bs_not_needed: 'Không cần', bs_completed: 'Hoàn tất',
@@ -535,8 +540,8 @@
       tpBestKids: 'Hợp với trẻ em', tpBestSeniors: 'Hợp người lớn tuổi', tpLeastTiring: 'Ít mệt nhất', tpBestLuggage: 'Hợp nhiều hành lý', tpScenic: 'Cảnh đẹp nhất',
       nlPriority: 'Ưu tiên', nlprio_required: 'Bắt buộc (khóa)', nlprio_preferred: 'Ưu tiên', nlprio_ai_decide: 'Để AI quyết định', nlprio_avoid: 'Tránh phương án này',
       tprec_userpref: 'Bạn ưu tiên phương án này cho chặng này nên nó dẫn đầu so sánh — các lựa chọn khác ở bên dưới.', tprec_avoided: 'Đã chọn để tránh phương án bạn muốn bỏ qua ở chặng này.',
-      dealWatchOn: 'Đang theo dõi ưu đãi', dealWatchOff: 'Theo dõi ưu đãi', dealCheckNow: 'Kiểm tra ngay', dealWatchHint: 'AI kiểm tra lại phương tiện khi bạn nhấn “Kiểm tra ngay” và báo nếu có lựa chọn rẻ hơn — không bao giờ tự đổi kế hoạch. Giá đến từ nghiên cứu và liên kết đặt chỗ; không bịa đặt.', dealNoBetter: 'Hiện chưa có ưu đãi tốt hơn', dealBetterFound: 'Đã tìm thấy ưu đãi tốt hơn', dealWas: 'trước', dealNow: 'nay', dealSave: 'tiết kiệm', dealKeep: 'Giữ lịch trình', dealSwitch: 'Đổi', dealSwitchSaved: 'Đã đổi — tiết kiệm ~{amt} (ước tính)', dealSavingsTotal: 'Đã tiết kiệm nhờ ưu đãi', researchedAt: 'Tra cứu lúc',
-      dealResearchFares: 'Tra giá vé hiện tại', dealNoFares: 'Không tìm thấy giá hiện tại — thử các liên kết đặt chỗ.', dealFaresTitle: 'Giá vé hiện tại (đã tra cứu · chờ xác minh)', dealWhileAway: 'tìm thấy khi bạn vắng mặt',
+      dealWatchOn: 'Đang theo dõi ưu đãi', dealWatchOff: 'Theo dõi ưu đãi', dealCheckNow: 'Kiểm tra ngay', dealWatchHint: 'AI kiểm tra lại phương tiện, khách sạn và ưu đãi vé, báo khi có lựa chọn rẻ hơn hoặc ưu đãi mới — không bao giờ tự đổi kế hoạch. Giá đến từ nghiên cứu và liên kết đặt chỗ; không bịa đặt.', dealNoBetter: 'Hiện chưa có ưu đãi tốt hơn', dealBetterFound: 'Đã tìm thấy ưu đãi tốt hơn', dealHotelDrop: 'Tìm thấy khách sạn rẻ hơn', dealTicketNew: 'Ưu đãi vé mới', perNight: 'đêm', dealWas: 'trước', dealNow: 'nay', dealSave: 'tiết kiệm', dealKeep: 'Giữ lịch trình', dealSwitch: 'Đổi', dealSwitchSaved: 'Đã đổi — tiết kiệm ~{amt} (ước tính)', dealSavingsTotal: 'Đã tiết kiệm nhờ ưu đãi', researchedAt: 'Tra cứu lúc',
+      dealResearchFares: 'Tra giá vé hiện tại', dealNoFares: 'Không tìm thấy giá hiện tại — thử các liên kết đặt chỗ.', dealFaresTitle: 'Giá vé hiện tại (đã tra cứu · chờ xác minh)', dealFaresLive: 'Giá vé hiện tại (trực tiếp)', fareLiveTag: 'trực tiếp', dealWhileAway: 'tìm thấy khi bạn vắng mặt',
       pushEnable: 'Bật thông báo điện thoại', pushOn: 'Đã bật thông báo', pushEnabled: 'Đã bật thông báo — chúng tôi sẽ báo khi có ưu đãi tốt hơn.', pushDenied: 'Thông báo đang bị chặn — hãy bật trong cài đặt trình duyệt/điện thoại.', pushUnsupported: 'Thiết bị/trình duyệt này không hỗ trợ thông báo.',
       tm_any: 'Bất kỳ · so sánh tất cả', tm_greyhound: 'Greyhound', tm_flixbus: 'FlixBus', tm_shuttle: 'Xe trung chuyển',
       // V3 Transport strategy + transfer intelligence
@@ -586,8 +591,11 @@
       tier_very_high: 'Phải đến', tier_high: 'Lựa chọn hàng đầu', tier_medium: 'Đáng đi',
       fit_kids: 'Hợp trẻ em', fit_teens: 'Hợp thiếu niên', fit_seniors: 'Hợp người lớn tuổi', fit_all_ages: 'Mọi lứa tuổi', fit_adults: 'Người lớn',
       // Sự kiện + Điểm dừng + Chi phí (Đợt 1)
-      tab_events: 'Sự kiện', tab_stopovers: 'Khám phá', tab_costs: 'Chi phí',
-      eventsTitle: 'Sự kiện trong chuyến đi', eventsSub: 'Sự kiện thật trong khoảng ngày của bạn — ghim vào kế hoạch. Đều là ước tính; không đặt gì.', findEvents: 'Tìm sự kiện (AI)', refreshEvents: 'Làm mới sự kiện', researchingEvents: 'Đang tìm sự kiện theo ngày của bạn…', noEventsYet: 'Nhấn “Tìm sự kiện” để xem có gì diễn ra trong chuyến đi.', eventPending: 'Chờ xác minh — kiểm tra ngày & giá', addToPlan: 'Thêm vào kế hoạch',
+      tab_events: 'Sự kiện', tab_weather: 'Thời tiết', tab_stopovers: 'Khám phá', tab_costs: 'Chi phí',
+      weatherTitle: 'Thời tiết & hành lý', weatherSub: 'Dự báo thật cho ngày của bạn (hoặc khí hậu trung bình mùa nếu còn xa) — kèm gợi ý mang gì.', findWeather: 'Xem thời tiết', refreshWeather: 'Cập nhật thời tiết', researchingWeather: 'Đang xem dự báo…', noWeatherYet: 'Chưa có thời tiết — nhấn để xem dự báo.', wxPackingTitle: 'Nên mang gì', wxSeasonalNote: 'Ngoài phạm vi dự báo trực tiếp — đang hiển thị thời tiết điển hình theo mùa.', wxSeasonalLabel: 'điển hình theo mùa (ước tính)', wxUnavailable: 'Chưa có dự báo — hãy kiểm tra gần ngày đi hơn.', wxRecOutdoor: 'Tuyệt cho hoạt động ngoài trời', wxRecIndoor: 'Nên có kế hoạch trong nhà', wxRecMixed: 'Thất thường — chuẩn bị phương án dự phòng',
+      wxcond_clear: 'Quang đãng', wxcond_partly: 'Có mây', wxcond_cloudy: 'Nhiều mây', wxcond_fog: 'Sương mù', wxcond_drizzle: 'Mưa phùn', wxcond_rain: 'Mưa', wxcond_snow: 'Tuyết', wxcond_showers: 'Mưa rào', wxcond_storm: 'Giông bão',
+      wxtip_pack_warm_layers: 'Áo ấm nhiều lớp — trời se lạnh', wxtip_pack_light_breathable: 'Quần áo nhẹ, thoáng', wxtip_pack_sun: 'Kem chống nắng, nón & kính', wxtip_pack_rain: 'Áo mưa hoặc dù', wxtip_pack_layers_swing: 'Mặc nhiều lớp — chênh lệch nhiệt độ ngày/đêm lớn', wxtip_pack_snow: 'Đồ đi tuyết & giày ấm', wxtip_pack_hydrate: 'Mang nước — giữ đủ nước',
+      eventsTitle: 'Sự kiện trong chuyến đi', eventsSub: 'Sự kiện thật trong khoảng ngày của bạn — ghim vào kế hoạch. Đều là ước tính; không đặt gì.', findEvents: 'Tìm sự kiện (AI)', refreshEvents: 'Làm mới sự kiện', researchingEvents: 'Đang tìm sự kiện theo ngày của bạn…', noEventsYet: 'Nhấn “Tìm sự kiện” để xem có gì diễn ra trong chuyến đi.', eventPending: 'Chờ xác minh — kiểm tra ngày & giá', eventLiveOfficial: 'Trực tiếp · chính thức (Ticketmaster)', addToPlan: 'Thêm vào kế hoạch',
       stopoversTitle: 'Điểm dừng trên chặng dài', stopoversSub: 'Điểm dừng hợp lý để ăn, nghỉ, đổ xăng và ngắm cảnh trên chặng dài — theo nhịp của nhóm bạn.', findStopovers: 'Tìm điểm dừng (AI)', refreshStopovers: 'Làm mới điểm dừng', researchingStopovers: 'Đang lên điểm dừng cho chặng dài…', noStopoversYet: 'Không có chặng dài cần dừng — hoặc nhấn “Tìm điểm dừng”.',
       stoptype_meal: 'Bữa ăn', stoptype_rest: 'Điểm nghỉ', stoptype_gas: 'Xăng / sạc', stoptype_coffee: 'Cà phê', stoptype_attraction: 'Ghé nhanh', stoptype_scenic: 'Ngắm cảnh', stoptype_hotel: 'Nghỉ đêm', soAdd: 'Thêm điểm dừng', soAdded: 'Đã thêm', soOptional: 'Tùy chọn', soSkip: 'Bỏ qua', soAlternatives: 'Lựa chọn khác', soPending: 'Chờ xác minh',
       costsTitle: 'Ước tính chi phí chuyến đi', costsSub: 'Ước tính có thể chỉnh — không phải giá trực tiếp. Người tổ chức chỉnh giả định; mọi người đều xem được.', costEstTotal: 'Tổng (ước tính)', costPerFamilyAvg: 'Mỗi gia đình (TB)', costPerPerson: 'Mỗi người', costPerDay: 'Mỗi ngày', costPerPersonShort: 'người', costRangeLabel: 'Khoảng', costExpected: 'dự kiến', costByCategory: 'Theo hạng mục',
@@ -755,6 +763,7 @@
       tdealsTitle: 'Ofertas de entradas', tdealsSub: 'Formas en que tu grupo puede pagar menos en atracciones de pago — investigadas, nunca compradas automáticamente.', tdealsFind: 'Buscar ofertas de entradas', tdealsRefresh: 'Actualizar ofertas', tdealsResearching: 'Buscando ofertas de entradas…', tdealsNone: 'No se encontraron ofertas claras por ahora', tdealsNoTickets: 'Aún no hay atracciones con entrada — clasifica las atracciones primero (Destacados).', tdealsEmpty: 'Aún no hay ofertas de entradas.', tdealSave: 'ahorra', tdealBookBy: 'compra', tdealOfficial: 'Entradas oficiales', tdealSearch: 'Comparar ofertas', tdeal_multi_day: 'Pase de varios días', tdeal_family_bundle: 'Paquete familiar', tdeal_early_bird: 'Anticipada', tdeal_combo: 'Combo / paquete', tdeal_membership: 'Membresía', tdeal_group: 'Tarifa de grupo', tdeal_free_day: 'Día gratis / descuento', tdeal_resident: 'Descuento de residente', tdeal_military_senior_student: 'Militar / mayor / estudiante', tdeal_other: 'Oferta',
       researchingBookings: 'Buscando entradas y reservas por hacer…', conciergeWorking: 'Tu concierge de IA está haciendo la tarea — hoteles, comida y reservas se están cargando.', refreshResearch: 'Actualizar',
       bookingType: 'Tipo', openOfficial: 'Abrir página oficial', readyToBook: 'Listo para reservar', markBooked: 'Marcar reservado', undoBooked: 'Reservado ✓ (toca para deshacer)',
+      iBookedThis: 'Yo lo reservé', confirmBookingTitle: 'Confirma tu reserva', confirmBookingIntro: 'Reserva en el sitio del operador, luego pega tu número de confirmación y el precio que pagaste.', confirmBookingHonesty: 'Solo se guarda lo que ingresas — nunca confirmamos automáticamente ni obtenemos precios.', confirmBookingSave: 'Guardar reserva', confirmNeedNumber: 'Agrega primero el número de confirmación.', confirmationNumberPh: 'p. ej. ABC123', actualPricePaid: 'Precio que pagaste', actualPricePh: 'p. ej. $420', confirmGoFlight: 'Buscar y reservar el vuelo', confirmGoHotel: 'Buscar y reservar el hotel', confirmFlightAirlineHint: 'Consejo: reserva en el sitio de la aerolínea cuando los precios coinciden — cambios más fáciles.', selfBookedToast: 'Reserva guardada en tu viaje', selfBookedNote: 'Reservado', selfBookedBy: 'Reservado por', selfBookedLedgerNote: 'Reserva propia',
       confirmationNumber: 'N.º de confirmación', cancellationPolicy: 'Política de cancelación', refundPolicy: 'Política de reembolso', deadlineLabel: 'Reservar antes de', providerLabel: 'Proveedor', recommended: 'Recomendado', bookingNotes: 'Notas',
       bt_flight: 'Vuelo', bt_hotel: 'Hotel', bt_airbnb: 'Alquiler vacacional', bt_attraction: 'Atracción / entradas', bt_restaurant: 'Restaurante', bt_tour: 'Tour', bt_parking: 'Estacionamiento', bt_rental_car: 'Auto de alquiler', bt_bus: 'Autobús', bt_ride: 'Transporte', bt_packing: 'Equipaje', bt_payment: 'Pago', bt_confirmation: 'Confirmación', bt_other: 'Otro',
       bs_research_needed: 'Investigar', bs_researching: 'Investigando', bs_ready_to_book: 'Listo para reservar', bs_user_approval_needed: 'Requiere aprobación', bs_booked: 'Reservado', bs_skipped: 'Omitido', bs_paid: 'Pagado', bs_not_needed: 'No necesario', bs_completed: 'Completado',
@@ -823,8 +832,8 @@
       tpBestKids: 'Mejor con niños', tpBestSeniors: 'Mejor para mayores', tpLeastTiring: 'Menos cansado', tpBestLuggage: 'Mejor para equipaje', tpScenic: 'Más panorámico',
       nlPriority: 'Prioridad', nlprio_required: 'Obligatorio (fijado)', nlprio_preferred: 'Preferido', nlprio_ai_decide: 'La IA decide', nlprio_avoid: 'Evitar este modo',
       tprec_userpref: 'Prefieres esto para este tramo, así que encabeza la comparación — las alternativas quedan abajo.', tprec_avoided: 'Elegido para evitar el modo que pediste omitir en este tramo.',
-      dealWatchOn: 'Vigilando ofertas', dealWatchOff: 'Vigilar ofertas', dealCheckNow: 'Revisar ahora', dealWatchHint: 'La IA revisa el transporte cuando tocas “Revisar ahora” y te avisa si aparece una opción más barata — nunca cambia tu plan por su cuenta. Los precios vienen de la investigación y enlaces de reserva; nada se inventa.', dealNoBetter: 'No hay mejor oferta por ahora', dealBetterFound: 'Mejor oferta encontrada', dealWas: 'antes', dealNow: 'ahora', dealSave: 'ahorra', dealKeep: 'Mantener itinerario', dealSwitch: 'Cambiar', dealSwitchSaved: 'Cambiado — ahorras ~{amt} (est.)', dealSavingsTotal: 'Ahorro en ofertas hasta ahora', researchedAt: 'Investigado',
-      dealResearchFares: 'Buscar tarifas actuales', dealNoFares: 'No se encontraron tarifas actuales — prueba los enlaces de reserva.', dealFaresTitle: 'Tarifas actuales (investigadas · pendiente de verificación)', dealWhileAway: 'encontrado mientras no estabas',
+      dealWatchOn: 'Vigilando ofertas', dealWatchOff: 'Vigilar ofertas', dealCheckNow: 'Revisar ahora', dealWatchHint: 'La IA revisa transporte, hoteles y ofertas de entradas y te avisa si aparece una opción más barata o una nueva oferta — nunca cambia tu plan por su cuenta. Los precios vienen de la investigación y enlaces de reserva; nada se inventa.', dealNoBetter: 'No hay mejor oferta por ahora', dealBetterFound: 'Mejor oferta encontrada', dealHotelDrop: 'Hotel más barato encontrado', dealTicketNew: 'Nueva oferta de entradas', perNight: 'noche', dealWas: 'antes', dealNow: 'ahora', dealSave: 'ahorra', dealKeep: 'Mantener itinerario', dealSwitch: 'Cambiar', dealSwitchSaved: 'Cambiado — ahorras ~{amt} (est.)', dealSavingsTotal: 'Ahorro en ofertas hasta ahora', researchedAt: 'Investigado',
+      dealResearchFares: 'Buscar tarifas actuales', dealNoFares: 'No se encontraron tarifas actuales — prueba los enlaces de reserva.', dealFaresTitle: 'Tarifas actuales (investigadas · pendiente de verificación)', dealFaresLive: 'Tarifas actuales (en vivo)', fareLiveTag: 'en vivo', dealWhileAway: 'encontrado mientras no estabas',
       pushEnable: 'Activar alertas en el teléfono', pushOn: 'Alertas activadas', pushEnabled: 'Alertas activadas — te avisaremos de mejores ofertas.', pushDenied: 'Las notificaciones están bloqueadas — actívalas en los ajustes del navegador/teléfono.', pushUnsupported: 'Las alertas no están disponibles en este dispositivo/navegador.',
       tm_any: 'Cualquiera · comparar todo', tm_greyhound: 'Greyhound', tm_flixbus: 'FlixBus', tm_shuttle: 'Shuttle',
       // V3 Transport strategy + transfer intelligence
@@ -874,8 +883,11 @@
       tier_very_high: 'Imperdible', tier_high: 'Top', tier_medium: 'Vale la pena',
       fit_kids: 'Ideal para niños', fit_teens: 'Ideal para adolescentes', fit_seniors: 'Apto para mayores', fit_all_ages: 'Todas las edades', fit_adults: 'Adultos',
       // Eventos + Paradas + Costos (Lote 1)
-      tab_events: 'Eventos', tab_stopovers: 'Descubrimientos', tab_costs: 'Costos',
-      eventsTitle: 'Eventos durante tu viaje', eventsSub: 'Eventos reales dentro de tus fechas — fija cualquiera a tu plan. Estimaciones etiquetadas; nada se reserva.', findEvents: 'Buscar eventos (IA)', refreshEvents: 'Actualizar eventos', researchingEvents: 'Buscando eventos para tus fechas…', noEventsYet: 'Toca “Buscar eventos” para ver qué hay durante tu viaje.', eventPending: 'Pendiente de verificación — confirma fecha y precio', addToPlan: 'Agregar al plan',
+      tab_events: 'Eventos', tab_weather: 'Clima', tab_stopovers: 'Descubrimientos', tab_costs: 'Costos',
+      weatherTitle: 'Clima y equipaje', weatherSub: 'Pronóstico real para tus fechas (o normales de temporada si faltan días) — y qué empacar.', findWeather: 'Ver el clima', refreshWeather: 'Actualizar clima', researchingWeather: 'Consultando el pronóstico…', noWeatherYet: 'Aún no hay clima — toca para ver el pronóstico.', wxPackingTitle: 'Qué empacar', wxSeasonalNote: 'Más allá del pronóstico en vivo — mostrando el clima típico de la temporada.', wxSeasonalLabel: 'típico de la temporada (est.)', wxUnavailable: 'Pronóstico aún no disponible — revisa más cerca de tus fechas.', wxRecOutdoor: 'Ideal para planes al aire libre', wxRecIndoor: 'Planea un día bajo techo', wxRecMixed: 'Variable — ten un plan B',
+      wxcond_clear: 'Despejado', wxcond_partly: 'Parcialmente nublado', wxcond_cloudy: 'Nublado', wxcond_fog: 'Niebla', wxcond_drizzle: 'Llovizna', wxcond_rain: 'Lluvia', wxcond_snow: 'Nieve', wxcond_showers: 'Chubascos', wxcond_storm: 'Tormentas',
+      wxtip_pack_warm_layers: 'Capas abrigadas — hará frío', wxtip_pack_light_breathable: 'Ropa ligera y transpirable', wxtip_pack_sun: 'Protector solar, gorra y gafas', wxtip_pack_rain: 'Impermeable o paraguas', wxtip_pack_layers_swing: 'Capas — gran cambio de temperatura día/noche', wxtip_pack_snow: 'Equipo de nieve y botas abrigadas', wxtip_pack_hydrate: 'Lleva agua — mantente hidratado',
+      eventsTitle: 'Eventos durante tu viaje', eventsSub: 'Eventos reales dentro de tus fechas — fija cualquiera a tu plan. Estimaciones etiquetadas; nada se reserva.', findEvents: 'Buscar eventos (IA)', refreshEvents: 'Actualizar eventos', researchingEvents: 'Buscando eventos para tus fechas…', noEventsYet: 'Toca “Buscar eventos” para ver qué hay durante tu viaje.', eventPending: 'Pendiente de verificación — confirma fecha y precio', eventLiveOfficial: 'En vivo · oficial (Ticketmaster)', addToPlan: 'Agregar al plan',
       stopoversTitle: 'Paradas en trayectos largos', stopoversSub: 'Paradas inteligentes para comer, descansar, cargar gasolina y paisajes — al ritmo de tu grupo.', findStopovers: 'Buscar paradas (IA)', refreshStopovers: 'Actualizar paradas', researchingStopovers: 'Planeando paradas para los trayectos largos…', noStopoversYet: 'Ningún trayecto largo necesita paradas — o toca “Buscar paradas”.',
       stoptype_meal: 'Comida', stoptype_rest: 'Descanso', stoptype_gas: 'Gasolina / carga', stoptype_coffee: 'Café', stoptype_attraction: 'Parada rápida', stoptype_scenic: 'Paisaje', stoptype_hotel: 'Pernoctar', soAdd: 'Agregar parada', soAdded: 'Agregada', soOptional: 'Opcional', soSkip: 'Omitir', soAlternatives: 'Alternativas', soPending: 'Pendiente de verificación',
       costsTitle: 'Estimación de costos del viaje', costsSub: 'Estimaciones editables — no precios en vivo. El organizador ajusta supuestos; todos pueden ver.', costEstTotal: 'Total (est.)', costPerFamilyAvg: 'Por familia (prom.)', costPerPerson: 'Por persona', costPerDay: 'Por día', costPerPersonShort: 'persona', costRangeLabel: 'Rango', costExpected: 'esperado', costByCategory: 'Por categoría',
@@ -1217,6 +1229,7 @@
       // Task Tracker fields (additive; legacy bookings still valid):
       priority: (root.TCTasks ? root.TCTasks.priority(vt) : 'P2'), assignedToFamily: '', assignedToMember: '', dueDate: '',
       costEstimate: '', actualCost: '', paidBy: '', splitMode: '', splitBetween: [], linkedSegmentId: '',
+      bookedAt: '', bookingSource: '', // assisted-checkout: when + how a booking was confirmed (self_booked|dlc_ride_booking|'')
     };
     if (extra) for (var k in extra) b[k] = extra[k];
     return b;
@@ -1471,7 +1484,7 @@
     var legs = (tr.transport || []).map(function (l) { return { fromCity: l.fromCity, toCity: l.toCity }; });
     if (!legs.length && Array.isArray(tr.lockedLegs)) legs = tr.lockedLegs.map(function (l) { return { fromCity: l.fromCity, toCity: l.toCity }; });
     if (!legs.length) return Promise.resolve({ ok: false, legs: [] });
-    return callWithRetry(c, { legs: legs, lang: state.lang }).then(function (r) { var d = (r && r.data) || {}; return { ok: d.ok === true, legs: d.legs || [], sourceNote: d.sourceNote || '', researchedAt: d.researchedAt || 0 }; }).catch(function () { return { ok: false, legs: [] }; });
+    return callWithRetry(c, { legs: legs, lang: state.lang }).then(function (r) { var d = (r && r.data) || {}; return { ok: d.ok === true, legs: d.legs || [], sourceNote: d.sourceNote || '', researchedAt: d.researchedAt || 0, status: d.status || 'estimated' }; }).catch(function () { return { ok: false, legs: [] }; });
   }
   // V3 AI Transport STRATEGY + TRANSFER agent — research-driven multi-leg strategies, transfer
   // hubs, return intelligence (grounded; pending-verification). Falls back to the deterministic
@@ -1513,6 +1526,19 @@
     if (!c) return Promise.resolve({ destinations: [] });
     return callWithRetry(c, { trip: { destinations: trip.destinations, dateRange: trip.dateRange, budget: trip.budget, tripStyle: trip.tripStyle, families: trip.families }, dateList: (parseTripDates(trip.dateRange) || {}).dates || [], avoidPlaces: rejectedNames(trip), preferredPlaces: preferredNames(trip), lang: state.lang })
       .then(function (r) { var d = (r && r.data) || {}; return { destinations: d.destinations || [] }; })
+      .catch(function () { return { destinations: [] }; });
+  }
+  // Weather Agent — REAL Open-Meteo forecast (≤16 days) + labelled seasonal normals beyond, per
+  // destination + its dates. Caches resolved lat/lng back onto the segment to skip re-geocoding.
+  function researchWeather(trip) {
+    var c = mkCallable('researchTripWeather', 45000);
+    if (!c) return Promise.resolve({ destinations: [] });
+    return callWithRetry(c, { trip: { destination: trip.destination, destinations: (trip.destinations || []).map(function (d) { return { city: d.city, role: d.role, lat: d._lat, lng: d._lng, arrivalDate: d.arrivalDate, departureDate: d.departureDate, startDate: d.startDate, endDate: d.endDate }; }), dateRange: trip.dateRange, families: trip.families }, lang: state.lang })
+      .then(function (r) {
+        var d = (r && r.data) || {};
+        (d.destinations || []).forEach(function (wd) { var seg = (trip.destinations || []).filter(function (s) { return (s.city || '') === (wd.city || ''); })[0]; if (seg && wd.lat != null) { seg._lat = wd.lat; seg._lng = wd.lng; } });
+        return { destinations: d.destinations || [] };
+      })
       .catch(function () { return { destinations: [] }; });
   }
   // AI Social Clip — builds an EXPORT PACKAGE (storyboard / captions / voiceover / overlays /
@@ -2378,7 +2404,7 @@
     }
     // V5: the trip surfaces not in the 5-tab bar are reachable here (set state.activeTab + render).
     list.appendChild(el('p', 'tc-sheet__lbl', t('moreNavTitle')));
-    [['journey', '🧭 ', 'tab_journey'], ['transport', '🚐 ', 'tab_transport'], ['stay', '🏨 ', 'tab_stay'], ['food', '🍽 ', 'tab_food'], ['events', '🎉 ', 'tab_events'], ['stopovers', '✨ ', 'tab_stopovers'], ['costs', '💰 ', 'tab_costs'], ['group', '👥 ', 'tab_group']].forEach(function (it) {
+    [['journey', '🧭 ', 'tab_journey'], ['transport', '🚐 ', 'tab_transport'], ['stay', '🏨 ', 'tab_stay'], ['food', '🍽 ', 'tab_food'], ['events', '🎉 ', 'tab_events'], ['weather', '🌦️ ', 'tab_weather'], ['stopovers', '✨ ', 'tab_stopovers'], ['costs', '💰 ', 'tab_costs'], ['group', '👥 ', 'tab_group']].forEach(function (it) {
       var b = el('button', 'tc-pbtn', it[1] + t(it[2])); b.type = 'button';
       b.addEventListener('click', function () { closeModal(); state.activeTab = it[0]; render(); });
       list.appendChild(b);
@@ -3704,15 +3730,16 @@
     var anyHotel = !!(tr.destination) || (Array.isArray(tr.destinations) && tr.destinations.some(function (d) { return d && (d.city || '').trim() && d.hotelNeeded !== false; }));
     var anyTransport = !!(tr.departureCity && (tr.destination || (Array.isArray(tr.destinations) && tr.destinations.some(function (d) { return d && (d.city || '').trim(); }))));
     var anyDest = !!(tr.destination || (Array.isArray(tr.destinations) && tr.destinations.some(function (d) { return d && (d.city || '').trim(); })));
-    state._cResearch = { stays: anyHotel, food: true, bookings: true, transport: anyTransport, attractions: anyDest, events: anyDest, stopovers: anyTransport, routeOps: anyTransport, tours: anyDest };
+    state._cResearch = { stays: anyHotel, food: true, bookings: true, transport: anyTransport, attractions: anyDest, events: anyDest, weather: anyDest, stopovers: anyTransport, routeOps: anyTransport, tours: anyDest };
     function done(k) { if (state._cResearch) state._cResearch[k] = false; if (state.screen === 'plan') render(); }
-    if (anyHotel) { researchStays(tr).then(function (res) { if (res.stays && res.stays.length) { tr.stays = res.stays; tr.stayStrategies = res.strategies || []; saveTrip(tr); } done('stays'); }).catch(function () { done('stays'); }); }
+    if (anyHotel) { researchStays(tr).then(function (res) { if (res.stays && res.stays.length) { tr.stays = res.stays; tr.stayStrategies = res.strategies || []; checkHotelDeals(tr); saveTrip(tr); } done('stays'); }).catch(function () { done('stays'); }); }
     researchRestaurants(tr).then(function (res) { if (res.food && res.food.length) { tr.food = res.food; saveTrip(tr); } done('food'); }).catch(function () { done('food'); });
     if (anyTransport) { researchTransport(tr).then(function (res) { applyTransportResult(tr, res); done('transport'); }).catch(function () { done('transport'); }); }
     // Destination Intelligence: rank signature attractions for the group + add ticketed icons to the booking checklist.
     if (anyDest) { researchAttractions(tr).then(function (res) { if (res.destinations && res.destinations.length) { tr.attractions = res.destinations; if (res.groupProfile) tr.groupProfile = res.groupProfile; mergeBookings(tr, ticketedAttractionBookings(tr)); saveTrip(tr); } done('attractions'); }).catch(function () { done('attractions'); }); }
     // Event Discovery + Stopover agents (events match trip dates; stopovers on long legs).
     if (anyDest) { researchEvents(tr).then(function (res) { if (res.destinations && res.destinations.length) { tr.events = res.destinations; saveTrip(tr); } done('events'); }).catch(function () { done('events'); }); }
+    if (anyDest) { researchWeather(tr).then(function (res) { if (res.destinations && res.destinations.length) { tr.weather = res.destinations; saveTrip(tr); } done('weather'); }).catch(function () { done('weather'); }); }
     if (anyTransport) { researchStopovers(tr).then(function (res) { if (res.legs && res.legs.length) { tr.stopovers = res.legs; saveTrip(tr); } done('stopovers'); }).catch(function () { done('stopovers'); }); }
     if (anyTransport) { researchRouteOps(tr).then(function (res) { if (res.legs && res.legs.length) { tr.routeOps = res.legs; saveTrip(tr); } done('routeOps'); }).catch(function () { done('routeOps'); }); }
     if (anyDest) { researchTours(tr).then(function (res) { if (res.destinations && res.destinations.length) { tr.tours = res.destinations; saveTrip(tr); } done('tours'); }).catch(function () { done('tours'); }); }
@@ -4081,10 +4108,10 @@
     // V5: 5 visible tabs. The other 8 surfaces stay fully reachable via the More sheet (which sets
     // state.activeTab). ALL_TABS validates activeTab against EVERY render branch — NOT just the 5
     // pills — so navigating to a hidden tab via More is never reset to 'overview' by the heal.
-    var ALL_TABS = ['overview', 'itinerary', 'journey', 'transport', 'stay', 'food', 'events', 'stopovers', 'costs', 'bookings', 'album', 'clips', 'group'];
+    var ALL_TABS = ['overview', 'itinerary', 'journey', 'transport', 'stay', 'food', 'events', 'weather', 'stopovers', 'costs', 'bookings', 'album', 'clips', 'group'];
     if (ALL_TABS.indexOf(state.activeTab) === -1) state.activeTab = 'overview'; // heal stale 'arrival'/'live'/'more'
     var TAB_PAIRS = [['overview', 'tab_overview'], ['itinerary', 'tab_days'], ['bookings', 'tab_tasks'], ['album', 'tab_album'], ['more', 'tab_more']];
-    var HIDDEN_TABS = ['journey', 'transport', 'stay', 'food', 'events', 'stopovers', 'costs', 'group']; // reachable via More (clips lives inside Album)
+    var HIDDEN_TABS = ['journey', 'transport', 'stay', 'food', 'events', 'weather', 'stopovers', 'costs', 'group']; // reachable via More (clips lives inside Album)
     function tabIsActive(key) {
       if (key === 'more') return HIDDEN_TABS.indexOf(state.activeTab) !== -1;
       if (key === 'album') return state.activeTab === 'album' || state.activeTab === 'clips';
@@ -4104,6 +4131,7 @@
     else if (state.activeTab === 'stay') s.appendChild(renderStays(plan));
     else if (state.activeTab === 'food') s.appendChild(renderFood(plan));
     else if (state.activeTab === 'events') s.appendChild(renderEvents(plan));
+    else if (state.activeTab === 'weather') s.appendChild(renderWeather(plan));
     else if (state.activeTab === 'stopovers') s.appendChild(renderStopovers(plan));
     else if (state.activeTab === 'costs') s.appendChild(renderCosts(plan));
     else if (state.activeTab === 'bookings') s.appendChild(renderBookings(plan));
@@ -6615,7 +6643,7 @@
   // Proactive auto-research so the user never has to hunt for a "Search hotels" button.
   function autoResearchStays(tr) {
     state._cResearch = state._cResearch || {}; state._cResearch.stays = true;
-    researchStays(tr).then(function (res) { state._cResearch.stays = false; if (res.stays && res.stays.length) { tr.stays = res.stays; tr.stayStrategies = res.strategies || []; saveTrip(tr); } render(); }).catch(function () { state._cResearch.stays = false; render(); });
+    researchStays(tr).then(function (res) { state._cResearch.stays = false; if (res.stays && res.stays.length) { tr.stays = res.stays; tr.stayStrategies = res.strategies || []; checkHotelDeals(tr); saveTrip(tr); } render(); }).catch(function () { state._cResearch.stays = false; render(); });
   }
   function renderStays(plan) {
     var tr = state.trip;
@@ -6829,6 +6857,16 @@
     var drop = prev - cur;
     return drop > 0 && drop >= DEAL_MIN_DROP_ABS && drop >= prev * DEAL_MIN_DROP_PCT;
   }
+  // Mirror of functions/lib/dealThreshold.js parsePriceNumber — keep in sync. Floor of a "$lo–$hi"
+  // range; null when there's no real dollar figure ($$$/pending/percent-only).
+  function parsePriceNumber(text) {
+    if (text == null) return null;
+    var s = String(text).replace(/,/g, '');
+    if (/%/.test(s) && !/\$/.test(s)) return null;
+    var nums = (s.match(/\d+(?:\.\d+)?/g) || []).map(Number).filter(function (n) { return isFinite(n) && n > 0 && n < 100000; });
+    if (!nums.length) return null;
+    return Math.min.apply(null, nums);
+  }
   function checkDealDrops(tr) {
     var legs = tr.transport || []; if (!legs.length) return;
     tr.dealSnapshot = tr.dealSnapshot || {};
@@ -6837,9 +6875,43 @@
       var key = legKeyOf(lg, i), cur = cheapestCostForLeg(lg); if (!cur) return;
       var prev = tr.dealSnapshot[key];
       if (tr.dealWatch && prev && prev.cost && meaningfulDrop(prev.cost, cur.cost)) {
-        alerts.push({ route: (lg.fromCity || '').split(',')[0] + '→' + (lg.toCity || '').split(',')[0], oldCost: prev.cost, newCost: cur.cost, mode: cur.mode, leg: lg, i: i });
+        alerts.push({ kind: 'fare', route: (lg.fromCity || '').split(',')[0] + '→' + (lg.toCity || '').split(',')[0], oldCost: prev.cost, newCost: cur.cost, mode: cur.mode, leg: lg, i: i });
       }
       tr.dealSnapshot[key] = { cost: cur.cost, mode: cur.mode, ts: Date.now() };
+    });
+    if (alerts.length) state._dealAlerts = (state._dealAlerts || []).concat(alerts);
+  }
+  // Hotel price-drop watch — snapshot the floor nightly price of each stored hotel; alert on a
+  // meaningful drop on the next research. $$$/pending entries (no number) are tracked-but-never-alerted.
+  function checkHotelDeals(tr) {
+    if (!tr.stays || !tr.stays.length) return;
+    tr.dealSnapshot = tr.dealSnapshot || {};
+    var alerts = [];
+    tr.stays.forEach(function (st) {
+      var city = (st.city || '').trim(); if (!city) return;
+      (st.hotels || []).forEach(function (h) {
+        var name = (h.name || '').trim(); if (!name) return;
+        var cur = parsePriceNumber(h.priceRange); if (cur == null) return;
+        var key = 'hotel:' + city + ':' + name, prev = tr.dealSnapshot[key];
+        if (tr.dealWatch && prev && prev.cost && meaningfulDrop(prev.cost, cur)) alerts.push({ kind: 'hotel', label: name, city: city.split(',')[0], oldCost: prev.cost, newCost: cur });
+        tr.dealSnapshot[key] = { cost: cur, ts: Date.now() };
+      });
+    });
+    if (alerts.length) state._dealAlerts = (state._dealAlerts || []).concat(alerts);
+  }
+  // Ticket new-deal watch — savingsEstimate is a discount, never a price, so this is a "new deal
+  // appeared" notice (existence diff), never a numeric price drop.
+  function checkTicketDeals(tr) {
+    if (!tr.ticketDeals || !tr.ticketDeals.length) return;
+    tr.dealSnapshot = tr.dealSnapshot || {};
+    var alerts = [];
+    tr.ticketDeals.forEach(function (d) {
+      var attr = (d.attraction || '').trim(); if (!attr) return;
+      (d.items || []).forEach(function (it) {
+        var key = 'ticket:' + attr + ':' + (it.dealType || 'other'), prev = tr.dealSnapshot[key];
+        if (tr.dealWatch && !prev) alerts.push({ kind: 'ticket', label: attr, dealType: it.dealType || 'other', savings: it.savingsEstimate || '', title: it.title || '' });
+        tr.dealSnapshot[key] = { seen: true, savings: it.savingsEstimate || '', ts: Date.now() };
+      });
     });
     if (alerts.length) state._dealAlerts = (state._dealAlerts || []).concat(alerts);
   }
@@ -6887,7 +6959,7 @@
     row.appendChild(pbtn((tr.dealWatch ? '🔔 ' + t('dealWatchOn') : '🔕 ' + t('dealWatchOff')), 'tc-pbtn--ghost' + (tr.dealWatch ? ' tc-pbtn--on' : ''), function () { tr.dealWatch = !tr.dealWatch; saveTrip(tr); if (tr.dealWatch && tcPushSupported() && !tr.pushEnabled) tcEnablePush(); else render(); }));
     if (!state.readonly && !tr._demo) {
       row.appendChild(pbtn('↻ ' + t('dealCheckNow'), 'tc-pbtn--ghost', function () { state.generating = true; renderGenerating(t('researchingTransport')); researchTransport(tr).then(function (res) { state.generating = false; var before = (state._dealAlerts || []).length; applyTransportResult(tr, res); if ((state._dealAlerts || []).length === before) toast(t('dealNoBetter')); render(); }); }));
-      row.appendChild(pbtn('💲 ' + t('dealResearchFares'), 'tc-pbtn--ghost', function () { state.generating = true; renderGenerating(t('researchingTransport')); researchFares(tr).then(function (res) { state.generating = false; if (res.ok && res.legs.length) { tr.legFares = res.legs; tr.legFaresAt = res.researchedAt; tr.legFaresNote = res.sourceNote; saveTrip(tr); } else toast(t('dealNoFares')); render(); }); }));
+      row.appendChild(pbtn('💲 ' + t('dealResearchFares'), 'tc-pbtn--ghost', function () { state.generating = true; renderGenerating(t('researchingTransport')); researchFares(tr).then(function (res) { state.generating = false; if (res.ok && res.legs.length) { tr.legFares = res.legs; tr.legFaresAt = res.researchedAt; tr.legFaresNote = res.sourceNote; tr.legFaresLive = (res.status === 'live'); saveTrip(tr); } else toast(t('dealNoFares')); render(); }); }));
     }
     box.appendChild(row);
     // Phone push opt-in — so "better deal" alerts reach the device even when the app is closed.
@@ -6907,29 +6979,42 @@
     // Grounded current-fare research (honest estimates, pending verification, with source + time).
     if (tr.legFares && tr.legFares.length) {
       var ff = el('div', 'tc-fares');
-      ff.appendChild(el('strong', 'tc-fares__t', '💲 ' + t('dealFaresTitle')));
+      ff.appendChild(el('strong', 'tc-fares__t', '💲 ' + t(tr.legFaresLive ? 'dealFaresLive' : 'dealFaresTitle')));
       tr.legFares.forEach(function (lf) {
         var parts = [((lf.from || '').split(',')[0] || '') + '→' + ((lf.to || '').split(',')[0] || '')];
         [['flight', '✈️'], ['bus', '🚌'], ['train', '🚆']].forEach(function (m) { var f = lf[m[0]]; if (f && (f.low || f.high)) parts.push(m[1] + ' $' + (f.low || '?') + (f.high && f.high !== f.low ? ('–$' + f.high) : '')); });
         if (parts.length > 1) ff.appendChild(el('p', 'tc-fares__leg', parts.join('   ·   ')));
       });
       if (tr.legFaresNote) ff.appendChild(el('p', 'tc-fares__note', '≈ ' + tr.legFaresNote));
-      if (tr.legFaresAt) ff.appendChild(el('p', 'tc-dealwatch__ts', '🕒 ' + t('researchedAt') + ' ' + tpResearchedLabel(tr.legFaresAt) + ' · ' + t('unverified')));
+      if (tr.legFaresAt) ff.appendChild(el('p', 'tc-dealwatch__ts', '🕒 ' + t('researchedAt') + ' ' + tpResearchedLabel(tr.legFaresAt) + ' · ' + t(tr.legFaresLive ? 'fareLiveTag' : 'unverified')));
       box.appendChild(ff);
     }
     // Alerts: client (Check now → has leg/mode, supports Switch) + server (cron-written, informational).
     function dealCard(a, server) {
       var card = el('div', 'tc-deal');
-      card.appendChild(el('strong', 'tc-deal__t', '🎉 ' + t('dealBetterFound') + (server ? (' · ' + t('dealWhileAway')) : '')));
-      card.appendChild(el('p', 'tc-deal__d', a.route + ' · ' + (tpIcon(a.mode) + ' ' + (t('tm_' + a.mode) || a.mode)) + ' — ' + t('dealWas') + ' $' + a.oldCost + ' → ' + t('dealNow') + ' $' + a.newCost + ' · ' + t('dealSave') + ' $' + Math.max(0, a.oldCost - a.newCost)));
+      var kind = a.kind || 'fare'; // back-compat: pre-kind stored alerts are fares
+      var titleKey = kind === 'hotel' ? 'dealHotelDrop' : (kind === 'ticket' ? 'dealTicketNew' : 'dealBetterFound');
+      var titleIcon = kind === 'hotel' ? '🏨 ' : (kind === 'ticket' ? '🏷 ' : '🎉 ');
+      card.appendChild(el('strong', 'tc-deal__t', titleIcon + t(titleKey) + (server ? (' · ' + t('dealWhileAway')) : '')));
+      var bodyTxt;
+      if (kind === 'hotel') {
+        bodyTxt = a.label + ' · ' + a.city + ' — ' + t('dealWas') + ' $' + a.oldCost + ' → ' + t('dealNow') + ' $' + a.newCost + ' · ' + t('dealSave') + ' $' + Math.max(0, a.oldCost - a.newCost) + '/' + t('perNight');
+      } else if (kind === 'ticket') {
+        bodyTxt = a.label + ' — ' + (t('tdeal_' + a.dealType) || a.dealType) + (a.title ? (' · ' + a.title) : '') + (a.savings && parsePriceNumber(a.savings) != null ? (' · ' + t('tdealSave') + ' ' + a.savings) : '');
+      } else {
+        bodyTxt = a.route + ' · ' + (tpIcon(a.mode) + ' ' + (t('tm_' + a.mode) || a.mode)) + ' — ' + t('dealWas') + ' $' + a.oldCost + ' → ' + t('dealNow') + ' $' + a.newCost + ' · ' + t('dealSave') + ' $' + Math.max(0, a.oldCost - a.newCost);
+      }
+      card.appendChild(el('p', 'tc-deal__d', bodyTxt));
       var acts = el('div', 'tc-deal__acts');
       acts.appendChild(pbtn('✓ ' + t('dealKeep'), 'tc-pbtn--ghost', function () {
         if (server) { tr.dealAlerts = (tr.dealAlerts || []).filter(function (x) { return x !== a; }); saveTrip(tr); }
         else state._dealAlerts = (state._dealAlerts || []).filter(function (x) { return x !== a; });
         render();
       }));
-      if (!server && a.leg) acts.appendChild(pbtn('🔁 ' + t('dealSwitch'), 'tc-pbtn--accent', function () { state._dealAlerts = (state._dealAlerts || []).filter(function (x) { return x !== a; }); chooseTransport(a.leg, a.i, a.mode); }));
+      // Switch only applies to a transport leg (hotels/tickets aren't a single switchable option).
+      if (!server && kind === 'fare' && a.leg) acts.appendChild(pbtn('🔁 ' + t('dealSwitch'), 'tc-pbtn--accent', function () { state._dealAlerts = (state._dealAlerts || []).filter(function (x) { return x !== a; }); chooseTransport(a.leg, a.i, a.mode); }));
       card.appendChild(acts);
+      if (kind === 'ticket') card.appendChild(el('p', 'tc-unverified', t('unverified')));
       box.appendChild(card);
     }
     (state._dealAlerts || []).forEach(function (a) { dealCard(a, false); });
@@ -7031,6 +7116,67 @@
     tr.notes.push({ id: uid('note'), text: '🚐 ' + (requested ? t('rideRequestedNote') : t('rideBookedNote')) + (res.route ? (': ' + res.route) : '') + (res.bookingId ? (' · #' + res.bookingId) : ''), ts: Date.now() });
     saveTrip(tr);
     toast(requested ? t('rideRequestedToast') : t('rideBookedToast'));
+  }
+  // ── Assisted checkout / confirmation capture (P3) ──────────────────────────
+  // HONEST self-booking: the user books on the real operator site, then pastes their confirmation #
+  // + the price they actually paid. We mark the booking booked + record ONLY what they typed (no
+  // fetch, no auto-confirm, no fabricated price). Mirrors reconcileRideResult's attach, on an
+  // existing booking object.
+  function attachManualBooking(b, tr, opts) {
+    opts = opts || {};
+    b.bookingStatus = opts.asRequested ? 'user_approval_needed' : 'booked';
+    b.confirmationNumber = String(opts.confirmationNumber || '').trim();
+    if (opts.actualPrice != null && String(opts.actualPrice).trim()) b.actualCost = String(opts.actualPrice).trim(); // verbatim, never reformatted
+    b.bookedBy = (getMe() ? famName(getMe()) : '');
+    b.bookedAt = new Date().toISOString();
+    b.bookingSource = 'self_booked';
+    // Cost ledger (same integer-derive as reconcileRideResult; de-dup by bookingId so re-saving won't double-count).
+    var amt = parseInt(String(opts.actualPrice || '').replace(/[^\d]/g, ''), 10) || 0;
+    if (amt) {
+      var already = costLedger(tr).some(function (e) { return e.bookingId && e.bookingId === b.id; });
+      if (!already) costLedger(tr).push({ id: uid('cl'), bookingId: b.id, familyId: (b.paidBy || (getMe() || '')), title: b.title, amount: amt, paid: false, notes: (b.confirmationNumber ? ('#' + b.confirmationNumber) : t('selfBookedLedgerNote')), createdAt: new Date().toISOString() });
+    }
+    tr.notes = tr.notes || [];
+    tr.notes.push({ id: uid('note'), text: bookingTypeIcon(b.type) + ' ' + t('selfBookedNote') + ': ' + b.title + (b.confirmationNumber ? (' · #' + b.confirmationNumber) : ''), ts: Date.now() });
+    saveTrip(tr);
+    tcNotifyTask(opts.asRequested ? 'user_approval_needed' : 'booked', b.title);
+    toast(t('selfBookedToast'));
+    render();
+  }
+  function operatorLabel(b) { return b.type === 'flight' ? t('confirmGoFlight') : ((b.type === 'hotel' || b.type === 'airbnb') ? t('confirmGoHotel') : t('openOfficial')); }
+  function openConfirmBookingModal(b, idx) {
+    if (state.readonly || (state.trip && state.trip._demo)) { toast(t('sampleReadonly')); return; }
+    var tr = state.trip; closeModal();
+    var ov = el('div', 'tc-modal'); ov.id = 'tcModal';
+    var card = el('div', 'tc-modal__card');
+    var head = el('div', 'tc-modal__head');
+    head.appendChild(el('strong', 'tc-modal__title', t('confirmBookingTitle')));
+    var x = el('button', 'tc-modal__x', '×'); x.type = 'button'; x.addEventListener('click', closeModal); head.appendChild(x);
+    card.appendChild(head);
+    card.appendChild(el('p', 'tc-hint', t('confirmBookingIntro')));
+    var links = BookingLinkProvider.links(b, tr);
+    card.appendChild(linkBtn('🔗 ' + operatorLabel(b), links.officialUrl || links.searchUrl, 'tc-pbtn--accent'));
+    if ((b.type === 'hotel' || b.type === 'airbnb') && b.title && typeof StayLinkProvider !== 'undefined' && StayLinkProvider.booking) {
+      card.appendChild(linkBtn('🏨 ' + t('confirmGoHotel'), StayLinkProvider.booking({ name: b.title }, b.city || (tr && tr.destination) || '')));
+    }
+    var cn = input(b.confirmationNumber, t('confirmationNumberPh'));
+    card.appendChild(field(t('confirmationNumber'), cn));
+    var pr = input(b.actualCost, t('actualPricePh'));
+    card.appendChild(field(t('actualPricePaid'), pr));
+    if (b.type === 'flight') card.appendChild(el('p', 'tc-hint', t('confirmFlightAirlineHint')));
+    card.appendChild(el('p', 'tc-hint', t('confirmBookingHonesty')));
+    var acts = el('div', 'tc-modal__acts');
+    var cancel = el('button', 'tc-pbtn', t('cancelBtn')); cancel.type = 'button'; cancel.addEventListener('click', closeModal); acts.appendChild(cancel);
+    var save = el('button', 'tc-pbtn tc-pbtn--accent', t('confirmBookingSave')); save.type = 'button';
+    save.addEventListener('click', function () {
+      var cnv = (cn.value || '').trim();
+      if (!cnv) { toast(t('confirmNeedNumber')); return; }
+      attachManualBooking(b, state.trip, { confirmationNumber: cnv, actualPrice: (pr.value || '').trim(), asRequested: false });
+      closeModal();
+    });
+    acts.appendChild(save);
+    card.appendChild(acts);
+    ov.appendChild(card); ov.addEventListener('click', function (e) { if (e.target === ov) closeModal(); }); doc.body.appendChild(ov);
   }
   function requestDlcRide(leg) {
     var tr = state.trip, opts = { kind: 'ride', pickup: leg.fromCity || '', dropoff: leg.toCity || '' };
@@ -7456,7 +7602,9 @@
     acts.appendChild(linkBtn('🔎 ' + (ev.eventUrl ? t('tpSearchBook') : t('mapG')), ev.eventUrl || gsearch((ev.name || '') + ' ' + (city || ''))));
     if (canEditPlan()) acts.appendChild(pbtn('📌 ' + t('addToPlan'), 'tc-pbtn--accent', function () { pinAttraction({ name: ev.name, why: ev.whyRecommended || '' }, city); }));
     c.appendChild(acts);
-    c.appendChild(el('span', 'tc-event__pending', '≈ ' + t('eventPending')));
+    // Live Ticketmaster events are the only ones allowed to drop the pending caption (official source).
+    if (ev.source === 'ticketmaster_live' && ev.verificationStatus === 'verified') c.appendChild(el('span', 'tc-event__live', '✓ ' + t('eventLiveOfficial')));
+    else c.appendChild(el('span', 'tc-event__pending', '≈ ' + t('eventPending')));
     var _lme = learnMoreSection(ev, 'event', city); if (_lme) c.appendChild(_lme); // "Learn more"
     if (!state.readonly && ev.name) c.appendChild(voteRow({ name: ev.name }));
     return c;
@@ -7479,6 +7627,57 @@
       var block = el('div', 'tc-stayblock');
       if (multi && d.city) block.appendChild(el('strong', 'tc-stayblock__city', '📍 ' + d.city));
       consensusSort(d.events.filter(function (ev) { return ev && ev.name && !rejectedNameSet(tr)[(ev.name || '').trim().toLowerCase()]; }), function (ev) { return ev.name; }).forEach(function (ev) { block.appendChild(eventCard(ev, d.city)); });
+      wrap.appendChild(block);
+    });
+    wrap.appendChild(el('p', 'tc-unverified', t('unverified')));
+    return wrap;
+  }
+  // ── Weather tab (P2) — REAL Open-Meteo forecast + labelled seasonal normals; honest by design ──
+  function wxDayCard(day) {
+    var c = el('article', 'tc-wxday' + (day.source === 'seasonal_normal' ? ' tc-wxday--seasonal' : '') + (day.source === 'unavailable' ? ' tc-wxday--na' : ''));
+    var top = el('div', 'tc-wxday__top');
+    top.appendChild(el('span', 'tc-wxday__date', day.date));
+    if (day.source !== 'unavailable' && day.condition) top.appendChild(el('span', 'tc-wxday__cond', (day.emoji || '') + ' ' + (t('wxcond_' + day.condition) || day.condition)));
+    c.appendChild(top);
+    if (day.source === 'unavailable') { c.appendChild(el('p', 'tc-wxday__na', t('wxUnavailable'))); return c; }
+    if (day.tMax != null || day.tMin != null) c.appendChild(el('p', 'tc-wxday__temp', (day.tMax != null ? day.tMax + '°' : '–') + ' / ' + (day.tMin != null ? day.tMin + '°' : '–')));
+    var meta = el('div', 'tc-wxday__meta');
+    if (day.precipProbMax != null) meta.appendChild(el('span', 'tc-wxday__rain', '💧 ' + day.precipProbMax + '%'));
+    if (day.rec) meta.appendChild(el('span', 'tc-wxday__rec', day.rec === 'outdoor' ? ('🌳 ' + t('wxRecOutdoor')) : (day.rec === 'indoor' ? ('🏛 ' + t('wxRecIndoor')) : ('🔀 ' + t('wxRecMixed')))));
+    if (meta.children.length) c.appendChild(meta);
+    if (day.source === 'seasonal_normal') c.appendChild(el('span', 'tc-event__pending', '≈ ' + t('wxSeasonalLabel')));
+    return c;
+  }
+  function renderWeather(plan) {
+    var tr = state.trip, wrap = el('div', 'tc-stays tc-weather');
+    wrap.appendChild(el('strong', 'tc-stays__t', '🌦️ ' + t('weatherTitle')));
+    wrap.appendChild(el('p', 'tc-stays__sub', t('weatherSub')));
+    if (!state.readonly && !tr._demo) {
+      var find = el('button', 'tc-cta', (tr.weather && tr.weather.length) ? ('↻ ' + t('refreshWeather')) : t('findWeather')); find.type = 'button';
+      find.addEventListener('click', function () { find.disabled = true; state.generating = true; renderGenerating(t('researchingWeather')); researchWeather(tr).then(function (res) { state.generating = false; if (res.destinations && res.destinations.length) { tr.weather = res.destinations; saveTrip(tr); } render(); }); });
+      wrap.appendChild(find);
+    }
+    var wd = (tr.weather && tr.weather.length) ? tr.weather : [];
+    if (isResearching('weather') && !wd.length) { wrap.appendChild(researchBanner('researchingWeather')); return wrap; }
+    if (!wd.length) { wrap.appendChild(el('p', 'tc-empty', t('noWeatherYet'))); return wrap; }
+    var multi = wd.length > 1;
+    wd.forEach(function (d) {
+      var block = el('div', 'tc-stayblock');
+      if (multi && d.city) block.appendChild(el('strong', 'tc-stayblock__city', '📍 ' + d.city));
+      if (d.source === 'seasonal_normal') block.appendChild(el('p', 'tc-hint', '≈ ' + t('wxSeasonalNote')));
+      var days = (d.days || []);
+      var hasData = days.some(function (x) { return x.source !== 'unavailable'; });
+      if (!hasData) { block.appendChild(el('p', 'tc-empty', t('wxUnavailable'))); wrap.appendChild(block); return; }
+      var grid = el('div', 'tc-wxgrid');
+      days.forEach(function (x) { grid.appendChild(wxDayCard(x)); });
+      block.appendChild(grid);
+      if (d.packingTips && d.packingTips.length) {
+        var pk = el('div', 'tc-wxpack');
+        pk.appendChild(el('strong', 'tc-wxpack__t', '🎒 ' + t('wxPackingTitle')));
+        var ul = el('ul', 'tc-wxpack__list');
+        d.packingTips.forEach(function (k) { ul.appendChild(el('li', null, t('wxtip_' + k) || k)); });
+        pk.appendChild(ul); block.appendChild(pk);
+      }
       wrap.appendChild(block);
     });
     wrap.appendChild(el('p', 'tc-unverified', t('unverified')));
@@ -7931,7 +8130,7 @@
         cta.disabled = true; state.generating = true; renderGenerating(t('tdealsResearching'));
         researchTicketDeals(tr).then(function (res) {
           state.generating = false;
-          if (res.deals && res.deals.length) { tr.ticketDeals = res.deals; tr.ticketDealsAt = Date.now(); saveTrip(tr); }
+          if (res.deals && res.deals.length) { tr.ticketDeals = res.deals; tr.ticketDealsAt = Date.now(); checkTicketDeals(tr); saveTrip(tr); }
           else toast(t('tdealsNone'));
           render();
         });
@@ -8174,8 +8373,13 @@
         _mem.className = 'tc-input'; _mem.addEventListener('change', function () { b.assignedToMember = _mem.value; saveTrip(tr); if (_mem.value) tcNotifyTask('assigned', b.title, memberName(_mem.value)); render(); });
         ctrls.appendChild(_mem);
       }
-      var mb = el('button', 'tc-pbtn' + (b.bookingStatus === 'booked' ? ' tc-pbtn--accent' : ''), b.bookingStatus === 'booked' ? t('undoBooked') : t('markBooked')); mb.type = 'button';
-      mb.addEventListener('click', function () { b.bookingStatus = (b.bookingStatus === 'booked') ? 'ready_to_book' : 'booked'; if (b.bookingStatus === 'booked') { b.bookedBy = (getMe() ? famName(getMe()) : ''); tcNotifyTask('booked', b.title); } saveTrip(tr); render(); });
+      var mb = el('button', 'tc-pbtn' + (b.bookingStatus === 'booked' ? ' tc-pbtn--accent' : ''), b.bookingStatus === 'booked' ? t('undoBooked') : t('iBookedThis')); mb.type = 'button';
+      // Not-booked → open the assisted-checkout modal (deep-link + confirmation/price capture).
+      // Undo path unchanged. This is the whole assisted-checkout feature: never silent-confirm.
+      mb.addEventListener('click', function () {
+        if (b.bookingStatus === 'booked') { b.bookingStatus = 'ready_to_book'; saveTrip(tr); render(); return; }
+        openConfirmBookingModal(b, idx);
+      });
       ctrls.appendChild(mb);
       var del = el('button', 'tc-pbtn', '🗑'); del.type = 'button'; del.addEventListener('click', function () { tr.bookings.splice(idx, 1); saveTrip(tr); render(); });
       ctrls.appendChild(del);
@@ -8183,6 +8387,7 @@
       if (b.bookingStatus === 'booked') {
         var cn = input(b.confirmationNumber, t('confirmationNumber')); cn.addEventListener('input', function () { b.confirmationNumber = cn.value; }); cn.addEventListener('change', function () { saveTrip(tr); });
         c.appendChild(field(t('confirmationNumber'), cn));
+        if (b.bookedAt && b.bookingSource === 'self_booked') c.appendChild(el('p', 'tc-bk__donemeta', '✓ ' + t('selfBookedBy') + (b.bookedBy ? (' ' + b.bookedBy) : '') + ' · ' + String(b.bookedAt).slice(0, 10)));
       }
       var _due = input(b.dueDate || b.deadline || '', t('taskDue'), 'date'); _due.addEventListener('change', function () { b.dueDate = _due.value; b.deadline = _due.value; saveTrip(tr); });
       c.appendChild(field(t('taskDue'), _due));
@@ -8542,7 +8747,7 @@
     _voteVerdict: voteVerdict, _recomputeAutoReject: recomputeAutoReject, _reconcileAutoRejections: reconcileAutoRejections, _rejectedNames: rejectedNames, _rejectedNameSet: rejectedNameSet, _unrejectPlace: unrejectPlace, _skippedNames: skippedNames,
     _consensusFor: consensusFor, _familyWeight: familyWeight, _buildPreferenceProfile: buildPreferenceProfile, _likedNames: likedNames, _favoritedNames: favoritedNames, _votesSummaryText: votesSummaryText, _voteRow: voteRow,
     _preferredNames: preferredNames, _votesSignature: votesSignature, _votesChangedSinceOptimize: votesChangedSinceOptimize, _optimizeRebuild: optimizeRebuild, _consensusSort: consensusSort, _hotelVoteName: hotelVoteName,
-    _researchTours: researchTours, _requestDlcInquiry: requestDlcInquiry, _reconcileRideResult: reconcileRideResult, _toursPanel: toursPanel,
+    _researchTours: researchTours, _requestDlcInquiry: requestDlcInquiry, _reconcileRideResult: reconcileRideResult, _attachManualBooking: attachManualBooking, _openConfirmBookingModal: openConfirmBookingModal, _researchWeather: researchWeather, _checkHotelDeals: checkHotelDeals, _checkTicketDeals: checkTicketDeals, _toursPanel: toursPanel,
     _loadMedia: loadMedia, _addMedia: addMedia, _updateMedia: updateMedia, _deleteMedia: deleteMedia, _visibleMedia: visibleMedia, _mediaCol: mediaCol, _isImageUrl: isImageUrl, _dayOptionsForAlbum: dayOptionsForAlbum,
     _generateClipPackage: generateClipPackage, _mountLiveMap: mountLiveMap, _renderAlbum: renderAlbum, _renderClips: renderClips, _albumCard: albumCard, _clipExportPanel: clipExportPanel, _addMediaPanel: addMediaPanel,
     _renderHero: renderHero, _renderCreate: renderCreate, _whoWhereWhatBand: whoWhereWhatBand, _howItWorksSection: howItWorksSection, _capabilityCards: capabilityCards, _trustSection: trustSection, _tripActivityFeed: tripActivityFeed, _renderLiveLocation: renderLiveLocation, _callWithRetry: callWithRetry,

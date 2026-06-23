@@ -35,5 +35,16 @@ ok('custom thresholds honored', D.isMeaningfulDrop(100, 90, { absMin: 5, pctMin:
 // Constants exported for the frontend mirror to match.
 ok('constants exported', D.DEAL_MIN_DROP_ABS === 25 && D.DEAL_MIN_DROP_PCT === 0.10);
 
+// parsePriceNumber — anchor a free-text hotel/ticket price; null when there's no real dollar figure.
+ok('range → floor (low)', D.parsePriceNumber('$180–$240/night') === 180);
+ok('single price', D.parsePriceNumber('$95') === 95);
+ok('commas stripped', D.parsePriceNumber('$1,250') === 1250);
+ok('$$$ → null (no number)', D.parsePriceNumber('$$$') === null);
+ok('"pending verification" → null', D.parsePriceNumber('pending verification') === null);
+ok('empty/null → null', D.parsePriceNumber('') === null && D.parsePriceNumber(null) === null);
+ok('percent-only discount → null (not a price)', D.parsePriceNumber('~10-20%') === null);
+ok('dollar discount range still parses', D.parsePriceNumber('$15–$30/ticket') === 15);
+ok('absurd numbers filtered', D.parsePriceNumber('999999') === null);
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

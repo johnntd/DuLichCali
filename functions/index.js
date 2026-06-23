@@ -55,6 +55,8 @@ const _driverRanking = require('./lib/driverRanking.js');
 const _dealThreshold = require('./lib/dealThreshold.js');
 const _airportPairs = require('./lib/airportPairs.js');
 const _ticketDeals = require('./lib/ticketDeals.js');
+const _weather = require('./lib/weather.js');
+const _tmEvents = require('./lib/ticketmasterEvents.js');
 
 // Email provider secret (Resend — https://resend.com)
 const RESEND_API_KEY      = defineSecret('RESEND_API_KEY');
@@ -2933,6 +2935,27 @@ function buildEventsPrompt(lang) {
     'Write all human-readable text in ' + langName + '. Output ONE compact valid JSON object only.',
   ].join('\n');
 }
+// ── Ticketmaster Discovery seam (P3) ──────────────────────────────────────────
+// FACTUAL event enrichment when a Discovery key is configured (TICKETMASTER_API_KEY ENV VAR — NOT a
+// bound defineSecret, so the function deploys cleanly with none set) AND the live client is enabled.
+// Absent key OR disabled → null → caller keeps the grounded path. NO untested live client ships:
+// TM_LIVE_DISABLED gates the documented fetch; flip to false + test against a real dev key first.
+const TM_LIVE_DISABLED = true; // flip false ONLY after a live-key integration test
+async function tcTicketmasterEvents(city, startDate, endDate, avoidSet) {
+  var key = ''; try { key = String(process.env.TICKETMASTER_API_KEY || '').trim(); } catch (e) { key = ''; }
+  if (!_tmEvents.tmKeyPresent(key) || TM_LIVE_DISABLED) return null;
+  // ── SINGLE DOCUMENTED INTEGRATION POINT (implement + test vs a real dev key, then flip the flag) ──
+  //   const params = new URLSearchParams({ apikey: key, city: String(city || ''), countryCode: 'US', sort: 'date,asc', size: '20' });
+  //   if (startDate) params.set('startDateTime', startDate + 'T00:00:00Z');
+  //   if (endDate) params.set('endDateTime', endDate + 'T23:59:59Z');
+  //   try {
+  //     const r = await fetch('https://app.ticketmaster.com/discovery/v2/events.json?' + params.toString());
+  //     if (!r.ok) return null;
+  //     const j = await r.json();
+  //     return _tmEvents.sanitizeLiveEvents(j && j._embedded && j._embedded.events, avoidSet);
+  //   } catch (e) { console.warn('[tcTicketmasterEvents] live error', e && e.message); return null; }
+  return null;
+}
 exports.researchTripEvents = onCall(
   { region: 'us-central1', secrets: [GEMINI_API_KEY], timeoutSeconds: 50, memory: '256MiB', cors: true },
   async (request) => {
@@ -2968,7 +2991,15 @@ exports.researchTripEvents = onCall(
         }));
         return { city: String(d.city || '').slice(0, 80), events };
       }).filter(d => d.city);
-      return { ok: true, destinations, dataSource: 'ai_researched_pending_verification' };
+      // P3 Ticketmaster seam: replace a city's grounded events with FACTUAL live events when a key
+      // is configured AND the live client is enabled. No-op today (returns null) → grounded path.
+      const isoM = String(trip.dateRange || '').replace(/[–—]/g, '-').match(/(\d{4}-\d{2}-\d{2})[^\d]+(\d{4}-\d{2}-\d{2})/);
+      const tmStart = isoM ? isoM[1] : '', tmEnd = isoM ? isoM[2] : '';
+      const merged = await Promise.all(destinations.map(async (d) => {
+        try { const live = await tcTicketmasterEvents(d.city, tmStart, tmEnd, avoidSet); if (live && live.length) return { city: d.city, events: live, source: 'ticketmaster_live' }; } catch (e3) {}
+        return d;
+      }));
+      return { ok: true, destinations: merged, dataSource: 'ai_researched_pending_verification' };
     } catch (e2) {
       console.error('[researchTripEvents] failed', e2 && e2.message);
       return { ok: false, debugCode: 'RESEARCH_ERROR', destinations: [] };
@@ -2988,6 +3019,98 @@ function buildStopoverPrompt(lang) {
     'Write all human-readable text in ' + langName + '. Output ONE compact valid JSON object only.',
   ].join('\n');
 }
+// ── P2 WEATHER AGENT (Open-Meteo — FREE, NO API KEY, REAL forecast) ──────────────────────────
+// For each destination + its dates: REAL daily forecast (≤16 days ahead) → indoor/outdoor nudges +
+// deterministic packing-tip KEYS. Dates beyond the forecast window fall back to clearly-labelled
+// seasonal CLIMATE normals (separate Open-Meteo endpoint); dates with neither are marked
+// 'unavailable' (no numbers shown). NEVER fabricates: temps/precip come straight from the API
+// arrays, condition is a fixed WMO lookup (functions/lib/weather.js), packing tips are derived
+// deterministically. No Gemini, no secrets — pure fetch (Node 20 global fetch).
+exports.researchTripWeather = onCall(
+  { region: 'us-central1', timeoutSeconds: 50, memory: '256MiB', cors: true },
+  async (request) => {
+    const data = request.data || {};
+    const trip = data.trip || {};
+    const dests = (Array.isArray(trip.destinations) ? trip.destinations : [])
+      .filter((d) => d && (d.city || '').trim() && d.role !== 'pass_through');
+    const fallbackCity = (trip.destination || '').trim();
+    const cities = dests.length ? dests : (fallbackCity ? [{ city: fallbackCity }] : []);
+    if (!cities.length) return { ok: false, debugCode: 'NO_DESTINATION', destinations: [] };
+
+    const isoOf = (dt) => dt.toISOString().slice(0, 10);
+    const addDays = (iso, n) => { const d = new Date(iso + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return isoOf(d); };
+    const todayIso = isoOf(new Date());
+    const windowEnd = addDays(todayIso, 15); // Open-Meteo free forecast covers ~16 days from today.
+    const trIso = String(trip.dateRange || '').replace(/[–—]/g, '-').match(/(\d{4}-\d{2}-\d{2})[^\d]+(\d{4}-\d{2}-\d{2})/);
+    const trStart = trIso ? trIso[1] : '', trEnd = trIso ? trIso[2] : '';
+
+    const fetchJson = async (url) => { try { const r = await fetch(url); if (!r.ok) return null; return await r.json(); } catch (e) { return null; } };
+    const geocode = async (city) => {
+      const j = await fetchJson('https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(city) + '&count=1&language=en&format=json');
+      if (!j || !Array.isArray(j.results) || !j.results.length) return null; // missing 'results' = no match → honest skip
+      const r = j.results[0];
+      return { lat: r.latitude, lng: r.longitude, timezone: r.timezone || 'auto' };
+    };
+    const datesBetween = (a, b) => { const out = []; if (!a || !b) return out; let cur = a, g = 0; while (cur <= b && g < 20) { out.push(cur); cur = addDays(cur, 1); g++; } return out; };
+
+    const results = await Promise.all(cities.slice(0, 8).map(async (dest) => {
+      const city = String(dest.city || '').trim();
+      let lat = dest.lat, lng = dest.lng, tz = dest.timezone;
+      if (lat == null || lng == null) {
+        const g = await geocode(city);
+        if (!g) return { city, lat: null, lng: null, days: [], packingTips: [], source: 'unavailable' };
+        lat = g.lat; lng = g.lng; tz = g.timezone;
+      }
+      let arr = dest.arrivalDate || dest.startDate || trStart || '';
+      let dep = dest.departureDate || dest.endDate || trEnd || arr;
+      if (!arr) return { city, lat, lng, timezone: tz, days: [], packingTips: [], source: 'unavailable' };
+      if (dep < arr) dep = arr;
+      let span = datesBetween(arr, dep).slice(0, 14);
+      if (!span.length) span = [arr];
+      const within = span.filter((d) => d >= todayIso && d <= windowEnd);
+      const beyond = span.filter((d) => d > windowEnd);
+      const byDate = {};
+      if (within.length) {
+        const fj = await fetchJson('https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lng +
+          '&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code&temperature_unit=fahrenheit&timezone=auto&start_date=' + within[0] + '&end_date=' + within[within.length - 1]);
+        const dd = fj && fj.daily;
+        if (dd && Array.isArray(dd.time)) dd.time.forEach((dt, i) => {
+          const code = dd.weather_code ? dd.weather_code[i] : null;
+          const pp = dd.precipitation_probability_max ? dd.precipitation_probability_max[i] : null;
+          const tx = dd.temperature_2m_max ? dd.temperature_2m_max[i] : null;
+          const tn = dd.temperature_2m_min ? dd.temperature_2m_min[i] : null;
+          byDate[dt] = { date: dt, tMax: tx, tMin: tn, precipProbMax: pp, condition: _weather.wxCondition(code).key, rec: _weather.outdoorScore(code, pp, tx, tn), source: 'forecast' };
+        });
+      }
+      if (beyond.length) {
+        const cj = await fetchJson('https://climate-api.open-meteo.com/v1/climate?latitude=' + lat + '&longitude=' + lng +
+          '&start_date=' + beyond[0] + '&end_date=' + beyond[beyond.length - 1] + '&models=MRI_AGCM3_2_S&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&temperature_unit=fahrenheit');
+        const cd = cj && cj.daily;
+        if (cd && Array.isArray(cd.time)) cd.time.forEach((dt, i) => {
+          const ps = cd.precipitation_sum ? cd.precipitation_sum[i] : null;
+          const cond = (ps != null && ps > 2) ? 'rain' : 'partly';
+          const tx = cd.temperature_2m_max ? cd.temperature_2m_max[i] : null;
+          const tn = cd.temperature_2m_min ? cd.temperature_2m_min[i] : null;
+          byDate[dt] = { date: dt, tMax: tx, tMin: tn, precipProbMax: null, condition: cond, rec: _weather.outdoorScore(cond === 'rain' ? 61 : 1, null, tx, tn), source: 'seasonal_normal' };
+        });
+      }
+      const days = span.map((d) => byDate[d] || { date: d, source: 'unavailable' });
+      const known = days.filter((d) => d.source !== 'unavailable');
+      const source = !known.length ? 'unavailable' : (known.every((d) => d.source === 'forecast') ? 'forecast' : 'seasonal_normal');
+      return { city, lat, lng, timezone: tz, days, packingTips: _weather.buildPackingTips(known), source };
+    }));
+
+    try {
+      const coordsByCity = {};
+      results.forEach((r) => { if (r && r.city) coordsByCity[r.city] = { lat: r.lat, lng: r.lng, timezone: r.timezone }; });
+      const destinations = _weather.sanitizeWeather({ destinations: results }).map((d) => Object.assign(d, coordsByCity[d.city] || {}));
+      return { ok: true, destinations, dataSource: 'open_meteo_real', generatedAt: Date.now() };
+    } catch (e) {
+      console.error('[researchTripWeather] failed', e && e.message);
+      return { ok: false, debugCode: 'WEATHER_ERROR', destinations: [] };
+    }
+  }
+);
 exports.researchTripStopovers = onCall(
   { region: 'us-central1', secrets: [GEMINI_API_KEY, GOOGLE_MAPS_API_KEY], timeoutSeconds: 50, memory: '256MiB', cors: true },
   async (request) => {
@@ -4218,6 +4341,26 @@ exports.researchTripTransport = onCall(
 // LOW–HIGH ranges with a source note + real search URLs, all "pending verification" — NEVER an
 // invented exact price (null when no credible fare is found). This powers the Deal Hunter snapshot
 // + the scheduled monitor; plug a paid flight-fare API into the SAME shape for authoritative prices.
+// ── LIVE FARE PROVIDER SEAM (P3) ──────────────────────────────────────────────
+// Single integration point for a real paid fare API (Duffel/Amadeus). Detection is via the
+// DUFFEL_API_KEY ENV VAR (NOT a bound defineSecret) so the functions deploy cleanly with NO secret
+// provisioned — the seam is a guaranteed no-op until a key is set AND a tested client is wired here.
+// Returns the SAME per-leg shape tcResearchLegFares emits, with status 'live' so the UI flips the
+// "(est.)/pending verification" label to "(live)". Absent key → null → caller keeps the grounded
+// path UNCHANGED. NO untested HTTP client ships: the body is a documented TODO that returns null.
+function tcLiveFareConfigured() {
+  var k = ''; try { k = String(process.env.DUFFEL_API_KEY || '').trim(); } catch (e) { k = ''; }
+  return k.length >= 20;
+}
+async function tcLiveFareProvider(legs, lang) {
+  if (!tcLiveFareConfigured()) return null; // → caller keeps the grounded "(est.)" path
+  // TODO(live-fare): when an authorized, TESTED Duffel/Amadeus integration exists, call it per leg
+  //   (e.g. Duffel offer_requests → cheapest offer total_amount), map each to
+  //   { from, to, flight:{low,high,note,url}, bus:{...}, train:{...} } and return
+  //   { legs:[...], sourceNote, status:'live' }. Until then, fail OPEN (never fabricate):
+  console.warn('[tcLiveFareProvider] DUFFEL_API_KEY present but no tested integration — using grounded research');
+  return null;
+}
 function buildLegFaresPrompt(legs, lang) {
   const langName = lang === 'vi' ? 'Vietnamese' : (lang === 'es' ? 'Spanish' : 'English');
   return [
@@ -4231,6 +4374,8 @@ function buildLegFaresPrompt(legs, lang) {
 // Shared grounded fare-research core (used by the callable AND the scheduled deal monitor).
 // Returns { legs:[{from,to,flight,bus,train}], sourceNote } or null. Never fabricates a number.
 async function tcResearchLegFares(legs, lang, geminiKey) {
+  const live = await tcLiveFareProvider(legs, lang); // P3 seam: null today → grounded path below
+  if (live && Array.isArray(live.legs) && live.legs.length) return { legs: live.legs.slice(0, 8), sourceNote: String(live.sourceNote || '').slice(0, 160), status: 'live' };
   const text = await serverCallGeminiGrounded(buildLegFaresPrompt(legs, lang), geminiKey, 1500);
   let raw = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
   const s = raw.indexOf('{'); const e = raw.lastIndexOf('}');
@@ -4240,7 +4385,7 @@ async function tcResearchLegFares(legs, lang, geminiKey) {
   const intOrNull = (x) => { const n = parseInt(x, 10); return (isFinite(n) && n > 0 && n < 20000) ? n : null; };
   const clampMode = (m) => { m = m || {}; return { low: intOrNull(m.low), high: intOrNull(m.high), note: String(m.note || '').slice(0, 120), url: /^https?:\/\//.test(String(m.url || '')) ? String(m.url).slice(0, 300) : '' }; };
   const outLegs = (Array.isArray(parsed.legs) ? parsed.legs : []).slice(0, 8).map((l) => ({ from: String((l && l.from) || '').slice(0, 80), to: String((l && l.to) || '').slice(0, 80), flight: clampMode(l && l.flight), bus: clampMode(l && l.bus), train: clampMode(l && l.train) }));
-  return { legs: outLegs, sourceNote: String(parsed.sourceNote || '').slice(0, 160) };
+  return { legs: outLegs, sourceNote: String(parsed.sourceNote || '').slice(0, 160), status: 'estimated' };
 }
 exports.researchLegFares = onCall(
   { region: 'us-central1', secrets: [GEMINI_API_KEY], timeoutSeconds: 60, memory: '256MiB', cors: true },
@@ -4249,6 +4394,12 @@ exports.researchLegFares = onCall(
     const lang = (data.lang === 'vi' || data.lang === 'es') ? data.lang : 'en';
     const legs = (Array.isArray(data.legs) ? data.legs : []).filter((l) => l && String(l.fromCity || '').trim() && String(l.toCity || '').trim()).slice(0, 8);
     if (!legs.length) return { ok: false, debugCode: 'NO_LEGS', legs: [] };
+    // P3 live-fare seam: when a real provider is wired (DUFFEL_API_KEY env) it answers here;
+    // null today → fall through to grounded research below (labelled est./pending verification).
+    try {
+      const live = await tcLiveFareProvider(legs.map((l) => ({ from: l.fromCity, to: l.toCity })), lang);
+      if (live && Array.isArray(live.legs) && live.legs.length) return { ok: true, legs: live.legs.slice(0, 8), sourceNote: String(live.sourceNote || '').slice(0, 160), researchedAt: Date.now(), dataSource: 'live_verified', status: 'live' };
+    } catch (e0) { /* fail open to grounded */ }
     const geminiKey = await getAiKey('gemini');
     if (!geminiKey) return { ok: false, debugCode: 'NO_GEMINI_KEY', legs: [] };
     try {
@@ -4261,7 +4412,7 @@ exports.researchLegFares = onCall(
       const intOrNull = (x) => { const n = parseInt(x, 10); return (isFinite(n) && n > 0 && n < 20000) ? n : null; };
       const clampMode = (m) => { m = m || {}; return { low: intOrNull(m.low), high: intOrNull(m.high), note: String(m.note || '').slice(0, 120), url: /^https?:\/\//.test(String(m.url || '')) ? String(m.url).slice(0, 300) : '' }; };
       const outLegs = (Array.isArray(parsed.legs) ? parsed.legs : []).slice(0, 8).map((l) => ({ from: String((l && l.from) || '').slice(0, 80), to: String((l && l.to) || '').slice(0, 80), flight: clampMode(l && l.flight), bus: clampMode(l && l.bus), train: clampMode(l && l.train) }));
-      return { ok: true, legs: outLegs, sourceNote: String(parsed.sourceNote || '').slice(0, 160), researchedAt: Date.now(), dataSource: 'grounded_pending_verification' };
+      return { ok: true, legs: outLegs, sourceNote: String(parsed.sourceNote || '').slice(0, 160), researchedAt: Date.now(), dataSource: 'grounded_pending_verification', status: 'estimated' };
     } catch (e2) {
       console.error('[researchLegFares] failed', e2 && e2.message);
       return { ok: false, debugCode: 'FARES_ERROR', legs: [] };
@@ -4306,8 +4457,33 @@ exports.monitorDealWatchTrips = onSchedule(
           const key = 'fare:' + (lf.from || '') + '>' + (lf.to || '');
           const prev = snapshot[key];
           // Jitter guard: only alert on a MEANINGFUL drop (≥$25 AND ≥10%), not estimate-range noise.
-          if (prev && prev.cost && _dealThreshold.isMeaningfulDrop(prev.cost, best.cost)) newAlerts.push({ route: (lf.from || '').split(',')[0] + '→' + (lf.to || '').split(',')[0], oldCost: prev.cost, newCost: best.cost, mode: best.mode, ts: Date.now() });
+          if (prev && prev.cost && _dealThreshold.isMeaningfulDrop(prev.cost, best.cost)) newAlerts.push({ kind: 'fare', route: (lf.from || '').split(',')[0] + '→' + (lf.to || '').split(',')[0], oldCost: prev.cost, newCost: best.cost, mode: best.mode, ts: Date.now() });
           snapshot[key] = { cost: best.cost, mode: best.mode, ts: Date.now() };
+        });
+        // HOTELS — snapshot the floor nightly price of each stored hotel; alert on a meaningful drop
+        // vs the prior snapshot. No re-research (no live hotel-price API → re-rolling the grounded
+        // estimate is pure jitter); diff the prices the trip already carries. Skip $$$/pending (no #).
+        (Array.isArray(trip.stays) ? trip.stays : []).forEach((st) => {
+          const city = String((st && st.city) || '').trim(); if (!city) return;
+          (Array.isArray(st.hotels) ? st.hotels : []).forEach((h) => {
+            const name = String((h && h.name) || '').trim(); if (!name) return;
+            const cur = _dealThreshold.parsePriceNumber(h.priceRange); if (cur == null) return;
+            const hk = 'hotel:' + city + ':' + name, hp = snapshot[hk];
+            if (hp && hp.cost && _dealThreshold.isMeaningfulDrop(hp.cost, cur)) newAlerts.push({ kind: 'hotel', label: name, city: city.split(',')[0], oldCost: hp.cost, newCost: cur, ts: Date.now() });
+            snapshot[hk] = { cost: cur, ts: Date.now() };
+          });
+        });
+        // TICKETS — savingsEstimate is a DISCOUNT (often "pending verification"), never a ticket PRICE,
+        // so this is a NEW-DEAL-APPEARED notice, not a numeric price drop. Snapshot which
+        // (attraction→dealType) deals exist; alert when a new one shows up on a later re-check.
+        (Array.isArray(trip.ticketDeals) ? trip.ticketDeals : []).forEach((d) => {
+          const attr = String((d && d.attraction) || '').trim(); if (!attr) return;
+          (Array.isArray(d.items) ? d.items : []).forEach((it) => {
+            const dt = String((it && it.dealType) || 'other');
+            const tk = 'ticket:' + attr + ':' + dt;
+            if (!snapshot[tk]) newAlerts.push({ kind: 'ticket', label: attr, dealType: dt, savings: String((it && it.savingsEstimate) || ''), title: String((it && it.title) || ''), ts: Date.now() });
+            snapshot[tk] = { seen: true, savings: String((it && it.savingsEstimate) || ''), ts: Date.now() };
+          });
         });
         const existing = Array.isArray(trip.dealAlerts) ? trip.dealAlerts : [];
         const update = { dealSnapshot: snapshot, dealCheckedAt: Date.now() };
@@ -4320,9 +4496,16 @@ exports.monitorDealWatchTrips = onSchedule(
             const subsSnap = await docSnap.ref.collection('pushSubscriptions').get();
             if (!subsSnap.empty) {
               const a0 = newAlerts[0];
+              // English-only push body (the cron has no per-user lang; matches the existing limitation).
+              // Body shape varies by alert kind; in-app cards are fully localized.
+              let body;
+              if (a0.kind === 'hotel') body = a0.label + ' (' + a0.city + '): $' + a0.oldCost + ' → $' + a0.newCost;
+              else if (a0.kind === 'ticket') body = a0.label + ' — new ticket deal';
+              else body = a0.route + ': $' + a0.oldCost + ' → $' + a0.newCost;
+              if (newAlerts.length > 1) body += ' (+' + (newAlerts.length - 1) + ' more)';
               const payload = JSON.stringify({
                 title: 'Better deal found',
-                body: a0.route + ': $' + a0.oldCost + ' → $' + a0.newCost + (newAlerts.length > 1 ? (' (+' + (newAlerts.length - 1) + ' more)') : ''),
+                body: body,
                 url: '/travel-concierge?trip=' + docSnap.id,
                 tag: 'dlc-deal-' + docSnap.id,
                 badgeCount: (update.dealAlerts || newAlerts).length,

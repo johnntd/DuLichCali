@@ -15,6 +15,9 @@
     "test:deals": "node tests/deal-threshold.test.js",
     "test:airports": "node tests/airport-pairs.test.js",
     "test:tickets": "node tests/ticket-deals.test.js",
+    "test:weather": "node tests/weather.test.js",
+    "test:tmevents": "node tests/ticketmaster-events.test.js",
+    "test:i18n": "node tests/tc-i18n-parity.test.js",
     "auto:hair": "bash automation/auto_run.sh automation/prompts/hair_salon_system_audit.md",
     "auto:full": "bash automation/auto_run.sh automation/prompts/full_app_system_audit.md",
     "auto:phase1": "bash automation/auto_run.sh automation/prompts/phase1_hair_salon_fix.md"

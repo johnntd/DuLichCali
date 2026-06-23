@@ -833,6 +833,7 @@ select.tc-input { appearance: none; background-image: linear-gradient(45deg, tra
 .tc-event__why, .tc-stop__why { font-family: var(--font-b); font-size: .8rem; color: var(--cream); margin: .2rem 0; }
 .tc-event__acts, .tc-stop__acts { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .4rem; }
 .tc-event__pending { display: inline-block; font-family: var(--font-b); font-size: .68rem; color: var(--muted); margin-top: .35rem; }
+.tc-event__live { display: inline-block; font-family: var(--font-b); font-size: .68rem; font-weight: 700; color: #6ee7a0; margin-top: .35rem; }
 .tc-stop__alts { font-family: var(--font-b); font-size: .76rem; color: var(--muted); margin: .2rem 0; }
 .tc-stop__badge { font-family: var(--font-b); font-weight: 700; font-size: .62rem; color: #bae6fd; background: rgba(56,189,248,.16); border: 1px solid rgba(56,189,248,.4); padding: .12rem .4rem; border-radius: 99px; }
 .tc-stop--skipped { opacity: .55; }
@@ -1408,6 +1409,23 @@ select.tc-input { appearance: none; background-image: linear-gradient(45deg, tra
 .tc-tpcol__pro { font-family: var(--font-b); font-size: .76rem; color: #cdd9ec; }
 .tc-tpcol__btn { margin-top: auto; }
 @media (min-width: 1200px) { .tc-tpcol { min-width: 160px; } }
+/* Weather tab (P2) — real Open-Meteo forecast + labelled seasonal normals */
+.tc-wxgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: .5rem; margin: .5rem 0; }
+.tc-wxday { border: 1px solid var(--border); border-radius: 10px; padding: .55rem .6rem; background: var(--navy-900); display: flex; flex-direction: column; gap: .25rem; }
+.tc-wxday--seasonal { border-style: dashed; }
+.tc-wxday--na { opacity: .7; }
+.tc-wxday__top { display: flex; justify-content: space-between; align-items: baseline; gap: .4rem; flex-wrap: wrap; }
+.tc-wxday__date { font-family: var(--font-b); font-size: .76rem; color: var(--muted); }
+.tc-wxday__cond { font-family: var(--font-b); font-size: .8rem; color: var(--cream); }
+.tc-wxday__temp { font-family: var(--font-d); font-size: 1.05rem; color: var(--cream); margin: 0; }
+.tc-wxday__na { font-family: var(--font-b); font-size: .78rem; color: var(--muted); margin: 0; }
+.tc-wxday__meta { display: flex; flex-wrap: wrap; gap: .4rem; font-family: var(--font-b); font-size: .74rem; color: var(--muted); }
+.tc-wxday__rec { color: #cdd9ec; }
+.tc-wxpack { margin-top: .5rem; border-top: 1px solid var(--border); padding-top: .5rem; }
+.tc-wxpack__t { display: block; font-family: var(--font-b); font-weight: 700; font-size: .85rem; color: var(--cream); margin-bottom: .3rem; }
+.tc-wxpack__list { margin: 0; padding-left: 1.1rem; font-family: var(--font-b); font-size: .83rem; color: var(--cream); }
+.tc-wxpack__list li { margin: .15rem 0; }
+@media (min-width: 1200px) { .tc-wxgrid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); } }
 .tc-deal { border: 1px solid rgba(110,231,160,.45); background: rgba(16,185,129,.1); border-radius: 12px; padding: .7rem .8rem; margin-top: .6rem; }
 .tc-deal__t { display: block; font-family: var(--font-b); font-weight: 700; font-size: .92rem; color: #bbf7d0; }
 .tc-deal__d { font-family: var(--font-b); font-size: .85rem; line-height: 1.5; color: var(--cream); margin: .3rem 0 .55rem; }

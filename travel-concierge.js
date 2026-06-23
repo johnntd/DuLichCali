@@ -111,7 +111,7 @@
       tab_journey: 'Journey', journeyTitle: 'Your journey', journeySub: 'Every stop, stay and ride as a node. Lock what you love 🔒 — the AI only replans around it.', jnNoPlan: 'Generate the trip first — your journey timeline appears here.', jnLock: 'Lock', jnUnlock: 'Unlock', jnLocked: 'Locked', jnImprove: 'Improve around this', jnImproving: 'Replanning this day (keeping locked items)…', jnAddAfter: 'Add after', jnReplanDay: 'Replan this day', jnReplanKeep: 'keeps 🔒 locked', jnReplanned: 'Day replanned — locked items kept', jnTransportNode: 'Transport', jnViewTransport: 'Compare transport', jnNodeMenu: 'Options', jnAddPh: 'Add a place / activity', jnAdd: 'Add',
       cmdPh: 'Tell the concierge what to change…', cmdGo: 'Ask AI', cmdBusy: 'Understanding your request…', cmdPlanTitle: 'Here’s what I’ll change', cmdNone: 'I couldn’t turn that into an edit — try rephrasing (e.g. “skip the zoo”, “add Disneyland day 2”, “find another Vietnamese dinner”).', cmdFail: 'Couldn’t interpret that right now — try again.', cmdDays: 'Replans day {d}', cmdApply: 'Apply changes', cmdApplied: 'Trip updated', cmdCancel: 'Cancel',
       cmdop_skip: 'Skip', cmdop_delete: 'Remove', cmdop_lock: 'Lock', cmdop_unlock: 'Unlock', cmdop_replace: 'Replace', cmdop_add: 'Add', cmdop_retime: 'Re-time', cmdop_replan_day: 'Replan', cmdop_stay_extra_night: 'Stay an extra night', cmdop_leave_earlier: 'Leave earlier', cmdop_change_return: 'Change return',
-      rideBookingTitle: 'DuLichCali ride', rideBookedToast: 'Ride booked and added to your trip', rideRequestedToast: 'Ride requested — pending confirmation', rideNotCompleted: 'Ride booking not completed — nothing was added. You can try again.', rideBookedNote: 'DuLichCali ride booked', rideRequestedNote: 'DuLichCali ride requested', rideRequestMichael: 'Request Michael ride', rideBookDlc: 'Book with DuLichCali', rideViewRequest: 'View request', rideModifyRequest: 'Modify request', rideCancelRequest: 'Cancel request', rideViewTitle: 'Your ride request', rideRouteLabel: 'Route', ridePassengers: 'Passengers', rideCancelledNote: 'Ride request cancelled', rideCancelledToast: 'Ride request cancelled — you can request it again anytime',
+      rideBookingTitle: 'DuLichCali ride', rideBookedToast: 'Ride booked and added to your trip', rideRequestedToast: 'Ride requested — pending confirmation', rideNotCompleted: 'Ride booking not completed — nothing was added. You can try again.', rideBookedNote: 'DuLichCali ride booked', rideRequestedNote: 'DuLichCali ride requested', rideRequestMichael: 'Request Michael ride', rideBookDlc: 'Book with DuLichCali', rideViewRequest: 'View request', rideModifyRequest: 'Modify request', rideCancelRequest: 'Cancel request', rideViewTitle: 'Your ride request', rideRouteLabel: 'Route', ridePassengers: 'Passengers', rideCancelledNote: 'Ride request cancelled', rideCancelledToast: 'Ride request cancelled — you can request it again anytime', rideModifyNote: 'MODIFIED — replaces request #{id}; please cancel the previous booking',
       groupTravelersTitle: 'Who\'s travelling', travelersAdults: 'adults', travelersEdit: 'Edit travelers',
       summary: 'Trip summary', assumptions: 'Assumptions', warnings: 'Good to know',
       costRange: 'Estimated cost', meetup: 'Meetup', regenDay: 'Regenerate day',
@@ -408,7 +408,7 @@
       tab_journey: 'Hành trình', journeyTitle: 'Hành trình của bạn', journeySub: 'Mỗi điểm dừng, nơi ở và chuyến xe là một nút. Khóa thứ bạn thích 🔒 — AI chỉ tối ưu xung quanh.', jnNoPlan: 'Hãy tạo chuyến đi trước — dòng thời gian hành trình sẽ hiện ở đây.', jnLock: 'Khóa', jnUnlock: 'Mở khóa', jnLocked: 'Đã khóa', jnImprove: 'Cải thiện quanh mục này', jnImproving: 'Đang lên lại ngày này (giữ mục đã khóa)…', jnAddAfter: 'Thêm sau', jnReplanDay: 'Lên lại ngày này', jnReplanKeep: 'giữ 🔒 đã khóa', jnReplanned: 'Đã lên lại ngày — giữ mục đã khóa', jnTransportNode: 'Di chuyển', jnViewTransport: 'So sánh di chuyển', jnNodeMenu: 'Tùy chọn', jnAddPh: 'Thêm địa điểm / hoạt động', jnAdd: 'Thêm',
       cmdPh: 'Nói cho trợ lý biết bạn muốn đổi gì…', cmdGo: 'Hỏi AI', cmdBusy: 'Đang hiểu yêu cầu của bạn…', cmdPlanTitle: 'Đây là những thay đổi tôi sẽ làm', cmdNone: 'Tôi chưa chuyển được thành chỉnh sửa — hãy thử diễn đạt lại (vd: “bỏ sở thú”, “thêm Disneyland ngày 2”, “tìm bữa tối Việt khác”).', cmdFail: 'Hiện chưa hiểu được — vui lòng thử lại.', cmdDays: 'Lên lại ngày {d}', cmdApply: 'Áp dụng thay đổi', cmdApplied: 'Đã cập nhật chuyến đi', cmdCancel: 'Hủy',
       cmdop_skip: 'Bỏ qua', cmdop_delete: 'Xóa', cmdop_lock: 'Khóa', cmdop_unlock: 'Mở khóa', cmdop_replace: 'Thay thế', cmdop_add: 'Thêm', cmdop_retime: 'Đổi giờ', cmdop_replan_day: 'Lên lại', cmdop_stay_extra_night: 'Ở thêm một đêm', cmdop_leave_earlier: 'Về sớm hơn', cmdop_change_return: 'Đổi chuyến về',
-      rideBookingTitle: 'Xe Du Lịch Cali', rideBookedToast: 'Đã đặt xe và thêm vào chuyến đi', rideRequestedToast: 'Đã yêu cầu xe — chờ xác nhận', rideNotCompleted: 'Chưa hoàn tất đặt xe — không có gì được thêm. Bạn có thể thử lại.', rideBookedNote: 'Đã đặt xe Du Lịch Cali', rideRequestedNote: 'Đã yêu cầu xe Du Lịch Cali', rideRequestMichael: 'Yêu cầu xe Michael', rideBookDlc: 'Đặt với Du Lịch Cali', rideViewRequest: 'Xem yêu cầu', rideModifyRequest: 'Sửa yêu cầu', rideCancelRequest: 'Hủy yêu cầu', rideViewTitle: 'Yêu cầu xe của bạn', rideRouteLabel: 'Tuyến', ridePassengers: 'Số khách', rideCancelledNote: 'Đã hủy yêu cầu xe', rideCancelledToast: 'Đã hủy yêu cầu xe — bạn có thể yêu cầu lại bất cứ lúc nào',
+      rideBookingTitle: 'Xe Du Lịch Cali', rideBookedToast: 'Đã đặt xe và thêm vào chuyến đi', rideRequestedToast: 'Đã yêu cầu xe — chờ xác nhận', rideNotCompleted: 'Chưa hoàn tất đặt xe — không có gì được thêm. Bạn có thể thử lại.', rideBookedNote: 'Đã đặt xe Du Lịch Cali', rideRequestedNote: 'Đã yêu cầu xe Du Lịch Cali', rideRequestMichael: 'Yêu cầu xe Michael', rideBookDlc: 'Đặt với Du Lịch Cali', rideViewRequest: 'Xem yêu cầu', rideModifyRequest: 'Sửa yêu cầu', rideCancelRequest: 'Hủy yêu cầu', rideViewTitle: 'Yêu cầu xe của bạn', rideRouteLabel: 'Tuyến', ridePassengers: 'Số khách', rideCancelledNote: 'Đã hủy yêu cầu xe', rideCancelledToast: 'Đã hủy yêu cầu xe — bạn có thể yêu cầu lại bất cứ lúc nào', rideModifyNote: 'ĐÃ SỬA — thay cho yêu cầu #{id}; vui lòng hủy đặt chỗ trước đó',
       groupTravelersTitle: 'Ai cùng đi', travelersAdults: 'người lớn', travelersEdit: 'Sửa người đi',
       summary: 'Tóm tắt chuyến đi', assumptions: 'Giả định', warnings: 'Cần lưu ý',
       costRange: 'Chi phí ước tính', meetup: 'Điểm hẹn', regenDay: 'Tạo lại ngày',
@@ -700,7 +700,7 @@
       tab_journey: 'Recorrido', journeyTitle: 'Tu recorrido', journeySub: 'Cada parada, alojamiento y viaje como un nodo. Bloquea lo que te gusta 🔒 — la IA solo replanifica alrededor.', jnNoPlan: 'Genera el viaje primero — tu línea de tiempo aparecerá aquí.', jnLock: 'Bloquear', jnUnlock: 'Desbloquear', jnLocked: 'Bloqueado', jnImprove: 'Mejorar alrededor de esto', jnImproving: 'Replanificando este día (manteniendo lo bloqueado)…', jnAddAfter: 'Agregar después', jnReplanDay: 'Replanificar este día', jnReplanKeep: 'mantiene 🔒 bloqueado', jnReplanned: 'Día replanificado — se mantuvo lo bloqueado', jnTransportNode: 'Transporte', jnViewTransport: 'Comparar transporte', jnNodeMenu: 'Opciones', jnAddPh: 'Agregar un lugar / actividad', jnAdd: 'Agregar',
       cmdPh: 'Dile al concierge qué cambiar…', cmdGo: 'Preguntar a la IA', cmdBusy: 'Entendiendo tu solicitud…', cmdPlanTitle: 'Esto es lo que cambiaré', cmdNone: 'No pude convertirlo en una edición — reformula (ej. “omite el zoológico”, “agrega Disneyland día 2”, “busca otra cena vietnamita”).', cmdFail: 'No se pudo interpretar ahora — inténtalo de nuevo.', cmdDays: 'Replanifica el día {d}', cmdApply: 'Aplicar cambios', cmdApplied: 'Viaje actualizado', cmdCancel: 'Cancelar',
       cmdop_skip: 'Omitir', cmdop_delete: 'Quitar', cmdop_lock: 'Bloquear', cmdop_unlock: 'Desbloquear', cmdop_replace: 'Reemplazar', cmdop_add: 'Agregar', cmdop_retime: 'Reprogramar', cmdop_replan_day: 'Replanificar', cmdop_stay_extra_night: 'Quedarse otra noche', cmdop_leave_earlier: 'Salir antes', cmdop_change_return: 'Cambiar regreso',
-      rideBookingTitle: 'Viaje DuLichCali', rideBookedToast: 'Viaje reservado y agregado a tu trip', rideRequestedToast: 'Viaje solicitado — pendiente de confirmación', rideNotCompleted: 'Reserva de viaje no completada — no se agregó nada. Puedes intentarlo de nuevo.', rideBookedNote: 'Viaje DuLichCali reservado', rideRequestedNote: 'Viaje DuLichCali solicitado', rideRequestMichael: 'Solicitar viaje con Michael', rideBookDlc: 'Reservar con DuLichCali', rideViewRequest: 'Ver solicitud', rideModifyRequest: 'Modificar solicitud', rideCancelRequest: 'Cancelar solicitud', rideViewTitle: 'Tu solicitud de viaje', rideRouteLabel: 'Ruta', ridePassengers: 'Pasajeros', rideCancelledNote: 'Solicitud de viaje cancelada', rideCancelledToast: 'Solicitud de viaje cancelada — puedes solicitarla de nuevo cuando quieras',
+      rideBookingTitle: 'Viaje DuLichCali', rideBookedToast: 'Viaje reservado y agregado a tu trip', rideRequestedToast: 'Viaje solicitado — pendiente de confirmación', rideNotCompleted: 'Reserva de viaje no completada — no se agregó nada. Puedes intentarlo de nuevo.', rideBookedNote: 'Viaje DuLichCali reservado', rideRequestedNote: 'Viaje DuLichCali solicitado', rideRequestMichael: 'Solicitar viaje con Michael', rideBookDlc: 'Reservar con DuLichCali', rideViewRequest: 'Ver solicitud', rideModifyRequest: 'Modificar solicitud', rideCancelRequest: 'Cancelar solicitud', rideViewTitle: 'Tu solicitud de viaje', rideRouteLabel: 'Ruta', ridePassengers: 'Pasajeros', rideCancelledNote: 'Solicitud de viaje cancelada', rideCancelledToast: 'Solicitud de viaje cancelada — puedes solicitarla de nuevo cuando quieras', rideModifyNote: 'MODIFICADA — reemplaza la solicitud #{id}; cancela la reserva anterior',
       groupTravelersTitle: 'Quiénes viajan', travelersAdults: 'adultos', travelersEdit: 'Editar viajeros',
       summary: 'Resumen del viaje', assumptions: 'Supuestos', warnings: 'Bueno saber',
       costRange: 'Costo estimado', meetup: 'Punto de encuentro', regenDay: 'Regenerar día',
@@ -7168,8 +7168,10 @@
       notes: noteBits.join(' · '),
       // Clean handoff contract → ride-intake emits a result + returns to returnUrl; TC reconciles it.
       tripId: tr.id || '', tripName: tr.groupName || '', legRef: legRef, legKey: opts.legKey || '', segmentId: segmentId,
-      // taskId binds the result back to THIS trip task so reconcile updates it in place (no duplicate);
-      // existingBookingId lets the ride flow treat a re-submit as a modify of the same booking.
+      // taskId binds the result back to THIS trip task so reconcile updates it in place (no duplicate).
+      // existingBookingId is carried for traceability only — ride-intake does NOT yet vendor-side-edit
+      // the prior booking, so a modify submits a new request whose notes explicitly say it replaces
+      // the old (see requestRideForTask). A true in-place vendor modify is a follow-up callable.
       taskId: opts.taskId || '', existingBookingId: opts.existingBookingId || '',
       transportMode: opts.mode || (kind === 'van_transfer' ? 'dlc_ride' : 'ride'), luggage: opts.luggage || '',
       familyId: opts.familyId || (typeof getMe === 'function' ? (getMe() || '') : ''), assignedToMember: opts.memberId || '', returnUrl: returnUrl, source: 'travel_concierge',
@@ -7313,14 +7315,19 @@
     return { pickup: '', dropoff: b.city || '' };
   }
   // Open the embedded DLC ride flow for a TASK, passing full trip context (incl. taskId so the result
-  // attaches back to this exact task). modify=true re-opens to change an existing booking.
+  // attaches back to this exact task). modify=true re-opens to change an existing request — it
+  // submits a NEW request (ride-intake does not vendor-side-edit yet) so we make the replacement
+  // EXPLICIT in the notes (never a silent orphaned booking); the prior request id is carried for the
+  // driver to cancel the old one. (True in-place vendor modify = a follow-up callable.)
   function requestRideForTask(b, o) {
     o = o || {}; var tr = state.trip; var r = rideTaskRoute(b);
+    var notes = b.notes || '';
+    if (o.modify && b.confirmationNumber) notes = (t('rideModifyNote').replace('{id}', b.confirmationNumber) + (notes ? (' · ' + notes) : ''));
     var io = {
       kind: 'ride', pickup: r.pickup, dropoff: r.dropoff, taskId: b.id, mode: 'dlc_ride',
       segmentId: b.segmentId || segmentIdForCity(tr, r.dropoff) || '', legRef: r.pickup + '→' + r.dropoff,
       familyId: b.assignedToFamily || '', memberId: b.assignedToMember || '', luggage: b.luggage || '',
-      label: b.title || '', userNotes: b.notes || '', date: b.dueDate || b.deadline || '',
+      label: b.title || '', userNotes: notes, date: b.dueDate || b.deadline || '',
       existingBookingId: o.modify ? (b.confirmationNumber || '') : '',
     };
     // §0b: prefill the pickup DATE from the arrival stop + name the inbound provider (e.g. Bus Hoàng).
@@ -8435,7 +8442,10 @@
       // the list's first To-Do item == the Next Action), (4) due date, (5) priority score.
       // keep the ORIGINAL index for delete (bookingCard splices tr.bookings[idx]).
       var _KR = (root.TCDepGraph && root.TCDepGraph._KIND_RANK) || { transport: 0, lodging: 1, ticket: 2, activity: 3, food: 4, optional: 5 };
-      function _seqOf(b) { var d = b._dep || {}; var ix = (typeof d.idx === 'number') ? d.idx : 1e9; var k = _KR[d.kind]; return ix * 10 + (k == null ? 5 : k); }
+      // NOTE: clamp a non-finite journeyIndex (Infinity for unscheduled tasks) to 1e9 so the
+      // kind-rank survives (Infinity*10 would swallow it) and unscheduled tasks order like the
+      // engine's loose nextAction path (by priorityScore), keeping "first To-Do == Next Action".
+      function _seqOf(b) { var d = b._dep || {}; var ix = (typeof d.idx === 'number' && isFinite(d.idx)) ? d.idx : 1e9; var k = _KR[d.kind]; return ix * 10 + (k == null ? 5 : k); }
       var _ordered = tr.bookings.map(function (b, i) { return { b: b, i: i }; }).sort(function (x, y) {
         var dxd = (root.TCTasks && root.TCTasks.isDone(x.b)) ? 1 : 0, dyd = (root.TCTasks && root.TCTasks.isDone(y.b)) ? 1 : 0;
         if (dxd !== dyd) return dxd - dyd; // completed sink to the bottom (All view)
@@ -8443,9 +8453,12 @@
         if (bx !== by) return bx - by; // unblocked before blocked
         var sx = _seqOf(x.b), sy = _seqOf(y.b);
         if (sx !== sy) return sx - sy; // journey / dependency sequence
+        // Same-seq tiebreak MUST match TCDepGraph.nextAction (priorityScore DESC) so the list head
+        // equals the Next-Action card; dueDate is the final tiebreak only.
+        var scoreDiff = ((y.b._dep && y.b._dep.score) || 0) - ((x.b._dep && x.b._dep.score) || 0);
+        if (scoreDiff) return scoreDiff;
         var ddx = x.b.dueDate || '~', ddy = y.b.dueDate || '~';
-        if (ddx !== ddy) return ddx < ddy ? -1 : 1; // earlier due first
-        return ((y.b._dep && y.b._dep.score) || 0) - ((x.b._dep && x.b._dep.score) || 0);
+        return ddx === ddy ? 0 : (ddx < ddy ? -1 : 1);
       });
       _ordered.forEach(function (o) {
         var b = o.b, i = o.i;

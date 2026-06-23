@@ -175,6 +175,7 @@
       tab_bookings: 'Tasks', bookingsTitle: 'Trip tasks & action items', bookingsSub: 'What to book, confirm, and pay for this trip.',
       bookingApprovalNotice: 'The AI researches and prepares options only — it never buys, charges your card, or stores card numbers. You complete payment on the official page.',
       researchBookings: 'Research options (AI)', rebuildChecklist: 'Rebuild from itinerary', addBooking: 'Add booking', noBookings: 'No booking items yet — research options or add one.',
+      tdealsTitle: 'Ticket deals', tdealsSub: 'Ways your group can pay less on paid attractions — researched, never auto-bought.', tdealsFind: 'Find ticket deals', tdealsRefresh: 'Refresh deals', tdealsResearching: 'Hunting ticket deals…', tdealsNone: 'No clear deals found right now', tdealsNoTickets: 'No ticketed attractions yet — rank attractions first (Highlights).', tdealsEmpty: 'No ticket deals yet.', tdealSave: 'save', tdealBookBy: 'buy', tdealOfficial: 'Official tickets', tdealSearch: 'Compare deals', tdeal_multi_day: 'Multi-day pass', tdeal_family_bundle: 'Family bundle', tdeal_early_bird: 'Early-bird / advance', tdeal_combo: 'Combo / bundle', tdeal_membership: 'Membership', tdeal_group: 'Group rate', tdeal_free_day: 'Free / discount day', tdeal_resident: 'Resident discount', tdeal_military_senior_student: 'Military / senior / student', tdeal_other: 'Deal',
       researchingBookings: 'Finding tickets & reservations to book…', conciergeWorking: 'Your AI concierge is doing the homework — hotels, food and bookings are loading.', refreshResearch: 'Refresh',
       bookingType: 'Type', openOfficial: 'Open official page', readyToBook: 'Ready to book', markBooked: 'Mark booked', undoBooked: 'Booked ✓ (tap to undo)',
       confirmationNumber: 'Confirmation #', cancellationPolicy: 'Cancellation policy', refundPolicy: 'Refund policy', deadlineLabel: 'Book by', providerLabel: 'Provider', recommended: 'Recommended', bookingNotes: 'Notes',
@@ -463,6 +464,7 @@
       tab_bookings: 'Nhiệm vụ', bookingsTitle: 'Nhiệm vụ chuyến đi', bookingsSub: 'Cần đặt, xác nhận và thanh toán cho chuyến đi.',
       bookingApprovalNotice: 'AI chỉ tìm hiểu và chuẩn bị lựa chọn — không bao giờ mua, tính tiền thẻ hay lưu số thẻ. Bạn hoàn tất thanh toán trên trang chính thức.',
       researchBookings: 'Tìm lựa chọn (AI)', rebuildChecklist: 'Tạo lại từ lịch trình', addBooking: 'Thêm mục đặt chỗ', noBookings: 'Chưa có mục nào — hãy tìm lựa chọn hoặc thêm một mục.',
+      tdealsTitle: 'Ưu đãi vé', tdealsSub: 'Cách để cả nhóm trả ít hơn cho các điểm tham quan có vé — chỉ tra cứu, không tự đặt.', tdealsFind: 'Tìm ưu đãi vé', tdealsRefresh: 'Làm mới ưu đãi', tdealsResearching: 'Đang tìm ưu đãi vé…', tdealsNone: 'Hiện chưa thấy ưu đãi rõ ràng', tdealsNoTickets: 'Chưa có điểm tham quan có vé — hãy xếp hạng điểm tham quan trước (Nổi bật).', tdealsEmpty: 'Chưa có ưu đãi vé.', tdealSave: 'tiết kiệm', tdealBookBy: 'mua', tdealOfficial: 'Vé chính thức', tdealSearch: 'So sánh ưu đãi', tdeal_multi_day: 'Vé nhiều ngày', tdeal_family_bundle: 'Gói gia đình', tdeal_early_bird: 'Mua sớm / trước', tdeal_combo: 'Gói combo', tdeal_membership: 'Thành viên', tdeal_group: 'Giá nhóm', tdeal_free_day: 'Ngày miễn phí / giảm giá', tdeal_resident: 'Giảm giá cư dân', tdeal_military_senior_student: 'Quân nhân / cao tuổi / sinh viên', tdeal_other: 'Ưu đãi',
       researchingBookings: 'Đang tìm vé & chỗ cần đặt trước…', conciergeWorking: 'Trợ lý AI đang làm bài tập — khách sạn, ẩm thực và đặt chỗ đang được tải.', refreshResearch: 'Làm mới',
       bookingType: 'Loại', openOfficial: 'Mở trang chính thức', readyToBook: 'Sẵn sàng đặt', markBooked: 'Đánh dấu đã đặt', undoBooked: 'Đã đặt ✓ (chạm để hoàn tác)',
       confirmationNumber: 'Mã xác nhận', cancellationPolicy: 'Chính sách hủy', refundPolicy: 'Chính sách hoàn tiền', deadlineLabel: 'Đặt trước', providerLabel: 'Nhà cung cấp', recommended: 'Đề xuất', bookingNotes: 'Ghi chú',
@@ -750,6 +752,7 @@
       tab_bookings: 'Tareas', bookingsTitle: 'Tareas del viaje', bookingsSub: 'Qué reservar, confirmar y pagar para este viaje.',
       bookingApprovalNotice: 'La IA solo investiga y prepara opciones — nunca compra, cobra tu tarjeta ni guarda números de tarjeta. Tú completas el pago en la página oficial.',
       researchBookings: 'Buscar opciones (IA)', rebuildChecklist: 'Recrear desde el itinerario', addBooking: 'Añadir reserva', noBookings: 'Aún no hay reservas — busca opciones o añade una.',
+      tdealsTitle: 'Ofertas de entradas', tdealsSub: 'Formas en que tu grupo puede pagar menos en atracciones de pago — investigadas, nunca compradas automáticamente.', tdealsFind: 'Buscar ofertas de entradas', tdealsRefresh: 'Actualizar ofertas', tdealsResearching: 'Buscando ofertas de entradas…', tdealsNone: 'No se encontraron ofertas claras por ahora', tdealsNoTickets: 'Aún no hay atracciones con entrada — clasifica las atracciones primero (Destacados).', tdealsEmpty: 'Aún no hay ofertas de entradas.', tdealSave: 'ahorra', tdealBookBy: 'compra', tdealOfficial: 'Entradas oficiales', tdealSearch: 'Comparar ofertas', tdeal_multi_day: 'Pase de varios días', tdeal_family_bundle: 'Paquete familiar', tdeal_early_bird: 'Anticipada', tdeal_combo: 'Combo / paquete', tdeal_membership: 'Membresía', tdeal_group: 'Tarifa de grupo', tdeal_free_day: 'Día gratis / descuento', tdeal_resident: 'Descuento de residente', tdeal_military_senior_student: 'Militar / mayor / estudiante', tdeal_other: 'Oferta',
       researchingBookings: 'Buscando entradas y reservas por hacer…', conciergeWorking: 'Tu concierge de IA está haciendo la tarea — hoteles, comida y reservas se están cargando.', refreshResearch: 'Actualizar',
       bookingType: 'Tipo', openOfficial: 'Abrir página oficial', readyToBook: 'Listo para reservar', markBooked: 'Marcar reservado', undoBooked: 'Reservado ✓ (toca para deshacer)',
       confirmationNumber: 'N.º de confirmación', cancellationPolicy: 'Política de cancelación', refundPolicy: 'Política de reembolso', deadlineLabel: 'Reservar antes de', providerLabel: 'Proveedor', recommended: 'Recomendado', bookingNotes: 'Notas',
@@ -1424,6 +1427,34 @@
       .then(function (r) { var d = (r && r.data) || {}; return { food: d.food || [] }; })
       .catch(function () { return { food: [] }; });
   }
+  // Ticketed attractions across the trip (name + city + category), rejected ones filtered out.
+  function ticketedAttractions(tr) {
+    var out = [], seen = {};
+    (tr.attractions || []).forEach(function (d) {
+      (d.attractions || []).forEach(function (a) {
+        if (!a || !a.ticketed || !a.name) return;
+        var k = (a.name || '').trim().toLowerCase(); if (!k || seen[k] || rejectedNameSet(tr)[k]) return;
+        seen[k] = 1; out.push({ name: a.name, city: d.city || '', category: a.category || '' });
+      });
+    });
+    return out;
+  }
+  // Ticket DEAL Hunter — grounded deal-intelligence for the trip's ticketed attractions
+  // (multi-day/family/early-bird/combo/membership/discounts). Honest est. ranges; never books.
+  function researchTicketDeals(tr) {
+    var c = mkCallable('researchTicketDeals', 50000);
+    var attractions = ticketedAttractions(tr);
+    if (!attractions.length) return Promise.resolve({ ok: false, deals: [], none: true });
+    if (!c) return Promise.resolve({ ok: false, deals: [] });
+    return callWithRetry(c, { trip: { dateRange: tr.dateRange, budget: tr.budget, families: tr.families }, attractions: attractions, lang: state.lang })
+      .then(function (r) { var d = (r && r.data) || {}; return { ok: d.ok === true, deals: d.deals || [] }; })
+      .catch(function () { return { ok: false, deals: [] }; });
+  }
+  // Deterministic, never-fabricated ticket links (official search + deal comparison search).
+  var TicketDealLinkProvider = {
+    official: function (name) { return 'https://www.google.com/search?q=' + encodeURIComponent((name || '') + ' official tickets'); },
+    deals: function (name) { return 'https://www.google.com/search?q=' + encodeURIComponent((name || '') + ' ticket discount deals'); },
+  };
   // Phase B — AI Transportation Agent. Compares modes per major leg (origin→dest→…→home);
   // car/DLC-ride distance+time are verified server-side, never invented. Returns trip.transport.
   function researchTransport(trip) {
@@ -7858,6 +7889,58 @@
     }
     return c;
   }
+  function tdealIcon(ty) { return ({ multi_day: '📅', family_bundle: '👨‍👩‍👧‍👦', early_bird: '⏰', combo: '🎟', membership: '🪪', group: '👥', free_day: '🆓', resident: '🏠', military_senior_student: '🎖' })[ty] || '🏷'; }
+  // 🏷 Ticket Deals — grounded deal-intelligence for the trip's ticketed attractions. The cheaper
+  // option is research only (est. ranges, official + search links); nothing is auto-bought.
+  function ticketDealsBlock(tr) {
+    var box = el('div', 'tc-tdeals');
+    box.appendChild(el('strong', 'tc-tdeals__t', '🏷 ' + t('tdealsTitle')));
+    box.appendChild(el('p', 'tc-tdeals__sub', t('tdealsSub')));
+    var atts = ticketedAttractions(tr);
+    if (!state.readonly && !tr._demo) {
+      if (!atts.length) { box.appendChild(el('p', 'tc-hint', t('tdealsNoTickets'))); return box; }
+      var cta = el('button', 'tc-cta', (tr.ticketDeals && tr.ticketDeals.length) ? ('↻ ' + t('tdealsRefresh')) : t('tdealsFind')); cta.type = 'button';
+      cta.addEventListener('click', function () {
+        cta.disabled = true; state.generating = true; renderGenerating(t('tdealsResearching'));
+        researchTicketDeals(tr).then(function (res) {
+          state.generating = false;
+          if (res.deals && res.deals.length) { tr.ticketDeals = res.deals; tr.ticketDealsAt = Date.now(); saveTrip(tr); }
+          else toast(t('tdealsNone'));
+          render();
+        });
+      });
+      box.appendChild(cta);
+    }
+    var deals = tr.ticketDeals || [];
+    if (!deals.length) { if (state.readonly || tr._demo) box.appendChild(el('p', 'tc-empty', t('tdealsEmpty'))); return box; }
+    deals.forEach(function (d) {
+      var card = el('article', 'tc-tdeal');
+      card.appendChild(el('strong', 'tc-tdeal__name', '🎢 ' + d.attraction + (d.city ? (' · ' + d.city) : '')));
+      if (d.note) { var nt = el('p', 'tc-tdeal__note'); nt.appendChild(el('span', 'tc-attr__why-k', '💡 ')); nt.appendChild(doc.createTextNode(d.note)); card.appendChild(nt); }
+      (d.items || []).forEach(function (it) {
+        var row = el('div', 'tc-tdeal__item');
+        var head = el('div', 'tc-tdeal__ihead');
+        head.appendChild(el('span', 'tc-tdeal__type', tdealIcon(it.dealType) + ' ' + (t('tdeal_' + it.dealType) || it.dealType)));
+        if (it.title) head.appendChild(el('strong', 'tc-tdeal__ttl', it.title));
+        row.appendChild(head);
+        if (it.description) row.appendChild(el('p', 'tc-tdeal__desc', it.description));
+        var meta = el('div', 'tc-tdeal__meta');
+        if (it.savingsEstimate) meta.appendChild(el('span', 'tc-tdeal__save', '💰 ' + t('tdealSave') + ' ' + it.savingsEstimate));
+        if (it.bookBy) meta.appendChild(el('span', 'tc-tdeal__by', '⏰ ' + t('tdealBookBy') + ' ' + it.bookBy));
+        if (it.conditions) meta.appendChild(el('span', 'tc-tdeal__cond', '• ' + it.conditions));
+        if (meta.children.length) row.appendChild(meta);
+        card.appendChild(row);
+      });
+      var acts = el('div', 'tc-tdeal__acts');
+      acts.appendChild(linkBtn('🔎 ' + t('tdealOfficial'), TicketDealLinkProvider.official(d.attraction), 'tc-pbtn--accent'));
+      acts.appendChild(linkBtn('🏷 ' + t('tdealSearch'), TicketDealLinkProvider.deals(d.attraction)));
+      card.appendChild(acts);
+      card.appendChild(el('p', 'tc-unverified', t('unverified')));
+      box.appendChild(card);
+    });
+    if (tr.ticketDealsAt) box.appendChild(el('p', 'tc-dealwatch__ts', '🕒 ' + t('researchedAt') + ' ' + tpResearchedLabel(tr.ticketDealsAt) + ' · ' + t('unverified')));
+    return box;
+  }
   function renderBookings(plan) {
     var tr = state.trip;
     normalizeDestinations(tr);
@@ -7896,6 +7979,8 @@
       actions.appendChild(rebuild);
       wrap.appendChild(actions);
     }
+    // 🏷 Ticket Deals (deal-intelligence for ticketed attractions) — shown in demo/readonly too.
+    wrap.appendChild(ticketDealsBlock(tr));
     if (tr.bookings.length) {
       // Progress header — N done / M total + readiness %. Reuses TCOverview.readiness (bookingStatus).
       var _rd = (root.TCOverview ? root.TCOverview.readiness(tr.bookings) : { doneCount: 0, totalCount: tr.bookings.length, pct: 0 });

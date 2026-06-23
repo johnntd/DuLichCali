@@ -54,6 +54,7 @@ const _placeMediaSanitize = require('./lib/placeMediaSanitize.js');
 const _driverRanking = require('./lib/driverRanking.js');
 const _dealThreshold = require('./lib/dealThreshold.js');
 const _airportPairs = require('./lib/airportPairs.js');
+const _ticketDeals = require('./lib/ticketDeals.js');
 
 // Email provider secret (Resend — https://resend.com)
 const RESEND_API_KEY      = defineSecret('RESEND_API_KEY');
@@ -2806,6 +2807,54 @@ exports.researchTripRestaurants = onCall(
     } catch (e2) {
       console.error('[researchTripRestaurants] failed', e2 && e2.message);
       return { ok: false, debugCode: 'RESEARCH_ERROR', food: [] };
+    }
+  }
+);
+// ── Ticket DEAL Hunter (theme parks / attractions) ───────────────────────────
+// Grounded deal-intelligence for the trip's TICKETED attractions: multi-day passes, family/group
+// bundles, early-bird/advance-purchase, combo tickets, membership break-even, resident/military/
+// senior/student discounts, free days. HONEST: rough savings ranges or "pending verification" only
+// — NEVER a fabricated exact price or URL (the frontend builds official + search links). The output
+// shape is clamped by the pure node-tested functions/lib/ticketDeals.js. Recommends, never books.
+function buildTicketDealsPrompt(lang) {
+  var langName = lang === 'vi' ? 'Vietnamese' : (lang === 'es' ? 'Spanish' : 'English');
+  return [
+    'You are a TICKET DEAL hunter for Du Lich Cali, helping a group of families pay LESS for paid attractions (theme parks, zoos, aquariums, museums, observatories). Using current web knowledge, find the real, common ways THIS group can save on each ticketed attraction listed. You ONLY research/recommend — never book, never charge.',
+    'Return ONLY valid JSON (no markdown): { "deals":[ { "attraction"(the REAL attraction name from the input — never invented),"city","note"(one phrase: the smartest way for THIS group to save here),"items":[ { "dealType"(multi_day|family_bundle|early_bird|combo|membership|group|free_day|resident|military_senior_student|other),"title"(short),"description"(one sentence: what the deal is + who it fits),"savingsEstimate"(a ROUGH range or percent like "~10-20%" or "$15-$30/ticket", or "pending verification" — NEVER an exact current price),"bookBy"(best time to buy, e.g. "buy online 3+ days ahead"),"conditions"(one short phrase, e.g. "weekday only" or "ages 3-9") } ] } ] }',
+    'GROUP-AWARE: use the provided group size + ages + budget. A big group with kids → highlight family/group bundles, multi-day passes (only if they are staying multiple days near the park), and kids-go-free / junior pricing. Multiple paid attractions in one city → suggest a real combo / CityPASS-style bundle when one genuinely exists. Members/locals → mention membership break-even and resident / AAA / military / senior / student discounts ONLY where they really exist. A single-day visit → favor advance-purchase online savings, not multi-day passes.',
+    'STRICT ANTI-FABRICATION: only describe deal TYPES that genuinely exist for that attraction. If you are not sure a specific deal exists, OMIT it. NEVER output an exact current price, a confirmation number, a phone number, or a URL. savingsEstimate is always a rough range/percent or "pending verification".',
+    'Cover the attractions in the input; 2-4 deal items per attraction, best first. Keep every text field ONE short phrase so the JSON stays valid; no trailing commas. Write all human-readable text in ' + langName + '. Output ONE compact valid JSON object only.',
+  ].join('\n');
+}
+exports.researchTicketDeals = onCall(
+  { region: 'us-central1', secrets: [GEMINI_API_KEY], timeoutSeconds: 50, memory: '256MiB', cors: true },
+  async (request) => {
+    const data = request.data || {};
+    const trip = data.trip || {};
+    const lang = (data.lang === 'vi' || data.lang === 'es') ? data.lang : 'en';
+    // Ticketed attractions the caller surfaced (name + city + category); nothing to hunt without them.
+    const attractions = (Array.isArray(data.attractions) ? data.attractions : [])
+      .filter(a => a && (a.name || '').trim()).slice(0, 12);
+    if (!attractions.length) return { ok: false, debugCode: 'NO_TICKETED_ATTRACTIONS', deals: [] };
+    const geminiKey = await getAiKey('gemini');
+    if (!geminiKey) return { ok: false, debugCode: 'NO_GEMINI_KEY', deals: [] };
+    const userContent = 'Find ticket deals. Input JSON:\n' + JSON.stringify({
+      dateRange: trip.dateRange, budget: trip.budget,
+      attractions: attractions.map(a => ({ name: String(a.name).slice(0, 120), city: String(a.city || '').slice(0, 80), category: String(a.category || '').slice(0, 40) })),
+      familiesSummary: summarizeFamiliesForTrip(trip.families),
+    });
+    try {
+      const text = await serverCallGeminiGrounded(buildTicketDealsPrompt(lang) + '\n\n' + userContent, geminiKey, 3200);
+      let raw = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
+      const s = raw.indexOf('{'); const e = raw.lastIndexOf('}');
+      if (s > 0 || e > 0) raw = raw.slice(s, e + 1);
+      const parsed = tripSalvageJson(raw);
+      if (!parsed) { console.error('[researchTicketDeals] unparseable JSON, len=' + raw.length); return { ok: false, debugCode: 'RESEARCH_ERROR', deals: [] }; }
+      const deals = _ticketDeals.sanitizeTicketDeals(parsed);
+      return { ok: true, deals };
+    } catch (e2) {
+      console.error('[researchTicketDeals] failed', e2 && e2.message);
+      return { ok: false, debugCode: 'RESEARCH_ERROR', deals: [] };
     }
   }
 );

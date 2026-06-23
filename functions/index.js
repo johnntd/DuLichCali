@@ -2482,17 +2482,24 @@ exports.researchTripStays = onCall(
     const data = request.data || {};
     const trip = data.trip || {};
     const lang = (data.lang === 'vi' || data.lang === 'es') ? data.lang : 'en';
-    const dests = (Array.isArray(trip.destinations) ? trip.destinations : []).filter(d => d && (d.city || '').trim() && d.hotelNeeded !== false);
-    if (!dests.length) return { ok: false, debugCode: 'NO_LODGING_DESTINATIONS', stays: [] };
+    const allDests = (Array.isArray(trip.destinations) ? trip.destinations : []).filter(d => d && (d.city || '').trim() && d.hotelNeeded !== false);
+    if (!allDests.length) return { ok: false, debugCode: 'NO_LODGING_DESTINATIONS', stays: [] };
+    // Stay Intelligence "Too expensive" re-research: cap nightly price + (optionally) ONE city.
+    const maxNightly = Math.max(0, parseInt(data.maxNightly, 10) || 0);
+    const cityFilter = String(data.cityFilter || '').trim().toLowerCase().split(',')[0];
+    const filtered = cityFilter ? allDests.filter(d => String(d.city || '').toLowerCase().indexOf(cityFilter) !== -1) : allDests;
+    const dests = filtered.length ? filtered : allDests;
     const geminiKey = await getAiKey('gemini');
     if (!geminiKey) return { ok: false, debugCode: 'NO_GEMINI_KEY', stays: [] };
     const cons = tcConsensusArrays(data); const avoidSet = tcAvoidSet(cons.avoidPlaces);
+    const budgetLine = maxNightly ? ('\nHARD BUDGET CONSTRAINT: every recommended hotel MUST have an estimated nightly price at or BELOW $' + maxNightly + '/night — set priceRange to a rough range ending at or under $' + maxNightly + ' (or "pending verification"); NEVER recommend a hotel above $' + maxNightly + '/night. Still return AT LEAST 3 options under this cap, spanning budget→best value, plus a family/accessible option where relevant.') : '';
     const userContent = 'Recommend where to stay. Input JSON:\n' + JSON.stringify({
       dateRange: trip.dateRange, budget: trip.budget, tripStyle: trip.tripStyle,
       destinations: dests.slice(0, 6).map(d => ({ city: d.city, role: d.role, hotelNeeded: d.hotelNeeded !== false, notes: d.notes || '', hotelPrefs: Array.isArray(d.hotelPrefs) ? d.hotelPrefs : [] })),
       avoidPlaces: cons.avoidPlaces, preferredPlaces: cons.preferredPlaces,
       familiesSummary: summarizeFamiliesForTrip(trip.families),
-    });
+      maxNightlyUsd: maxNightly || undefined,
+    }) + budgetLine;
     try {
       const text = await serverCallGeminiGrounded(buildStaysResearchPrompt(lang) + '\n\n' + userContent, geminiKey, 7000);
       let raw = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').replace(/[\u0000-\u001F]+/g, ' ');

@@ -213,6 +213,31 @@
       bestAreasTitle: 'Best areas for your group', stayStrategiesTitle: 'Where to base yourselves', stayStrategiesSub: 'AI compares stay strategies across your stops and recommends one.',
       strat_single_base: 'Single base', strat_split_nights: 'Split nights', strat_cheapest: 'Cheapest', strat_near_attraction: 'Near the main attraction',
       stratDriving: 'Driving', stratConvenience: 'Convenience', stratKids: 'Kids', stratFood: 'Food',
+      // ── Stay Intelligence Engine ──
+      stayTiersTitle: 'Compare by price', tierPremium: 'Premium', tierBestValue: 'Best value', tierBudget: 'Budget',
+      stayCurrentPick: 'Your pick', stayChooseBtn: 'Choose', stayChosenBadge: 'Your pick ✓', stayMakePick: 'Make this the pick',
+      stayLock: 'Lock', stayUnlock: 'Unlock', stayLockedBadge: '🔒 Locked', stayLockedNote: 'Kept across re-plans',
+      stayChosenToast: 'Hotel set — re-optimizing your stay', stayReoptimized: 'Stay updated around your hotel',
+      stayRideReconfirm: 'A booked ride for this stop may need re-confirming for the new hotel',
+      stayAlternativesTitle: 'Alternatives', staltBestValue: 'Best value', staltBudget: 'Budget', staltClosest: 'Closest to attraction',
+      staltBeachfront: 'Beachfront', staltFamily: 'Family-friendly', staltLuxury: 'Luxury', staltPoints: 'Points-friendly', staltMore: 'More options',
+      staltNone: 'No match in this set — tap Refresh for more',
+      stayTooExpensive: '💸 Too expensive', stayMaxBudgetTitle: 'Max per night', stayMaxBudgetPh: 'e.g. 250',
+      stayMaxBudgetHint: 'We’ll find hotels under this and keep your itinerary, attractions, transport & restaurants.', stayApplyBudget: 'Find cheaper stays',
+      stayBudgetApplied: 'Re-researching under ${amt}/night…', stayBudgetWarn: 'Over your ${amt}/night budget',
+      stayEnterOwn: '✏️ Enter your own hotel', stayOwnTitle: 'Your hotel', stayOwnPh: 'e.g. Hilton Garden Inn Mission Valley',
+      stayOwnHint: 'We’ll research it (rating, parking, breakfast, distances) and score how well it fits your trip.', stayResearchOwn: 'Research & score',
+      stayResearchingOwn: 'Researching your hotel…', stayFitTitle: 'Trip fit', stayFitExcellent: 'Excellent fit', stayFitGood: 'Good fit', stayFitPoor: 'Poor fit',
+      stayUseThis: 'Use this hotel', stayOwnAdded: 'Added your hotel', stayOwnFailed: 'Couldn’t research that hotel — try a more specific name',
+      stayDealsTitle: 'Price watch', stayDealWatch: 'Watch prices', stayDealWatchOn: 'Watching prices',
+      stayDealDrop: '{name}: updated research ~${amt}/night lower', staySwitchBtn: 'Switch',
+      stayDealNote: 'Estimate from updated research — verify on Booking. We never switch automatically.', stayNoDeals: 'No price drops yet. Meaningful drops show here.',
+      stayVotesTitle: 'Family votes', stayGroupPick: 'Family favorite: {name}', stayGroupPickNone: 'No clear favorite yet — have everyone vote ❤️',
+      stayLockedTitle: 'Locked stays', stayCostTitle: 'Lodging cost', stayCostEstimated: 'Estimated', stayCostActual: 'Actual',
+      stayCostPaidBy: 'Paid by', stayCostSplit: 'Split', stayCostRemaining: 'Remaining', staySplitPerRoom: 'Per room', staySplitPerFamily: 'Per family',
+      stayMarkBooked: 'Mark booked', stayCostNights: '{n} nights', stayPerNight: '/night', stayNightlyEst: '/night (est.)',
+      stayPriceEstimate: 'estimate — verify on Booking', stayBookingStatusTitle: 'Booking status',
+      stayStatusResearch: 'Researching options', stayStatusChosen: 'Chosen — ready to book', stayStatusBooked: 'Booked',
       tab_food: 'Food', foodPicksTitle: 'Food picks', foodSub: 'AI-researched restaurants for your group at each stop — matched to your cuisines.', findFood: 'Find food picks (AI)', researchingFood: 'Finding the best restaurants for your group…', noFoodYet: 'Tap “Find food picks” for AI restaurant recommendations.', searchFoodBtn: 'Search', yelpBtn: 'Yelp', dishesLabel: 'Must-try', reservationLabel: 'Reservations',
       imgRepresentative: 'Representative image only', imgPending: 'Photo pending verification', viewPhotos: 'Photos', googleReviews: 'Google reviews', yelpReviews: 'Yelp reviews', menuBtn: 'Menu', mustTryLabel: 'Must-try',
       noVerifiedPhoto: 'No verified photo available', noVerifiedFood: 'No verified food photos', viewGooglePhotos: 'Google Photos', tripadvisor: 'Tripadvisor', verifiedPhoto: 'Verified photo', areaPhoto: 'Area photo · Wikimedia', likelyMatchPhoto: 'Likely match · Wikimedia', viaWikipedia: 'Wikipedia (CC)', viaWikimedia: 'Wikimedia Commons', morePhotos: 'More photos',
@@ -505,6 +530,31 @@
       bestAreasTitle: 'Khu vực tốt nhất cho nhóm bạn', stayStrategiesTitle: 'Nên đặt cơ sở ở đâu', stayStrategiesSub: 'AI so sánh các chiến lược lưu trú giữa các điểm và đề xuất một phương án.',
       strat_single_base: 'Một cơ sở', strat_split_nights: 'Chia đêm', strat_cheapest: 'Rẻ nhất', strat_near_attraction: 'Gần điểm tham quan chính',
       stratDriving: 'Lái xe', stratConvenience: 'Tiện lợi', stratKids: 'Trẻ em', stratFood: 'Ẩm thực',
+      // ── Stay Intelligence Engine ──
+      stayTiersTitle: 'So sánh theo giá', tierPremium: 'Cao cấp', tierBestValue: 'Đáng giá nhất', tierBudget: 'Tiết kiệm',
+      stayCurrentPick: 'Lựa chọn của bạn', stayChooseBtn: 'Chọn', stayChosenBadge: 'Đã chọn ✓', stayMakePick: 'Đặt làm lựa chọn',
+      stayLock: 'Khoá', stayUnlock: 'Mở khoá', stayLockedBadge: '🔒 Đã khoá', stayLockedNote: 'Giữ nguyên khi lập lại lịch',
+      stayChosenToast: 'Đã chọn khách sạn — đang tối ưu lại nơi nghỉ', stayReoptimized: 'Đã cập nhật lịch quanh khách sạn của bạn',
+      stayRideReconfirm: 'Chuyến xe đã đặt cho điểm này có thể cần xác nhận lại theo khách sạn mới',
+      stayAlternativesTitle: 'Lựa chọn khác', staltBestValue: 'Đáng giá nhất', staltBudget: 'Tiết kiệm', staltClosest: 'Gần điểm tham quan nhất',
+      staltBeachfront: 'Sát biển', staltFamily: 'Hợp gia đình', staltLuxury: 'Sang trọng', staltPoints: 'Tích điểm', staltMore: 'Thêm lựa chọn',
+      staltNone: 'Không có lựa chọn phù hợp — bấm Làm mới để xem thêm',
+      stayTooExpensive: '💸 Quá đắt', stayMaxBudgetTitle: 'Tối đa mỗi đêm', stayMaxBudgetPh: 'vd: 250',
+      stayMaxBudgetHint: 'Chúng tôi sẽ tìm khách sạn dưới mức này và giữ nguyên lịch trình, điểm tham quan, di chuyển & nhà hàng.', stayApplyBudget: 'Tìm nơi rẻ hơn',
+      stayBudgetApplied: 'Đang tìm lại dưới ${amt}/đêm…', stayBudgetWarn: 'Vượt ngân sách ${amt}/đêm của bạn',
+      stayEnterOwn: '✏️ Nhập khách sạn của bạn', stayOwnTitle: 'Khách sạn của bạn', stayOwnPh: 'vd: Hilton Garden Inn Mission Valley',
+      stayOwnHint: 'Chúng tôi sẽ tra cứu (đánh giá, bãi xe, bữa sáng, khoảng cách) và chấm điểm mức phù hợp với chuyến đi.', stayResearchOwn: 'Tra cứu & chấm điểm',
+      stayResearchingOwn: 'Đang tra cứu khách sạn của bạn…', stayFitTitle: 'Mức phù hợp', stayFitExcellent: 'Rất phù hợp', stayFitGood: 'Khá phù hợp', stayFitPoor: 'Ít phù hợp',
+      stayUseThis: 'Dùng khách sạn này', stayOwnAdded: 'Đã thêm khách sạn của bạn', stayOwnFailed: 'Không tra cứu được — hãy nhập tên cụ thể hơn',
+      stayDealsTitle: 'Theo dõi giá', stayDealWatch: 'Theo dõi giá', stayDealWatchOn: 'Đang theo dõi giá',
+      stayDealDrop: '{name}: tra cứu mới thấp hơn ~${amt}/đêm', staySwitchBtn: 'Đổi',
+      stayDealNote: 'Ước tính từ tra cứu mới — hãy kiểm tra trên Booking. Chúng tôi không bao giờ tự đổi.', stayNoDeals: 'Chưa có đợt giảm giá. Mức giảm đáng kể sẽ hiện ở đây.',
+      stayVotesTitle: 'Bình chọn của gia đình', stayGroupPick: 'Gia đình thích nhất: {name}', stayGroupPickNone: 'Chưa có lựa chọn nổi bật — mời mọi người bình chọn ❤️',
+      stayLockedTitle: 'Nơi ở đã khoá', stayCostTitle: 'Chi phí lưu trú', stayCostEstimated: 'Ước tính', stayCostActual: 'Thực tế',
+      stayCostPaidBy: 'Người trả', stayCostSplit: 'Chia', stayCostRemaining: 'Còn lại', staySplitPerRoom: 'Theo phòng', staySplitPerFamily: 'Theo gia đình',
+      stayMarkBooked: 'Đánh dấu đã đặt', stayCostNights: '{n} đêm', stayPerNight: '/đêm', stayNightlyEst: '/đêm (ước tính)',
+      stayPriceEstimate: 'ước tính — kiểm tra trên Booking', stayBookingStatusTitle: 'Trạng thái đặt phòng',
+      stayStatusResearch: 'Đang tìm lựa chọn', stayStatusChosen: 'Đã chọn — sẵn sàng đặt', stayStatusBooked: 'Đã đặt',
       tab_food: 'Ẩm thực', foodPicksTitle: 'Gợi ý ẩm thực', foodSub: 'AI nghiên cứu nhà hàng cho cả nhóm tại từng điểm — hợp khẩu vị của bạn.', findFood: 'Tìm gợi ý ẩm thực (AI)', researchingFood: 'Đang tìm nhà hàng tốt nhất cho nhóm…', noFoodYet: 'Nhấn “Tìm gợi ý ẩm thực” để AI gợi ý nhà hàng.', searchFoodBtn: 'Tìm', yelpBtn: 'Yelp', dishesLabel: 'Nên thử', reservationLabel: 'Đặt chỗ',
       imgRepresentative: 'Chỉ là ảnh minh họa', imgPending: 'Ảnh chờ xác minh', viewPhotos: 'Ảnh', googleReviews: 'Đánh giá Google', yelpReviews: 'Đánh giá Yelp', menuBtn: 'Thực đơn', mustTryLabel: 'Nên thử',
       noVerifiedPhoto: 'Chưa có ảnh xác minh', noVerifiedFood: 'Chưa có ảnh món ăn xác minh', viewGooglePhotos: 'Ảnh Google', tripadvisor: 'Tripadvisor', verifiedPhoto: 'Ảnh đã xác minh', areaPhoto: 'Ảnh khu vực · Wikimedia', likelyMatchPhoto: 'Có thể đúng · Wikimedia', viaWikipedia: 'Wikipedia (CC)', viaWikimedia: 'Wikimedia Commons', morePhotos: 'Thêm ảnh',
@@ -797,6 +847,31 @@
       bestAreasTitle: 'Mejores zonas para tu grupo', stayStrategiesTitle: 'Dónde establecer tu base', stayStrategiesSub: 'La IA compara estrategias de alojamiento entre tus paradas y recomienda una.',
       strat_single_base: 'Una base', strat_split_nights: 'Dividir noches', strat_cheapest: 'Más económico', strat_near_attraction: 'Cerca de la atracción principal',
       stratDriving: 'Conducir', stratConvenience: 'Comodidad', stratKids: 'Niños', stratFood: 'Comida',
+      // ── Stay Intelligence Engine ──
+      stayTiersTitle: 'Comparar por precio', tierPremium: 'Premium', tierBestValue: 'Mejor valor', tierBudget: 'Económico',
+      stayCurrentPick: 'Tu elección', stayChooseBtn: 'Elegir', stayChosenBadge: 'Tu elección ✓', stayMakePick: 'Hacer esta la elección',
+      stayLock: 'Fijar', stayUnlock: 'Desfijar', stayLockedBadge: '🔒 Fijado', stayLockedNote: 'Se mantiene al replanificar',
+      stayChosenToast: 'Hotel elegido — reoptimizando tu estancia', stayReoptimized: 'Estancia actualizada según tu hotel',
+      stayRideReconfirm: 'Un viaje reservado para esta parada puede necesitar reconfirmarse para el nuevo hotel',
+      stayAlternativesTitle: 'Alternativas', staltBestValue: 'Mejor valor', staltBudget: 'Económico', staltClosest: 'Más cerca de la atracción',
+      staltBeachfront: 'Frente al mar', staltFamily: 'Familiar', staltLuxury: 'Lujo', staltPoints: 'Con puntos', staltMore: 'Más opciones',
+      staltNone: 'Sin coincidencias en este grupo — pulsa Actualizar para ver más',
+      stayTooExpensive: '💸 Demasiado caro', stayMaxBudgetTitle: 'Máximo por noche', stayMaxBudgetPh: 'ej. 250',
+      stayMaxBudgetHint: 'Buscaremos hoteles por debajo de esto y mantendremos tu itinerario, atracciones, transporte y restaurantes.', stayApplyBudget: 'Buscar más económicos',
+      stayBudgetApplied: 'Buscando de nuevo bajo ${amt}/noche…', stayBudgetWarn: 'Supera tu presupuesto de ${amt}/noche',
+      stayEnterOwn: '✏️ Ingresa tu propio hotel', stayOwnTitle: 'Tu hotel', stayOwnPh: 'ej. Hilton Garden Inn Mission Valley',
+      stayOwnHint: 'Lo investigaremos (calificación, estacionamiento, desayuno, distancias) y puntuaremos qué tan bien encaja en tu viaje.', stayResearchOwn: 'Investigar y puntuar',
+      stayResearchingOwn: 'Investigando tu hotel…', stayFitTitle: 'Compatibilidad', stayFitExcellent: 'Excelente', stayFitGood: 'Buena', stayFitPoor: 'Baja',
+      stayUseThis: 'Usar este hotel', stayOwnAdded: 'Hotel agregado', stayOwnFailed: 'No se pudo investigar — intenta un nombre más específico',
+      stayDealsTitle: 'Vigilancia de precios', stayDealWatch: 'Vigilar precios', stayDealWatchOn: 'Vigilando precios',
+      stayDealDrop: '{name}: investigación actualizada ~${amt}/noche más baja', staySwitchBtn: 'Cambiar',
+      stayDealNote: 'Estimación de investigación actualizada — verifica en Booking. Nunca cambiamos automáticamente.', stayNoDeals: 'Aún sin bajadas. Las bajadas relevantes aparecen aquí.',
+      stayVotesTitle: 'Votos de la familia', stayGroupPick: 'Favorito de la familia: {name}', stayGroupPickNone: 'Aún sin favorito claro — que todos voten ❤️',
+      stayLockedTitle: 'Alojamientos fijados', stayCostTitle: 'Costo de alojamiento', stayCostEstimated: 'Estimado', stayCostActual: 'Real',
+      stayCostPaidBy: 'Pagado por', stayCostSplit: 'División', stayCostRemaining: 'Restante', staySplitPerRoom: 'Por habitación', staySplitPerFamily: 'Por familia',
+      stayMarkBooked: 'Marcar reservado', stayCostNights: '{n} noches', stayPerNight: '/noche', stayNightlyEst: '/noche (est.)',
+      stayPriceEstimate: 'estimación — verifica en Booking', stayBookingStatusTitle: 'Estado de reserva',
+      stayStatusResearch: 'Investigando opciones', stayStatusChosen: 'Elegido — listo para reservar', stayStatusBooked: 'Reservado',
       tab_food: 'Comida', foodPicksTitle: 'Recomendaciones de comida', foodSub: 'Restaurantes investigados por IA para tu grupo en cada parada, según tus cocinas.', findFood: 'Buscar comida (IA)', researchingFood: 'Buscando los mejores restaurantes para tu grupo…', noFoodYet: 'Toca “Buscar comida” para recomendaciones de restaurantes por IA.', searchFoodBtn: 'Buscar', yelpBtn: 'Yelp', dishesLabel: 'Para probar', reservationLabel: 'Reservas',
       imgRepresentative: 'Solo imagen representativa', imgPending: 'Foto pendiente de verificar', viewPhotos: 'Fotos', googleReviews: 'Reseñas de Google', yelpReviews: 'Reseñas de Yelp', menuBtn: 'Menú', mustTryLabel: 'Para probar',
       noVerifiedPhoto: 'Sin foto verificada', noVerifiedFood: 'Sin fotos de comida verificadas', viewGooglePhotos: 'Google Fotos', tripadvisor: 'Tripadvisor', verifiedPhoto: 'Foto verificada', areaPhoto: 'Foto del área · Wikimedia', likelyMatchPhoto: 'Coincidencia probable · Wikimedia', viaWikipedia: 'Wikipedia (CC)', viaWikimedia: 'Wikimedia Commons', morePhotos: 'Más fotos',
@@ -1413,6 +1488,7 @@
     mergeBookings(tr, lockedLegsTasks(tr));
     mergeBookings(tr, transportChoiceTasks(tr));
     if (typeof ticketedAttractionBookings === 'function') mergeBookings(tr, ticketedAttractionBookings(tr));
+    try { enrichHotelTasks(tr); } catch (e) {} // Stay Intelligence: chosen hotel + cost onto the hotel task
     return tr.bookings;
   }
   // ── V6 Dependency Graph: tag each task → graph node and run the deterministic engine. ──
@@ -1492,10 +1568,11 @@
       return r;
     }, function () { return attempt(); });
   }
-  function researchStays(trip) {
+  function researchStays(trip, opts) {
+    opts = opts || {};
     var c = mkCallable('researchTripStays', 48000);
     if (!c) return Promise.resolve({ stays: [], strategies: [] });
-    return callWithRetry(c, { trip: { destinations: trip.destinations, dateRange: trip.dateRange, budget: trip.budget, tripStyle: trip.tripStyle, families: trip.families }, avoidPlaces: rejectedNames(trip), preferredPlaces: preferredNames(trip), lang: state.lang })
+    return callWithRetry(c, { trip: { destinations: trip.destinations, dateRange: trip.dateRange, budget: trip.budget, tripStyle: trip.tripStyle, families: trip.families }, avoidPlaces: rejectedNames(trip), preferredPlaces: preferredNames(trip), maxNightly: opts.maxNightly || 0, cityFilter: opts.cityFilter || '', lang: state.lang })
       .then(function (r) { var d = (r && r.data) || {}; return { stays: d.stays || [], strategies: d.strategies || [] }; })
       .catch(function () { return { stays: [], strategies: [] }; });
   }
@@ -1734,8 +1811,11 @@
       var cm = (tr.transportChoice || {})[(lg.legType || 'leg') + ':' + (lg.fromCity || '') + '>' + (lg.toCity || '') + ':' + i];
       if (cm === 'flight' || cm === 'bus' || cm === 'train') { var o = (lg.options || []).filter(function (x) { return x.mode === cm; })[0]; var mid = o ? tpCostMid(o.totalCostRange) : 0; if (mid) add('transport', t('tm_' + cm) + ' (' + (lg.fromCity || '').split(',')[0] + '→' + (lg.toCity || '').split(',')[0] + ')', mid, { highF: 1.5 }); }
     });
-    // Stay
-    add('stay', t('costHotel'), rooms * nights * a.hotelPerNight, { highF: 1.4 });
+    // Stay — prefer the user's CHOSEN hotel nightly estimates (avg) over the generic assumption.
+    var chosenMids = [];
+    try { (tr.stays || []).forEach(function (s2, si2) { var ch = chosenHotelFor(tr, s2, si2); var m = ch ? hotelNightlyMid(ch) : null; if (m != null) chosenMids.push(m); }); } catch (e) {}
+    var nightly = chosenMids.length ? Math.round(chosenMids.reduce(function (x, y) { return x + y; }, 0) / chosenMids.length) : a.hotelPerNight;
+    add('stay', t('costHotel'), rooms * nights * nightly, { highF: 1.4 });
     // Activities
     var ticketed = 0; (tr.attractions || []).forEach(function (d) { (d.attractions || []).forEach(function (at) { if (at.ticketed) ticketed++; }); });
     if (ticketed) add('activities', t('costTickets'), ticketed * travelers * a.ticketPerPerson, { highF: 1.4 });
@@ -4828,7 +4908,7 @@
     var daySpecs = idxs.map(function (i) { var dd = plan.days[i]; return { dayNumber: i + 1, date: dd.date || '', destinationIndex: destIndex, isTravelDay: !!dd.isTravelDay, isReturnDay: !!dd.isReturnDay, title: dd.title || '', theme: dd.theme || '', summary: dd.summary || '' }; });
     var td = (tr.destinations || [])[destIndex] || {}, pdest = (plan.destinations || [])[destIndex] || {};
     state.generating = true; renderGenerating(t('genLeg'));
-    legFn({
+    return legFn({
       trip: { tripStyle: tr.tripStyle, budget: tr.budget, families: tr.families, preferences: tr.preferences, departureCity: tr.departureCity, lastDayFull: !!tr.lastDayFull, finalDayMode: finalDayMode(tr) },
       lang: state.lang,
       leg: { index: destIndex, city: td.city || pdest.city || destNameFromTrip(tr, destIndex), startDate: td.startDate || '', endDate: td.endDate || '', hotelSuggestion: pdest.hotelSuggestion || null, role: td.role || 'main_destination', hotelNeeded: td.hotelNeeded !== false, mealOnly: !!td.mealOnly, suggestFood: td.suggestFood !== false, suggestActivities: td.suggestActivities !== false, hoursToSpend: td.hoursToSpend || '', priority: td.priority || 'required' },
@@ -6659,15 +6739,22 @@
 
   // ── "Where to Stay" tab: AI lodging research (areas + hotel/Airbnb options) ──
   function stayCatIcon(c) { return ({ best_overall: '🏆', best_value: '💰', family: '👨‍👩‍👧', luxury: '✨', resort: '🏖', ocean_view: '🌊', food_area: '🍜', theme_parks: '🎢', disneyland: '🏰', budget: '💵', pool: '🏊', breakfast: '🥐', kitchen: '🍳', accessible: '♿' })[c] || '🏨'; }
-  function stayCard(h, city) {
-    var tr = state.trip, c = el('article', 'tc-stay tc-hotelcard');
+  function stayCard(h, city, ctx) {
+    var tr = state.trip;
+    var stay = ctx && ctx.stay, si = ctx ? ctx.i : -1, hotels = (ctx && ctx.hotels) || (stay && stay.hotels) || [h];
+    var tier = computeStayTier(h, hotels);
+    var chosen = (ctx && stay) ? isHotelChosen(tr, stay, si, h) : false;
+    var locked = (ctx && stay) ? (isStayLocked(tr, stay, si) && chosen) : false;
+    var c = el('article', 'tc-stay tc-hotelcard tc-stayintel tc-stayintel--' + tier + (chosen ? ' tc-stayintel--chosen' : '') + (locked ? ' tc-stayintel--locked' : ''));
     // Real verified hotel photo when resolvable (Google Places via placeMedia), else a
     // clearly-labelled placeholder — never an AI image passed off as a real photo.
     c.appendChild(placeMedia({ name: h.name || (h.area || city), category: 'lodging', address: h.area || '', city: city, imageUrl: null }, 'tc-place__media tc-foodcard__media'));
     var head = el('div', 'tc-stay__head');
     head.appendChild(el('strong', 'tc-stay__name', h.name || (t('bestArea') + ': ' + (h.area || city || ''))));
+    if (ctx) head.appendChild(el('span', 'tc-stayintel__tier tc-stayintel__tier--' + tier, tierIcon(tier) + ' ' + t('tier' + ({ premium: 'Premium', best_value: 'BestValue', budget: 'Budget' })[tier])));
     var cat = h.category || h.bestFor || 'best_value';
     head.appendChild(el('span', 'tc-stay__for', stayCatIcon(cat) + ' ' + (t('stayfor_' + cat) || cat)));
+    if (chosen) head.appendChild(el('span', 'tc-stayintel__badge' + (locked ? ' tc-stayintel__badge--lock' : ''), locked ? t('stayLockedBadge') : t('stayChosenBadge')));
     c.appendChild(head);
     var meta = el('div', 'tc-hotelcard__meta');
     if (h.starRating) meta.appendChild(chip('tc-chip--star', '⭐ ' + h.starRating + (h.reviewCount ? (' · ' + h.reviewCount) : '')));
@@ -6682,8 +6769,24 @@
     if (h.distanceNote) c.appendChild(el('p', 'tc-stay__meta', t('distanceLabel') + ': ' + h.distanceNote));
     if (h.amenities && h.amenities.length) c.appendChild(el('p', 'tc-stay__meta', h.amenities.join(' · ')));
     if (h.parkingNote) c.appendChild(el('p', 'tc-stay__meta', t('parkingLabel') + ': ' + h.parkingNote));
-    c.appendChild(el('p', 'tc-stay__meta', '💵 ' + (h.priceRange || t('pending'))));
+    var priceLine = el('p', 'tc-stay__meta', '💵 ' + (h.priceRange || t('pending')));
+    if (parsePriceMid(h.priceRange) != null) priceLine.appendChild(el('span', 'tc-stayintel__estlbl', ' · ' + t('stayPriceEstimate')));
+    c.appendChild(priceLine);
+    if (ctx) {
+      var est = hotelEstimatedCost(tr, h);
+      if (est) c.appendChild(el('p', 'tc-stay__meta tc-stayintel__est', '🧮 ~$' + est + ' · ' + t('stayCostNights').replace('{n}', String(tripNights(tr)))));
+      var pmid = parsePriceMid(h.priceRange), pnb = perNightBudget(tr);
+      if (pmid != null && pnb && pmid > pnb * 1.05) c.appendChild(el('p', 'tc-stay__meta tc-stayintel__warn', '⚠ ' + t('stayBudgetWarn').replace('${amt}', '$' + pnb)));
+    }
     if (h.why) { var w = el('p', 'tc-stay__why'); w.appendChild(el('span', 'tc-bk__rec-k', t('recommended') + ': ')); w.appendChild(doc.createTextNode(h.why)); c.appendChild(w); }
+    if (ctx && stay && !state.readonly && !tr._demo && (h.name || h.area)) {
+      var ctrls = el('div', 'tc-stayintel__ctrls');
+      if (!chosen) ctrls.appendChild(pbtn('🏨 ' + t('stayChooseBtn'), 'tc-pbtn--accent', function () { chooseStay(stay, si, h); }));
+      else ctrls.appendChild(el('span', 'tc-stayintel__pick', '✓ ' + t('stayCurrentPick')));
+      if (locked) ctrls.appendChild(pbtn('🔓 ' + t('stayUnlock'), '', function () { unlockStay(stay, si); }));
+      else ctrls.appendChild(pbtn('🔒 ' + t('stayLock'), '', function () { lockStay(stay, si, h); }));
+      c.appendChild(ctrls);
+    }
     var acts = el('div', 'tc-stay__acts');
     // Real provider SEARCH links (no fabricated listings/prices): Booking, Expedia, Hotels.com, reviews, map.
     acts.appendChild(linkBtn('🔎 ' + t('stayBooking'), StayLinkProvider.booking(h, city), 'tc-pbtn--accent'));
@@ -6691,7 +6794,9 @@
     acts.appendChild(linkBtn(t('stayHotels'), StayLinkProvider.hotels(h, city)));
     acts.appendChild(linkBtn('⭐ ' + t('stayReviews'), StayLinkProvider.tripadvisor(h, city)));
     acts.appendChild(linkBtn('🗺 ' + t('mapG'), StayLinkProvider.photos(h, city)));
-    if (!state.readonly && !tr._demo) {
+    // In the Stay Intelligence context (ctx), "Choose" supersedes the manual add — so we don't
+    // create a duplicate (name-titled) hotel task alongside the city-titled one Choose enriches.
+    if (!ctx && !state.readonly && !tr._demo) {
       var addbk = el('button', 'tc-pbtn', '🎟 ' + t('addBooking')); addbk.type = 'button';
       addbk.addEventListener('click', function () { tr.bookings = tr.bookings || []; tr.bookings.push(newBooking('hotel', (h.name || (t('whereToStayTitle') + ' — ' + (city || ''))), { city: city || '', priceRange: h.priceRange || '', recommendedOption: h.why || '', dataSource: 'ai_researched_pending_verification' })); saveTrip(tr); toast(t('addBooking')); });
       acts.appendChild(addbk);
@@ -6726,7 +6831,398 @@
   // Proactive auto-research so the user never has to hunt for a "Search hotels" button.
   function autoResearchStays(tr) {
     state._cResearch = state._cResearch || {}; state._cResearch.stays = true;
-    researchStays(tr).then(function (res) { state._cResearch.stays = false; if (res.stays && res.stays.length) { tr.stays = res.stays; tr.stayStrategies = res.strategies || []; checkHotelDeals(tr); saveTrip(tr); } render(); }).catch(function () { state._cResearch.stays = false; render(); });
+    researchStays(tr).then(function (res) { state._cResearch.stays = false; applyStaysResult(tr, res); render(); }).catch(function () { state._cResearch.stays = false; render(); });
+  }
+  // ════════════════════════════════════════════════════════════════════════
+  //  STAY INTELLIGENCE ENGINE — hotels are CANDIDATES, not final answers.
+  //  Mirrors Transport Intelligence: tiers + alternatives, choose→persist→
+  //  auto-reoptimize (regenerateLeg), lock, user-hotel + fit, deal watch,
+  //  group-vote winner, hotel task chain + cost. Honest estimates ONLY —
+  //  prices are AI-researched RANGES labelled "estimate", never live quotes.
+  // ════════════════════════════════════════════════════════════════════════
+  // Stable per-destination key (mirrors legKeyOf) — survives reorder within a trip.
+  function destKeyOf(stay, i) { return 'dest:' + _cityShort(stay && stay.city) + ':' + i; }
+  // Stable per-hotel key within a stay (shares hotelVoteName so votes + choice agree).
+  function hotelKeyOf(h, city) { return String(hotelVoteName(h, city) || '').trim().toLowerCase(); }
+  // Map a stay (by city) → the trip.destinations index regenerateLeg / plan.destinations use.
+  function destIndexForStay(tr, stay) {
+    var city = _cityShort(stay && stay.city), ds = tr.destinations || [];
+    for (var i = 0; i < ds.length; i++) { if (_cityShort(ds[i].city) === city) return i; }
+    var pd = (tr.plan && tr.plan.destinations) || [];
+    for (var j = 0; j < pd.length; j++) { if (_cityShort(pd[j].city) === city) return j; }
+    return -1;
+  }
+  // Pure tier/price/pick logic lives in tc-stays.js (TCStays) — single-sourced + unit-tested.
+  function parsePriceMid(text) { return TCStays.parsePriceMid(text); }
+  function computeStayTier(h, hotels) { return TCStays.computeStayTier(h, hotels); }
+  function stayPick(stay, criterion) { return TCStays.stayPick(stay, criterion); }
+  function tierIcon(tier) { return ({ premium: '✨', best_value: '⭐', budget: '💵' })[tier] || '🏨'; }
+  // ── Choice / lock state (mirrors transportChoice/transportStatus) ──
+  function stayChoiceMap(tr) { tr.stayChoice = tr.stayChoice || {}; return tr.stayChoice; }
+  function lockedStaysMap(tr) { tr.lockedStays = tr.lockedStays || {}; return tr.lockedStays; }
+  function chosenHotelKeyFor(tr, stay, i) { var k = destKeyOf(stay, i), lk = lockedStaysMap(tr)[k]; if (lk && lk.hotelKey) return lk.hotelKey; return stayChoiceMap(tr)[k] || ''; }
+  function isHotelChosen(tr, stay, i, h) { return chosenHotelKeyFor(tr, stay, i) === hotelKeyOf(h, stay.city); }
+  function isStayLocked(tr, stay, i) { return !!lockedStaysMap(tr)[destKeyOf(stay, i)]; }
+  function findHotelByKey(stay, key) { return (stay.hotels || []).filter(function (h) { return hotelKeyOf(h, stay.city) === key; })[0] || null; }
+  function chosenHotelFor(tr, stay, i) { var k = chosenHotelKeyFor(tr, stay, i); return k ? findHotelByKey(stay, k) : null; }
+  // ── Cost helpers (estimate, never a live quote) ──
+  function tripNights(tr) { var p = parseTripDates(tr.dateRange) || { count: 1 }; return Math.max(1, (p.count || 1) - 1); }
+  function tripRooms(tr) { return (tr.families || []).reduce(function (s, f) { return s + Math.max(1, Math.ceil(famTravelers(f) / 4)); }, 0) || 1; }
+  function hotelNightlyMid(h) { return parsePriceMid(h && h.priceRange); }
+  function hotelEstimatedCost(tr, h) { var mid = hotelNightlyMid(h); if (mid == null) return 0; return Math.round(mid * tripNights(tr) * tripRooms(tr)); }
+  // Push the chosen hotel into the destination + plan so regenerateLeg anchors the leg's days to it.
+  function anchorHotelToDestination(tr, destIdx, h, city) {
+    if (destIdx < 0) return;
+    tr.destinations = tr.destinations || [];
+    var d = tr.destinations[destIdx];
+    if (d) { d.selectedHotel = { name: h.name || '', area: h.area || '', city: city || d.city || '' }; d.hotel = h.name || d.hotel || ''; }
+    if (tr.plan && Array.isArray(tr.plan.destinations) && tr.plan.destinations[destIdx]) {
+      tr.plan.destinations[destIdx].hotelSuggestion = { name: h.name || '', area: h.area || '', why: h.why || '' };
+    }
+  }
+  // THE CORE — choose a hotel for a stop, persist, then auto re-optimize the leg around it
+  // (regenerateLeg re-times restaurants/attractions/rest, preserving pinned + locked items). Any
+  // Michael/DLC ride for the stop re-anchors to the hotel; a BOOKED ride is flagged for re-confirm,
+  // never silently mutated. Records informational switch-savings. opts.reopt=false skips the replan.
+  function chooseStay(stay, i, h, opts) {
+    opts = opts || {}; var tr = state.trip; var key = destKeyOf(stay, i), hk = hotelKeyOf(h, stay.city);
+    if (isStayLocked(tr, stay, i) && !opts.fromLock) { toast(t('stayLockedBadge')); return; }
+    var prevKey = stayChoiceMap(tr)[key];
+    stayChoiceMap(tr)[key] = hk;
+    var destIdx = destIndexForStay(tr, stay);
+    anchorHotelToDestination(tr, destIdx, h, stay.city);
+    if (prevKey && prevKey !== hk) {
+      var prevH = findHotelByKey(stay, prevKey), oldC = prevH ? hotelEstimatedCost(tr, prevH) : 0, newC = hotelEstimatedCost(tr, h);
+      if (oldC && newC && oldC - newC >= 1) tr.dealSavingsLog = (tr.dealSavingsLog || []).concat([{ route: (stay.city || '').split(',')[0], from: 'hotel', to: hk, saved: Math.round(oldC - newC), ts: Date.now() }]).slice(-20);
+    }
+    var reconfirm = flagRidesForHotelChange(tr, stay.city);
+    syncHotelTasks(tr);
+    saveTrip(tr);
+    toast(t('stayChosenToast') + (reconfirm ? (' · ' + t('stayRideReconfirm')) : ''));
+    if (opts.reopt !== false && !opts.fromLock && destIdx >= 0 && tr.plan && Array.isArray(tr.plan.days) && tr.plan.days.length) {
+      var _rp = regenerateLeg(destIdx);  // re-times the leg's days around the new hotel (preserves pins)
+      // Chain route re-verification AFTER the leg regenerates (no concurrent double-render); if
+      // regenerateLeg couldn't run (no callable / no days for the stop), re-verify + render now.
+      if (_rp && typeof _rp.then === 'function') { _rp.then(function () { try { verifyRoute(tr); } catch (e) {} }); }
+      else { try { verifyRoute(tr); } catch (e) {} render(); }
+    } else { render(); }
+  }
+  // Lock / unlock a stay — the locked hotel + check-in/out are preserved across ALL future replans.
+  function lockStay(stay, i, h) {
+    var tr = state.trip, key = destKeyOf(stay, i), di = destIndexForStay(tr, stay), d = (tr.destinations || [])[di] || {};
+    lockedStaysMap(tr)[key] = { hotelKey: hotelKeyOf(h, stay.city), hotelName: h.name || '', city: stay.city || '', checkIn: d.startDate || d.arrivalDate || '', checkOut: d.endDate || d.departureDate || '' };
+    stayChoiceMap(tr)[key] = hotelKeyOf(h, stay.city);
+    anchorHotelToDestination(tr, di, h, stay.city);   // locked hotel is also a pinned anchor
+    syncHotelTasks(tr);
+    saveTrip(tr); toast(t('stayLockedBadge')); render();
+  }
+  function unlockStay(stay, i) { var tr = state.trip; delete lockedStaysMap(tr)[destKeyOf(stay, i)]; saveTrip(tr); toast(t('stayUnlock')); render(); }
+  // When a hotel changes for a city, any DLC ride touching that city re-anchors. Unbooked tasks pick
+  // up the new hotel via the prefill (destinations[].selectedHotel); a BOOKED ride is flagged + noted
+  // for re-confirm (never silently mutated). Returns true if a booked ride was flagged.
+  function flagRidesForHotelChange(tr, city) {
+    var c = _cityShort(city); if (!c) return false; var flagged = false;
+    (tr.bookings || []).forEach(function (b) {
+      if (!isDlcRideTask(b)) return; var r = rideTaskRoute(b);
+      if (_cityShort(r.pickup) !== c && _cityShort(r.dropoff) !== c) return;
+      if ((b.confirmationNumber || b.bookingStatus === 'booked') && !b._hotelReconfirm) {
+        b._hotelReconfirm = true; flagged = true;
+        tr.notes = tr.notes || []; tr.notes.push({ id: uid('note'), text: '🚐 ' + t('stayRideReconfirm') + (b.title ? (' (' + b.title + ')') : ''), ts: Date.now() });
+      }
+    });
+    return flagged;
+  }
+  // ── Hotel task chain (Part 9) — enrich the existing per-destination "Hotel — city" task
+  //    (from deriveBookingChecklist) with the chosen hotel + estimated cost; advance its status.
+  //    Stages map to the existing bookingStatus lifecycle: research_needed → ready_to_book (chosen)
+  //    → booked (confirmed) → completed. Never clobbers a user-confirmed booking. ──
+  function enrichHotelTasks(tr) {
+    (tr.bookings || []).forEach(function (b) {
+      if (b.type !== 'hotel') return;
+      var city = _cityShort(b.city);
+      var si = (tr.stays || []).map(function (s) { return _cityShort(s.city); }).indexOf(city);
+      if (si < 0) return; var stay = tr.stays[si];
+      var chosen = chosenHotelFor(tr, stay, si); if (!chosen) return;
+      var locked = isStayLocked(tr, stay, si); b._stayLocked = locked;
+      if (b.bookingStatus === 'booked' || b.bookingStatus === 'completed' || b.bookingStatus === 'paid' || b.confirmationNumber) { b.selectedOption = b.selectedOption || (chosen.name || ''); return; }
+      b.selectedOption = chosen.name || chosen.area || '';
+      b.recommendedOption = chosen.why || b.recommendedOption || '';
+      if (chosen.priceRange) b.priceRange = chosen.priceRange;
+      var est = hotelEstimatedCost(tr, chosen); if (est) b.costEstimate = String(est);
+      b.dataSource = 'ai_researched_pending_verification';
+      b.bookingStatus = (!b.bookingStatus || b.bookingStatus === 'research_needed') ? 'ready_to_book' : b.bookingStatus;
+    });
+  }
+  // Ensure a hotel task exists for each lodging destination (mirrors deriveBookingChecklist's hotel
+  // line so choosing on the Stay tab before opening Tasks still works), then enrich.
+  function syncHotelTasks(tr) {
+    tr.bookings = tr.bookings || [];
+    (tr.destinations || []).forEach(function (d) {
+      if (!(d.city || '').trim() || d.hotelNeeded === false) return;
+      if (!tr.bookings.some(function (b) { return b.type === 'hotel' && _cityShort(b.city) === _cityShort(d.city); })) {
+        tr.bookings.push(newBooking('hotel', (t('bt_hotel') + ' — ' + d.city), { destinationId: d.id, city: d.city, dataSource: 'derived_from_itinerary' }));
+      }
+    });
+    enrichHotelTasks(tr);
+  }
+  // Group-vote winner (Part 8): the hotel with the highest weighted consensus among voted hotels
+  // (tie-broken by star rating). null when no one has voted or the leader is a group "skip".
+  function pickStayWinner(stay) {
+    var hs = (stay && stay.hotels) || []; if (!hs.length) return null; var best = null;
+    hs.forEach(function (h) {
+      var cons = consensusFor(hotelVoteName(h, stay.city)); if (!cons.voters && !cons.favs) return;
+      var s = cons.score + (parseFloat(h.starRating) || 0) * 0.1;
+      if (!best || s > best.s) best = { h: h, s: s, verdict: cons.verdict };
+    });
+    return (best && best.verdict !== 'skip') ? best.h : null;
+  }
+  // Apply a stays research result: store stays + strategies, snapshot deals, sync the hotel tasks.
+  function applyStaysResult(tr, res) {
+    if (!res) return;
+    if (res.stays && res.stays.length) { tr.stays = res.stays; tr.stayStrategies = res.strategies || []; }
+    checkHotelDeals(tr); syncHotelTasks(tr); saveTrip(tr);
+  }
+  // Rough nightly ceiling per room from the family's STATED budget tier (allocation math on the
+  // user's own input — an estimate basis, never a fabricated market price).
+  function perNightBudget(tr) { return TCStays.perNightBudget(tr && tr.budget); }
+  // ── Part 2: "Too expensive" → re-research ONLY this city under a max nightly price; itinerary,
+  //    attractions, transport, restaurants all preserved (only the hotel set is replaced). ──
+  function tooExpensiveFlow(stay, i) {
+    var tr = state.trip;
+    stayInputModal({ title: t('stayTooExpensive'), label: t('stayMaxBudgetTitle'), placeholder: t('stayMaxBudgetPh'), hint: t('stayMaxBudgetHint'), submit: t('stayApplyBudget'), inputType: 'number',
+      onSubmit: function (val) {
+        var max = parseInt(String(val).replace(/[^\d]/g, ''), 10); if (!max) return; closeModal();
+        toast(t('stayBudgetApplied').replace('${amt}', '$' + max));
+        state._cResearch = state._cResearch || {}; state._cResearch.stays = true; render();
+        researchStays(tr, { maxNightly: max, cityFilter: stay.city }).then(function (res) {
+          state._cResearch.stays = false;
+          var fresh = (res.stays || []).filter(function (s) { return _cityShort(s.city) === _cityShort(stay.city); })[0];
+          if (fresh && fresh.hotels && fresh.hotels.length) {
+            stay.hotels = fresh.hotels;
+            if (fresh.bestAreas) stay.bestAreas = fresh.bestAreas; if (fresh.bestArea) stay.bestArea = fresh.bestArea; if (fresh.airbnbAreas) stay.airbnbAreas = fresh.airbnbAreas;
+            var k = destKeyOf(stay, i); if (!findHotelByKey(stay, stayChoiceMap(tr)[k])) delete stayChoiceMap(tr)[k];
+            tr._stayBudget = tr._stayBudget || {}; tr._stayBudget[k] = max;
+            checkHotelDeals(tr); syncHotelTasks(tr); saveTrip(tr);
+          } else { toast(t('stayOwnFailed')); }
+          render();
+        }).catch(function () { state._cResearch.stays = false; render(); });
+      } });
+  }
+  // ── Part 4: "Enter your own hotel" → research it (real rating/distance via researchUserPlace) →
+  //    score Trip fit (Excellent/Good/Poor) → on accept, slot it in + chooseStay (re-optimizes). ──
+  function makeUserHotel(name, city, place, distanceNote) {
+    place = place || {};
+    return { name: name, area: place.address || city || '', userEntered: true,
+      starRating: String(place.rating || '').replace(/[^\d.]/g, ''), reviewCount: place.reviewCount || '',
+      priceRange: place.priceRange || 'pending verification', parkingNote: place.parkingNote || '',
+      breakfast: false, kitchen: false, pool: false, familySuite: /family|suite/i.test(place.kidSuitability || ''),
+      distanceNote: distanceNote || '', why: place.why || '', category: 'best_value', dataSource: 'user_entered', attractionDistances: [] };
+  }
+  function researchUserHotel(name, city) {
+    var c = mkCallable('researchUserPlace', 50000), tr = state.trip;
+    if (!c || !tr.id) return Promise.resolve(makeUserHotel(name, city, null, null));
+    var ctx = { destinations: (tr.destinations || []).map(function (d) { return { city: d.city, role: d.role }; }), hotelsByCity: {}, groupProfile: tr.groupProfile || {} };
+    return c({ tripId: tr.id, name: name, area: city || '', placeType: 'hotel', tripContext: ctx, lang: state.lang })
+      .then(function (r) { var d = (r && r.data) || {}; return makeUserHotel(name, city, (d.ok && d.place) ? d.place : null, d.distanceNote); })
+      .catch(function () { return makeUserHotel(name, city, null, null); });
+  }
+  function scoreHotelFit(tr, stay, h) {
+    var score = 0, reasons = [];
+    var rating = parseFloat(String(h.starRating || '').replace(/[^\d.]/g, ''));
+    if (isFinite(rating) && rating > 0) { if (rating >= 4.3) { score += 2; reasons.push('⭐ ' + rating); } else if (rating >= 3.8) { score += 1; } else { score -= 1; } }
+    var mid = parsePriceMid(h.priceRange), budget = perNightBudget(tr);
+    if (mid != null && budget) { if (mid <= budget) { score += 2; reasons.push('💵 ≤ $' + budget + t('stayPerNight')); } else if (mid > budget * 1.25) { score -= 2; reasons.push('⚠ ' + t('stayBudgetWarn').replace('${amt}', '$' + budget)); } }
+    if (h.distanceNote) { score += 1; reasons.push('📍 ' + h.distanceNote); }
+    var gp = tr.groupProfile || analyzeGroupProfile(tr.families, tr.budget, tr.tripStyle);
+    if (gp.childFocused && (h.familySuite || h.pool)) { score += 1; reasons.push('👨‍👩‍👧 ' + t('stayfor_family')); }
+    if (gp.seniorSensitive && h.parkingNote) { score += 0.5; }
+    var level = score >= 4 ? 'excellent' : (score >= 1 ? 'good' : 'poor');
+    return { level: level, score: score, reasons: reasons };
+  }
+  function fitKey(level) { return 'stayFit' + level.charAt(0).toUpperCase() + level.slice(1); }
+  function enterOwnHotelFlow(stay, i) {
+    var tr = state.trip;
+    stayInputModal({ title: t('stayEnterOwn'), label: t('stayOwnTitle'), placeholder: t('stayOwnPh'), hint: t('stayOwnHint'), submit: t('stayResearchOwn'),
+      onSubmit: function (val) {
+        var name = String(val || '').trim(); if (!name) return;
+        var body = doc.getElementById('tcStayModalBody'); if (body) { body.innerHTML = ''; body.appendChild(researchBanner('stayResearchingOwn')); }
+        researchUserHotel(name, stay.city).then(function (h) {
+          if (!h) { toast(t('stayOwnFailed')); closeModal(); return; }
+          showUserHotelFit(stay, i, h, scoreHotelFit(tr, stay, h));
+        }).catch(function () { toast(t('stayOwnFailed')); closeModal(); });
+      } });
+  }
+  function showUserHotelFit(stay, i, h, fit) {
+    var body = doc.getElementById('tcStayModalBody'); if (!body) return; body.innerHTML = '';
+    body.appendChild(stayCard(h, stay.city));
+    var fitBox = el('div', 'tc-stayintel__fit tc-stayintel__fit--' + fit.level);
+    fitBox.appendChild(el('strong', 'tc-stayintel__fitt', t('stayFitTitle') + ': ' + t(fitKey(fit.level))));
+    fit.reasons.forEach(function (r) { fitBox.appendChild(el('p', 'tc-stayintel__fitr', r)); });
+    body.appendChild(fitBox);
+    var use = el('button', 'tc-cta', t('stayUseThis')); use.type = 'button';
+    use.addEventListener('click', function () {
+      stay.hotels = stay.hotels || []; if (!findHotelByKey(stay, hotelKeyOf(h, stay.city))) stay.hotels.unshift(h);
+      closeModal(); toast(t('stayOwnAdded')); chooseStay(stay, i, h);
+    });
+    body.appendChild(use);
+  }
+  // Small guided input modal (mobile-first) for the budget / your-hotel prompts.
+  function stayInputModal(o) {
+    closeModal();
+    var ov = el('div', 'tc-modal'); ov.id = 'tcModal';
+    var card = el('div', 'tc-modal__card');
+    var head = el('div', 'tc-modal__head');
+    head.appendChild(el('strong', 'tc-modal__title', o.title || ''));
+    var x = el('button', 'tc-modal__x', '×'); x.type = 'button'; x.addEventListener('click', closeModal); head.appendChild(x);
+    card.appendChild(head);
+    var body = el('div', 'tc-stayintel__modal'); body.id = 'tcStayModalBody';
+    if (o.hint) body.appendChild(el('p', 'tc-hint', o.hint));
+    var inp = input('', o.placeholder || ''); if (o.inputType === 'number') { inp.type = 'number'; inp.setAttribute('inputmode', 'numeric'); }
+    body.appendChild(field(o.label || '', inp));
+    var go = el('button', 'tc-cta', o.submit || t('stayResearchOwn')); go.type = 'button';
+    go.addEventListener('click', function () { if (o.onSubmit) o.onSubmit(inp.value); });
+    inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); go.click(); } });
+    body.appendChild(go); card.appendChild(body);
+    ov.appendChild(card); ov.addEventListener('click', function (e) { if (e.target === ov) closeModal(); }); doc.body.appendChild(ov);
+    try { inp.focus(); } catch (e) {}
+  }
+  // ── Stay Intelligence UI sections (Parts 1,3,7,5,10,8) ──
+  // Tiers row: Premium / Best Value ⭐ / Budget — quick-choose (never only one hotel).
+  function stayTiersRow(s, si, hotels) {
+    if ((hotels || []).length < 2) return null;
+    var view = { city: s.city, hotels: hotels };
+    var byTier = { premium: null, best_value: null, budget: null };
+    hotels.forEach(function (h) { var tt = computeStayTier(h, hotels); if (!byTier[tt]) byTier[tt] = h; });
+    if (!byTier.budget) byTier.budget = stayPick(view, 'budget');
+    if (!byTier.premium) byTier.premium = stayPick(view, 'luxury');
+    if (!byTier.best_value) byTier.best_value = stayPick(view, 'best_value');
+    var wrap2 = el('div', 'tc-stayintel__tierswrap');
+    wrap2.appendChild(el('strong', 'tc-stayintel__h', '💲 ' + t('stayTiersTitle')));
+    var row = el('div', 'tc-stayintel__tiers');
+    [['premium', 'Premium'], ['best_value', 'BestValue'], ['budget', 'Budget']].forEach(function (pair) {
+      var h = byTier[pair[0]]; if (!h) return;
+      var card = el('button', 'tc-stayintel__tiercard tc-stayintel__tiercard--' + pair[0]); card.type = 'button';
+      card.appendChild(el('span', 'tc-stayintel__tierlbl', tierIcon(pair[0]) + ' ' + t('tier' + pair[1])));
+      card.appendChild(el('strong', 'tc-stayintel__tiername', h.name || h.area || ''));
+      card.appendChild(el('span', 'tc-stayintel__tierprice', h.priceRange ? ('💵 ' + h.priceRange) : t('pending')));
+      if (parseFloat(h.starRating)) card.appendChild(el('span', 'tc-stayintel__tierstar', '⭐ ' + h.starRating));
+      if (!state.readonly && !state.trip._demo) card.addEventListener('click', function () { chooseStay(s, si, h); });
+      row.appendChild(card);
+    });
+    wrap2.appendChild(row);
+    return row.children.length ? wrap2 : null;
+  }
+  // Current pick highlight + group-vote winner suggestion (Part 8).
+  function stayCurrentPick(s, si, hotels) {
+    var tr = state.trip, chosen = chosenHotelFor(tr, s, si);
+    var winner = pickStayWinner({ city: s.city, hotels: hotels });
+    if (!chosen && !winner) return null;
+    var box = el('div', 'tc-stayintel__current');
+    if (chosen) { box.appendChild(el('strong', 'tc-stayintel__h', '🏨 ' + t('stayCurrentPick'))); box.appendChild(stayCard(chosen, s.city, { stay: s, i: si, hotels: hotels })); }
+    if (winner && (!chosen || hotelKeyOf(winner, s.city) !== hotelKeyOf(chosen, s.city))) {
+      var wb = el('div', 'tc-stayintel__winner');
+      wb.appendChild(el('span', 'tc-stayintel__winlbl', '🗳 ' + t('stayGroupPick').replace('{name}', winner.name || winner.area || '')));
+      if (!state.readonly && !tr._demo) wb.appendChild(pbtn(t('stayMakePick'), 'tc-pbtn--accent', function () { chooseStay(s, si, winner); }));
+      box.appendChild(wb);
+    }
+    return box;
+  }
+  // Alternatives chips (Part 3) → surface the best hotel for each lens, tap to choose.
+  function stayAlternatives(s, si, hotels) {
+    var view = { city: s.city, hotels: hotels };
+    var lenses = [['best_value', 'staltBestValue'], ['budget', 'staltBudget'], ['closest', 'staltClosest'], ['beachfront', 'staltBeachfront'], ['family', 'staltFamily'], ['luxury', 'staltLuxury'], ['points', 'staltPoints']];
+    var box = el('div', 'tc-stayintel__alts');
+    box.appendChild(el('strong', 'tc-stayintel__h', '🔀 ' + t('stayAlternativesTitle')));
+    var row = el('div', 'tc-stayintel__chips'), seen = {};
+    lenses.forEach(function (l) {
+      var h = stayPick(view, l[0]); if (!h) return; var hk = hotelKeyOf(h, s.city);
+      var chip2 = el('button', 'tc-stayintel__chip'); chip2.type = 'button';
+      chip2.appendChild(doc.createTextNode(t(l[1]) + ' · ' + (h.name || h.area || '')));
+      if (!state.readonly && !state.trip._demo) chip2.addEventListener('click', function () { chooseStay(s, si, h); });
+      row.appendChild(chip2);
+    });
+    if (!row.children.length) row.appendChild(el('span', 'tc-hint', t('staltNone')));
+    box.appendChild(row);
+    return box;
+  }
+  // [Too expensive] + [Enter your own hotel] (Parts 2 & 4).
+  function stayActions(s, si) {
+    if (state.readonly || state.trip._demo) return null;
+    var row = el('div', 'tc-stayintel__actions');
+    row.appendChild(pbtn(t('stayTooExpensive'), '', function () { tooExpensiveFlow(s, si); }));
+    row.appendChild(pbtn(t('stayEnterOwn'), '', function () { enterOwnHotelFlow(s, si); }));
+    return row;
+  }
+  // Deal Watch section (Part 7): toggle + hotel price-drop alerts; Switch never auto-applies.
+  function stayDealsSection() {
+    var tr = state.trip, box = el('div', 'tc-stayintel__deals');
+    var head = el('div', 'tc-stayintel__dealhead');
+    head.appendChild(el('strong', 'tc-stayintel__h', '🔔 ' + t('stayDealsTitle')));
+    if (!state.readonly && !tr._demo) {
+      var tog = el('button', 'tc-pbtn' + (tr.dealWatch ? ' tc-pbtn--accent' : ''), (tr.dealWatch ? '✓ ' : '') + t(tr.dealWatch ? 'stayDealWatchOn' : 'stayDealWatch')); tog.type = 'button';
+      tog.addEventListener('click', function () { tr.dealWatch = !tr.dealWatch; saveTrip(tr); render(); });
+      head.appendChild(tog);
+    }
+    box.appendChild(head);
+    var alerts = (state._dealAlerts || []).filter(function (a) { return a && a.kind === 'hotel'; });
+    if (!alerts.length) { box.appendChild(el('p', 'tc-hint', t('stayNoDeals'))); return box; }
+    alerts.forEach(function (a) {
+      var row = el('div', 'tc-stayintel__deal');
+      var save = Math.max(0, Math.round((a.oldCost || 0) - (a.newCost || 0)));
+      row.appendChild(el('span', 'tc-stayintel__dealtxt', '💸 ' + t('stayDealDrop').replace('{name}', a.label || '').replace('${amt}', '$' + save)));
+      var stay = (tr.stays || []).filter(function (s2) { return _cityShort(s2.city) === _cityShort(a.city); })[0];
+      var si2 = stay ? tr.stays.indexOf(stay) : -1;
+      var h = stay ? (stay.hotels || []).filter(function (x) { return (x.name || '') === a.label; })[0] : null;
+      if (h && si2 >= 0 && !state.readonly && !tr._demo) row.appendChild(pbtn(t('staySwitchBtn'), 'tc-pbtn--accent', function () { chooseStay(stay, si2, h); }));
+      box.appendChild(row);
+    });
+    box.appendChild(el('p', 'tc-unverified', t('stayDealNote')));
+    return box;
+  }
+  // Locked stays summary (Part 5).
+  function stayLockedSection() {
+    var tr = state.trip, locks = lockedStaysMap(tr), keys = Object.keys(locks); if (!keys.length) return null;
+    var box = el('div', 'tc-stayintel__locked');
+    box.appendChild(el('strong', 'tc-stayintel__h', '🔒 ' + t('stayLockedTitle')));
+    keys.forEach(function (k) { var lk = locks[k]; box.appendChild(el('p', 'tc-stayintel__lockrow', '🔒 ' + (lk.hotelName || '') + ' · ' + (lk.city || '') + (lk.checkIn ? (' · ' + lk.checkIn + (lk.checkOut ? ('→' + lk.checkOut) : '')) : ''))); });
+    box.appendChild(el('p', 'tc-hint', t('stayLockedNote')));
+    return box;
+  }
+  // Lodging cost summary (Part 10): estimated / actual / remaining + per-family balance.
+  function stayCostSection() {
+    var tr = state.trip;
+    var hotelTasks = (tr.bookings || []).filter(function (b) { return b.type === 'hotel' && (b.costEstimate || b.actualCost); });
+    if (!hotelTasks.length || !root.TCTasks) return null;
+    var fams = (tr.families || []).map(function (f, i) { return { id: f.id || ('f' + i), name: f.name || ('#' + (i + 1)), travelers: famTravelers(f), members: (f.members || []) }; });
+    var bal = root.TCTasks.computeBalances(hotelTasks, fams, costSplit(tr), (tr.costLedger || []).filter(function (e) { return /hotel|lodg/i.test(e.title || ''); }));
+    var box = el('div', 'tc-stayintel__cost');
+    box.appendChild(el('strong', 'tc-stayintel__h', '💰 ' + t('stayCostTitle')));
+    var g = el('div', 'tc-stayintel__costgrid');
+    g.appendChild(kv(t('stayCostEstimated'), '~$' + bal.totalEstimated));
+    if (bal.totalActual) g.appendChild(kv(t('stayCostActual'), '$' + bal.totalActual));
+    g.appendChild(kv(t('stayCostRemaining'), '$' + bal.remaining));
+    box.appendChild(g);
+    bal.perFamily.forEach(function (f) { if (f.owed || f.paid) box.appendChild(el('p', 'tc-stayintel__costrow', f.name + ': $' + f.balance + (f.paid ? (' · ' + t('stayCostPaidBy') + ' $' + f.paid) : ''))); });
+    box.appendChild(el('p', 'tc-unverified', t('stayPriceEstimate')));
+    return box;
+  }
+  // Booking-status section (Part 9) — hotel task per stop + a Mark-booked shortcut.
+  function stayBookingStatusSection() {
+    var tr = state.trip;
+    var hotelTasks = (tr.bookings || []).filter(function (b) { return b.type === 'hotel'; }); if (!hotelTasks.length) return null;
+    var box = el('div', 'tc-stayintel__bstatus');
+    box.appendChild(el('strong', 'tc-stayintel__h', '📋 ' + t('stayBookingStatusTitle')));
+    hotelTasks.forEach(function (b) {
+      var booked = (b.bookingStatus === 'booked' || b.bookingStatus === 'completed' || b.bookingStatus === 'paid' || b.confirmationNumber);
+      var statusKey = booked ? 'stayStatusBooked' : (b.selectedOption ? 'stayStatusChosen' : 'stayStatusResearch');
+      var row = el('div', 'tc-stayintel__bsrow');
+      row.appendChild(el('span', 'tc-stayintel__bscity', '📍 ' + (b.city || '')));
+      if (b.selectedOption) row.appendChild(el('span', 'tc-stayintel__bsname', b.selectedOption));
+      row.appendChild(el('span', 'tc-stayintel__bstag tc-stayintel__bstag--' + (booked ? 'booked' : (b.selectedOption ? 'chosen' : 'research')), t(statusKey)));
+      if (!state.readonly && !tr._demo && b.selectedOption && !booked) row.appendChild(pbtn(t('stayMarkBooked'), 'tc-pbtn--accent', function () { openConfirmBookingModal(b, (tr.bookings || []).indexOf(b)); }));
+      box.appendChild(row);
+    });
+    return box;
   }
   function renderStays(plan) {
     var tr = state.trip;
@@ -6754,7 +7250,7 @@
       wrap.appendChild(el('p', 'tc-hint', t('stayStrategiesSub')));
       strat.forEach(function (s) { wrap.appendChild(stayStrategyCard(s)); });
     }
-    stays.forEach(function (s) {
+    stays.forEach(function (s, si) {
       var block = el('div', 'tc-stayblock');
       var head = el('div', 'tc-stayblock__head');
       head.appendChild(el('strong', 'tc-stayblock__city', '📍 ' + (s.city || '')));
@@ -6775,8 +7271,13 @@
         block.appendChild(bab);
       }
       var hotelsF = (s.hotels || []).filter(function (h) { return !rejectedNameSet(tr)[hotelVoteName(h, s.city).trim().toLowerCase()]; });
+      // ── Stay Intelligence: tiers + current pick/winner + alternatives + replace actions ──
+      var _t1 = stayTiersRow(s, si, hotelsF); if (_t1) block.appendChild(_t1);
+      var _cp = stayCurrentPick(s, si, hotelsF); if (_cp) block.appendChild(_cp);
+      var _alt = stayAlternatives(s, si, hotelsF); if (_alt) block.appendChild(_alt);
+      var _act = stayActions(s, si); if (_act) block.appendChild(_act);
       var hn = voteSortNote(hotelsF, function (h) { return hotelVoteName(h, s.city); }); if (hn) block.appendChild(hn);
-      consensusSort(hotelsF, function (h) { return hotelVoteName(h, s.city); }).forEach(function (h) { block.appendChild(stayCard(h, s.city)); });
+      consensusSort(hotelsF, function (h) { return hotelVoteName(h, s.city); }).forEach(function (h) { block.appendChild(stayCard(h, s.city, { stay: s, i: si, hotels: hotelsF })); });
       if (s.airbnbAreas && s.airbnbAreas.length) {
         block.appendChild(el('strong', 'tc-stays__sub2', t('airbnbAreasTitle')));
         s.airbnbAreas.forEach(function (ab) {
@@ -6793,6 +7294,11 @@
       block.appendChild(el('p', 'tc-unverified', t('unverified')));
       wrap.appendChild(block);
     });
+    // ── Trip-level Stay Intelligence: Deals · Locked · Cost · Booking status ──
+    var _deals = stayDealsSection(); if (_deals) wrap.appendChild(_deals);
+    var _locked = stayLockedSection(); if (_locked) wrap.appendChild(_locked);
+    var _cost = stayCostSection(); if (_cost) wrap.appendChild(_cost);
+    var _bs = stayBookingStatusSection(); if (_bs) wrap.appendChild(_bs);
     return wrap;
   }
 
@@ -7378,6 +7884,12 @@
     o = o || {}; var tr = state.trip; var r = rideTaskRoute(b);
     var notes = b.notes || '';
     if (o.modify && b.confirmationNumber) notes = (t('rideModifyNote').replace('{id}', b.confirmationNumber) + (notes ? (' · ' + notes) : ''));
+    // Stay Intelligence re-anchor: name the CHOSEN hotel(s) for this leg so the ride leaves from /
+    // drops at the exact hotel. Notes-only (never an invented street address). ↑ pickup, ↓ dropoff.
+    function _selHotel(city) { var c = _cityShort(city); var d = (tr.destinations || []).filter(function (x) { return _cityShort(x.city) === c; })[0]; return (d && d.selectedHotel && d.selectedHotel.name) || ''; }
+    var _ph = _selHotel(r.pickup), _dh = _selHotel(r.dropoff), _hh = [];
+    if (_ph) _hh.push('↑ ' + _ph); if (_dh) _hh.push('↓ ' + _dh);
+    if (_hh.length) notes = (notes ? notes + ' · ' : '') + t('bt_hotel') + ': ' + _hh.join(' · ');
     var io = {
       kind: 'ride', pickup: r.pickup, dropoff: r.dropoff, taskId: b.id, mode: 'dlc_ride',
       segmentId: b.segmentId || segmentIdForCity(tr, r.dropoff) || '', legRef: r.pickup + '→' + r.dropoff,

@@ -1727,3 +1727,74 @@ select.tc-input { appearance: none; background-image: linear-gradient(45deg, tra
 .tc-dep--next { border-color: var(--tc-gold); box-shadow: 0 0 0 1px rgba(241,194,101,.4) inset; }
 .tc-dep--next .tc-dep__ic { color: var(--tc-gold); }
 .tc-dep__conn { text-align: center; color: var(--muted); font-size: .9rem; line-height: 1; padding: .15rem 0; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   STAY INTELLIGENCE ENGINE — tiers, alternatives, choose/lock, deals, cost.
+   Mobile-first base → 768 → 1200. Isolated .tc-stayintel__* namespace.
+   ════════════════════════════════════════════════════════════════════════ */
+.tc-stayintel__h { display: block; font-family: var(--font-d); font-size: 1rem; color: var(--cream); margin: .6rem 0 .4rem; }
+/* Hotel card states (extend .tc-stay) */
+.tc-stayintel--chosen { border-color: var(--tc-gold); box-shadow: 0 0 0 1px var(--tc-gold-soft) inset, var(--tc-shadow-sm); }
+.tc-stayintel--locked { border-color: var(--tc-gold-deep); }
+.tc-stayintel__tier { display: inline-flex; align-items: center; gap: .2rem; font-family: var(--font-b); font-weight: 600; font-size: .66rem; padding: .12rem .45rem; border-radius: 99px; border: 1px solid var(--border); color: var(--cream); }
+.tc-stayintel__tier--premium { background: var(--tc-gold-soft); border-color: var(--tc-gold); color: var(--tc-gold); }
+.tc-stayintel__tier--best_value { background: rgba(56,189,248,.16); border-color: var(--tc-accent); color: #bae6fd; }
+.tc-stayintel__tier--budget { background: rgba(255,255,255,.06); color: var(--muted); }
+.tc-stayintel__badge { margin-left: auto; font-size: .66rem; font-weight: 700; padding: .12rem .45rem; border-radius: 99px; background: var(--tc-gold); color: #1a1407; }
+.tc-stayintel__badge--lock { background: var(--tc-gold-deep); color: #0a0a0a; }
+.tc-stayintel__ctrls { display: flex; flex-wrap: wrap; gap: .4rem; margin: .4rem 0; }
+.tc-stayintel__pick { display: inline-flex; align-items: center; font-size: .8rem; font-weight: 600; color: var(--tc-gold); }
+.tc-stayintel__estlbl { color: var(--muted); font-size: .78rem; font-style: italic; }
+.tc-stayintel__est { color: #bae6fd; font-size: .82rem; }
+.tc-stayintel__warn { color: #fca5a5; font-size: .82rem; }
+/* Tiers row */
+.tc-stayintel__tierswrap { margin: .5rem 0; }
+.tc-stayintel__tiers { display: grid; grid-template-columns: 1fr; gap: .5rem; }
+.tc-stayintel__tiercard { text-align: left; display: flex; flex-direction: column; gap: .15rem; padding: .6rem .7rem; border-radius: 12px; border: 1px solid var(--border); background: var(--navy-800); color: var(--cream); cursor: pointer; font-family: var(--font-b); }
+.tc-stayintel__tiercard:active { transform: scale(.99); }
+.tc-stayintel__tiercard--premium { border-color: var(--tc-gold); }
+.tc-stayintel__tiercard--best_value { border-color: var(--tc-accent); }
+.tc-stayintel__tierlbl { font-size: .7rem; font-weight: 700; color: var(--muted); }
+.tc-stayintel__tiername { font-family: var(--font-d); font-size: .95rem; }
+.tc-stayintel__tierprice { font-size: .8rem; color: var(--tc-gold); }
+.tc-stayintel__tierstar { font-size: .74rem; color: var(--muted); }
+/* Current pick + group winner */
+.tc-stayintel__current { margin: .5rem 0; padding: .5rem; border-radius: 14px; border: 1px solid var(--tc-gold-soft); background: rgba(241,194,101,.05); }
+.tc-stayintel__winner { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-top: .4rem; padding: .45rem .6rem; border-radius: 10px; background: rgba(56,189,248,.1); border: 1px solid rgba(56,189,248,.3); }
+.tc-stayintel__winlbl { font-size: .85rem; color: #bae6fd; }
+/* Alternatives chips */
+.tc-stayintel__alts { margin: .5rem 0; }
+.tc-stayintel__chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+.tc-stayintel__chip { font-family: var(--font-b); font-size: .76rem; padding: .35rem .6rem; border-radius: 99px; border: 1px solid var(--border); background: var(--navy-800); color: var(--cream); cursor: pointer; }
+.tc-stayintel__chip:active { transform: scale(.97); }
+.tc-stayintel__actions { display: flex; flex-wrap: wrap; gap: .5rem; margin: .5rem 0; }
+/* Deals / Locked / Cost / Booking-status panels */
+.tc-stayintel__deals, .tc-stayintel__locked, .tc-stayintel__cost, .tc-stayintel__bstatus { margin: .8rem 0; padding: .6rem .7rem; border-radius: 14px; border: 1px solid var(--border); background: var(--tc-glass); }
+.tc-stayintel__dealhead { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.tc-stayintel__deal { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; padding: .4rem 0; border-top: 1px solid var(--border); }
+.tc-stayintel__dealtxt { font-size: .85rem; color: var(--cream); }
+.tc-stayintel__lockrow { font-size: .85rem; color: var(--cream); margin: .2rem 0; }
+.tc-stayintel__costgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .4rem; margin: .4rem 0; }
+.tc-stayintel__costrow { font-size: .82rem; color: var(--muted); margin: .15rem 0; }
+.tc-stayintel__bsrow { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; padding: .35rem 0; border-top: 1px solid var(--border); }
+.tc-stayintel__bscity { font-weight: 600; color: var(--cream); font-size: .82rem; }
+.tc-stayintel__bsname { color: var(--muted); font-size: .8rem; }
+.tc-stayintel__bstag { font-size: .68rem; font-weight: 700; padding: .12rem .45rem; border-radius: 99px; }
+.tc-stayintel__bstag--research { background: rgba(255,255,255,.08); color: var(--muted); }
+.tc-stayintel__bstag--chosen { background: rgba(56,189,248,.16); color: #bae6fd; }
+.tc-stayintel__bstag--booked { background: var(--tc-gold); color: #1a1407; }
+/* Your-hotel modal + fit score */
+.tc-stayintel__modal { display: flex; flex-direction: column; gap: .5rem; padding: .2rem 0; }
+.tc-stayintel__fit { padding: .5rem .6rem; border-radius: 12px; border: 1px solid var(--border); margin-top: .4rem; }
+.tc-stayintel__fit--excellent { border-color: #4ade80; background: rgba(74,222,128,.1); }
+.tc-stayintel__fit--good { border-color: var(--tc-accent); background: rgba(56,189,248,.1); }
+.tc-stayintel__fit--poor { border-color: #fca5a5; background: rgba(252,165,165,.1); }
+.tc-stayintel__fitt { display: block; font-family: var(--font-d); color: var(--cream); margin-bottom: .25rem; }
+.tc-stayintel__fitr { font-size: .8rem; color: var(--muted); margin: .12rem 0; }
+@media (min-width: 768px) {
+  .tc-stayintel__tiers { grid-template-columns: repeat(3, 1fr); }
+}
+@media (min-width: 1200px) {
+  .tc-stayintel__costgrid { grid-template-columns: repeat(3, 1fr); }
+  .tc-stayintel__chip { font-size: .8rem; }
+}

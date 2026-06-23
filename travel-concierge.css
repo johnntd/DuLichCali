@@ -1774,7 +1774,7 @@ select.tc-input { appearance: none; background-image: linear-gradient(45deg, tra
 .tc-stayintel__deal { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; padding: .4rem 0; border-top: 1px solid var(--border); }
 .tc-stayintel__dealtxt { font-size: .85rem; color: var(--cream); }
 .tc-stayintel__lockrow { font-size: .85rem; color: var(--cream); margin: .2rem 0; }
-.tc-stayintel__costgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .4rem; margin: .4rem 0; }
+.tc-stayintel__costgrid { display: grid; grid-template-columns: 1fr; gap: .4rem; margin: .4rem 0; }
 .tc-stayintel__costrow { font-size: .82rem; color: var(--muted); margin: .15rem 0; }
 .tc-stayintel__bsrow { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; padding: .35rem 0; border-top: 1px solid var(--border); }
 .tc-stayintel__bscity { font-weight: 600; color: var(--cream); font-size: .82rem; }
@@ -1793,8 +1793,8 @@ select.tc-input { appearance: none; background-image: linear-gradient(45deg, tra
 .tc-stayintel__fitr { font-size: .8rem; color: var(--muted); margin: .12rem 0; }
 @media (min-width: 768px) {
   .tc-stayintel__tiers { grid-template-columns: repeat(3, 1fr); }
+  .tc-stayintel__costgrid { grid-template-columns: repeat(3, 1fr); }
 }
 @media (min-width: 1200px) {
-  .tc-stayintel__costgrid { grid-template-columns: repeat(3, 1fr); }
   .tc-stayintel__chip { font-size: .8rem; }
 }

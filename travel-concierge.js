@@ -3931,6 +3931,7 @@
       }
       tr.lastOptimizedSignature = votesSignature(tr); // clears the "votes changed" nudge
       try { tr.bookings = []; mergeBookings(tr, deriveBookingChecklist(tr)); } catch (e) {} // re-derive (rejected already filtered)
+      try { reanchorChosenStays(tr); enrichHotelTasks(tr); } catch (e) {} // Stay Intelligence: a full rebuild must KEEP chosen/LOCKED hotels (Part 5) — re-assert anchors + hotel tasks
       state.activeTab = 'overview'; state.activeDay = 0;
       saveTrip(tr);
       runConciergeResearch(tr); // re-research every supporting tab with the latest consensus
@@ -4907,11 +4908,16 @@
     if (!idxs.length) return;
     var daySpecs = idxs.map(function (i) { var dd = plan.days[i]; return { dayNumber: i + 1, date: dd.date || '', destinationIndex: destIndex, isTravelDay: !!dd.isTravelDay, isReturnDay: !!dd.isReturnDay, title: dd.title || '', theme: dd.theme || '', summary: dd.summary || '' }; });
     var td = (tr.destinations || [])[destIndex] || {}, pdest = (plan.destinations || [])[destIndex] || {};
+    // Stay Intelligence: a LOCKED hotel for this city must survive ANY replan — prefer it over the
+    // (possibly AI-reset) pdest.hotelSuggestion. lockedStays is keyed by stays-index but stores city.
+    var _legCity = _cityShort(td.city || pdest.city || ''), _lk = lockedStaysMap(tr), _lockedSugg = null;
+    Object.keys(_lk).forEach(function (k) { var L = _lk[k]; if (L && L.hotelName && _cityShort(L.city) === _legCity) _lockedSugg = { name: L.hotelName, area: '', why: t('stayLockedBadge') }; });
+    if (_lockedSugg && pdest) pdest.hotelSuggestion = _lockedSugg; // re-assert the lock on the plan
     state.generating = true; renderGenerating(t('genLeg'));
     return legFn({
       trip: { tripStyle: tr.tripStyle, budget: tr.budget, families: tr.families, preferences: tr.preferences, departureCity: tr.departureCity, lastDayFull: !!tr.lastDayFull, finalDayMode: finalDayMode(tr) },
       lang: state.lang,
-      leg: { index: destIndex, city: td.city || pdest.city || destNameFromTrip(tr, destIndex), startDate: td.startDate || '', endDate: td.endDate || '', hotelSuggestion: pdest.hotelSuggestion || null, role: td.role || 'main_destination', hotelNeeded: td.hotelNeeded !== false, mealOnly: !!td.mealOnly, suggestFood: td.suggestFood !== false, suggestActivities: td.suggestActivities !== false, hoursToSpend: td.hoursToSpend || '', priority: td.priority || 'required' },
+      leg: { index: destIndex, city: td.city || pdest.city || destNameFromTrip(tr, destIndex), startDate: td.startDate || '', endDate: td.endDate || '', hotelSuggestion: _lockedSugg || pdest.hotelSuggestion || null, role: td.role || 'main_destination', hotelNeeded: td.hotelNeeded !== false, mealOnly: !!td.mealOnly, suggestFood: td.suggestFood !== false, suggestActivities: td.suggestActivities !== false, hoursToSpend: td.hoursToSpend || '', priority: td.priority || 'required' },
       daySpecs: daySpecs, liveHighlights: tr.liveHighlights || [], avoidPlaces: rejectedNames(tr), preferredPlaces: preferredNames(tr), pinnedActivities: tr.pinnedActivities || [],
     }).then(function (rr) {
       state.generating = false;
@@ -6880,11 +6886,20 @@
       tr.plan.destinations[destIdx].hotelSuggestion = { name: h.name || '', area: h.area || '', why: h.why || '' };
     }
   }
+  // Re-assert every chosen/LOCKED hotel onto the (re)built plan — called after a full optimizeRebuild
+  // so Part 5 holds: locked hotels + their tasks/cost survive a whole-trip re-plan.
+  function reanchorChosenStays(tr) {
+    (tr.stays || []).forEach(function (s, si) {
+      var h = chosenHotelFor(tr, s, si); if (!h) return;
+      var di = destIndexForStay(tr, s); if (di >= 0) anchorHotelToDestination(tr, di, h, s.city);
+    });
+  }
   // THE CORE — choose a hotel for a stop, persist, then auto re-optimize the leg around it
   // (regenerateLeg re-times restaurants/attractions/rest, preserving pinned + locked items). Any
   // Michael/DLC ride for the stop re-anchors to the hotel; a BOOKED ride is flagged for re-confirm,
   // never silently mutated. Records informational switch-savings. opts.reopt=false skips the replan.
   function chooseStay(stay, i, h, opts) {
+    if (state.readonly || (state.trip && state.trip._demo)) { toast(t('sampleReadonly')); return; }
     opts = opts || {}; var tr = state.trip; var key = destKeyOf(stay, i), hk = hotelKeyOf(h, stay.city);
     if (isStayLocked(tr, stay, i) && !opts.fromLock) { toast(t('stayLockedBadge')); return; }
     var prevKey = stayChoiceMap(tr)[key];
@@ -6909,6 +6924,7 @@
   }
   // Lock / unlock a stay — the locked hotel + check-in/out are preserved across ALL future replans.
   function lockStay(stay, i, h) {
+    if (state.readonly || (state.trip && state.trip._demo)) { toast(t('sampleReadonly')); return; }
     var tr = state.trip, key = destKeyOf(stay, i), di = destIndexForStay(tr, stay), d = (tr.destinations || [])[di] || {};
     lockedStaysMap(tr)[key] = { hotelKey: hotelKeyOf(h, stay.city), hotelName: h.name || '', city: stay.city || '', checkIn: d.startDate || d.arrivalDate || '', checkOut: d.endDate || d.departureDate || '' };
     stayChoiceMap(tr)[key] = hotelKeyOf(h, stay.city);
@@ -6988,6 +7004,7 @@
   // ── Part 2: "Too expensive" → re-research ONLY this city under a max nightly price; itinerary,
   //    attractions, transport, restaurants all preserved (only the hotel set is replaced). ──
   function tooExpensiveFlow(stay, i) {
+    if (state.readonly || (state.trip && state.trip._demo)) { toast(t('sampleReadonly')); return; }
     var tr = state.trip;
     stayInputModal({ title: t('stayTooExpensive'), label: t('stayMaxBudgetTitle'), placeholder: t('stayMaxBudgetPh'), hint: t('stayMaxBudgetHint'), submit: t('stayApplyBudget'), inputType: 'number',
       onSubmit: function (val) {
@@ -7001,7 +7018,6 @@
             stay.hotels = fresh.hotels;
             if (fresh.bestAreas) stay.bestAreas = fresh.bestAreas; if (fresh.bestArea) stay.bestArea = fresh.bestArea; if (fresh.airbnbAreas) stay.airbnbAreas = fresh.airbnbAreas;
             var k = destKeyOf(stay, i); if (!findHotelByKey(stay, stayChoiceMap(tr)[k])) delete stayChoiceMap(tr)[k];
-            tr._stayBudget = tr._stayBudget || {}; tr._stayBudget[k] = max;
             checkHotelDeals(tr); syncHotelTasks(tr); saveTrip(tr);
           } else { toast(t('stayOwnFailed')); }
           render();
@@ -7041,6 +7057,7 @@
   }
   function fitKey(level) { return 'stayFit' + level.charAt(0).toUpperCase() + level.slice(1); }
   function enterOwnHotelFlow(stay, i) {
+    if (state.readonly || (state.trip && state.trip._demo)) { toast(t('sampleReadonly')); return; }
     var tr = state.trip;
     stayInputModal({ title: t('stayEnterOwn'), label: t('stayOwnTitle'), placeholder: t('stayOwnPh'), hint: t('stayOwnHint'), submit: t('stayResearchOwn'),
       onSubmit: function (val) {
@@ -7136,6 +7153,7 @@
     var row = el('div', 'tc-stayintel__chips'), seen = {};
     lenses.forEach(function (l) {
       var h = stayPick(view, l[0]); if (!h) return; var hk = hotelKeyOf(h, s.city);
+      if (seen[hk]) return; seen[hk] = 1;  // one chip per hotel even when lenses overlap
       var chip2 = el('button', 'tc-stayintel__chip'); chip2.type = 'button';
       chip2.appendChild(doc.createTextNode(t(l[1]) + ' · ' + (h.name || h.area || '')));
       if (!state.readonly && !state.trip._demo) chip2.addEventListener('click', function () { chooseStay(s, si, h); });
@@ -7829,6 +7847,13 @@
     card.appendChild(field(t('confirmationNumber'), cn));
     var pr = input(b.actualCost, t('actualPricePh'));
     card.appendChild(field(t('actualPricePaid'), pr));
+    // Who paid (Part 10) — only meaningful with 2+ families; feeds the cost ledger via attachManualBooking.
+    var paidSel = null;
+    if (tripFamilies().length > 1) {
+      paidSel = selectFrom([''].concat(tripFamilies().map(function (f) { return f.id; })), b.paidBy || '', function (id) { if (!id) return t('taskPaidByNone'); var ff = tripFamilies().filter(function (x) { return x.id === id; })[0]; return ff ? (ff.name || id) : id; });
+      paidSel.className = 'tc-input';
+      card.appendChild(field(t('taskPaidBy'), paidSel));
+    }
     if (b.type === 'flight') card.appendChild(el('p', 'tc-hint', t('confirmFlightAirlineHint')));
     card.appendChild(el('p', 'tc-hint', t('confirmBookingHonesty')));
     var acts = el('div', 'tc-modal__acts');
@@ -7837,6 +7862,7 @@
     save.addEventListener('click', function () {
       var cnv = (cn.value || '').trim();
       if (!cnv) { toast(t('confirmNeedNumber')); return; }
+      if (paidSel) b.paidBy = paidSel.value;
       attachManualBooking(b, state.trip, { confirmationNumber: cnv, actualPrice: (pr.value || '').trim(), asRequested: false });
       closeModal();
     });

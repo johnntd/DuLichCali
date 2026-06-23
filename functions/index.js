@@ -2486,8 +2486,9 @@ exports.researchTripStays = onCall(
     if (!allDests.length) return { ok: false, debugCode: 'NO_LODGING_DESTINATIONS', stays: [] };
     // Stay Intelligence "Too expensive" re-research: cap nightly price + (optionally) ONE city.
     const maxNightly = Math.max(0, parseInt(data.maxNightly, 10) || 0);
-    const cityFilter = String(data.cityFilter || '').trim().toLowerCase().split(',')[0];
-    const filtered = cityFilter ? allDests.filter(d => String(d.city || '').toLowerCase().indexOf(cityFilter) !== -1) : allDests;
+    const cityFilter = String(data.cityFilter || '').trim().toLowerCase().split(',')[0].trim();
+    // EXACT first-segment match (not substring) so "orange" never matches "orange county" too.
+    const filtered = cityFilter ? allDests.filter(d => String(d.city || '').toLowerCase().split(',')[0].trim() === cityFilter) : allDests;
     const dests = filtered.length ? filtered : allDests;
     const geminiKey = await getAiKey('gemini');
     if (!geminiKey) return { ok: false, debugCode: 'NO_GEMINI_KEY', stays: [] };

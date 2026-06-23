@@ -111,7 +111,7 @@
       tab_journey: 'Journey', journeyTitle: 'Your journey', journeySub: 'Every stop, stay and ride as a node. Lock what you love 🔒 — the AI only replans around it.', jnNoPlan: 'Generate the trip first — your journey timeline appears here.', jnLock: 'Lock', jnUnlock: 'Unlock', jnLocked: 'Locked', jnImprove: 'Improve around this', jnImproving: 'Replanning this day (keeping locked items)…', jnAddAfter: 'Add after', jnReplanDay: 'Replan this day', jnReplanKeep: 'keeps 🔒 locked', jnReplanned: 'Day replanned — locked items kept', jnTransportNode: 'Transport', jnViewTransport: 'Compare transport', jnNodeMenu: 'Options', jnAddPh: 'Add a place / activity', jnAdd: 'Add',
       cmdPh: 'Tell the concierge what to change…', cmdGo: 'Ask AI', cmdBusy: 'Understanding your request…', cmdPlanTitle: 'Here’s what I’ll change', cmdNone: 'I couldn’t turn that into an edit — try rephrasing (e.g. “skip the zoo”, “add Disneyland day 2”, “find another Vietnamese dinner”).', cmdFail: 'Couldn’t interpret that right now — try again.', cmdDays: 'Replans day {d}', cmdApply: 'Apply changes', cmdApplied: 'Trip updated', cmdCancel: 'Cancel',
       cmdop_skip: 'Skip', cmdop_delete: 'Remove', cmdop_lock: 'Lock', cmdop_unlock: 'Unlock', cmdop_replace: 'Replace', cmdop_add: 'Add', cmdop_retime: 'Re-time', cmdop_replan_day: 'Replan', cmdop_stay_extra_night: 'Stay an extra night', cmdop_leave_earlier: 'Leave earlier', cmdop_change_return: 'Change return',
-      rideBookingTitle: 'DuLichCali ride', rideBookedToast: 'Ride booked and added to your trip', rideRequestedToast: 'Ride requested — pending confirmation', rideNotCompleted: 'Ride booking not completed — nothing was added. You can try again.', rideBookedNote: 'DuLichCali ride booked', rideRequestedNote: 'DuLichCali ride requested', rideRequestMichael: 'Request Michael ride', rideBookDlc: 'Book with DuLichCali', rideViewRequest: 'View request', rideModifyRequest: 'Modify request', rideCancelRequest: 'Cancel request', rideViewTitle: 'Your ride request', rideRouteLabel: 'Route', ridePassengers: 'Passengers', rideCancelledNote: 'Ride request cancelled', rideCancelledToast: 'Ride request cancelled — you can request it again anytime', rideModifyNote: 'MODIFIED — replaces request #{id}; please cancel the previous booking',
+      rideBookingTitle: 'DuLichCali ride', rideBookedToast: 'Ride booked and added to your trip', rideRequestedToast: 'Ride requested — pending confirmation', rideNotCompleted: 'Ride booking not completed — nothing was added. You can try again.', rideBookedNote: 'DuLichCali ride booked', rideRequestedNote: 'DuLichCali ride requested', rideRequestMichael: 'Request Michael ride', rideBookDlc: 'Book with DuLichCali', rideViewRequest: 'View request', rideModifyRequest: 'Modify request', rideCancelRequest: 'Cancel request', rideViewTitle: 'Your ride request', rideRouteLabel: 'Route', ridePassengers: 'Passengers', rideCancelledNote: 'Ride request cancelled', rideCancelledToast: 'Ride request cancelled — you can request it again anytime', rideModifyNote: 'MODIFIED — replaces request #{id}; please cancel the previous booking', rideVendorCancelledNote: 'Ride was cancelled/declined by the provider — please re-request',
       groupTravelersTitle: 'Who\'s travelling', travelersAdults: 'adults', travelersEdit: 'Edit travelers',
       summary: 'Trip summary', assumptions: 'Assumptions', warnings: 'Good to know',
       costRange: 'Estimated cost', meetup: 'Meetup', regenDay: 'Regenerate day',
@@ -408,7 +408,7 @@
       tab_journey: 'Hành trình', journeyTitle: 'Hành trình của bạn', journeySub: 'Mỗi điểm dừng, nơi ở và chuyến xe là một nút. Khóa thứ bạn thích 🔒 — AI chỉ tối ưu xung quanh.', jnNoPlan: 'Hãy tạo chuyến đi trước — dòng thời gian hành trình sẽ hiện ở đây.', jnLock: 'Khóa', jnUnlock: 'Mở khóa', jnLocked: 'Đã khóa', jnImprove: 'Cải thiện quanh mục này', jnImproving: 'Đang lên lại ngày này (giữ mục đã khóa)…', jnAddAfter: 'Thêm sau', jnReplanDay: 'Lên lại ngày này', jnReplanKeep: 'giữ 🔒 đã khóa', jnReplanned: 'Đã lên lại ngày — giữ mục đã khóa', jnTransportNode: 'Di chuyển', jnViewTransport: 'So sánh di chuyển', jnNodeMenu: 'Tùy chọn', jnAddPh: 'Thêm địa điểm / hoạt động', jnAdd: 'Thêm',
       cmdPh: 'Nói cho trợ lý biết bạn muốn đổi gì…', cmdGo: 'Hỏi AI', cmdBusy: 'Đang hiểu yêu cầu của bạn…', cmdPlanTitle: 'Đây là những thay đổi tôi sẽ làm', cmdNone: 'Tôi chưa chuyển được thành chỉnh sửa — hãy thử diễn đạt lại (vd: “bỏ sở thú”, “thêm Disneyland ngày 2”, “tìm bữa tối Việt khác”).', cmdFail: 'Hiện chưa hiểu được — vui lòng thử lại.', cmdDays: 'Lên lại ngày {d}', cmdApply: 'Áp dụng thay đổi', cmdApplied: 'Đã cập nhật chuyến đi', cmdCancel: 'Hủy',
       cmdop_skip: 'Bỏ qua', cmdop_delete: 'Xóa', cmdop_lock: 'Khóa', cmdop_unlock: 'Mở khóa', cmdop_replace: 'Thay thế', cmdop_add: 'Thêm', cmdop_retime: 'Đổi giờ', cmdop_replan_day: 'Lên lại', cmdop_stay_extra_night: 'Ở thêm một đêm', cmdop_leave_earlier: 'Về sớm hơn', cmdop_change_return: 'Đổi chuyến về',
-      rideBookingTitle: 'Xe Du Lịch Cali', rideBookedToast: 'Đã đặt xe và thêm vào chuyến đi', rideRequestedToast: 'Đã yêu cầu xe — chờ xác nhận', rideNotCompleted: 'Chưa hoàn tất đặt xe — không có gì được thêm. Bạn có thể thử lại.', rideBookedNote: 'Đã đặt xe Du Lịch Cali', rideRequestedNote: 'Đã yêu cầu xe Du Lịch Cali', rideRequestMichael: 'Yêu cầu xe Michael', rideBookDlc: 'Đặt với Du Lịch Cali', rideViewRequest: 'Xem yêu cầu', rideModifyRequest: 'Sửa yêu cầu', rideCancelRequest: 'Hủy yêu cầu', rideViewTitle: 'Yêu cầu xe của bạn', rideRouteLabel: 'Tuyến', ridePassengers: 'Số khách', rideCancelledNote: 'Đã hủy yêu cầu xe', rideCancelledToast: 'Đã hủy yêu cầu xe — bạn có thể yêu cầu lại bất cứ lúc nào', rideModifyNote: 'ĐÃ SỬA — thay cho yêu cầu #{id}; vui lòng hủy đặt chỗ trước đó',
+      rideBookingTitle: 'Xe Du Lịch Cali', rideBookedToast: 'Đã đặt xe và thêm vào chuyến đi', rideRequestedToast: 'Đã yêu cầu xe — chờ xác nhận', rideNotCompleted: 'Chưa hoàn tất đặt xe — không có gì được thêm. Bạn có thể thử lại.', rideBookedNote: 'Đã đặt xe Du Lịch Cali', rideRequestedNote: 'Đã yêu cầu xe Du Lịch Cali', rideRequestMichael: 'Yêu cầu xe Michael', rideBookDlc: 'Đặt với Du Lịch Cali', rideViewRequest: 'Xem yêu cầu', rideModifyRequest: 'Sửa yêu cầu', rideCancelRequest: 'Hủy yêu cầu', rideViewTitle: 'Yêu cầu xe của bạn', rideRouteLabel: 'Tuyến', ridePassengers: 'Số khách', rideCancelledNote: 'Đã hủy yêu cầu xe', rideCancelledToast: 'Đã hủy yêu cầu xe — bạn có thể yêu cầu lại bất cứ lúc nào', rideModifyNote: 'ĐÃ SỬA — thay cho yêu cầu #{id}; vui lòng hủy đặt chỗ trước đó', rideVendorCancelledNote: 'Xe đã bị nhà cung cấp hủy/từ chối — vui lòng yêu cầu lại',
       groupTravelersTitle: 'Ai cùng đi', travelersAdults: 'người lớn', travelersEdit: 'Sửa người đi',
       summary: 'Tóm tắt chuyến đi', assumptions: 'Giả định', warnings: 'Cần lưu ý',
       costRange: 'Chi phí ước tính', meetup: 'Điểm hẹn', regenDay: 'Tạo lại ngày',
@@ -700,7 +700,7 @@
       tab_journey: 'Recorrido', journeyTitle: 'Tu recorrido', journeySub: 'Cada parada, alojamiento y viaje como un nodo. Bloquea lo que te gusta 🔒 — la IA solo replanifica alrededor.', jnNoPlan: 'Genera el viaje primero — tu línea de tiempo aparecerá aquí.', jnLock: 'Bloquear', jnUnlock: 'Desbloquear', jnLocked: 'Bloqueado', jnImprove: 'Mejorar alrededor de esto', jnImproving: 'Replanificando este día (manteniendo lo bloqueado)…', jnAddAfter: 'Agregar después', jnReplanDay: 'Replanificar este día', jnReplanKeep: 'mantiene 🔒 bloqueado', jnReplanned: 'Día replanificado — se mantuvo lo bloqueado', jnTransportNode: 'Transporte', jnViewTransport: 'Comparar transporte', jnNodeMenu: 'Opciones', jnAddPh: 'Agregar un lugar / actividad', jnAdd: 'Agregar',
       cmdPh: 'Dile al concierge qué cambiar…', cmdGo: 'Preguntar a la IA', cmdBusy: 'Entendiendo tu solicitud…', cmdPlanTitle: 'Esto es lo que cambiaré', cmdNone: 'No pude convertirlo en una edición — reformula (ej. “omite el zoológico”, “agrega Disneyland día 2”, “busca otra cena vietnamita”).', cmdFail: 'No se pudo interpretar ahora — inténtalo de nuevo.', cmdDays: 'Replanifica el día {d}', cmdApply: 'Aplicar cambios', cmdApplied: 'Viaje actualizado', cmdCancel: 'Cancelar',
       cmdop_skip: 'Omitir', cmdop_delete: 'Quitar', cmdop_lock: 'Bloquear', cmdop_unlock: 'Desbloquear', cmdop_replace: 'Reemplazar', cmdop_add: 'Agregar', cmdop_retime: 'Reprogramar', cmdop_replan_day: 'Replanificar', cmdop_stay_extra_night: 'Quedarse otra noche', cmdop_leave_earlier: 'Salir antes', cmdop_change_return: 'Cambiar regreso',
-      rideBookingTitle: 'Viaje DuLichCali', rideBookedToast: 'Viaje reservado y agregado a tu trip', rideRequestedToast: 'Viaje solicitado — pendiente de confirmación', rideNotCompleted: 'Reserva de viaje no completada — no se agregó nada. Puedes intentarlo de nuevo.', rideBookedNote: 'Viaje DuLichCali reservado', rideRequestedNote: 'Viaje DuLichCali solicitado', rideRequestMichael: 'Solicitar viaje con Michael', rideBookDlc: 'Reservar con DuLichCali', rideViewRequest: 'Ver solicitud', rideModifyRequest: 'Modificar solicitud', rideCancelRequest: 'Cancelar solicitud', rideViewTitle: 'Tu solicitud de viaje', rideRouteLabel: 'Ruta', ridePassengers: 'Pasajeros', rideCancelledNote: 'Solicitud de viaje cancelada', rideCancelledToast: 'Solicitud de viaje cancelada — puedes solicitarla de nuevo cuando quieras', rideModifyNote: 'MODIFICADA — reemplaza la solicitud #{id}; cancela la reserva anterior',
+      rideBookingTitle: 'Viaje DuLichCali', rideBookedToast: 'Viaje reservado y agregado a tu trip', rideRequestedToast: 'Viaje solicitado — pendiente de confirmación', rideNotCompleted: 'Reserva de viaje no completada — no se agregó nada. Puedes intentarlo de nuevo.', rideBookedNote: 'Viaje DuLichCali reservado', rideRequestedNote: 'Viaje DuLichCali solicitado', rideRequestMichael: 'Solicitar viaje con Michael', rideBookDlc: 'Reservar con DuLichCali', rideViewRequest: 'Ver solicitud', rideModifyRequest: 'Modificar solicitud', rideCancelRequest: 'Cancelar solicitud', rideViewTitle: 'Tu solicitud de viaje', rideRouteLabel: 'Ruta', ridePassengers: 'Pasajeros', rideCancelledNote: 'Solicitud de viaje cancelada', rideCancelledToast: 'Solicitud de viaje cancelada — puedes solicitarla de nuevo cuando quieras', rideModifyNote: 'MODIFICADA — reemplaza la solicitud #{id}; cancela la reserva anterior', rideVendorCancelledNote: 'El proveedor canceló/rechazó el viaje — solicítalo de nuevo',
       groupTravelersTitle: 'Quiénes viajan', travelersAdults: 'adultos', travelersEdit: 'Editar viajeros',
       summary: 'Resumen del viaje', assumptions: 'Supuestos', warnings: 'Bueno saber',
       costRange: 'Costo estimado', meetup: 'Punto de encuentro', regenDay: 'Regenerar día',
@@ -7195,6 +7195,12 @@
     // If the ride was requested FROM a specific trip task (taskId), update THAT task in place so the
     // existing "Confirm ride Michael" card becomes the live booking — never a disconnected duplicate.
     var taskB = res.taskId ? tr.bookings.filter(function (b) { return b.id === res.taskId; })[0] : null;
+    // Fallback: if the taskId didn't match (e.g. the task was re-derived with a new id), attach to an
+    // existing ride task for the SAME route so we update it in place rather than pushing a duplicate.
+    if (!taskB) {
+      var wantKey = res.segmentId ? null : ('ride:' + _cityShort((res.pickup || (res.route || '').split('→')[0])) + '>' + _cityShort((res.dropoff || (res.route || '').split('→')[1])));
+      taskB = tr.bookings.filter(function (b) { return isDlcRideTask(b) && !b.confirmationNumber && ((res.segmentId && b.segmentId === res.segmentId) || (wantKey && rideRouteKey(b) === wantKey)); })[0] || null;
+    }
     if (taskB) {
       taskB.provider = taskB.provider || 'DuLichCali'; taskB.bookingStatus = requested ? 'user_approval_needed' : 'booked';
       taskB.confirmationNumber = res.bookingId; taskB.priceRange = res.priceEstimate || taskB.priceRange || '';
@@ -7222,6 +7228,53 @@
     saveTrip(tr);
     tcNotifyTask(requested ? 'user_approval_needed' : 'booked', (taskB && taskB.title) || (t('rideBookingTitle') + (res.route ? (' · ' + res.route) : ''))); // notify group members
     toast(requested ? t('rideRequestedToast') : t('rideBookedToast'));
+  }
+  // ── Live ride-status SYNC (P0) ──────────────────────────────────────────────
+  // The vendor/driver approves a ride in THEIR portal, which flips the booking doc status
+  // (vendor_review → offered_to_driver → assigned/confirmed → completed, or cancelled/declined).
+  // The trip is loaded once via get(), so without this the task is stuck at "needs approval". Here
+  // we (1) collapse duplicate ride tasks for one route, then (2) subscribe (onSnapshot) to each ride
+  // task's booking doc — the customer may `get` their own booking by id — and map the live status to
+  // the task, persisting + re-rendering. This makes the vendor's approval show up as "booked".
+  function _applyRideStatus(b, bookingStatus, doc, tr) {
+    var mapped = root.TCTasks && root.TCTasks.rideStatusToTask(bookingStatus); if (!mapped) return false;
+    var changed = false;
+    if (mapped === 'cancelled') {
+      if (b.bookingStatus !== 'research_needed' || b.confirmationNumber) {
+        b.bookingStatus = 'research_needed'; b.confirmationNumber = ''; b.bookingSource = '';
+        (tr.notes = tr.notes || []).push({ id: uid('note'), text: '🚐 ' + t('rideVendorCancelledNote') + (b.title ? (': ' + b.title) : ''), ts: Date.now() });
+        changed = true;
+      }
+      return changed;
+    }
+    if (b.bookingStatus !== mapped) { b.bookingStatus = mapped; changed = true; }
+    if (doc) {
+      var price = doc.priceEstimate || (doc.quote && doc.quote.dlcPrice != null ? ('$' + doc.quote.dlcPrice) : '') || (doc.price != null ? ('$' + doc.price) : '');
+      if (price && !b.actualCost) { b.actualCost = price; changed = true; }
+      var prov = (doc.driver && doc.driver.name) ? doc.driver.name : '';
+      if (prov && (!b.provider || /dulichcali/i.test(b.provider))) { b.provider = prov; changed = true; }
+    }
+    if ((mapped === 'booked' || mapped === 'completed') && b.segmentId) { tr.transportStatus = tr.transportStatus || {}; if (tr.transportStatus[b.segmentId] !== 'booked') { tr.transportStatus[b.segmentId] = 'booked'; changed = true; } }
+    return changed;
+  }
+  function syncRideBookings(tr) {
+    if (!tr || !tr.id || tr._demo) return;
+    var changed = false;
+    if (root.TCTasks && root.TCTasks.dedupeRideTasks) { var before = (tr.bookings || []).length; tr.bookings = root.TCTasks.dedupeRideTasks(tr.bookings || [], rideRouteKey); if (tr.bookings.length !== before) changed = true; }
+    var db = root.dlcDb;
+    (state._rideUnsubs || []).forEach(function (u) { try { u(); } catch (e) {} }); state._rideUnsubs = [];
+    if (db) {
+      (tr.bookings || []).filter(function (b) { return isDlcRideTask(b) && b.confirmationNumber; }).forEach(function (b) {
+        try {
+          var unsub = db.collection('bookings').doc(b.confirmationNumber).onSnapshot(function (snap) {
+            if (!snap || !snap.exists) return; var d = snap.data() || {};
+            if (_applyRideStatus(b, d.status, d, tr)) { tcNotifyTask(root.TCTasks.rideStatusToTask(d.status) === 'completed' ? 'completed' : 'booked', b.title); saveTrip(tr); if (state.screen === 'plan') render(); }
+          }, function () {});
+          state._rideUnsubs.push(unsub);
+        } catch (e) {}
+      });
+    }
+    if (changed) { saveTrip(tr); if (state.screen === 'plan') render(); }
   }
   // ── Assisted checkout / confirmation capture (P3) ──────────────────────────
   // HONEST self-booking: the user books on the real operator site, then pastes their confirmation #
@@ -7314,6 +7367,8 @@
     if (lsi.indexOf('>') !== -1) { var p = lsi.split('>'); if (p[0].trim() && p[1].trim()) return { pickup: p[0].trim(), dropoff: p[1].trim() }; }
     return { pickup: '', dropoff: b.city || '' };
   }
+  // Stable per-route key for a ride task (dedup + taskId-miss fallback). '' for non-ride.
+  function rideRouteKey(b) { if (!isDlcRideTask(b)) return ''; var r = rideTaskRoute(b); return 'ride:' + _cityShort(r.pickup) + '>' + _cityShort(r.dropoff); }
   // Open the embedded DLC ride flow for a TASK, passing full trip context (incl. taskId so the result
   // attaches back to this exact task). modify=true re-opens to change an existing request — it
   // submits a NEW request (ride-intake does not vendor-side-edit yet) so we make the replacement
@@ -7334,6 +7389,10 @@
     var fc = (r.pickup || '').trim().toLowerCase();
     var seg = fc ? (tr.destinations || []).filter(function (d) { return (d.city || '').trim().toLowerCase() === fc; })[0] : null;
     if (seg) { var arr = segArrival(seg); if (arr) { if (!io.date) io.date = arr; io.afterArrival = true; io.afterArrivalProvider = (seg.preferredProvider || '').trim(); } }
+    // PERSIST the task (with its id) BEFORE navigating away, so on return reconcileRideResult can
+    // match it by taskId and update IN PLACE — otherwise an unsaved (ephemeral-id) task wouldn't be
+    // found on reload and a duplicate booking would be pushed.
+    try { if (tr.bookings && tr.bookings.some(function (x) { return x.id === b.id; })) saveTrip(tr); } catch (e) {}
     requestDlcInquiry(io);
   }
   function cancelRideTask(b) {
@@ -8911,7 +8970,7 @@
   function loadSharedTrip(id) {
     loadTrip(id).then(function (tr) {
       if (tr && tr.deleted === true) { toast(t('tripDeleted')); goDashboard(); return; }
-      if (tr && tr.plan) { state.trip = tr; normalizeDestinations(state.trip); try { migrateLegacyTripToSegments(state.trip); } catch (e) {} state.trip._demo = false; state.readonly = false; state.screen = 'plan'; state.activeTab = 'overview'; try { reconcileRideResult(state.trip); } catch (e) {} resolveMyRole().then(function (role) { if (role && role !== 'owner') rememberJoinedTrip(id); else { try { learnFromTrip(state.trip); } catch (e) {} } render(); }); }
+      if (tr && tr.plan) { state.trip = tr; normalizeDestinations(state.trip); try { migrateLegacyTripToSegments(state.trip); } catch (e) {} state.trip._demo = false; state.readonly = false; state.screen = 'plan'; state.activeTab = 'overview'; try { reconcileRideResult(state.trip); } catch (e) {} try { syncRideBookings(state.trip); } catch (e) {} resolveMyRole().then(function (role) { if (role && role !== 'owner') rememberJoinedTrip(id); else { try { learnFromTrip(state.trip); } catch (e) {} } render(); }); }
       else { newTrip(); state.screen = 'hero'; render(); }
     });
   }

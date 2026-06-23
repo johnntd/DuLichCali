@@ -115,5 +115,58 @@
     return { perMember: perMember, unassigned: Math.round(unassigned), total: Math.round(total) };
   }
 
-  root.TCTasks = { priority: priority, computeBalances: computeBalances, memberCosts: memberCosts, isDone: isDone, setDone: setDone };
+  // Map a ride BOOKING-DOC status (bookings/{id}.status, set by ride-intake + the driver/vendor
+  // portal: vendor_review|offered_to_driver|assigned|completed|declined|cancelled|…) → the trip
+  // TASK bookingStatus. Returns '' for an unknown status (caller leaves the task unchanged).
+  function rideStatusToTask(s) {
+    s = String(s == null ? '' : s).toLowerCase();
+    if (!s) return '';
+    if (/cancel|declin|reject|expired|no[_ ]?show|void/.test(s)) return 'cancelled';
+    if (/complet|finish|fulfilled|done/.test(s)) return 'completed';
+    // pending checked BEFORE booked so "offered_to_driver" (offer sent, not accepted) → needs approval.
+    if (/review|pending|new|offered|info|await|requested|queue|unconfirmed/.test(s)) return 'user_approval_needed';
+    if (/assigned|confirm|accept|en[_ ]?route|enroute|arriv|in[_ ]?progress|on[_ ]?the[_ ]?way|scheduled|booked|paid/.test(s)) return 'booked';
+    return '';
+  }
+  // Collapse duplicate ride tasks for the SAME route into one (the derived "Confirm ride" task + a
+  // reconciled "DuLichCali ride" booking are the same leg). routeKeyOf(b) → a string key for a ride
+  // task (or falsy for non-ride / no route). Non-ride tasks pass through unchanged + in order. The
+  // surviving task keeps the richest fields (confirmationNumber, linkedSegmentId, most-advanced
+  // status). Pure; returns a NEW array.
+  function dedupeRideTasks(bookings, routeKeyOf) {
+    bookings = bookings || [];
+    var RANK = { research_needed: 0, researching: 1, ready_to_book: 2, user_approval_needed: 3, booked: 4, paid: 5, completed: 6 };
+    var groups = {}, order = [];
+    bookings.forEach(function (b) {
+      var k = routeKeyOf ? routeKeyOf(b) : null;
+      if (!k) { order.push({ keep: b }); return; }
+      if (!groups[k]) { groups[k] = []; order.push({ group: k }); }
+      groups[k].push(b);
+    });
+    var out = [];
+    order.forEach(function (o) {
+      if (o.keep) { out.push(o.keep); return; }
+      var g = groups[o.group];
+      if (g.length === 1) { out.push(g[0]); return; }
+      // Keep the DERIVED task (has linkedSegmentId → stable bookingKey, so deriveTripTasks won't
+      // re-create a duplicate) and merge the booking data into it; else the one with a booking.
+      var primary = g.filter(function (x) { return x.linkedSegmentId; })[0] || g.filter(function (x) { return x.confirmationNumber; })[0] || g[0];
+      g.forEach(function (x) {
+        if (x === primary) return;
+        if (!primary.confirmationNumber && x.confirmationNumber) primary.confirmationNumber = x.confirmationNumber;
+        if (!primary.linkedSegmentId && x.linkedSegmentId) primary.linkedSegmentId = x.linkedSegmentId;
+        if (!primary.segmentId && x.segmentId) primary.segmentId = x.segmentId;
+        if (!primary.provider && x.provider) primary.provider = x.provider;
+        if (!primary.actualCost && x.actualCost) primary.actualCost = x.actualCost;
+        if (!primary.priceRange && x.priceRange) primary.priceRange = x.priceRange;
+        if (!primary.bookedAt && x.bookedAt) primary.bookedAt = x.bookedAt;
+        if (!primary.bookingSource && x.bookingSource) primary.bookingSource = x.bookingSource;
+        if ((RANK[x.bookingStatus] || 0) > (RANK[primary.bookingStatus] || 0)) primary.bookingStatus = x.bookingStatus;
+      });
+      out.push(primary);
+    });
+    return out;
+  }
+
+  root.TCTasks = { priority: priority, computeBalances: computeBalances, memberCosts: memberCosts, isDone: isDone, setDone: setDone, rideStatusToTask: rideStatusToTask, dedupeRideTasks: dedupeRideTasks };
 })(typeof window !== 'undefined' ? window : this);

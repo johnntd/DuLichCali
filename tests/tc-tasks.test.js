@@ -83,5 +83,26 @@ var mc2 = T.memberCosts([
 ok('priceRange low end used when no actual/estimate', mc2.perMember.filter(function (x) { return x.id === 'm3'; })[0].owed === 80);
 ok('actualCost still wins over priceRange', mc2.perMember.filter(function (x) { return x.id === 'm1'; })[0].owed === 40);
 
+// ── rideStatusToTask — booking-doc status → trip task status ──
+ok('vendor_review/offered → needs approval', T.rideStatusToTask('vendor_review') === 'user_approval_needed' && T.rideStatusToTask('offered_to_driver') === 'user_approval_needed');
+ok('assigned/confirmed/accepted → booked', T.rideStatusToTask('assigned') === 'booked' && T.rideStatusToTask('confirmed') === 'booked' && T.rideStatusToTask('accepted') === 'booked' && T.rideStatusToTask('en_route') === 'booked');
+ok('completed → completed', T.rideStatusToTask('completed') === 'completed');
+ok('declined/cancelled → cancelled', T.rideStatusToTask('declined') === 'cancelled' && T.rideStatusToTask('cancelled') === 'cancelled' && T.rideStatusToTask('rejected') === 'cancelled');
+ok('unknown/empty → "" (leave unchanged)', T.rideStatusToTask('weird') === '' && T.rideStatusToTask('') === '' && T.rideStatusToTask(null) === '');
+
+// ── dedupeRideTasks — collapse the duplicate ride task for one leg ──
+var routeKey = function (b) { return (b.type === 'ride') ? ('ride:' + (b.route || '')) : null; };
+var deduped = T.dedupeRideTasks([
+  { id: 'hotelA', type: 'hotel', title: 'SD hotel' },
+  { id: 'derived', type: 'ride', route: 'oc>sd', title: 'Confirm ride Michael · OC → SD', linkedSegmentId: 'OC>SD', bookingStatus: 'research_needed' }, // derived
+  { id: 'recon', type: 'ride', route: 'oc>sd', title: 'DuLichCali ride · OC → SD', confirmationNumber: 'BK123', bookingStatus: 'booked', priceRange: '$315', bookedAt: '2026-07-01' }, // reconciled dup
+  { id: 'otherleg', type: 'ride', route: 'sd>oc', title: 'Confirm ride Michael · SD → OC', linkedSegmentId: 'SD>OC' },
+], routeKey);
+ok('collapses the 2 OC→SD ride tasks into one', deduped.filter(function (b) { return b.type === 'ride' && b.route === 'oc>sd'; }).length === 1);
+ok('keeps the other leg + the non-ride task', deduped.length === 3 && deduped.some(function (b) { return b.id === 'hotelA'; }) && deduped.some(function (b) { return b.route === 'sd>oc'; }));
+var merged = deduped.filter(function (b) { return b.route === 'oc>sd'; })[0];
+ok('merged task carries the confirmationNumber + booked status + price + linkedSegmentId', merged.confirmationNumber === 'BK123' && merged.bookingStatus === 'booked' && merged.priceRange === '$315' && merged.linkedSegmentId === 'OC>SD');
+ok('non-ride tasks pass through unchanged + ordered', deduped[0].id === 'hotelA');
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

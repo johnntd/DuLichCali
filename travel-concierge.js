@@ -265,7 +265,7 @@
       tpRequestDlc: 'Request DuLichCali Ride', tpDlcNote: 'Sends a draft to the DuLichCali ride booking — you confirm there.', tpSearchBook: 'Search & book', tpConfirmNote: 'Estimate — confirm price & schedule at the booking site.', tpChoose: 'Choose this', tpYourChoice: 'Your choice',
       tpLeg_outbound: 'Getting there', tpLeg_inter: 'Between stops', tpLeg_return: 'Return home',
       tpDay_transit: 'Transit day', tpDay_activity: 'Activity day', tpDay_half: 'Half travel / half play',
-      tpWhy: 'Why AI recommends this:', tpRecommended: 'Recommended', tpLowestCost: 'Lowest cost', tpFastest: 'Fastest', tpComfort: 'Most comfortable', tpPrivateDlc: 'Private ride', tpCompare: 'Compare options',
+      tpWhy: 'Why AI recommends this:', tpRecommended: 'Recommended', tpLowestCost: 'Lowest cost', tpFastest: 'Fastest', tpComfort: 'Most comfortable', tpPrivateDlc: 'Private ride', tpCompare: 'Compare options', tpSideBySide: 'Compare side-by-side',
       tpPerFamily: 'Per family', tpGas: 'Gas (est.)', tpParking: 'Parking', tpConvenience: 'Convenience', tpBestFamilies: 'Best for families', tpMarkBooked: 'Mark booked', tpBooked: 'Booked', tpBookedToast: 'Marked as booked', tpUnbookedToast: 'Marked as not booked',
       tpTollNote: 'Tolls: check your route (pending verification).', tpAirportBuffer: 'Includes ~2–3h airport buffer (security, boarding, bags).', tpBaggageNote: 'Add baggage fees + a rental car or rideshare at the destination.', tpBusStationNote: 'Confirm the exact pickup/drop-off station with the operator.',
       tpFlightSearch: 'Search flights', tpAirportsNear: 'Nearest airports', tpBusGreyhound: 'Greyhound', tpBusFlix: 'FlixBus', tpBusHoang: 'Hoàng Express',
@@ -553,7 +553,7 @@
       tpRequestDlc: 'Yêu cầu xe Du Lịch Cali', tpDlcNote: 'Gửi bản nháp sang phần đặt xe Du Lịch Cali — bạn xác nhận tại đó.', tpSearchBook: 'Tìm & đặt', tpConfirmNote: 'Ước tính — xác nhận giá & lịch tại trang đặt.', tpChoose: 'Chọn cái này', tpYourChoice: 'Lựa chọn của bạn',
       tpLeg_outbound: 'Đường đến', tpLeg_inter: 'Giữa các điểm', tpLeg_return: 'Đường về',
       tpDay_transit: 'Ngày di chuyển', tpDay_activity: 'Ngày hoạt động', tpDay_half: 'Nửa di chuyển / nửa chơi',
-      tpWhy: 'Vì sao AI đề xuất:', tpRecommended: 'Đề xuất', tpLowestCost: 'Rẻ nhất', tpFastest: 'Nhanh nhất', tpComfort: 'Thoải mái nhất', tpPrivateDlc: 'Xe riêng', tpCompare: 'So sánh phương án',
+      tpWhy: 'Vì sao AI đề xuất:', tpRecommended: 'Đề xuất', tpLowestCost: 'Rẻ nhất', tpFastest: 'Nhanh nhất', tpComfort: 'Thoải mái nhất', tpPrivateDlc: 'Xe riêng', tpCompare: 'So sánh phương án', tpSideBySide: 'So sánh cạnh nhau',
       tpPerFamily: 'Mỗi gia đình', tpGas: 'Xăng (ước tính)', tpParking: 'Đậu xe', tpConvenience: 'Tiện lợi', tpBestFamilies: 'Hợp gia đình nhất', tpMarkBooked: 'Đánh dấu đã đặt', tpBooked: 'Đã đặt', tpBookedToast: 'Đã đánh dấu đã đặt', tpUnbookedToast: 'Đã đánh dấu chưa đặt',
       tpTollNote: 'Phí cầu đường: kiểm tra tuyến của bạn (chờ xác minh).', tpAirportBuffer: 'Đã tính ~2–3 giờ ở sân bay (an ninh, lên máy bay, hành lý).', tpBaggageNote: 'Cộng thêm phí hành lý + xe thuê hoặc xe đi chung tại điểm đến.', tpBusStationNote: 'Xác nhận bến đón/trả chính xác với nhà xe.',
       tpFlightSearch: 'Tìm chuyến bay', tpAirportsNear: 'Sân bay gần nhất', tpBusGreyhound: 'Greyhound', tpBusFlix: 'FlixBus', tpBusHoang: 'Hoàng Express',
@@ -841,7 +841,7 @@
       tpRequestDlc: 'Solicitar viaje DuLichCali', tpDlcNote: 'Envía un borrador a la reserva de viajes DuLichCali — confírmalo allí.', tpSearchBook: 'Buscar y reservar', tpConfirmNote: 'Estimado — confirma precio y horario en el sitio de reserva.', tpChoose: 'Elegir esta', tpYourChoice: 'Tu elección',
       tpLeg_outbound: 'Cómo llegar', tpLeg_inter: 'Entre paradas', tpLeg_return: 'Regreso a casa',
       tpDay_transit: 'Día de tránsito', tpDay_activity: 'Día de actividades', tpDay_half: 'Medio viaje / medio paseo',
-      tpWhy: 'Por qué la IA lo recomienda:', tpRecommended: 'Recomendado', tpLowestCost: 'Más económico', tpFastest: 'Más rápido', tpComfort: 'Más cómodo', tpPrivateDlc: 'Viaje privado', tpCompare: 'Comparar opciones',
+      tpWhy: 'Por qué la IA lo recomienda:', tpRecommended: 'Recomendado', tpLowestCost: 'Más económico', tpFastest: 'Más rápido', tpComfort: 'Más cómodo', tpPrivateDlc: 'Viaje privado', tpCompare: 'Comparar opciones', tpSideBySide: 'Comparar lado a lado',
       tpPerFamily: 'Por familia', tpGas: 'Gasolina (est.)', tpParking: 'Estacionamiento', tpConvenience: 'Comodidad', tpBestFamilies: 'Mejor para familias', tpMarkBooked: 'Marcar reservado', tpBooked: 'Reservado', tpBookedToast: 'Marcado como reservado', tpUnbookedToast: 'Marcado como no reservado',
       tpTollNote: 'Peajes: revisa tu ruta (pendiente de verificación).', tpAirportBuffer: 'Incluye ~2–3 h de margen en el aeropuerto (seguridad, embarque, maletas).', tpBaggageNote: 'Suma cargos de equipaje + un auto de alquiler o viaje compartido en el destino.', tpBusStationNote: 'Confirma la estación exacta de recogida/bajada con el operador.',
       tpFlightSearch: 'Buscar vuelos', tpAirportsNear: 'Aeropuertos cercanos', tpBusGreyhound: 'Greyhound', tpBusFlix: 'FlixBus', tpBusHoang: 'Hoàng Express',
@@ -7159,11 +7159,38 @@
     if (chosenOpt) c.appendChild(transportOptionCard(chosenOpt, leg, i, true));
     var others = opts.filter(function (o) { return o !== chosenOpt; });
     if (others.length) {
-      var tg = pbtn((state._tpOpen[key] ? '▴ ' : '▾ ') + t('tpCompare') + ' (' + others.length + ')', 'tc-pbtn--ghost', function () { state._tpOpen[key] = !state._tpOpen[key]; render(); });
-      c.appendChild(tg);
+      var toggles = el('div', 'tc-tpleg__toggles');
+      toggles.appendChild(pbtn((state._tpOpen[key] ? '▴ ' : '▾ ') + t('tpCompare') + ' (' + others.length + ')', 'tc-pbtn--ghost', function () { state._tpOpen[key] = !state._tpOpen[key]; render(); }));
+      // Side-by-side: scan all modes' cost/time/strength in one row to pick the best deal.
+      state._tpGrid = state._tpGrid || {};
+      toggles.appendChild(pbtn((state._tpGrid[key] ? '▴ ' : '⊞ ') + t('tpSideBySide'), 'tc-pbtn--ghost' + (state._tpGrid[key] ? ' tc-pbtn--on' : ''), function () { state._tpGrid[key] = !state._tpGrid[key]; render(); }));
+      c.appendChild(toggles);
+      if (state._tpGrid[key]) c.appendChild(transportCompareGrid(leg, i));
       if (state._tpOpen[key]) others.forEach(function (o) { c.appendChild(transportOptionCard(o, leg, i, false)); });
     }
     return c;
+  }
+  // Side-by-side per-leg deal comparison: every mode as a compact column (cost / time / top
+  // strength) so the group scans the best deal at a glance. Honest — only real fields shown,
+  // estimate ranges as-is, no fabricated numbers. "Choose" reuses the same chooseTransport flow.
+  function transportCompareGrid(leg, i) {
+    var opts = (leg.options || []).slice(0, 6), cm = chosenMode(leg, i);
+    var grid = el('div', 'tc-tpgrid');
+    opts.forEach(function (o) {
+      var isChosen = o.mode === cm;
+      var col = el('div', 'tc-tpcol' + (isChosen ? ' tc-tpcol--chosen' : ''));
+      var mode = el('div', 'tc-tpcol__mode', (tpIcon(o.mode) || '') + ' ' + tpModeLabel(o.mode));
+      if (isChosen) mode.appendChild(el('span', 'tc-tpcol__star', ' ★'));
+      col.appendChild(mode);
+      var cost = o.totalCostRange || o.perTravelerCost || o.gasEstimate || '';
+      col.appendChild(el('div', 'tc-tpcol__cost', cost ? ('💲 ' + cost) : '—'));
+      col.appendChild(el('div', 'tc-tpcol__time', o.durationText ? ('⏱ ' + o.durationText) : '—'));
+      var proK = (o.prosKeys && o.prosKeys[0]) || '', pro = proK ? t(proK) : '';
+      if (pro && pro !== proK) col.appendChild(el('div', 'tc-tpcol__pro', '✓ ' + pro));
+      if (canEditPlan() && !isChosen) col.appendChild(pbtn(t('tpChoose'), 'tc-pbtn--ghost tc-tpcol__btn', function () { chooseTransport(leg, i, o.mode); }));
+      grid.appendChild(col);
+    });
+    return grid;
   }
   // ── V3 AI Transport STRATEGY + TRANSFER intelligence panel ─────────────────
   function tpModeLabel(m) { var k = 'tm_' + m; var l = t(k); return (l && l !== k) ? l : String(m || '').replace(/_/g, ' '); }

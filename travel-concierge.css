@@ -82,7 +82,17 @@ body { overflow-y: auto; overflow-x: hidden; }
 .tc-nophoto__links { display: flex; flex-wrap: wrap; gap: .3rem; justify-content: center; }
 .tc-nophoto__btn { font-size: .64rem; min-height: 30px; padding: .18rem .5rem; }
 .tc-place__imgnote--ok { background: rgba(16,185,129,.78); border-color: rgba(16,185,129,.5); color: #ecfdf5; }
+/* Media Enrichment: non-exact tiers (geosearch area / intitle name-match) — labelled, not a ✓. */
+.tc-place__imgnote--area { background: rgba(56,90,140,.82); border-color: rgba(120,160,210,.5); color: #eaf2ff; }
 .tc-place__attr { position: absolute; right: .5rem; bottom: .5rem; max-width: 60%; font-family: var(--font-b); font-size: .54rem; color: #e5e7eb; background: rgba(8,12,24,.62); padding: .1rem .4rem; border-radius: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tc-place__attr--link { text-decoration: none; }
+.tc-place__attr--link:hover { text-decoration: underline; }
+/* Multi-photo gallery thumb strip (tap to promote to hero) */
+.tc-place__gallery { position: absolute; left: 0; right: 0; bottom: 0; display: flex; gap: .25rem; padding: .3rem; overflow-x: auto; background: linear-gradient(0deg, rgba(8,12,24,.6), transparent); -webkit-overflow-scrolling: touch; }
+.tc-place__galthumb { flex: 0 0 auto; width: 44px; height: 44px; object-fit: cover; border-radius: 5px; border: 1px solid rgba(255,255,255,.35); cursor: pointer; opacity: .85; transition: opacity .15s; }
+.tc-place__galthumb:hover { opacity: 1; }
+@media (min-width: 768px) { .tc-place__galthumb { width: 52px; height: 52px; } }
+@media (min-width: 1200px) { .tc-place__galthumb { width: 58px; height: 58px; } }
 .tc-hero__demos-lbl { font-family: var(--font-b); font-weight: 700; font-size: .66rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 1.8rem 0 .5rem; }
 .tc-hero__demos { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
 .tc-hero__demo { display: flex; flex-direction: column; gap: .2rem; align-items: flex-start; padding: .85rem; border-radius: 14px; border: 1px solid var(--border); background: var(--navy-800); color: var(--cream); cursor: pointer; text-align: left; }

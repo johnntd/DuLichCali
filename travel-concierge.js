@@ -215,7 +215,7 @@
       stratDriving: 'Driving', stratConvenience: 'Convenience', stratKids: 'Kids', stratFood: 'Food',
       tab_food: 'Food', foodPicksTitle: 'Food picks', foodSub: 'AI-researched restaurants for your group at each stop — matched to your cuisines.', findFood: 'Find food picks (AI)', researchingFood: 'Finding the best restaurants for your group…', noFoodYet: 'Tap “Find food picks” for AI restaurant recommendations.', searchFoodBtn: 'Search', yelpBtn: 'Yelp', dishesLabel: 'Must-try', reservationLabel: 'Reservations',
       imgRepresentative: 'Representative image only', imgPending: 'Photo pending verification', viewPhotos: 'Photos', googleReviews: 'Google reviews', yelpReviews: 'Yelp reviews', menuBtn: 'Menu', mustTryLabel: 'Must-try',
-      noVerifiedPhoto: 'No verified photo available', noVerifiedFood: 'No verified food photos', viewGooglePhotos: 'Google Photos', tripadvisor: 'Tripadvisor', verifiedPhoto: 'Verified photo',
+      noVerifiedPhoto: 'No verified photo available', noVerifiedFood: 'No verified food photos', viewGooglePhotos: 'Google Photos', tripadvisor: 'Tripadvisor', verifiedPhoto: 'Verified photo', areaPhoto: 'Area photo · Wikimedia', likelyMatchPhoto: 'Likely match · Wikimedia', viaWikipedia: 'Wikipedia (CC)', viaWikimedia: 'Wikimedia Commons', morePhotos: 'More photos',
       skipPlace: 'Skip', skippedLabel: 'Skipped', undoSkip: 'Undo', replaceAlt: 'Replace with alternative', replacedOriginal: 'Replaced', pickAlternative: 'Pick an alternative', noAlts: 'No alternatives found — search or add your own.', searchReplacement: 'Search replacement', addOwn: 'Add my own', addOwnPh: 'Your restaurant / place name', leaveEmpty: 'Leave this slot empty', loadingAlts: 'Finding alternatives…',
       foodfor_family: 'Family', foodfor_groups: 'Groups', foodfor_date_night: 'Date night', foodfor_quick_bite: 'Quick bite', foodfor_fine_dining: 'Fine dining', foodfor_breakfast: 'Breakfast', foodfor_vegetarian: 'Vegetarian', foodfor_seafood: 'Seafood', foodfor_local_specialty: 'Local specialty', foodfor_kid_friendly: 'Kid-friendly',
       // Itinerary control (move/reorder/time-slot/pin/add/replan/why)
@@ -507,7 +507,7 @@
       stratDriving: 'Lái xe', stratConvenience: 'Tiện lợi', stratKids: 'Trẻ em', stratFood: 'Ẩm thực',
       tab_food: 'Ẩm thực', foodPicksTitle: 'Gợi ý ẩm thực', foodSub: 'AI nghiên cứu nhà hàng cho cả nhóm tại từng điểm — hợp khẩu vị của bạn.', findFood: 'Tìm gợi ý ẩm thực (AI)', researchingFood: 'Đang tìm nhà hàng tốt nhất cho nhóm…', noFoodYet: 'Nhấn “Tìm gợi ý ẩm thực” để AI gợi ý nhà hàng.', searchFoodBtn: 'Tìm', yelpBtn: 'Yelp', dishesLabel: 'Nên thử', reservationLabel: 'Đặt chỗ',
       imgRepresentative: 'Chỉ là ảnh minh họa', imgPending: 'Ảnh chờ xác minh', viewPhotos: 'Ảnh', googleReviews: 'Đánh giá Google', yelpReviews: 'Đánh giá Yelp', menuBtn: 'Thực đơn', mustTryLabel: 'Nên thử',
-      noVerifiedPhoto: 'Chưa có ảnh xác minh', noVerifiedFood: 'Chưa có ảnh món ăn xác minh', viewGooglePhotos: 'Ảnh Google', tripadvisor: 'Tripadvisor', verifiedPhoto: 'Ảnh đã xác minh',
+      noVerifiedPhoto: 'Chưa có ảnh xác minh', noVerifiedFood: 'Chưa có ảnh món ăn xác minh', viewGooglePhotos: 'Ảnh Google', tripadvisor: 'Tripadvisor', verifiedPhoto: 'Ảnh đã xác minh', areaPhoto: 'Ảnh khu vực · Wikimedia', likelyMatchPhoto: 'Có thể đúng · Wikimedia', viaWikipedia: 'Wikipedia (CC)', viaWikimedia: 'Wikimedia Commons', morePhotos: 'Thêm ảnh',
       skipPlace: 'Bỏ qua', skippedLabel: 'Đã bỏ qua', undoSkip: 'Hoàn tác', replaceAlt: 'Thay bằng lựa chọn khác', replacedOriginal: 'Đã thay', pickAlternative: 'Chọn một lựa chọn', noAlts: 'Không tìm thấy — hãy tìm hoặc tự thêm.', searchReplacement: 'Tìm chỗ thay thế', addOwn: 'Tự thêm', addOwnPh: 'Tên nhà hàng / địa điểm của bạn', leaveEmpty: 'Để trống khung giờ này', loadingAlts: 'Đang tìm lựa chọn…',
       foodfor_family: 'Hợp gia đình', foodfor_groups: 'Nhóm đông', foodfor_date_night: 'Hẹn hò', foodfor_quick_bite: 'Ăn nhanh', foodfor_fine_dining: 'Cao cấp', foodfor_breakfast: 'Bữa sáng', foodfor_vegetarian: 'Chay', foodfor_seafood: 'Hải sản', foodfor_local_specialty: 'Đặc sản địa phương', foodfor_kid_friendly: 'Hợp trẻ em',
       // Điều khiển lịch trình (di chuyển/đổi thứ tự/khung giờ/ghim/thêm/lên lại/vì sao)
@@ -799,7 +799,7 @@
       stratDriving: 'Conducir', stratConvenience: 'Comodidad', stratKids: 'Niños', stratFood: 'Comida',
       tab_food: 'Comida', foodPicksTitle: 'Recomendaciones de comida', foodSub: 'Restaurantes investigados por IA para tu grupo en cada parada, según tus cocinas.', findFood: 'Buscar comida (IA)', researchingFood: 'Buscando los mejores restaurantes para tu grupo…', noFoodYet: 'Toca “Buscar comida” para recomendaciones de restaurantes por IA.', searchFoodBtn: 'Buscar', yelpBtn: 'Yelp', dishesLabel: 'Para probar', reservationLabel: 'Reservas',
       imgRepresentative: 'Solo imagen representativa', imgPending: 'Foto pendiente de verificar', viewPhotos: 'Fotos', googleReviews: 'Reseñas de Google', yelpReviews: 'Reseñas de Yelp', menuBtn: 'Menú', mustTryLabel: 'Para probar',
-      noVerifiedPhoto: 'Sin foto verificada', noVerifiedFood: 'Sin fotos de comida verificadas', viewGooglePhotos: 'Google Fotos', tripadvisor: 'Tripadvisor', verifiedPhoto: 'Foto verificada',
+      noVerifiedPhoto: 'Sin foto verificada', noVerifiedFood: 'Sin fotos de comida verificadas', viewGooglePhotos: 'Google Fotos', tripadvisor: 'Tripadvisor', verifiedPhoto: 'Foto verificada', areaPhoto: 'Foto del área · Wikimedia', likelyMatchPhoto: 'Coincidencia probable · Wikimedia', viaWikipedia: 'Wikipedia (CC)', viaWikimedia: 'Wikimedia Commons', morePhotos: 'Más fotos',
       skipPlace: 'Omitir', skippedLabel: 'Omitido', undoSkip: 'Deshacer', replaceAlt: 'Reemplazar con alternativa', replacedOriginal: 'Reemplazado', pickAlternative: 'Elige una alternativa', noAlts: 'Sin alternativas — busca o agrega la tuya.', searchReplacement: 'Buscar reemplazo', addOwn: 'Agregar la mía', addOwnPh: 'Nombre de tu restaurante / lugar', leaveEmpty: 'Dejar este espacio vacío', loadingAlts: 'Buscando alternativas…',
       foodfor_family: 'Familiar', foodfor_groups: 'Grupos', foodfor_date_night: 'Cita', foodfor_quick_bite: 'Rápido', foodfor_fine_dining: 'Alta cocina', foodfor_breakfast: 'Desayuno', foodfor_vegetarian: 'Vegetariano', foodfor_seafood: 'Mariscos', foodfor_local_specialty: 'Especialidad local', foodfor_kid_friendly: 'Para niños',
       // Control del itinerario (mover/reordenar/franja horaria/fijar/agregar/replanear/por qué)
@@ -1033,6 +1033,71 @@
       }).catch(function () { _mediaCache[ck] = null; return null; });
     },
   };
+  // ── Media Enrichment (P-media): tiered REAL-photo resolver from FREE no-key sources ──────────
+  // Wikipedia REST (article-anchored, EXACT) → Wikimedia Commons geosearch (coord-anchored, AREA) →
+  // Commons intitle: search (named, gated). The match-safety brain (window.TCMediaEnrich) decides
+  // what is safe; we NEVER show a photo we can't tie to the place. Cached per place; honest labels.
+  function _meJget(u) { return fetch(u).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); }
+  function _meImageinfo(titles, ME) {
+    titles = (titles || []).filter(Boolean); if (!titles.length) return Promise.resolve({});
+    return _meJget('https://commons.wikimedia.org/w/api.php?action=query&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=640&format=json&origin=*&titles=' + encodeURIComponent(titles.slice(0, 20).join('|'))).then(function (j) {
+      var out = {}, pages = j && j.query && j.query.pages; if (!pages) return out;
+      Object.keys(pages).forEach(function (k) { var pg = pages[k], ii = pg.imageinfo && pg.imageinfo[0]; if (!ii) return; var a = ME.attributionOf(ii.extmetadata); out[pg.title] = { attribution: a.text, license: a.license, attrUrl: ii.descriptionurl || '', thumbUrl: ii.thumburl || '' }; });
+      return out;
+    });
+  }
+  function _mePhotosFromPages(j, ME, name, city, gate) {
+    var pages = j && j.query && j.query.pages; if (!pages) return [];
+    var out = [];
+    Object.keys(pages).forEach(function (k) {
+      var pg = pages[k]; if (/\.svg$/i.test(pg.title || '')) return;
+      if (gate && !ME.acceptCommonsFile(pg.title, name, city)) return; // strict name+city gate (intitle path)
+      var ii = pg.imageinfo && pg.imageinfo[0]; if (!ii || !ii.thumburl) return;
+      var a = ME.attributionOf(ii.extmetadata);
+      out.push({ thumbUrl: ii.thumburl, fullUrl: ii.url || ii.thumburl, attribution: a.text, attrUrl: ii.descriptionurl || '', license: a.license });
+    });
+    return out.slice(0, 8);
+  }
+  function enrichPlacePhotos(p) {
+    var ME = root.TCMediaEnrich, name = ((p && p.name) || '').trim();
+    if (!name || typeof fetch !== 'function' || !ME) return Promise.resolve(null);
+    var city = _cityShort(p && (p.city || p.address));
+    var ck = 'me_' + name.toLowerCase() + '|' + city.toLowerCase();
+    if (_mediaCache[ck] !== undefined) return Promise.resolve(_mediaCache[ck]);
+    var coords = (p && p.lat != null && p.lng != null) ? { lat: +p.lat, lng: +p.lng } : null;
+    var cands = ME.titleCandidates(name, city), i = 0;
+    function resolveStandard() {
+      if (i >= cands.length) return Promise.resolve(null);
+      var c = cands[i++];
+      return _meJget('https://en.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(c)).then(function (s) {
+        var conf = s && ME.summaryConfidence(s, { name: name, city: city, coords: coords });
+        return conf ? { title: String(s.title || c).replace(/ /g, '_'), summary: s, confidence: conf } : resolveStandard();
+      });
+    }
+    function articlePhotos(hit) {
+      var s = hit.summary, lead = (s.originalimage && s.originalimage.source) || (s.thumbnail && s.thumbnail.source) || '';
+      var artUrl = (s.content_urls && s.content_urls.desktop && s.content_urls.desktop.page) || '';
+      return _meJget('https://en.wikipedia.org/api/rest_v1/page/media-list/' + encodeURIComponent(hit.title)).then(function (ml) {
+        var kept = ME.keepGalleryItems(ml && ml.items, 6), fileTitles = kept.map(function (it) { return it.title; });
+        return _meImageinfo(fileTitles, ME).then(function (info) {
+          var photos = [];
+          if (lead) photos.push({ thumbUrl: lead, fullUrl: lead, attribution: t('viaWikipedia'), attrUrl: artUrl, license: 'CC' });
+          kept.forEach(function (it) { var u = ME.srcsetThumb(it, 640); if (!u) return; var inf = info[it.title]; photos.push({ thumbUrl: u, fullUrl: u, attribution: (inf && inf.attribution) || t('viaWikimedia'), attrUrl: (inf && inf.attrUrl) || artUrl, license: (inf && inf.license) || '' }); });
+          return photos.slice(0, 6);
+        });
+      });
+    }
+    var pipe = resolveStandard().then(function (hit) {
+      if (hit) return articlePhotos(hit).then(function (ph) { return ph.length ? { photos: ph, confidence: hit.confidence, source: 'wikipedia' } : null; });
+      var geo = coords ? _meJget('https://commons.wikimedia.org/w/api.php?action=query&generator=geosearch&ggscoord=' + coords.lat + '|' + coords.lng + '&ggsradius=400&ggslimit=8&ggsnamespace=6&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=640&format=json&origin=*').then(function (j) { return _mePhotosFromPages(j, ME, name, city, false); }) : Promise.resolve([]);
+      return geo.then(function (g) {
+        if (g.length) return { photos: g, confidence: 'area', source: 'wikimedia_commons' };
+        return _meJget('https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrsearch=' + encodeURIComponent(ME.intitleQuery(name)) + '&gsrlimit=8&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=640&format=json&origin=*').then(function (j) { var ph = _mePhotosFromPages(j, ME, name, city, true); return ph.length ? { photos: ph, confidence: 'name_match', source: 'wikimedia_commons' } : null; });
+      });
+    }).catch(function () { return null; });
+    _mediaCache[ck] = pipe; // cache the promise to dedupe concurrent cards
+    return pipe.then(function (r) { _mediaCache[ck] = r || null; return r || null; });
+  }
   // Media for a place the user will physically visit. HARD RULE (Issue #7): NEVER show an
   // AI-generated or generic category image. We show ONLY a real, verified photo of the
   // ACTUAL place (Wikipedia/Wikimedia). If none is verified, we show NO image — a clear
@@ -1059,20 +1124,51 @@
     // Show ONLY a verified real photo of the ACTUAL place — never AI/generic. Source order
     // (Issue: real photos): 1) Google Places (real provider, incl. restaurants/food) →
     // 2) Wikipedia (great for landmarks/attractions) → else keep the no-photo panel + links.
-    function showVerified(url, attribution, src) {
+    function showVerified(url, attribution, src, meta) {
       if (!url) return false;
+      meta = meta || {};
+      var prevImg = media.querySelector && media.querySelector('img.tc-place__img'); if (prevImg && prevImg.parentNode) prevImg.parentNode.removeChild(prevImg);
       var img = doc.createElement('img'); img.className = 'tc-place__img'; img.alt = name; img.loading = 'lazy';
       img.addEventListener('error', function () { /* keep the no-photo panel */ });
       img.src = url;
       media.classList.remove('tc-place__media--nophoto');
       media.insertBefore(img, media.firstChild);
       if (panel.parentNode) panel.parentNode.removeChild(panel);
-      media.setAttribute('data-imgstatus', 'verified_real_place'); media.setAttribute('data-imgsource', src); media.setAttribute('data-imgcount', '1');
-      media.appendChild(el('span', 'tc-place__imgnote tc-place__imgnote--ok', '✓ ' + t('verifiedPhoto')));
-      if (attribution) media.appendChild(el('span', 'tc-place__attr', '© ' + attribution));
+      // Confidence tier → honest badge: exact = "✓ Verified photo"; area/name_match = labelled (no ✓).
+      var conf = meta.confidence || 'exact', exact = (conf === 'exact');
+      var status = exact ? 'verified_real_place' : (conf === 'area' ? 'area_real' : (conf === 'name_match' ? 'name_match_real' : 'verified_real_place'));
+      media.setAttribute('data-imgstatus', status); media.setAttribute('data-imgsource', src); media.setAttribute('data-imgcount', String(meta.count || 1));
+      var oldNote = media.querySelector && media.querySelector('.tc-place__imgnote'); if (oldNote && oldNote.parentNode) oldNote.parentNode.removeChild(oldNote);
+      var bKey = (root.TCMediaEnrich && root.TCMediaEnrich.badgeKey(conf)) || 'verifiedPhoto';
+      media.appendChild(el('span', 'tc-place__imgnote ' + (exact ? 'tc-place__imgnote--ok' : 'tc-place__imgnote--area'), (exact ? '✓ ' : '') + t(bKey || 'verifiedPhoto')));
+      var oldAttr = media.querySelector && media.querySelector('.tc-place__attr'); if (oldAttr && oldAttr.parentNode) oldAttr.parentNode.removeChild(oldAttr);
+      if (attribution) {
+        if (meta.attrUrl) media.appendChild(linkBtn('© ' + attribution, meta.attrUrl, 'tc-place__attr tc-place__attr--link'));
+        else media.appendChild(el('span', 'tc-place__attr', '© ' + attribution));
+      }
       return true;
     }
-    function tryWikipedia() { PlaceMediaProvider.resolveReal(p).then(function (real) { if (real) showVerified(real, '', 'wikipedia'); }); }
+    // Render additional real photos as a tap-to-swap thumbnail strip (gallery). Each keeps its own
+    // attribution; tapping promotes it to the hero. All photos are real + confidence-labelled.
+    function renderGallery(photos, confidence, source) {
+      if (!media.querySelector) return;
+      var old = media.querySelector('.tc-place__gallery'); if (old && old.parentNode) old.parentNode.removeChild(old);
+      var strip = el('div', 'tc-place__gallery'); strip.setAttribute('aria-label', t('morePhotos'));
+      photos.slice(0, 6).forEach(function (ph) {
+        var th = doc.createElement('img'); th.className = 'tc-place__galthumb'; th.src = ph.thumbUrl || ph.fullUrl; th.alt = name; th.loading = 'lazy';
+        th.addEventListener('click', function () { showVerified(ph.fullUrl || ph.thumbUrl, ph.attribution, source === 'wikipedia' ? 'wikipedia' : 'wikimedia_commons', { confidence: confidence, attrUrl: ph.attrUrl, count: photos.length }); renderGallery(photos, confidence, source); });
+        strip.appendChild(th);
+      });
+      media.appendChild(strip);
+    }
+    function tryWikipedia() {
+      enrichPlacePhotos(p).then(function (res) {
+        if (!res || !res.photos || !res.photos.length) return;
+        var lead = res.photos[0];
+        showVerified(lead.thumbUrl || lead.fullUrl, lead.attribution, res.source === 'wikipedia' ? 'wikipedia' : 'wikimedia_commons', { confidence: res.confidence, attrUrl: lead.attrUrl, count: res.photos.length });
+        if (res.photos.length > 1) renderGallery(res.photos, res.confidence, res.source);
+      }).catch(function () { /* keep the no-photo panel */ });
+    }
     // Photo source order: 1) Google Places via the CLIENT Maps JS key (same approach the
     // ride-share service uses — works in the browser where the referrer-restricted key is
     // valid; the server secret is referrer-denied) → 2) server placePhotos (if a real server

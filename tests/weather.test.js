@@ -48,6 +48,11 @@ ok('day with no date dropped', s[0].days.length === 2);
 ok('null temps stay null (no fabrication)', s[0].days[1].tMax === null && s[0].days[1].tMin === null);
 ok('seasonal_normal source preserved', s[0].days[1].source === 'seasonal_normal');
 
+// Honesty: a forecast day with a null condition (null weather_code from the API) must NOT be
+// given a fabricated emoji/condition — it stays null and renders no condition chip.
+var s3 = W.sanitizeWeather({ destinations: [{ city: 'Z', source: 'forecast', days: [{ date: '2026-07-01', tMax: 80, tMin: 60, precipProbMax: 5, condition: null, rec: 'outdoor', source: 'forecast' }] }] });
+ok('null forecast condition stays null (no fabricated emoji)', s3[0].days[0].condition === null && s3[0].days[0].emoji === '' && s3[0].days[0].tMax === 80);
+
 // destination source derived when absent.
 var s2 = W.sanitizeWeather({ destinations: [{ city: 'X', days: [{ date: '2026-07-01', condition: 'clear', source: 'seasonal_normal' }] }] });
 ok('mixed/seasonal destination source derived', s2[0].source === 'seasonal_normal');

@@ -45,6 +45,8 @@ ok('empty/null → null', D.parsePriceNumber('') === null && D.parsePriceNumber(
 ok('percent-only discount → null (not a price)', D.parsePriceNumber('~10-20%') === null);
 ok('dollar discount range still parses', D.parsePriceNumber('$15–$30/ticket') === 15);
 ok('absurd numbers filtered', D.parsePriceNumber('999999') === null);
+ok('$ price with % off → anchors on the $ figure', D.parsePriceNumber('$50 (15% off)') === 50);
+ok('$ range with % off → floor of $ figures', D.parsePriceNumber('$180–$240/night (10% off)') === 180);
 
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

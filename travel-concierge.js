@@ -6863,7 +6863,10 @@
     if (text == null) return null;
     var s = String(text).replace(/,/g, '');
     if (/%/.test(s) && !/\$/.test(s)) return null;
-    var nums = (s.match(/\d+(?:\.\d+)?/g) || []).map(Number).filter(function (n) { return isFinite(n) && n > 0 && n < 100000; });
+    var nums;
+    if (/\$/.test(s)) nums = (s.match(/\$\s?\d+(?:\.\d+)?/g) || []).map(function (x) { return Number(x.replace(/[^\d.]/g, '')); });
+    else nums = (s.match(/\d+(?:\.\d+)?/g) || []).map(Number);
+    nums = nums.filter(function (n) { return isFinite(n) && n > 0 && n < 100000; });
     if (!nums.length) return null;
     return Math.min.apply(null, nums);
   }
@@ -7130,8 +7133,9 @@
     b.bookedBy = (getMe() ? famName(getMe()) : '');
     b.bookedAt = new Date().toISOString();
     b.bookingSource = 'self_booked';
-    // Cost ledger (same integer-derive as reconcileRideResult; de-dup by bookingId so re-saving won't double-count).
-    var amt = parseInt(String(opts.actualPrice || '').replace(/[^\d]/g, ''), 10) || 0;
+    // Cost ledger (de-dup by bookingId so re-saving won't double-count). Take the FIRST number only
+    // so a stray range like "$400-$450" can't concatenate into a nonsense ledger total (400450).
+    var amt = parseInt(((String(opts.actualPrice || '').match(/\d[\d,]*/) || [''])[0]).replace(/,/g, ''), 10) || 0;
     if (amt) {
       var already = costLedger(tr).some(function (e) { return e.bookingId && e.bookingId === b.id; });
       if (!already) costLedger(tr).push({ id: uid('cl'), bookingId: b.id, familyId: (b.paidBy || (getMe() || '')), title: b.title, amount: amt, paid: false, notes: (b.confirmationNumber ? ('#' + b.confirmationNumber) : t('selfBookedLedgerNote')), createdAt: new Date().toISOString() });

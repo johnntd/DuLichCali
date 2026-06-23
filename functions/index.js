@@ -3079,7 +3079,9 @@ exports.researchTripWeather = onCall(
           const pp = dd.precipitation_probability_max ? dd.precipitation_probability_max[i] : null;
           const tx = dd.temperature_2m_max ? dd.temperature_2m_max[i] : null;
           const tn = dd.temperature_2m_min ? dd.temperature_2m_min[i] : null;
-          byDate[dt] = { date: dt, tMax: tx, tMin: tn, precipProbMax: pp, condition: _weather.wxCondition(code).key, rec: _weather.outdoorScore(code, pp, tx, tn), source: 'forecast' };
+          // Honesty: a null per-day weather_code → leave condition null (no fabricated "cloudy") so
+          // wxDayCard shows the real temps without an invented condition chip.
+          byDate[dt] = { date: dt, tMax: tx, tMin: tn, precipProbMax: pp, condition: (code == null ? null : _weather.wxCondition(code).key), rec: _weather.outdoorScore(code, pp, tx, tn), source: 'forecast' };
         });
       }
       if (beyond.length) {

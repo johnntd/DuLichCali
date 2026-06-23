@@ -28,7 +28,14 @@ function parsePriceNumber(text) {
   if (text == null) return null;
   var s = String(text).replace(/,/g, '');
   if (/%/.test(s) && !/\$/.test(s)) return null; // percent-only = a discount, not a price
-  var nums = (s.match(/\d+(?:\.\d+)?/g) || []).map(Number).filter(function (n) { return isFinite(n) && n > 0 && n < 100000; });
+  var nums;
+  if (/\$/.test(s)) {
+    // When dollar signs are present, anchor ONLY on $-prefixed figures so "$50 (15% off)" → 50, not 15.
+    nums = (s.match(/\$\s?\d+(?:\.\d+)?/g) || []).map(function (x) { return Number(x.replace(/[^\d.]/g, '')); });
+  } else {
+    nums = (s.match(/\d+(?:\.\d+)?/g) || []).map(Number);
+  }
+  nums = nums.filter(function (n) { return isFinite(n) && n > 0 && n < 100000; });
   if (!nums.length) return null;
   return Math.min.apply(null, nums);
 }

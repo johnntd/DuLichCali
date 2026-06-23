@@ -111,7 +111,7 @@
       tab_journey: 'Journey', journeyTitle: 'Your journey', journeySub: 'Every stop, stay and ride as a node. Lock what you love 🔒 — the AI only replans around it.', jnNoPlan: 'Generate the trip first — your journey timeline appears here.', jnLock: 'Lock', jnUnlock: 'Unlock', jnLocked: 'Locked', jnImprove: 'Improve around this', jnImproving: 'Replanning this day (keeping locked items)…', jnAddAfter: 'Add after', jnReplanDay: 'Replan this day', jnReplanKeep: 'keeps 🔒 locked', jnReplanned: 'Day replanned — locked items kept', jnTransportNode: 'Transport', jnViewTransport: 'Compare transport', jnNodeMenu: 'Options', jnAddPh: 'Add a place / activity', jnAdd: 'Add',
       cmdPh: 'Tell the concierge what to change…', cmdGo: 'Ask AI', cmdBusy: 'Understanding your request…', cmdPlanTitle: 'Here’s what I’ll change', cmdNone: 'I couldn’t turn that into an edit — try rephrasing (e.g. “skip the zoo”, “add Disneyland day 2”, “find another Vietnamese dinner”).', cmdFail: 'Couldn’t interpret that right now — try again.', cmdDays: 'Replans day {d}', cmdApply: 'Apply changes', cmdApplied: 'Trip updated', cmdCancel: 'Cancel',
       cmdop_skip: 'Skip', cmdop_delete: 'Remove', cmdop_lock: 'Lock', cmdop_unlock: 'Unlock', cmdop_replace: 'Replace', cmdop_add: 'Add', cmdop_retime: 'Re-time', cmdop_replan_day: 'Replan', cmdop_stay_extra_night: 'Stay an extra night', cmdop_leave_earlier: 'Leave earlier', cmdop_change_return: 'Change return',
-      rideBookingTitle: 'DuLichCali ride', rideBookedToast: 'Ride booked and added to your trip', rideRequestedToast: 'Ride requested — pending confirmation', rideNotCompleted: 'Ride booking not completed — nothing was added. You can try again.', rideBookedNote: 'DuLichCali ride booked', rideRequestedNote: 'DuLichCali ride requested',
+      rideBookingTitle: 'DuLichCali ride', rideBookedToast: 'Ride booked and added to your trip', rideRequestedToast: 'Ride requested — pending confirmation', rideNotCompleted: 'Ride booking not completed — nothing was added. You can try again.', rideBookedNote: 'DuLichCali ride booked', rideRequestedNote: 'DuLichCali ride requested', rideRequestMichael: 'Request Michael ride', rideBookDlc: 'Book with DuLichCali', rideViewRequest: 'View request', rideModifyRequest: 'Modify request', rideCancelRequest: 'Cancel request', rideViewTitle: 'Your ride request', rideRouteLabel: 'Route', ridePassengers: 'Passengers', rideCancelledNote: 'Ride request cancelled', rideCancelledToast: 'Ride request cancelled — you can request it again anytime',
       groupTravelersTitle: 'Who\'s travelling', travelersAdults: 'adults', travelersEdit: 'Edit travelers',
       summary: 'Trip summary', assumptions: 'Assumptions', warnings: 'Good to know',
       costRange: 'Estimated cost', meetup: 'Meetup', regenDay: 'Regenerate day',
@@ -408,7 +408,7 @@
       tab_journey: 'Hành trình', journeyTitle: 'Hành trình của bạn', journeySub: 'Mỗi điểm dừng, nơi ở và chuyến xe là một nút. Khóa thứ bạn thích 🔒 — AI chỉ tối ưu xung quanh.', jnNoPlan: 'Hãy tạo chuyến đi trước — dòng thời gian hành trình sẽ hiện ở đây.', jnLock: 'Khóa', jnUnlock: 'Mở khóa', jnLocked: 'Đã khóa', jnImprove: 'Cải thiện quanh mục này', jnImproving: 'Đang lên lại ngày này (giữ mục đã khóa)…', jnAddAfter: 'Thêm sau', jnReplanDay: 'Lên lại ngày này', jnReplanKeep: 'giữ 🔒 đã khóa', jnReplanned: 'Đã lên lại ngày — giữ mục đã khóa', jnTransportNode: 'Di chuyển', jnViewTransport: 'So sánh di chuyển', jnNodeMenu: 'Tùy chọn', jnAddPh: 'Thêm địa điểm / hoạt động', jnAdd: 'Thêm',
       cmdPh: 'Nói cho trợ lý biết bạn muốn đổi gì…', cmdGo: 'Hỏi AI', cmdBusy: 'Đang hiểu yêu cầu của bạn…', cmdPlanTitle: 'Đây là những thay đổi tôi sẽ làm', cmdNone: 'Tôi chưa chuyển được thành chỉnh sửa — hãy thử diễn đạt lại (vd: “bỏ sở thú”, “thêm Disneyland ngày 2”, “tìm bữa tối Việt khác”).', cmdFail: 'Hiện chưa hiểu được — vui lòng thử lại.', cmdDays: 'Lên lại ngày {d}', cmdApply: 'Áp dụng thay đổi', cmdApplied: 'Đã cập nhật chuyến đi', cmdCancel: 'Hủy',
       cmdop_skip: 'Bỏ qua', cmdop_delete: 'Xóa', cmdop_lock: 'Khóa', cmdop_unlock: 'Mở khóa', cmdop_replace: 'Thay thế', cmdop_add: 'Thêm', cmdop_retime: 'Đổi giờ', cmdop_replan_day: 'Lên lại', cmdop_stay_extra_night: 'Ở thêm một đêm', cmdop_leave_earlier: 'Về sớm hơn', cmdop_change_return: 'Đổi chuyến về',
-      rideBookingTitle: 'Xe Du Lịch Cali', rideBookedToast: 'Đã đặt xe và thêm vào chuyến đi', rideRequestedToast: 'Đã yêu cầu xe — chờ xác nhận', rideNotCompleted: 'Chưa hoàn tất đặt xe — không có gì được thêm. Bạn có thể thử lại.', rideBookedNote: 'Đã đặt xe Du Lịch Cali', rideRequestedNote: 'Đã yêu cầu xe Du Lịch Cali',
+      rideBookingTitle: 'Xe Du Lịch Cali', rideBookedToast: 'Đã đặt xe và thêm vào chuyến đi', rideRequestedToast: 'Đã yêu cầu xe — chờ xác nhận', rideNotCompleted: 'Chưa hoàn tất đặt xe — không có gì được thêm. Bạn có thể thử lại.', rideBookedNote: 'Đã đặt xe Du Lịch Cali', rideRequestedNote: 'Đã yêu cầu xe Du Lịch Cali', rideRequestMichael: 'Yêu cầu xe Michael', rideBookDlc: 'Đặt với Du Lịch Cali', rideViewRequest: 'Xem yêu cầu', rideModifyRequest: 'Sửa yêu cầu', rideCancelRequest: 'Hủy yêu cầu', rideViewTitle: 'Yêu cầu xe của bạn', rideRouteLabel: 'Tuyến', ridePassengers: 'Số khách', rideCancelledNote: 'Đã hủy yêu cầu xe', rideCancelledToast: 'Đã hủy yêu cầu xe — bạn có thể yêu cầu lại bất cứ lúc nào',
       groupTravelersTitle: 'Ai cùng đi', travelersAdults: 'người lớn', travelersEdit: 'Sửa người đi',
       summary: 'Tóm tắt chuyến đi', assumptions: 'Giả định', warnings: 'Cần lưu ý',
       costRange: 'Chi phí ước tính', meetup: 'Điểm hẹn', regenDay: 'Tạo lại ngày',
@@ -700,7 +700,7 @@
       tab_journey: 'Recorrido', journeyTitle: 'Tu recorrido', journeySub: 'Cada parada, alojamiento y viaje como un nodo. Bloquea lo que te gusta 🔒 — la IA solo replanifica alrededor.', jnNoPlan: 'Genera el viaje primero — tu línea de tiempo aparecerá aquí.', jnLock: 'Bloquear', jnUnlock: 'Desbloquear', jnLocked: 'Bloqueado', jnImprove: 'Mejorar alrededor de esto', jnImproving: 'Replanificando este día (manteniendo lo bloqueado)…', jnAddAfter: 'Agregar después', jnReplanDay: 'Replanificar este día', jnReplanKeep: 'mantiene 🔒 bloqueado', jnReplanned: 'Día replanificado — se mantuvo lo bloqueado', jnTransportNode: 'Transporte', jnViewTransport: 'Comparar transporte', jnNodeMenu: 'Opciones', jnAddPh: 'Agregar un lugar / actividad', jnAdd: 'Agregar',
       cmdPh: 'Dile al concierge qué cambiar…', cmdGo: 'Preguntar a la IA', cmdBusy: 'Entendiendo tu solicitud…', cmdPlanTitle: 'Esto es lo que cambiaré', cmdNone: 'No pude convertirlo en una edición — reformula (ej. “omite el zoológico”, “agrega Disneyland día 2”, “busca otra cena vietnamita”).', cmdFail: 'No se pudo interpretar ahora — inténtalo de nuevo.', cmdDays: 'Replanifica el día {d}', cmdApply: 'Aplicar cambios', cmdApplied: 'Viaje actualizado', cmdCancel: 'Cancelar',
       cmdop_skip: 'Omitir', cmdop_delete: 'Quitar', cmdop_lock: 'Bloquear', cmdop_unlock: 'Desbloquear', cmdop_replace: 'Reemplazar', cmdop_add: 'Agregar', cmdop_retime: 'Reprogramar', cmdop_replan_day: 'Replanificar', cmdop_stay_extra_night: 'Quedarse otra noche', cmdop_leave_earlier: 'Salir antes', cmdop_change_return: 'Cambiar regreso',
-      rideBookingTitle: 'Viaje DuLichCali', rideBookedToast: 'Viaje reservado y agregado a tu trip', rideRequestedToast: 'Viaje solicitado — pendiente de confirmación', rideNotCompleted: 'Reserva de viaje no completada — no se agregó nada. Puedes intentarlo de nuevo.', rideBookedNote: 'Viaje DuLichCali reservado', rideRequestedNote: 'Viaje DuLichCali solicitado',
+      rideBookingTitle: 'Viaje DuLichCali', rideBookedToast: 'Viaje reservado y agregado a tu trip', rideRequestedToast: 'Viaje solicitado — pendiente de confirmación', rideNotCompleted: 'Reserva de viaje no completada — no se agregó nada. Puedes intentarlo de nuevo.', rideBookedNote: 'Viaje DuLichCali reservado', rideRequestedNote: 'Viaje DuLichCali solicitado', rideRequestMichael: 'Solicitar viaje con Michael', rideBookDlc: 'Reservar con DuLichCali', rideViewRequest: 'Ver solicitud', rideModifyRequest: 'Modificar solicitud', rideCancelRequest: 'Cancelar solicitud', rideViewTitle: 'Tu solicitud de viaje', rideRouteLabel: 'Ruta', ridePassengers: 'Pasajeros', rideCancelledNote: 'Solicitud de viaje cancelada', rideCancelledToast: 'Solicitud de viaje cancelada — puedes solicitarla de nuevo cuando quieras',
       groupTravelersTitle: 'Quiénes viajan', travelersAdults: 'adultos', travelersEdit: 'Editar viajeros',
       summary: 'Resumen del viaje', assumptions: 'Supuestos', warnings: 'Bueno saber',
       costRange: 'Costo estimado', meetup: 'Punto de encuentro', regenDay: 'Regenerar día',
@@ -1340,26 +1340,13 @@
     var legs = legSrc.map(function (lg, i) {
       return { index: i, toCity: _cityShort(lg.toCity), fromCity: _cityShort(lg.fromCity), date: lg.date || lg.dueDate || '', key: (typeof legKeyOf === 'function' ? legKeyOf(lg, i) : ((lg.fromCity || '') + '>' + (lg.toCity || ''))), isReturn: lg.legType === 'return' };
     });
-    function legForCity(city, dueDate) {
-      var c = _cityShort(city); if (!c || !legs.length) return null;
-      var m = legs.filter(function (L) { return L.toCity === c; });
-      if (!m.length) return null;
-      if (m.length === 1) return m[0];
-      // a city visited more than once → the leg whose date is the latest that is on/before the due date
-      var pick = null;
-      if (dueDate) m.forEach(function (L) { if (L.date && L.date <= dueDate && (!pick || L.date >= pick.date)) pick = L; });
-      return pick || m[0];
-    }
-    function legForTransport(b) {
-      var byKey = legs.filter(function (L) { return b.linkedSegmentId && (L.key === b.linkedSegmentId || ((b.linkedSegmentId || '').indexOf(L.toCity) !== -1 && (b.linkedSegmentId || '').indexOf(L.fromCity) !== -1)); })[0];
-      if (byKey) return byKey;
-      return legForCity(b.city, b.dueDate);
-    }
     var now = new Date();
     var mapped = tasks.map(function (b) {
       var kind = depKind(b.type);
-      var leg = (kind === 'transport') ? legForTransport(b) : legForCity(b.city, b.dueDate);
-      var jIdx = leg ? leg.index : Infinity;
+      // DIRECTION-AWARE mapping: a ride/transport task matches the leg with BOTH its from+to city
+      // (so SD→OC and OC→SD don't collide on the shared OC endpoint). journeyIndexFor falls back to
+      // arrival-city + dueDate for lodging/tickets/food. Pass the task's route hints through.
+      var jIdx = root.TCDepGraph.journeyIndexFor({ kind: kind, city: _cityShort(b.city), fromCity: b.fromCity, toCity: b.toCity, linkedSegmentId: b.linkedSegmentId, title: b.title, dueDate: b.dueDate }, legs);
       var du = null; if (b.dueDate) { var d = new Date(b.dueDate); if (!isNaN(d)) du = Math.ceil((d - now) / 86400000); }
       return { id: b.id, kind: kind, city: _cityShort(b.city), journeyIndex: jIdx, status: b.bookingStatus || 'research_needed', daysUntilDue: du, pinned: /pinned/.test(b.dataSource || ''), votes: 0, type: b.type, title: b.title };
     });
@@ -7070,6 +7057,7 @@
     // group off, so tell the driver to pick up AFTER that arrival. Honest: a known date may be
     // prefilled below, but we never fabricate a precise arrival minute.
     if (opts.afterArrival) noteBits.push((opts.afterArrivalProvider || '').trim() ? t('pickupAfterProvider').replace('{provider}', opts.afterArrivalProvider.trim()) : t('pickupAfterArrival'));
+    if (opts.userNotes) noteBits.push(opts.userNotes);
     if (ks.kids) noteBits.push(ks.kids + ' ' + t('childrenLabel').toLowerCase());
     if (ks.seniors) noteBits.push(ks.seniors + ' ' + t('seniors').toLowerCase());
     var legRef = opts.legRef || ((pickup || '') + '→' + (dropoff || ''));
@@ -7084,8 +7072,11 @@
       notes: noteBits.join(' · '),
       // Clean handoff contract → ride-intake emits a result + returns to returnUrl; TC reconciles it.
       tripId: tr.id || '', tripName: tr.groupName || '', legRef: legRef, legKey: opts.legKey || '', segmentId: segmentId,
+      // taskId binds the result back to THIS trip task so reconcile updates it in place (no duplicate);
+      // existingBookingId lets the ride flow treat a re-submit as a modify of the same booking.
+      taskId: opts.taskId || '', existingBookingId: opts.existingBookingId || '',
       transportMode: opts.mode || (kind === 'van_transfer' ? 'dlc_ride' : 'ride'), luggage: opts.luggage || '',
-      familyId: (typeof getMe === 'function' ? (getMe() || '') : ''), returnUrl: returnUrl, source: 'travel_concierge',
+      familyId: opts.familyId || (typeof getMe === 'function' ? (getMe() || '') : ''), assignedToMember: opts.memberId || '', returnUrl: returnUrl, source: 'travel_concierge',
     };
     try { root.sessionStorage.setItem('dlc_ride_prefill', JSON.stringify(draft)); } catch (e) {}
     try { root.location.href = '/airport'; } catch (e) {}
@@ -7103,21 +7094,35 @@
     tr.bookings = tr.bookings || [];
     if (tr.bookings.some(function (b) { return b.confirmationNumber && b.confirmationNumber === res.bookingId; })) return; // already attached
     var requested = res.status === 'requested';
-    tr.bookings.push(newBooking('ride', t('rideBookingTitle') + (res.route ? (' · ' + res.route) : ''), {
-      provider: 'DuLichCali', bookingStatus: requested ? 'user_approval_needed' : 'booked', confirmationNumber: res.bookingId,
-      priceRange: res.priceEstimate || '', recommendedOption: res.route || '', selectedOption: res.mode || 'dlc_ride',
-      notes: res.route || '', bookedBy: (typeof getMe === 'function' ? (getMe() || '') : ''), dataSource: 'dlc_ride_booking',
-      segmentId: res.segmentId || '', // Step D: stable attachment to the segment (survives reorder/rename)
-    }));
+    // If the ride was requested FROM a specific trip task (taskId), update THAT task in place so the
+    // existing "Confirm ride Michael" card becomes the live booking — never a disconnected duplicate.
+    var taskB = res.taskId ? tr.bookings.filter(function (b) { return b.id === res.taskId; })[0] : null;
+    if (taskB) {
+      taskB.provider = taskB.provider || 'DuLichCali'; taskB.bookingStatus = requested ? 'user_approval_needed' : 'booked';
+      taskB.confirmationNumber = res.bookingId; taskB.priceRange = res.priceEstimate || taskB.priceRange || '';
+      taskB.selectedOption = res.mode || 'dlc_ride'; taskB.bookedBy = (typeof getMe === 'function' ? (getMe() || '') : '');
+      taskB.bookedAt = new Date().toISOString(); taskB.bookingSource = 'dlc_ride_booking';
+      if (res.segmentId && !taskB.segmentId) taskB.segmentId = res.segmentId;
+    } else {
+      tr.bookings.push(newBooking('ride', t('rideBookingTitle') + (res.route ? (' · ' + res.route) : ''), {
+        provider: 'DuLichCali', bookingStatus: requested ? 'user_approval_needed' : 'booked', confirmationNumber: res.bookingId,
+        priceRange: res.priceEstimate || '', recommendedOption: res.route || '', selectedOption: res.mode || 'dlc_ride',
+        notes: res.route || '', bookedBy: (typeof getMe === 'function' ? (getMe() || '') : ''), dataSource: 'dlc_ride_booking', bookingSource: 'dlc_ride_booking',
+        segmentId: res.segmentId || '', // Step D: stable attachment to the segment (survives reorder/rename)
+      }));
+    }
     // Mark transport status by stable segmentId (primary) AND legKey (back-compat).
     tr.transportStatus = tr.transportStatus || {};
     if (res.segmentId) tr.transportStatus[res.segmentId] = requested ? 'planning' : 'booked';
     if (res.legKey) tr.transportStatus[res.legKey] = requested ? 'planning' : 'booked';
-    var amt = parseInt(String(res.priceEstimate || '').replace(/[^\d]/g, ''), 10) || 0;
-    if (amt) costLedger(tr).push({ id: uid('cl'), familyId: (typeof getMe === 'function' ? (getMe() || '') : ''), title: t('rideBookingTitle') + (res.route ? (' (' + res.route + ')') : ''), amount: amt, paid: false, notes: 'DuLichCali', createdAt: new Date().toISOString() });
+    var amt = parseInt(String((res.priceEstimate || '').match(/\d[\d,]*/) || [''])[0].replace(/,/g, ''), 10) || 0;
+    var ledgerKey = res.bookingId || (taskB && taskB.id);
+    var dupLedger = ledgerKey && costLedger(tr).some(function (e) { return e.bookingId && e.bookingId === ledgerKey; });
+    if (amt && !dupLedger) costLedger(tr).push({ id: uid('cl'), bookingId: ledgerKey, familyId: (taskB && taskB.assignedToFamily) || (typeof getMe === 'function' ? (getMe() || '') : ''), title: (taskB && taskB.title) || (t('rideBookingTitle') + (res.route ? (' (' + res.route + ')') : '')), amount: amt, paid: false, notes: 'DuLichCali', createdAt: new Date().toISOString() });
     tr.notes = tr.notes || [];
     tr.notes.push({ id: uid('note'), text: '🚐 ' + (requested ? t('rideRequestedNote') : t('rideBookedNote')) + (res.route ? (': ' + res.route) : '') + (res.bookingId ? (' · #' + res.bookingId) : ''), ts: Date.now() });
     saveTrip(tr);
+    tcNotifyTask(requested ? 'user_approval_needed' : 'booked', (taskB && taskB.title) || (t('rideBookingTitle') + (res.route ? (' · ' + res.route) : ''))); // notify group members
     toast(requested ? t('rideRequestedToast') : t('rideBookedToast'));
   }
   // ── Assisted checkout / confirmation capture (P3) ──────────────────────────
@@ -7194,6 +7199,81 @@
       if (arr) { opts.date = arr; opts.afterArrival = true; opts.afterArrivalProvider = (seg.preferredProvider || '').trim(); }
     }
     requestDlcInquiry(opts);
+  }
+  // ── DuLichCali / Michael ride TASK integration (P0) ─────────────────────────
+  // A ride task is a DuLichCali service — it must book via the EMBEDDED ride flow (requestDlcInquiry
+  // → /airport ride form → reconcileRideResult attaches the booking to THIS task), NEVER an external
+  // "Open official page" Google link.
+  function isDlcRideTask(b) {
+    if (!b) return false;
+    if (b.type === 'ride') return true;
+    return /michael|dulichcali|du lich cali|\bdlc\b/i.test((b.provider || '') + ' ' + (b.title || ''));
+  }
+  function rideTaskRoute(b) {
+    var tm = String(b.title || '').split(/→|->/);
+    if (tm.length === 2) { var f = tm[0].split('·').pop().trim(), to = tm[1].trim(); if (f && to) return { pickup: f, dropoff: to }; }
+    var lsi = String(b.linkedSegmentId || '').replace(/^[a-z_]+:/i, '').replace(/:\d+$/, '');
+    if (lsi.indexOf('>') !== -1) { var p = lsi.split('>'); if (p[0].trim() && p[1].trim()) return { pickup: p[0].trim(), dropoff: p[1].trim() }; }
+    return { pickup: '', dropoff: b.city || '' };
+  }
+  // Open the embedded DLC ride flow for a TASK, passing full trip context (incl. taskId so the result
+  // attaches back to this exact task). modify=true re-opens to change an existing booking.
+  function requestRideForTask(b, o) {
+    o = o || {}; var tr = state.trip; var r = rideTaskRoute(b);
+    var io = {
+      kind: 'ride', pickup: r.pickup, dropoff: r.dropoff, taskId: b.id, mode: 'dlc_ride',
+      segmentId: b.segmentId || segmentIdForCity(tr, r.dropoff) || '', legRef: r.pickup + '→' + r.dropoff,
+      familyId: b.assignedToFamily || '', memberId: b.assignedToMember || '', luggage: b.luggage || '',
+      label: b.title || '', userNotes: b.notes || '', date: b.dueDate || b.deadline || '',
+      existingBookingId: o.modify ? (b.confirmationNumber || '') : '',
+    };
+    // §0b: prefill the pickup DATE from the arrival stop + name the inbound provider (e.g. Bus Hoàng).
+    var fc = (r.pickup || '').trim().toLowerCase();
+    var seg = fc ? (tr.destinations || []).filter(function (d) { return (d.city || '').trim().toLowerCase() === fc; })[0] : null;
+    if (seg) { var arr = segArrival(seg); if (arr) { if (!io.date) io.date = arr; io.afterArrival = true; io.afterArrivalProvider = (seg.preferredProvider || '').trim(); } }
+    requestDlcInquiry(io);
+  }
+  function cancelRideTask(b) {
+    var tr = state.trip;
+    var oldConf = b.confirmationNumber;
+    b.bookingStatus = 'research_needed'; b.confirmationNumber = ''; b.bookingSource = ''; b.bookedAt = '';
+    if (oldConf) tr.costLedger = (tr.costLedger || []).filter(function (e) { return e.bookingId !== oldConf; });
+    tr.notes = tr.notes || []; tr.notes.push({ id: uid('note'), text: '🚐 ' + t('rideCancelledNote') + (b.title ? (': ' + b.title) : ''), ts: Date.now() });
+    saveTrip(tr); tcNotifyTask('cancelled', b.title); toast(t('rideCancelledToast')); render();
+  }
+  function openRideRequestModal(b) {
+    var tr = state.trip; closeModal();
+    var ov = el('div', 'tc-modal'); ov.id = 'tcModal'; var card = el('div', 'tc-modal__card');
+    var head = el('div', 'tc-modal__head'); head.appendChild(el('strong', 'tc-modal__title', '🚐 ' + t('rideViewTitle')));
+    var x = el('button', 'tc-modal__x', '×'); x.type = 'button'; x.addEventListener('click', closeModal); head.appendChild(x); card.appendChild(head);
+    var r = rideTaskRoute(b);
+    function row(k, v) { if (!v) return; var rw = el('p', 'tc-bk__meta'); rw.appendChild(el('strong', null, k + ': ')); rw.appendChild(doc.createTextNode(v)); card.appendChild(rw); }
+    row(t('rideRouteLabel'), (r.pickup && r.dropoff) ? (r.pickup + ' → ' + r.dropoff) : (b.title || ''));
+    row(t('providerLabel'), b.provider || 'DuLichCali');
+    row(t('taskDue'), b.dueDate || b.deadline || '');
+    row(t('ridePassengers'), String(totalTravelers()));
+    if (b.assignedToFamily) row('👤', famName(b.assignedToFamily));
+    if (b.assignedToMember) row('🙋', memberName(b.assignedToMember));
+    row(t('bs_' + (b.bookingStatus || 'research_needed')), b.confirmationNumber ? ('#' + b.confirmationNumber) : '');
+    if (b.priceRange) row('💵', b.priceRange);
+    if (b.notes) row(t('bookingNotes'), b.notes);
+    card.appendChild(el('p', 'tc-unverified', t('unverified')));
+    ov.appendChild(card); ov.addEventListener('click', function (e) { if (e.target === ov) closeModal(); }); doc.body.appendChild(ov);
+  }
+  // Status-driven DuLichCali ride actions for a ride task (used by bookingCard + naCard).
+  // Not booked → Request/Book; booked/requested → View / Modify / Cancel. Read-only/demo → nothing.
+  function rideTaskActions(b, acts, primaryCls) {
+    if (state.trip && state.trip._demo) return; // demo preview = no real booking actions
+    var isMichael = /michael/i.test((b.provider || '') + ' ' + (b.title || ''));
+    var hasBooking = !!b.confirmationNumber || b.bookingStatus === 'booked' || b.bookingStatus === 'user_approval_needed';
+    if (state.readonly) { if (hasBooking) acts.appendChild(pbtn('👁 ' + t('rideViewRequest'), primaryCls || 'tc-pbtn--accent', function () { openRideRequestModal(b); })); return; }
+    if (!hasBooking) {
+      acts.appendChild(pbtn('🚐 ' + (isMichael ? t('rideRequestMichael') : t('rideBookDlc')), primaryCls || 'tc-pbtn--accent', function () { requestRideForTask(b); }));
+    } else {
+      acts.appendChild(pbtn('👁 ' + t('rideViewRequest'), primaryCls || 'tc-pbtn--accent', function () { openRideRequestModal(b); }));
+      acts.appendChild(pbtn('🔁 ' + t('rideModifyRequest'), '', function () { requestRideForTask(b, { modify: true }); }));
+      acts.appendChild(pbtn('✖ ' + t('rideCancelRequest'), 'tc-pbtn--danger', function () { cancelRideTask(b); }));
+    }
   }
   function transportOptionCard(o, leg, i, isChosen) {
     var c = el('article', 'tc-tpopt' + (isChosen ? ' tc-tpopt--chosen' : ''));
@@ -8109,9 +8189,14 @@
     c.appendChild(meta);
     if (!state.readonly && !tr._demo) {
       var acts = el('div', 'tc-na__acts');
-      var links = BookingLinkProvider.links(b, tr);
-      var url = links.officialUrl || links.searchUrl;
-      if (url) acts.appendChild(linkBtn('🔎 ' + t('naResearch'), url, 'tc-na__btn'));
+      if (isDlcRideTask(b)) {
+        // The Next Action is a DuLichCali ride → primary CTA books inside the app (no Google link).
+        rideTaskActions(b, acts, 'tc-na__btn tc-na__btn--gold');
+      } else {
+        var links = BookingLinkProvider.links(b, tr);
+        var url = links.officialUrl || links.searchUrl;
+        if (url) acts.appendChild(linkBtn('🔎 ' + t('naResearch'), url, 'tc-na__btn'));
+      }
       var mk = el('button', 'tc-na__btn tc-na__btn--gold', '✓ ' + t('markBooked')); mk.type = 'button';
       mk.addEventListener('click', function () { if (root.TCTasks) root.TCTasks.setDone(b, true, { by: getMe() || '', byName: (getMe() ? famName(getMe()) : ''), nowIso: new Date().toISOString() }); saveTrip(tr); tcNotifyTask('completed', b.title); render(); });
       acts.appendChild(mk);
@@ -8238,7 +8323,7 @@
       var FILTERS = ['all', 'todo', 'completed', 'urgent', 'mine'];
       var fbar = el('div', 'tc-taskfilters');
       FILTERS.forEach(function (fk) {
-        var fb = el('button', 'tc-pbtn' + ((state._taskFilter || 'all') === fk ? ' tc-pbtn--on' : ''), t('tf_' + fk)); fb.type = 'button';
+        var fb = el('button', 'tc-pbtn' + ((state._taskFilter || 'todo') === fk ? ' tc-pbtn--on' : ''), t('tf_' + fk)); fb.type = 'button';
         fb.addEventListener('click', function () { state._taskFilter = fk; render(); });
         fbar.appendChild(fb);
       });
@@ -8247,13 +8332,23 @@
     if (isResearching('bookings') && !tr.bookings.length) wrap.appendChild(researchBanner('researchingBookings'));
     else if (!tr.bookings.length) wrap.appendChild(el('p', 'tc-empty', t('noBookings')));
     else {
-      var _flt = state._taskFilter || 'all', _me = getMe();
+      var _flt = state._taskFilter || 'todo', _me = getMe();
       var _shown = 0;
-      // V6: order by dependency-aware priorityScore (transport→…→optional, blocked sink lower);
+      // V6 ordering = the user's dependency rule: (1) done sink to bottom, (2) UNBLOCKED before
+      // blocked, (3) journey/dependency SEQUENCE (idx*10 + kind-rank — same seq nextAction uses, so
+      // the list's first To-Do item == the Next Action), (4) due date, (5) priority score.
       // keep the ORIGINAL index for delete (bookingCard splices tr.bookings[idx]).
+      var _KR = (root.TCDepGraph && root.TCDepGraph._KIND_RANK) || { transport: 0, lodging: 1, ticket: 2, activity: 3, food: 4, optional: 5 };
+      function _seqOf(b) { var d = b._dep || {}; var ix = (typeof d.idx === 'number') ? d.idx : 1e9; var k = _KR[d.kind]; return ix * 10 + (k == null ? 5 : k); }
       var _ordered = tr.bookings.map(function (b, i) { return { b: b, i: i }; }).sort(function (x, y) {
+        var dxd = (root.TCTasks && root.TCTasks.isDone(x.b)) ? 1 : 0, dyd = (root.TCTasks && root.TCTasks.isDone(y.b)) ? 1 : 0;
+        if (dxd !== dyd) return dxd - dyd; // completed sink to the bottom (All view)
         var bx = (x.b._dep && x.b._dep.blocked) ? 1 : 0, by = (y.b._dep && y.b._dep.blocked) ? 1 : 0;
-        if (bx !== by) return bx - by; // actionable before blocked
+        if (bx !== by) return bx - by; // unblocked before blocked
+        var sx = _seqOf(x.b), sy = _seqOf(y.b);
+        if (sx !== sy) return sx - sy; // journey / dependency sequence
+        var ddx = x.b.dueDate || '~', ddy = y.b.dueDate || '~';
+        if (ddx !== ddy) return ddx < ddy ? -1 : 1; // earlier due first
         return ((y.b._dep && y.b._dep.score) || 0) - ((x.b._dep && x.b._dep.score) || 0);
       });
       _ordered.forEach(function (o) {
@@ -8346,8 +8441,13 @@
     if (b.deadline) c.appendChild(el('p', 'tc-bk__meta', '⏰ ' + t('deadlineLabel') + ': ' + b.deadline));
     if (b.cancellationPolicy) c.appendChild(el('p', 'tc-bk__meta', b.cancellationPolicy));
     var acts = el('div', 'tc-bk__acts');
-    if (links.officialUrl) acts.appendChild(linkBtn('🔗 ' + t('openOfficial'), links.officialUrl, 'tc-pbtn--accent'));
-    acts.appendChild(linkBtn('🔎 ' + t('openOfficial'), links.searchUrl, links.officialUrl ? '' : 'tc-pbtn--accent'));
+    if (isDlcRideTask(b)) {
+      // DuLichCali/Michael ride = book INSIDE the app via the embedded ride flow, never a Google link.
+      rideTaskActions(b, acts);
+    } else {
+      if (links.officialUrl) acts.appendChild(linkBtn('🔗 ' + t('openOfficial'), links.officialUrl, 'tc-pbtn--accent'));
+      acts.appendChild(linkBtn('🔎 ' + t('openOfficial'), links.searchUrl, links.officialUrl ? '' : 'tc-pbtn--accent'));
+    }
     c.appendChild(acts);
     if (!ro) {
       var ctrls = el('div', 'tc-bk__ctrls');

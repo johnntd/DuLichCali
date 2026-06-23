@@ -86,5 +86,40 @@ ok('all-unscheduled trip still has a next action (highest priority)', rl.nextAct
 var nAll = trip().map(function (x) { x.status = 'booked'; return x; });
 ok('all done → nextAction null', G.build(nAll).nextAction === null && G.build(nAll).progress.overall === 100);
 
+// ── DIRECTION-AWARE journey mapping + the SJ↔OC↔SD acceptance scenario ──
+var ACC_LEGS = [
+  { index: 0, fromCity: 'San Jose, CA', toCity: 'Orange County, CA', date: '2026-07-01' },
+  { index: 1, fromCity: 'Orange County, CA', toCity: 'San Diego, CA', date: '2026-07-02' },
+  { index: 2, fromCity: 'San Diego, CA', toCity: 'Orange County, CA', date: '2026-07-03' },
+  { index: 3, fromCity: 'Orange County, CA', toCity: 'San Jose, CA', date: '2026-07-04' },
+];
+ok('routeOf parses an "A → B" title', (function () { var r = G.routeOf({ title: 'Confirm ride Michael · San Diego → Orange County' }); return r.from === 'san diego' && r.to === 'orange county'; })());
+ok('routeOf parses a "From>To" linkedSegmentId', (function () { var r = G.routeOf({ linkedSegmentId: 'San Diego, CA>Orange County, CA' }); return r.from === 'san diego' && r.to === 'orange county'; })());
+// the bug: SD→OC ride (dest OC) must NOT collide with the SJ→OC bus (also dest OC)
+ok('Michael OC→SD ride → leg 1', G.journeyIndexFor({ kind: 'transport', city: 'San Diego', title: 'Confirm ride Michael · Orange County → San Diego', dueDate: '2026-07-02' }, ACC_LEGS) === 1);
+ok('Michael SD→OC ride → leg 2 (NOT leg 0)', G.journeyIndexFor({ kind: 'transport', city: 'Orange County', title: 'Confirm ride Michael · San Diego → Orange County', dueDate: '2026-07-03' }, ACC_LEGS) === 2);
+ok('Bus OC→SJ → leg 3', G.journeyIndexFor({ kind: 'transport', city: 'San Jose', linkedSegmentId: 'Orange County, CA>San Jose, CA', dueDate: '2026-07-04' }, ACC_LEGS) === 3);
+ok('SD hotel → leg 1 (arrival city)', G.journeyIndexFor({ kind: 'lodging', city: 'San Diego', dueDate: '2026-07-02' }, ACC_LEGS) === 1);
+ok('OC return hotel → leg 2 (dueDate disambiguates city-visited-twice)', G.journeyIndexFor({ kind: 'lodging', city: 'Orange County', dueDate: '2026-07-03' }, ACC_LEGS) === 2);
+
+// Build the full trip with Bus SJ→OC COMPLETED → next action must be Michael OC→SD.
+function accNode(id, kind, city, route, dueDate, status) { return { id: id, kind: kind, city: city, title: route, journeyIndex: G.journeyIndexFor({ kind: kind, city: city, title: route, dueDate: dueDate }, ACC_LEGS), dueDate: dueDate, daysUntilDue: 30, status: status || 'research_needed' }; }
+var accNodes = [
+  accNode('bus_out', 'transport', 'Orange County', 'Book Xe Đò Hoàng · San Jose → Orange County', '2026-07-01', 'completed'),
+  accNode('mich_ocsd', 'transport', 'San Diego', 'Confirm ride Michael · Orange County → San Diego', '2026-07-02', 'research_needed'),
+  accNode('sd_hotel', 'lodging', 'San Diego', 'Hotel — San Diego', '2026-07-02', 'research_needed'),
+  accNode('sd_zoo', 'ticket', 'San Diego', 'San Diego Zoo', '2026-07-02', 'research_needed'),
+  accNode('mich_sdoc', 'transport', 'Orange County', 'Confirm ride Michael · San Diego → Orange County', '2026-07-03', 'research_needed'),
+  accNode('oc_hotel', 'lodging', 'Orange County', 'Hotel — Orange County', '2026-07-03', 'research_needed'),
+  accNode('oc_dinner', 'food', 'Orange County', 'Vietnamese dinner', '2026-07-03', 'research_needed'),
+  accNode('bus_home', 'transport', 'San Jose', 'Book Xe Đò Hoàng · Orange County → San Jose', '2026-07-04', 'research_needed'),
+];
+var accBuilt = G.build(accNodes);
+ok('next action after outbound bus done = Michael OC→SD', accBuilt.nextAction && accBuilt.nextAction.id === 'mich_ocsd');
+var incomplete = accBuilt.nodes.filter(function (n) { return !G.isDone(n); }).sort(function (a, b) { return G.seqOf(a) - G.seqOf(b); }).map(function (n) { return n.id; });
+ok('incomplete tasks sort in itinerary/dependency order', incomplete.join(',') === 'mich_ocsd,sd_hotel,sd_zoo,mich_sdoc,oc_hotel,oc_dinner,bus_home');
+var adv = accNodes.map(function (n) { return Object.assign({}, n, n.id === 'mich_ocsd' ? { status: 'booked' } : {}); });
+ok('completing Michael OC→SD advances next action to SD hotel', G.build(adv).nextAction && G.build(adv).nextAction.id === 'sd_hotel');
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

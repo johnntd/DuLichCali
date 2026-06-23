@@ -1795,6 +1795,7 @@ window.RideIntake = (function () {
         var fromL = (_lastOrigin || h.pickup || ''), toL = (_lastDest || h.dropoff || '');
         var result = {
           tripId: h.tripId, legKey: h.legKey || '', legRef: h.legRef || '', segmentId: h.segmentId || '',
+          taskId: h.taskId || '', // bind back to the originating Travel Concierge task (update in place)
           bookingId: bookingId, confirmationId: bookingId,
           status: pendingReview ? 'requested' : 'booked', vendor: 'DuLichCali',
           mode: h.transportMode || 'dlc_ride', pickup: fromL, dropoff: toL,

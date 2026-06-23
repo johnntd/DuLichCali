@@ -128,5 +128,42 @@
     return out;
   }
 
-  root.TCDepGraph = { build: build, nextAction: nextAction, progress: progress, warnings: warnings, isDone: isDone, _KIND_WEIGHT: KIND_WEIGHT };
+  // ── Task → journey-index mapping (DIRECTION-AWARE) ──────────────────────────
+  // A transport task must map to the leg matching BOTH its from AND to city — otherwise a city
+  // visited twice (e.g. arrive OC outbound, return through OC) collides: "Michael SD→OC" would
+  // wrongly match the earlier "Bus SJ→OC" (same destination OC) and sort before "Michael OC→SD".
+  // Pure + node-testable. legs = [{ index, fromCity, toCity, date }] (any case). dueDate optional.
+  function _short(s) { return String(s == null ? '' : s).split(',')[0].trim().toLowerCase(); }
+  function _pickByDate(cands, dueDate) { var pick = null; if (dueDate) cands.forEach(function (L) { if (L.date && L.date <= dueDate && (!pick || L.date >= pick.date)) pick = L; }); return pick; }
+  // Derive a task's {from,to} (short) from explicit fields → linkedSegmentId → the "A → B" title.
+  function routeOf(task) {
+    task = task || {};
+    var from = _short(task.fromCity), to = _short(task.toCity || task.city);
+    if (from && to && task.fromCity) return { from: from, to: to };
+    var lsi = String(task.linkedSegmentId || '').replace(/^[a-z_]+:/i, '').replace(/:\d+$/, '');
+    if (lsi.indexOf('>') !== -1) { var p = lsi.split('>'); var f = _short(p[0]), t1 = _short(p[1]); if (f && t1) return { from: f, to: t1 }; }
+    var tm = String(task.title || '').split(/→|->/);
+    if (tm.length === 2) { var f2 = _short(tm[0].split('·').pop()), t2 = _short(tm[1]); if (f2 && t2) return { from: f2, to: t2 }; }
+    return { from: from, to: to };
+  }
+  function journeyIndexFor(task, legs) {
+    legs = legs || []; task = task || {};
+    if (task.kind === 'transport') {
+      var r = routeOf(task);
+      if (r.from && r.to) {
+        var exact = legs.filter(function (L) { return _short(L.fromCity) === r.from && _short(L.toCity) === r.to; });
+        if (exact.length === 1) return exact[0].index;
+        if (exact.length > 1) return (_pickByDate(exact, task.dueDate) || exact[0]).index;
+      }
+    }
+    // non-transport (or a transport with no direction match) → the leg that ARRIVES at its city,
+    // disambiguated by dueDate when the city is visited more than once.
+    var c = _short(task.city); if (!c) return Infinity;
+    var m = legs.filter(function (L) { return _short(L.toCity) === c; });
+    if (!m.length) return Infinity;
+    if (m.length === 1) return m[0].index;
+    return (_pickByDate(m, task.dueDate) || m[0]).index;
+  }
+
+  root.TCDepGraph = { build: build, nextAction: nextAction, progress: progress, warnings: warnings, isDone: isDone, journeyIndexFor: journeyIndexFor, routeOf: routeOf, seqOf: seq, _KIND_WEIGHT: KIND_WEIGHT, _KIND_RANK: KIND_RANK };
 })(typeof window !== 'undefined' ? window : this);

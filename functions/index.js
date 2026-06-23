@@ -53,6 +53,7 @@ const _userPlaceSanitize = require('./lib/userPlaceSanitize.js');
 const _placeMediaSanitize = require('./lib/placeMediaSanitize.js');
 const _driverRanking = require('./lib/driverRanking.js');
 const _dealThreshold = require('./lib/dealThreshold.js');
+const _airportPairs = require('./lib/airportPairs.js');
 
 // Email provider secret (Resend — https://resend.com)
 const RESEND_API_KEY      = defineSecret('RESEND_API_KEY');
@@ -3994,14 +3995,21 @@ function tcBuildTransportLegs(route, trip) {
       const ppLo = ppMid * 0.7, ppHi = ppMid * 1.5, grpLo = ppLo * travelers, grpHi = ppHi * travelers;
       const flightMin = Math.round(miles / 8) + 165; // ~480 mph + ~2.5–3h door-to-door buffer
       const flightUrl = 'https://www.google.com/travel/flights?q=' + encodeURIComponent('flights from ' + l.fromCity + ' to ' + l.toCity);
+      // Airport-PAIR comparison (SJC/SFO/OAK → SAN/SNA/LGB …) instead of one generic city query —
+      // each pair is a real Google Flights search with an honest "best-for" label (closest hub /
+      // budget alternate / most flights). Falls back to the generic city link off known CA metros.
+      const apPairs = _airportPairs.airportPairLinks(l.fromCity, l.toCity, { maxPairs: 3 });
+      const flightLinks = apPairs.length
+        ? apPairs.map((p) => ({ label: '✈️ ' + p.label, bestForKey: p.bestForKey, url: p.url })).concat([{ labelKey: 'tpAirportsNear', url: tcGsearch('major airports near ' + l.toCity) }])
+        : [{ labelKey: 'tpFlightSearch', url: flightUrl }, { labelKey: 'tpAirportsNear', url: tcGsearch('major airports near ' + l.toCity) }];
       options.push({
         mode: 'flight', provider: '', status: 'estimated', distanceText: '', durationText: tcFmtDur(flightMin),
         totalCostRange: tcMoney(grpLo, grpHi) + ' (est.)', perTravelerCost: tcMoney(ppLo, ppHi) + '/person (est.)', perFamilyCost: tcMoney(grpLo / numFamilies, grpHi / numFamilies) + '/family (est.)',
         luggageSuitability: 'ok', childSuitability: 'ok', seniorSuitability: 'ok',
         prosKeys: ['tpro_fastest', 'tpro_lesstiring'], consKeys: ['tcon_airporttime', 'tcon_baggage', 'tcon_carthere', 'tcon_bookahead'],
         noteKeys: ['tpAirportBuffer', 'tpBaggageNote'], whyKey: 'tpwhy_flight',
-        bookingLink: flightUrl,
-        bookingLinks: [{ labelKey: 'tpFlightSearch', url: flightUrl }, { labelKey: 'tpAirportsNear', url: tcGsearch('major airports near ' + l.toCity) }],
+        bookingLink: (apPairs[0] && apPairs[0].url) || flightUrl, airportPairs: apPairs,
+        bookingLinks: flightLinks,
         mapLink: '', convenience: kids > 0 ? 3 : 4, confidence: 'low', canBookViaDLC: false, affectsItinerary: true, source: 'ai_estimate',
       });
     }

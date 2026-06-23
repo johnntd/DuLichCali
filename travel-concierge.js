@@ -268,6 +268,7 @@
       tpPerFamily: 'Per family', tpGas: 'Gas (est.)', tpParking: 'Parking', tpConvenience: 'Convenience', tpBestFamilies: 'Best for families', tpMarkBooked: 'Mark booked', tpBooked: 'Booked', tpBookedToast: 'Marked as booked', tpUnbookedToast: 'Marked as not booked',
       tpTollNote: 'Tolls: check your route (pending verification).', tpAirportBuffer: 'Includes ~2–3h airport buffer (security, boarding, bags).', tpBaggageNote: 'Add baggage fees + a rental car or rideshare at the destination.', tpBusStationNote: 'Confirm the exact pickup/drop-off station with the operator.',
       tpFlightSearch: 'Search flights', tpAirportsNear: 'Nearest airports', tpBusGreyhound: 'Greyhound', tpBusFlix: 'FlixBus', tpBusHoang: 'Hoàng Express',
+      apf_closest: 'closest airport', apf_budget: 'budget alternate', apf_mostflights: 'most flights',
       tpro_door: 'Door-to-door', tpro_flexible: 'Flexible — stop anytime', tpro_luggage: 'Room for luggage', tpro_costshare: 'Cost shared across the group', tpro_fastest: 'Fastest for long distance', tpro_lesstiring: 'Less tiring than a long drive', tpro_cheapest: 'Usually the cheapest', tpro_nodriving: 'No driving', tpro_private: 'Private driver, just your group', tpro_kidssenior: 'Easy for kids & seniors', tpro_noparking: 'No parking to deal with',
       tcon_longdrive: 'Long drive', tcon_fatigue: 'Driver fatigue', tcon_parking: 'Parking to find/pay', tcon_airporttime: 'Airport time adds up', tcon_baggage: 'Baggage fees', tcon_carthere: 'Need a car at the destination', tcon_bookahead: 'Book ahead for best price', tcon_slowest: 'Slowest option', tcon_schedule: 'Fixed schedule', tcon_luggagelimit: 'Limited luggage', tcon_highercost: 'Higher cost than driving',
       tprec_car_short: 'Driving is the easiest, most flexible choice for a short hop with your group and luggage.', tprec_car_group: 'Driving keeps your group together with luggage and is far cheaper than separate tickets for everyone.', tprec_flight_long: 'Flying saves the most time on this long leg for a small group without young kids — add a rental car at the destination.',
@@ -554,6 +555,7 @@
       tpPerFamily: 'Mỗi gia đình', tpGas: 'Xăng (ước tính)', tpParking: 'Đậu xe', tpConvenience: 'Tiện lợi', tpBestFamilies: 'Hợp gia đình nhất', tpMarkBooked: 'Đánh dấu đã đặt', tpBooked: 'Đã đặt', tpBookedToast: 'Đã đánh dấu đã đặt', tpUnbookedToast: 'Đã đánh dấu chưa đặt',
       tpTollNote: 'Phí cầu đường: kiểm tra tuyến của bạn (chờ xác minh).', tpAirportBuffer: 'Đã tính ~2–3 giờ ở sân bay (an ninh, lên máy bay, hành lý).', tpBaggageNote: 'Cộng thêm phí hành lý + xe thuê hoặc xe đi chung tại điểm đến.', tpBusStationNote: 'Xác nhận bến đón/trả chính xác với nhà xe.',
       tpFlightSearch: 'Tìm chuyến bay', tpAirportsNear: 'Sân bay gần nhất', tpBusGreyhound: 'Greyhound', tpBusFlix: 'FlixBus', tpBusHoang: 'Hoàng Express',
+      apf_closest: 'sân bay gần nhất', apf_budget: 'lựa chọn tiết kiệm', apf_mostflights: 'nhiều chuyến nhất',
       tpro_door: 'Tận nơi', tpro_flexible: 'Linh hoạt — dừng lúc nào cũng được', tpro_luggage: 'Rộng chỗ để hành lý', tpro_costshare: 'Chia chi phí cho cả nhóm', tpro_fastest: 'Nhanh nhất cho quãng đường dài', tpro_lesstiring: 'Đỡ mệt hơn lái xe đường dài', tpro_cheapest: 'Thường rẻ nhất', tpro_nodriving: 'Không phải lái xe', tpro_private: 'Tài xế riêng, chỉ nhóm bạn', tpro_kidssenior: 'Tiện cho trẻ em & người lớn tuổi', tpro_noparking: 'Không lo đậu xe',
       tcon_longdrive: 'Lái xe đường dài', tcon_fatigue: 'Tài xế mệt', tcon_parking: 'Phải tìm/trả phí đậu xe', tcon_airporttime: 'Tốn thời gian ở sân bay', tcon_baggage: 'Phí hành lý', tcon_carthere: 'Cần xe tại điểm đến', tcon_bookahead: 'Đặt sớm để có giá tốt', tcon_slowest: 'Chậm nhất', tcon_schedule: 'Lịch cố định', tcon_luggagelimit: 'Hạn chế hành lý', tcon_highercost: 'Đắt hơn tự lái',
       tprec_car_short: 'Tự lái là cách dễ và linh hoạt nhất cho chặng ngắn với nhóm và hành lý của bạn.', tprec_car_group: 'Tự lái giữ cả nhóm đi cùng nhau với hành lý và rẻ hơn nhiều so với mua vé riêng cho từng người.', tprec_flight_long: 'Bay tiết kiệm thời gian nhất cho chặng dài này với nhóm nhỏ không có trẻ nhỏ — thuê xe tại điểm đến.',
@@ -840,6 +842,7 @@
       tpPerFamily: 'Por familia', tpGas: 'Gasolina (est.)', tpParking: 'Estacionamiento', tpConvenience: 'Comodidad', tpBestFamilies: 'Mejor para familias', tpMarkBooked: 'Marcar reservado', tpBooked: 'Reservado', tpBookedToast: 'Marcado como reservado', tpUnbookedToast: 'Marcado como no reservado',
       tpTollNote: 'Peajes: revisa tu ruta (pendiente de verificación).', tpAirportBuffer: 'Incluye ~2–3 h de margen en el aeropuerto (seguridad, embarque, maletas).', tpBaggageNote: 'Suma cargos de equipaje + un auto de alquiler o viaje compartido en el destino.', tpBusStationNote: 'Confirma la estación exacta de recogida/bajada con el operador.',
       tpFlightSearch: 'Buscar vuelos', tpAirportsNear: 'Aeropuertos cercanos', tpBusGreyhound: 'Greyhound', tpBusFlix: 'FlixBus', tpBusHoang: 'Hoàng Express',
+      apf_closest: 'aeropuerto más cercano', apf_budget: 'alternativa económica', apf_mostflights: 'más vuelos',
       tpro_door: 'Puerta a puerta', tpro_flexible: 'Flexible — para cuando quieras', tpro_luggage: 'Espacio para equipaje', tpro_costshare: 'Costo compartido por el grupo', tpro_fastest: 'Lo más rápido para larga distancia', tpro_lesstiring: 'Menos cansado que conducir mucho', tpro_cheapest: 'Suele ser lo más barato', tpro_nodriving: 'Sin conducir', tpro_private: 'Conductor privado, solo tu grupo', tpro_kidssenior: 'Fácil para niños y mayores', tpro_noparking: 'Sin preocuparte por estacionar',
       tcon_longdrive: 'Viaje largo en auto', tcon_fatigue: 'Fatiga del conductor', tcon_parking: 'Buscar/pagar estacionamiento', tcon_airporttime: 'El tiempo en el aeropuerto suma', tcon_baggage: 'Cargos de equipaje', tcon_carthere: 'Necesitas auto en el destino', tcon_bookahead: 'Reserva con antelación para mejor precio', tcon_slowest: 'La opción más lenta', tcon_schedule: 'Horario fijo', tcon_luggagelimit: 'Equipaje limitado', tcon_highercost: 'Mayor costo que conducir',
       tprec_car_short: 'Conducir es lo más fácil y flexible para un tramo corto con tu grupo y equipaje.', tprec_car_group: 'Conducir mantiene al grupo junto con el equipaje y es mucho más barato que boletos separados para todos.', tprec_flight_long: 'Volar ahorra más tiempo en este tramo largo para un grupo pequeño sin niños pequeños — agrega un auto de alquiler en el destino.',
@@ -7050,7 +7053,14 @@
       // Real operator search/booking links (Google Flights + airports; Greyhound + FlixBus;
       // or Xe Đò Hoàng's official booking page + guide + site). Each labelled; nothing is booked here.
       var bl = (o.bookingLinks && o.bookingLinks.length) ? o.bookingLinks : (o.bookingLink ? [{ labelKey: 'tpSearchBook', url: o.bookingLink }] : []);
-      bl.forEach(function (lk) { if (lk && lk.url) acts.appendChild(linkBtn('🔎 ' + (t(lk.labelKey) || t('tpSearchBook')), lk.url, 'tc-pbtn--accent')); });
+      bl.forEach(function (lk) {
+        if (!lk || !lk.url) return;
+        // Airport-pair links carry a literal label ("✈️ SJC → SAN") + a best-for descriptor key;
+        // operator links carry an i18n labelKey. Support both.
+        var txt = lk.label ? lk.label : ('🔎 ' + (t(lk.labelKey) || t('tpSearchBook')));
+        if (lk.bestForKey && t(lk.bestForKey) !== lk.bestForKey) txt += ' · ' + t(lk.bestForKey);
+        acts.appendChild(linkBtn(txt, lk.url, 'tc-pbtn--accent'));
+      });
       // Phone numbers (e.g. Xe Đò Hoàng) as tap-to-call links — real, never fabricated.
       (o.phoneNumbers || []).forEach(function (ph) { var d = String(ph).replace(/[^0-9+]/g, ''); if (d) acts.appendChild(linkBtn('📞 ' + ph, 'tel:' + d)); });
       // Arrival-hub → transfer-to-hotel pattern: a DuLichCali inquiry (no payment). Flight → airport

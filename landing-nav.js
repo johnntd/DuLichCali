@@ -796,6 +796,63 @@
     wrap.innerHTML = footerHtml + html;
   }
 
+  // ── Landing-page i18n: vi/en/es switcher + inline-attribute translation ─────────
+  // RULE #2: every landing string must exist in vi/en/es. Translatable elements carry
+  // data-i18n-vi / data-i18n-es; the element's existing text is the English default
+  // (captured once into data-i18n-en). Attribute translations use
+  // data-i18n-attr="<attr>" + data-i18n-<lang>-<attr>. Persists to dlcLang (the SAME
+  // key the rest of the app uses) so the choice follows the user across pages.
+  function _lpLang() { try { return localStorage.getItem('dlcLang') || localStorage.getItem('dlc_lang') || 'en'; } catch (e) { return 'en'; } }
+  function applyLandingLang(lang) {
+    if (lang !== 'vi' && lang !== 'es') lang = 'en';
+    try { localStorage.setItem('dlcLang', lang); } catch (e) {}
+    var nodes = document.querySelectorAll('[data-i18n-vi],[data-i18n-es]'), i;
+    for (i = 0; i < nodes.length; i++) {
+      var el = nodes[i];
+      if (!el.hasAttribute('data-i18n-en')) el.setAttribute('data-i18n-en', el.textContent);
+      var txt = (lang === 'en') ? el.getAttribute('data-i18n-en') : el.getAttribute('data-i18n-' + lang);
+      if (txt == null || txt === '') txt = el.getAttribute('data-i18n-en');
+      if (txt != null) el.textContent = txt;
+    }
+    var aNodes = document.querySelectorAll('[data-i18n-attr]');
+    for (i = 0; i < aNodes.length; i++) {
+      var ae = aNodes[i], attr = ae.getAttribute('data-i18n-attr');
+      if (!attr) continue;
+      if (!ae.hasAttribute('data-i18n-en-' + attr)) ae.setAttribute('data-i18n-en-' + attr, ae.getAttribute(attr) || '');
+      var av = (lang === 'en') ? ae.getAttribute('data-i18n-en-' + attr) : ae.getAttribute('data-i18n-' + lang + '-' + attr);
+      if (av == null || av === '') av = ae.getAttribute('data-i18n-en-' + attr);
+      if (av != null) ae.setAttribute(attr, av);
+    }
+    document.documentElement.lang = lang;
+    var lbl = document.getElementById('lpLangLabel'); if (lbl) lbl.textContent = lang.toUpperCase();
+    var opts = document.querySelectorAll('#lpLangPicker .lang-opt');
+    for (i = 0; i < opts.length; i++) opts[i].classList.toggle('lang-opt--active', opts[i].getAttribute('data-lang') === lang);
+  }
+  global.setLandingLang = function (lang) { applyLandingLang(lang); var p = document.getElementById('lpLangPicker'); if (p) p.classList.remove('lang-picker--open'); };
+  // Globe switcher injected into the app-bar (reuses the homepage .lang-picker CSS from style.css;
+  // overridden to sit inline at the right of the bar, beside the Call button, so it doesn't collide
+  // with the fixed top-right positioning the homepage uses).
+  function injectLangPicker() {
+    if (document.getElementById('lpLangPicker')) return;
+    if (!document.querySelector('[data-i18n-vi]')) return; // no translatable copy → no dead globe
+    var bar = document.querySelector('.app-bar'); if (!bar) return;
+    var cur = _lpLang();
+    var p = document.createElement('div');
+    p.id = 'lpLangPicker'; p.className = 'lang-picker';
+    p.setAttribute('style', 'position:relative;top:auto;right:auto;left:auto;z-index:auto;margin-left:auto;align-self:center;');
+    p.innerHTML =
+      '<button class="lang-globe-btn" type="button" aria-label="Select language" onclick="var e=document.getElementById(\'lpLangPicker\');e&&e.classList.toggle(\'lang-picker--open\')">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>' +
+      '<span id="lpLangLabel" class="lang-globe-label">' + cur.toUpperCase() + '</span></button>' +
+      '<div class="lang-dropdown">' +
+      '<button class="lang-opt" type="button" data-lang="en" onclick="setLandingLang(\'en\')">EN</button>' +
+      '<button class="lang-opt" type="button" data-lang="vi" onclick="setLandingLang(\'vi\')">VI</button>' +
+      '<button class="lang-opt" type="button" data-lang="es" onclick="setLandingLang(\'es\')">ES</button>' +
+      '</div>';
+    var callBtn = bar.querySelector('.app-bar__call');
+    if (callBtn) bar.insertBefore(p, callBtn); else bar.appendChild(p);
+  }
+
   // ── Public API ────────────────────────────────────────────────────────────────
   global.LandingNav = {
     _cfg: null,
@@ -804,6 +861,7 @@
       global.LandingNav._cfg = cfg;
       document.body.style.paddingBottom = 'calc(64px + env(safe-area-inset-bottom,0px))';
       injectNav(cfg);
+      injectLangPicker(); applyLandingLang(_lpLang()); // RULE #2: vi/en/es switcher on every landing
 
       // Patch call buttons with region-specific host phone (rides/tours only)
       if (cfg.category === 'rides' || cfg.category === 'tour') {

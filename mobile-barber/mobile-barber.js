@@ -48,6 +48,9 @@
       heroShowcaseHotelTitle: 'Hotel-ready grooming',
       heroShowcaseHotelCopy:  'Business cut and beard detail before meetings or events.',
       heroShowcaseHotelCta:   'Book business cut',
+      heroShowcaseFilmTitle:  'DuLichCali21 — the 60-second film',
+      heroShowcaseFilmCopy:   'Mobile barber, airport rides, and California tours. One trusted name.',
+      heroShowcaseFilmCta:    'Watch on YouTube',
       servicesKicker: 'Services',
       servicesTitle: 'Choose a mobile barber service',
       vendorsKicker: 'Coverage',
@@ -295,6 +298,9 @@
       heroShowcaseHotelTitle: 'Chỉnh chu trước buổi họp',
       heroShowcaseHotelCopy:  'Cắt tóc + tỉa râu trước cuộc họp hoặc sự kiện quan trọng.',
       heroShowcaseHotelCta:   'Đặt kiểu công sở',
+      heroShowcaseFilmTitle:  'DuLichCali21 — phim ngắn 60 giây',
+      heroShowcaseFilmCopy:   'Thợ cắt tóc tận nơi, đưa đón sân bay và tour California. Một cái tên đáng tin cậy.',
+      heroShowcaseFilmCta:    'Xem trên YouTube',
       servicesKicker: 'Dịch vụ',
       servicesTitle: 'Chọn dịch vụ cắt tóc tại nhà',
       vendorsKicker: 'Khu vực',
@@ -542,6 +548,9 @@
       heroShowcaseHotelTitle: 'Listo para una reunión',
       heroShowcaseHotelCopy:  'Corte de negocios y detalle de barba antes del evento.',
       heroShowcaseHotelCta:   'Reservar corte ejecutivo',
+      heroShowcaseFilmTitle:  'DuLichCali21 — el cortometraje de 60 segundos',
+      heroShowcaseFilmCopy:   'Barbero a domicilio, traslados al aeropuerto y tours por California. Un solo nombre de confianza.',
+      heroShowcaseFilmCta:    'Ver en YouTube',
       servicesKicker: 'Servicios',
       servicesTitle: 'Elija un servicio de barbero móvil',
       vendorsKicker: 'Cobertura',
@@ -2122,6 +2131,18 @@
       badgeIcon: 'check',
       poster: DEFAULT_HERO_POSTER,
       action: function() { openAssistantPanel('general'); }
+    });
+
+    // DuLichCali 60s promo film — muted local preview loops in the hero;
+    // the CTA opens the full film on the DuLichCali YouTube channel.
+    slides.push({
+      type: 'clip', key: 'heroShowcasePromoFilm',
+      title: t('heroShowcaseFilmTitle') || 'DuLichCali21 — the 60-second film',
+      copy:  t('heroShowcaseFilmCopy')  || 'Mobile barber, airport rides, and California tours. One trusted name.',
+      cta:   t('heroShowcaseFilmCta')   || 'Watch on YouTube',
+      video: '/assets/mobile-barber/clips/dulichcali-promo-preview.mp4',
+      poster:'/assets/mobile-barber/clips/dulichcali-promo-preview.jpg',
+      action: function() { window.open('https://youtu.be/o_KZ2IW1UiY', '_blank', 'noopener'); }
     });
 
     // 3 hardcoded mobile-barber promo clips.

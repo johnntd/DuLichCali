@@ -46,5 +46,19 @@ ok('verify marker carries label + url', (function () { var v = P.verifyOrLink(nu
 ok('estLabel adds "(est.)"', P.estLabel('2h 30m') === '2h 30m (est.)');
 ok('estLabel empty → empty', P.estLabel('') === '');
 
+// ── estimateEvLegs — per-leg planner ──
+ok('no legs → ok:false', P.estimateEvLegs({ legs: [] }).ok === false);
+var elNoRange = P.estimateEvLegs({ legs: [{ from: 'A', to: 'B', miles: 340 }] });
+ok('legs but no range → rangeKnown:false', elNoRange.ok === true && elNoRange.rangeKnown === false);
+var route = P.estimateEvLegs({ legs: [{ from: 'San Jose', to: 'OC', miles: 340 }, { from: 'OC', to: 'San Diego', miles: 90 }], rangeMiles: 300, startPct: 90 });
+ok('per-leg: long first leg needs 1 charge', route.legs[0].stops === 1);
+ok('per-leg: first-leg arrival ≈ 42% (80 − 115/300)', route.legs[0].arrivalBattery >= 40 && route.legs[0].arrivalBattery <= 44);
+ok('per-leg: first-leg charge time is a positive estimate', route.legs[0].chargeMin > 10 && route.legs[0].chargeMin < 60);
+ok('per-leg: battery carries over to leg 2 start', route.legs[1].startBattery === route.legs[0].arrivalBattery);
+ok('per-leg: total stops counted', route.totalStops >= 1 && route.rangeKnown === true);
+var shortLeg = P.estimateEvLegs({ legs: [{ from: 'A', to: 'B', miles: 100 }], rangeMiles: 300, startPct: 90 });
+ok('short leg → 0 stops, arrival ≈ 57%', shortLeg.legs[0].stops === 0 && shortLeg.legs[0].arrivalBattery >= 55 && shortLeg.legs[0].arrivalBattery <= 58);
+ok('estimateEvLegs echoes assumptions', route.assumptions.rangeMiles === 300 && route.assumptions.startPct === 90);
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

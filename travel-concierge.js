@@ -259,6 +259,10 @@
       pkgTipTeens: 'Mix in photo spots and active experiences teens enjoy.', pkgTipSeniors: 'Favor low-walking options and easy parking; build in rest time.',
       pkgPrint: 'Print / Save PDF', pkgEditItin: 'Edit in Itinerary', pkgNoItin: 'Finalize your itinerary first to generate the guide.',
       pkgCall: 'Call', pkgClosedStatus: 'Temporarily closed — verify',
+      pkgEvTotalStops: '~{n} charging stop(s) across the trip', pkgEvModel: 'Vehicle', pkgEvModelCustom: 'Custom / other EV',
+      pkgEvStart: 'Start battery %', pkgEvChargeTo: 'Charge to', pkgEvCharge80: 'Charge to 80% (fastest)', pkgEvCharge90: 'Charge to 90%', pkgEvCharge100: 'Charge to 100%',
+      pkgEvUpdate: 'Update EV plan', pkgEvLegStops: '{n} charge stop(s)', pkgEvLegNoStop: 'No charge stop needed', pkgEvLegArrive: 'arrive ~{p}%',
+      pkgEvMin: 'min', pkgEvLow: 'Tight on range — consider charging earlier or to a higher %.', pkgEvNearbyPlay: 'Playground',
       pkgHonestyNote: 'This guide reuses your trip data. Photos are real (Google/Wikipedia) or labeled; prices, ratings, hours and battery are estimates or “verify before going” — never fabricated.',
       tab_food: 'Food', foodPicksTitle: 'Food picks', foodSub: 'AI-researched restaurants for your group at each stop — matched to your cuisines.', findFood: 'Find food picks (AI)', researchingFood: 'Finding the best restaurants for your group…', noFoodYet: 'Tap “Find food picks” for AI restaurant recommendations.', searchFoodBtn: 'Search', yelpBtn: 'Yelp', dishesLabel: 'Must-try', reservationLabel: 'Reservations',
       imgRepresentative: 'Representative image only', imgPending: 'Photo pending verification', viewPhotos: 'Photos', googleReviews: 'Google reviews', yelpReviews: 'Yelp reviews', menuBtn: 'Menu', mustTryLabel: 'Must-try',
@@ -598,6 +602,10 @@
       pkgTipTeens: 'Xen kẽ các điểm chụp ảnh và hoạt động năng động cho thanh thiếu niên.', pkgTipSeniors: 'Ưu tiên ít đi bộ và bãi đậu xe dễ dàng; sắp xếp thời gian nghỉ.',
       pkgPrint: 'In / Lưu PDF', pkgEditItin: 'Sửa trong Lịch trình', pkgNoItin: 'Hoàn tất lịch trình trước để tạo cẩm nang.',
       pkgCall: 'Gọi', pkgClosedStatus: 'Tạm đóng cửa — kiểm tra',
+      pkgEvTotalStops: 'Gợi ý ~{n} điểm sạc cho cả chuyến', pkgEvModel: 'Xe', pkgEvModelCustom: 'Tùy chỉnh / xe điện khác',
+      pkgEvStart: 'Pin khởi đầu %', pkgEvChargeTo: 'Sạc đến', pkgEvCharge80: 'Sạc đến 80% (nhanh nhất)', pkgEvCharge90: 'Sạc đến 90%', pkgEvCharge100: 'Sạc đến 100%',
+      pkgEvUpdate: 'Cập nhật kế hoạch sạc', pkgEvLegStops: '{n} lần sạc', pkgEvLegNoStop: 'Không cần dừng sạc', pkgEvLegArrive: 'đến nơi ~{p}%',
+      pkgEvMin: 'phút', pkgEvLow: 'Pin hơi sát — cân nhắc sạc sớm hơn hoặc sạc nhiều hơn.', pkgEvNearbyPlay: 'Khu vui chơi',
       pkgHonestyNote: 'Cẩm nang này dùng dữ liệu chuyến đi của bạn. Ảnh là thật (Google/Wikipedia) hoặc có ghi chú; giá, đánh giá, giờ mở cửa và pin là ước tính hoặc “kiểm tra trước khi đi” — không bao giờ bịa.',
       tab_food: 'Ẩm thực', foodPicksTitle: 'Gợi ý ẩm thực', foodSub: 'AI nghiên cứu nhà hàng cho cả nhóm tại từng điểm — hợp khẩu vị của bạn.', findFood: 'Tìm gợi ý ẩm thực (AI)', researchingFood: 'Đang tìm nhà hàng tốt nhất cho nhóm…', noFoodYet: 'Nhấn “Tìm gợi ý ẩm thực” để AI gợi ý nhà hàng.', searchFoodBtn: 'Tìm', yelpBtn: 'Yelp', dishesLabel: 'Nên thử', reservationLabel: 'Đặt chỗ',
       imgRepresentative: 'Chỉ là ảnh minh họa', imgPending: 'Ảnh chờ xác minh', viewPhotos: 'Ảnh', googleReviews: 'Đánh giá Google', yelpReviews: 'Đánh giá Yelp', menuBtn: 'Thực đơn', mustTryLabel: 'Nên thử',
@@ -937,6 +945,10 @@
       pkgTipTeens: 'Combina puntos fotográficos y experiencias activas para adolescentes.', pkgTipSeniors: 'Prioriza poca caminata y estacionamiento fácil; agrega tiempo de descanso.',
       pkgPrint: 'Imprimir / Guardar PDF', pkgEditItin: 'Editar en Itinerario', pkgNoItin: 'Finaliza tu itinerario primero para generar la guía.',
       pkgCall: 'Llamar', pkgClosedStatus: 'Cerrado temporalmente — verifica',
+      pkgEvTotalStops: '~{n} parada(s) de carga en el viaje', pkgEvModel: 'Vehículo', pkgEvModelCustom: 'Personalizado / otro EV',
+      pkgEvStart: 'Batería inicial %', pkgEvChargeTo: 'Cargar a', pkgEvCharge80: 'Cargar a 80% (más rápido)', pkgEvCharge90: 'Cargar a 90%', pkgEvCharge100: 'Cargar a 100%',
+      pkgEvUpdate: 'Actualizar plan EV', pkgEvLegStops: '{n} parada(s) de carga', pkgEvLegNoStop: 'Sin parada de carga', pkgEvLegArrive: 'llegas ~{p}%',
+      pkgEvMin: 'min', pkgEvLow: 'Autonomía justa — considera cargar antes o a un % más alto.', pkgEvNearbyPlay: 'Parque infantil',
       pkgHonestyNote: 'Esta guía reutiliza los datos de tu viaje. Las fotos son reales (Google/Wikipedia) o etiquetadas; precios, calificaciones, horarios y batería son estimaciones o “verifica antes de ir” — nunca inventados.',
       tab_food: 'Comida', foodPicksTitle: 'Recomendaciones de comida', foodSub: 'Restaurantes investigados por IA para tu grupo en cada parada, según tus cocinas.', findFood: 'Buscar comida (IA)', researchingFood: 'Buscando los mejores restaurantes para tu grupo…', noFoodYet: 'Toca “Buscar comida” para recomendaciones de restaurantes por IA.', searchFoodBtn: 'Buscar', yelpBtn: 'Yelp', dishesLabel: 'Para probar', reservationLabel: 'Reservas',
       imgRepresentative: 'Solo imagen representativa', imgPending: 'Foto pendiente de verificar', viewPhotos: 'Fotos', googleReviews: 'Reseñas de Google', yelpReviews: 'Reseñas de Yelp', menuBtn: 'Menú', mustTryLabel: 'Para probar',
@@ -5382,33 +5394,59 @@
     if (!stops && day.isTravelDay) box.appendChild(el('p', 'tc-pkg__meta', '🚗 ' + (city ? (t('pkgTravelTo') + ' ' + city) : t('travelDay'))));
     return box;
   }
-  // Honest EV trip helper (Phase 1): estimates ONLY from verified distance + USER-entered range.
-  function pkgEvHelper(tr, plan) {
-    var dm = pkgTotalDriveMiles(plan, tr); if (!dm.miles) return null;
-    var box = el('div', 'tc-pkg__ev');
-    box.appendChild(el('strong', 'tc-pkg__h', '⚡ ' + t('pkgEvTitle')));
-    box.appendChild(el('p', 'tc-pkg__meta', '🚗 ' + t('pkgTotalDrive') + ': ~' + dm.miles + ' mi' + (dm.source === 'google_maps' ? '' : ' (' + t('approxLabel') + ')')));
-    var range = parseInt(tr.evRangeMiles, 10) || 0;
-    if (!state.readonly && !tr._demo) {
-      var row = el('div', 'tc-pkg__evrow');
-      var inp = input(range ? String(range) : '', t('pkgEvRangePh')); inp.type = 'number'; inp.setAttribute('inputmode', 'numeric'); inp.className = 'tc-input tc-pkg__evinput';
-      row.appendChild(field(t('pkgEvRange'), inp));
-      var go = el('button', 'tc-pbtn tc-pbtn--accent', t('pkgEvEstimate')); go.type = 'button';
-      go.addEventListener('click', function () { var v = parseInt(inp.value, 10) || 0; tr.evRangeMiles = v; saveTrip(tr); render(); });
-      row.appendChild(go);
-      box.appendChild(row);
-    }
-    var plan2 = TCPackage.estimateEvPlan({ miles: dm.miles, rangeMiles: range });
-    if (plan2.rangeKnown) {
-      box.appendChild(el('p', 'tc-pkg__meta', '🔋 ' + t('pkgEvStops').replace('{n}', String(plan2.stops)) + ' (' + t('approxLabel') + ', ' + t('pkgEvAssume').replace('{r}', String(range)) + ')'));
-      if (plan2.stops === 0 && plan2.arrivalPct != null) box.appendChild(el('p', 'tc-pkg__meta', '✅ ' + t('pkgEvNoStop').replace('{p}', String(plan2.arrivalPct))));
-    } else {
-      box.appendChild(el('p', 'tc-pkg__meta', 'ℹ️ ' + t('pkgEvNeedRange')));
+  // Honest EV / Tesla trip helper (Phase B): PER-LEG planning from the user's entered vehicle
+  // range + start %/charge-to preference. All battery/charge numbers are labeled estimates; never
+  // a live battery read. Per-leg Supercharger + while-charging map links. Real distances only.
+  var TESLA_PRESETS = { model3: 272, model3lr: 333, modely: 310, models: 405, modelx: 335, cybertruck: 320 };
+  function pkgEvSettings(tr) {
+    var ev = tr.ev || {}, box = el('div', 'tc-pkg__evset');
+    var modelSel = doc.createElement('select'); modelSel.className = 'tc-input tc-pkg__evinput';
+    [['', t('pkgEvModelCustom')], ['model3', 'Tesla Model 3 (~272 mi)'], ['model3lr', 'Model 3 LR (~333 mi)'], ['modely', 'Model Y (~310 mi)'], ['models', 'Model S (~405 mi)'], ['modelx', 'Model X (~335 mi)'], ['cybertruck', 'Cybertruck (~320 mi)']].forEach(function (o) { var op = doc.createElement('option'); op.value = o[0]; op.textContent = o[1]; if (ev.model === o[0]) op.selected = true; modelSel.appendChild(op); });
+    box.appendChild(field(t('pkgEvModel'), modelSel));
+    var rangeInp = input(ev.rangeMiles ? String(ev.rangeMiles) : (tr.evRangeMiles ? String(tr.evRangeMiles) : ''), t('pkgEvRangePh')); rangeInp.type = 'number'; rangeInp.className = 'tc-input tc-pkg__evinput';
+    box.appendChild(field(t('pkgEvRange'), rangeInp));
+    modelSel.addEventListener('change', function () { if (TESLA_PRESETS[modelSel.value]) rangeInp.value = String(TESLA_PRESETS[modelSel.value]); });
+    var startInp = input(ev.startPct ? String(ev.startPct) : '90', '90'); startInp.type = 'number'; startInp.className = 'tc-input tc-pkg__evinput';
+    box.appendChild(field(t('pkgEvStart'), startInp));
+    var chSel = doc.createElement('select'); chSel.className = 'tc-input tc-pkg__evinput';
+    [['80', t('pkgEvCharge80')], ['90', t('pkgEvCharge90')], ['100', t('pkgEvCharge100')]].forEach(function (o) { var op = doc.createElement('option'); op.value = o[0]; op.textContent = o[1]; if (String(ev.chargeToPct || '80') === o[0]) op.selected = true; chSel.appendChild(op); });
+    box.appendChild(field(t('pkgEvChargeTo'), chSel));
+    var go = el('button', 'tc-pbtn tc-pbtn--accent', t('pkgEvUpdate')); go.type = 'button';
+    go.addEventListener('click', function () { tr.ev = { model: modelSel.value, rangeMiles: parseInt(rangeInp.value, 10) || 0, startPct: parseInt(startInp.value, 10) || 90, chargeToPct: parseInt(chSel.value, 10) || 80 }; saveTrip(tr); render(); });
+    box.appendChild(go);
+    return box;
+  }
+  function pkgEvLegCard(tr, lg, rangeKnown) {
+    var c = el('div', 'tc-pkg__evleg');
+    c.appendChild(el('strong', 'tc-pkg__evlegrte', '🚗 ' + String(lg.from || '').split(',')[0] + ' → ' + String(lg.to || '').split(',')[0] + ' · ~' + lg.miles + ' mi'));
+    if (rangeKnown) {
+      if (lg.stops > 0) c.appendChild(el('p', 'tc-pkg__meta', '🔋 ' + t('pkgEvLegStops').replace('{n}', String(lg.stops)) + ' · 🔌 ~' + lg.chargeMin + ' ' + t('pkgEvMin') + ' · ' + t('pkgEvLegArrive').replace('{p}', String(lg.arrivalBattery)) + ' (' + t('approxLabel') + ')'));
+      else c.appendChild(el('p', 'tc-pkg__meta', '✅ ' + t('pkgEvLegNoStop') + ' · ' + t('pkgEvLegArrive').replace('{p}', String(lg.arrivalBattery)) + ' (' + t('approxLabel') + ')'));
+      if (lg.lowArrival) c.appendChild(el('p', 'tc-pkg__meta tc-pkg__warn', '⚠ ' + t('pkgEvLow')));
     }
     var acts = el('div', 'tc-pkg__acts');
-    acts.appendChild(linkBtn('🔌 ' + t('pkgFindSuperchargers'), gsearch('Tesla Supercharger along ' + ((planDestinations(plan)[0] || {}).city || tr.departureCity || '') + ' to ' + (tr.destination || '')), 'tc-pbtn--accent'));
-    acts.appendChild(linkBtn('☕ ' + t('pkgWhileCharging'), gsearch('coffee and food near Tesla Supercharger ' + (tr.destination || ''))));
-    box.appendChild(acts);
+    acts.appendChild(linkBtn('🔌 ' + t('pkgFindSuperchargers'), MapLinkProvider.google('Tesla Supercharger', lg.to || lg.from), 'tc-pbtn--accent'));
+    if (!rangeKnown || lg.stops > 0) {
+      acts.appendChild(linkBtn('☕ ' + t('pkgNearbyCoffee'), MapLinkProvider.google('coffee', lg.to || lg.from)));
+      acts.appendChild(linkBtn('🚻 ' + t('pkgNearbyRestroom'), MapLinkProvider.google('restroom', lg.to || lg.from)));
+      acts.appendChild(linkBtn('🛝 ' + t('pkgEvNearbyPlay'), MapLinkProvider.google('playground', lg.to || lg.from)));
+    }
+    c.appendChild(acts);
+    return c;
+  }
+  function pkgEvHelper(tr, plan) {
+    var legs = (tr.transport || []).map(function (lg) { var m = parseInt(String(lg.driveDistanceText || '').replace(/[^\d]/g, ''), 10); return m ? { from: lg.fromCity, to: lg.toCity, miles: m } : null; }).filter(Boolean);
+    if (!legs.length) return null; // no inter-city drive legs → no EV plan to show
+    var ev = tr.ev || {}, range = parseInt(ev.rangeMiles, 10) || parseInt(tr.evRangeMiles, 10) || 0;
+    var box = el('div', 'tc-pkg__ev');
+    box.appendChild(el('strong', 'tc-pkg__h', '⚡ ' + t('pkgEvTitle')));
+    var totMiles = legs.reduce(function (s, l) { return s + l.miles; }, 0);
+    box.appendChild(el('p', 'tc-pkg__meta', '🚗 ' + t('pkgTotalDrive') + ': ~' + totMiles + ' mi (' + t('approxLabel') + ')'));
+    if (!state.readonly && !tr._demo) box.appendChild(pkgEvSettings(tr));
+    var res = TCPackage.estimateEvLegs({ legs: legs, rangeMiles: range, startPct: parseInt(ev.startPct, 10) || 90, chargeToPct: parseInt(ev.chargeToPct, 10) || 80 });
+    if (!res.rangeKnown) box.appendChild(el('p', 'tc-pkg__meta', 'ℹ️ ' + t('pkgEvNeedRange')));
+    else box.appendChild(el('p', 'tc-pkg__meta', '🔋 ' + t('pkgEvTotalStops').replace('{n}', String(res.totalStops)) + ' (' + t('approxLabel') + ')'));
+    (res.legs || []).forEach(function (lg) { box.appendChild(pkgEvLegCard(tr, lg, res.rangeKnown)); });
     box.appendChild(el('p', 'tc-unverified', t('pkgEvDisclaimer')));
     return box;
   }

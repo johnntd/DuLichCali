@@ -34,6 +34,45 @@
     };
   }
 
+  // ── Per-leg EV planner (Phase B) — honest: walks each leg tracking battery from the user's
+  //    entered range + start %, flags charge stops, and estimates charge TIME from miles-to-add
+  //    ÷ a typical Supercharger rate. Everything labeled an estimate; never a live battery read.
+  //    legs: [{ from, to, miles }]. Returns rangeKnown:false when no range (caller links out). ──
+  function estimateEvLegs(o) {
+    o = o || {};
+    var legs = Array.isArray(o.legs) ? o.legs.filter(function (l) { return l && Number(l.miles) > 0; }) : [];
+    if (!legs.length) return { ok: false, reason: 'no_legs' };
+    var range = Number(o.rangeMiles) || 0;
+    var startPct = (o.startPct != null) ? Number(o.startPct) : 90;
+    var chargeToPct = (o.chargeToPct != null) ? Number(o.chargeToPct) : 80;
+    var reservePct = (o.reservePct != null) ? Number(o.reservePct) : 15;
+    var milesPerMin = (o.milesPerMin != null && o.milesPerMin > 0) ? Number(o.milesPerMin) : 6; // ~Supercharger avg over a session
+    if (!(range > 0)) return { ok: true, rangeKnown: false, totalStops: null, legs: legs.map(function (l) { return { from: l.from, to: l.to, miles: Math.round(l.miles) }; }) };
+    var battery = Math.min(100, Math.max(0, startPct)), total = 0, out = [];
+    legs.forEach(function (l) {
+      var miles = Number(l.miles), startB = Math.round(battery);
+      var usableMiles = Math.max(0, (battery - reservePct) / 100 * range);
+      var stops = 0, chargeMin = 0, arrive;
+      if (miles <= usableMiles) {
+        arrive = battery - (miles / range * 100);
+      } else {
+        var perCharge = Math.max(1, (chargeToPct - reservePct) / 100 * range);
+        var remaining = miles - usableMiles;
+        stops = Math.ceil(remaining / perCharge);
+        var leftover = remaining - (stops - 1) * perCharge;     // miles driven after the LAST charge
+        arrive = chargeToPct - (leftover / range * 100);
+        // charge time ≈ miles added across the session(s) ÷ rate (honest estimate, labeled).
+        var milesAdded = stops * (chargeToPct - reservePct) / 100 * range;
+        chargeMin = Math.round(milesAdded / milesPerMin);
+      }
+      arrive = Math.max(0, Math.round(arrive));
+      battery = arrive;
+      total += stops;
+      out.push({ from: l.from, to: l.to, miles: Math.round(miles), startBattery: startB, arrivalBattery: arrive, stops: stops, chargeMin: chargeMin, lowArrival: arrive <= reservePct });
+    });
+    return { ok: true, rangeKnown: true, totalStops: total, legs: out, assumptions: { rangeMiles: range, startPct: startPct, chargeToPct: chargeToPct, reservePct: reservePct, milesPerMin: milesPerMin } };
+  }
+
   // ── Real sunrise / sunset / golden hour (Almanac sunrise equation) ──────────
   // utcOffset = local offset in hours (California PDT = -7). Returns null when lat/lng missing.
   function sunTimes(dateIso, lat, lng, utcOffset) {
@@ -101,7 +140,7 @@
   function estLabel(text) { var s = (text == null) ? '' : String(text).trim(); return s ? (s + ' (est.)') : ''; }
 
   root.TCPackage = {
-    estimateEvPlan: estimateEvPlan,
+    estimateEvPlan: estimateEvPlan, estimateEvLegs: estimateEvLegs,
     sunTimes: sunTimes, goldenHour: goldenHour, fmtMin: fmtMin,
     verifyOrLink: verifyOrLink, estLabel: estLabel,
   };

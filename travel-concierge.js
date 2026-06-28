@@ -274,6 +274,24 @@
       pkgAddFamily: 'Add family members', altActivities: 'Add alternative activities',
       addFamilyTitle: 'Add family members', addFamilySub: 'Tell us who is going — adults, kids’ ages, food & stay preferences. This does not change your itinerary.', addFamilyDone: 'Done', familyAdded: 'Family details saved',
       altSwapWith: 'Swap with this', altAddToDay: 'Add to this day', altSaveForLater: 'Save for later', altClose: 'Close', alternativeSaved: 'Saved to your ideas',
+      altPanelHelp: 'At least 2 alternatives for this stop — compare, vote, swap, or save', reviews: 'reviews', estimateLabel: 'estimate', aiSuggestionLabel: 'AI suggestion — verify', altFromStay: 'Directions from stay', altMoreInfo: 'More info',
+      voteTitle: 'Family vote', votePickFamily: 'First, pick which family you are:', voteCurrent: 'in the plan now', voteForThis: 'Vote for this', voteYours: 'Your vote', voteShort: 'Vote', voteStart: 'Start a family vote', voteForThisAlt: 'Vote',
+      voteProgress: '{n} of {m} families voted', voteWaitingAll: 'Waiting for {m} families to vote', voteAllVoted: 'All families voted', voteTie: 'Tie vote — original plan kept', voteMajoritySel: 'Majority selected: {win}', voteKept: 'Family vote kept the original', voteDone: 'Family vote complete',
+      voteChange: 'Change my vote', voteReopen: 'Re-open vote', voteClose: 'Close',
+      voteAuditManual: 'Family vote complete — a manual change ({manual}) is already in place; re-open to apply the vote.', voteFamilyAdded: 'A family was added after this vote — re-open to include them.', memberNamePh: 'Member name',
+      familyDefaultName: "Organizer's Family", familyFallbackName: 'Group {n}', familyManage: 'Manage families', familyMgmtTitle: 'Family Management', familyMgmtSub: 'Name each family, give it a color and icon, edit its profile, and split / merge / invite — changes save automatically.', backToTrip: 'Back to trip',
+      familyColor: 'Color', familyIcon: 'Icon', familyInitials: 'Initials', familyProfile: 'Family profile', familyPrimaryContact: 'Primary contact', familyPhone: 'Phone', familyEmail: 'Email', familyTeens: 'Teenagers', familyChildren: 'Children', familyToddlers: 'Toddlers', familyInfants: 'Infants',
+      familySpecialNeeds: 'Special needs', familyLanguages: 'Languages', familyLanguagesPh: 'e.g. Vietnamese, English', familyFoodAllergies: 'Food allergies', familyFoodPrefs2: 'Food preferences', familyTransportation: 'Transportation', familyHotelPref: 'Hotel preference', familyHotelRoom: 'Hotel room', familyHotelRoomPh: 'e.g. Room 214 (2 queen)', familyVehicle: 'Vehicle', familyVehiclePh: 'e.g. Van — 7 seats', familyNotes: 'Notes', childrenAgesPh: 'e.g. 3, 14',
+      familyCopySuffix: '(copy)', familySplitSuffix: '(split)', familyDuplicated: 'Family duplicated', familySplit: 'Family split — adjust the counts', familyMerged: 'Families merged', familyDeleted: 'Family removed', familyMinOne: 'A trip needs at least one family', familyMergeInto: 'Merge into', familyMergePick: 'Merge into…',
+      familyNamePromptTitle: 'Name your family', familyNamePromptSub: 'What would you like to call your family? You can rename or add more families anytime.', familyNamePromptPh: 'e.g. The Nguyen Family',
+      familyRename: 'Rename', familyEditProfile: 'Edit profile', familyVoteHistory: 'Vote history', familyTasks: 'Tasks', familyPayments: 'Payments', familyTransport: 'Transportation', familyNoVotes: 'No votes from this family yet.', familyDuplicate: 'Duplicate', familyDelete: 'Delete', familyInvite: 'Invite',
+      voteWaitingFor: 'Waiting for', taskAssignedTo: 'Assigned to', costShareEst: 'Estimated', costRemaining: 'Remaining',
+      voteAuditChanged: 'Changed by family vote: {win} selected over {orig}, {a}–{b}.', voteAuditTie: 'Tie vote — original plan kept.', voteAuditKept: 'Family vote kept {orig} ({a}–{b}).',
+      vt_fd: '≈ full day', vt_hd: '≈ half day', vt_h2: '≈ 2–3 hrs', vt_h1: '≈ 1–2 hrs',
+      fit_good: 'great fit', fit_ok: 'okay', fit_limited: 'limited', fitSuggested: 'suggested — verify',
+      pc_highly_rated: 'highly rated', pc_low_rated: 'lower rated', pc_popular: 'very popular', pc_closed_now: 'closed now',
+      factRating: 'Rating', factHours: 'Hours', factPhone: 'Phone', factCost: 'Cost', factDuration: 'Visit time', factBestTime: 'Best time', factParking: 'Parking', factFamilyFit: 'Family fit', factAccessibility: 'Accessibility', factRestrooms: 'Restrooms', factStroller: 'Stroller', factFoodNearby: 'Food nearby', factDessertNearby: 'Dessert nearby', factEvNearby: 'EV charging nearby', factSafety: 'Safety', factWeather: 'Weather / rainy day',
+      weatherIndoor: 'Indoor — good rainy-day option', weatherOutdoor: 'Mostly outdoor — check the forecast', weatherMixed: 'Mixed indoor / outdoor',
       altHintTitle: 'Optional alternatives', altHintBody: 'Tap ✨ on any stop for family-matched options. Swap, add to the day, or save for later — your original plan stays unless you change it.',
       savedIdeasTitle: 'Saved ideas', savedFrom: 'Instead of', savedAddToDay: 'Add to day', savedRemove: 'Remove',
       pkgHonestyNote: 'This guide reuses your trip data. Photos are real (Google/Wikipedia) or labeled; prices, ratings, hours and battery are estimates or “verify before going” — never fabricated.',
@@ -630,6 +648,24 @@
       pkgAddFamily: 'Thêm thành viên gia đình', altActivities: 'Thêm hoạt động thay thế',
       addFamilyTitle: 'Thêm thành viên gia đình', addFamilySub: 'Cho chúng tôi biết ai sẽ đi — người lớn, tuổi của trẻ, sở thích ăn uống & nơi ở. Việc này không thay đổi lịch trình của bạn.', addFamilyDone: 'Xong', familyAdded: 'Đã lưu thông tin gia đình',
       altSwapWith: 'Thay bằng chỗ này', altAddToDay: 'Thêm vào ngày này', altSaveForLater: 'Lưu để dùng sau', altClose: 'Đóng', alternativeSaved: 'Đã lưu vào ý tưởng của bạn',
+      altPanelHelp: 'Ít nhất 2 lựa chọn thay thế cho điểm này — so sánh, bình chọn, thay hoặc lưu', reviews: 'đánh giá', estimateLabel: 'ước tính', aiSuggestionLabel: 'Gợi ý của AI — hãy kiểm chứng', altFromStay: 'Chỉ đường từ nơi ở', altMoreInfo: 'Thêm thông tin',
+      voteTitle: 'Gia đình bình chọn', votePickFamily: 'Trước tiên, chọn bạn là gia đình nào:', voteCurrent: 'đang trong kế hoạch', voteForThis: 'Bình chọn mục này', voteYours: 'Bạn đã chọn', voteShort: 'Bình chọn', voteStart: 'Bắt đầu bình chọn', voteForThisAlt: 'Bình chọn',
+      voteProgress: '{n}/{m} gia đình đã bình chọn', voteWaitingAll: 'Đang chờ {m} gia đình bình chọn', voteAllVoted: 'Tất cả gia đình đã bình chọn', voteTie: 'Hòa phiếu — giữ kế hoạch gốc', voteMajoritySel: 'Đa số chọn: {win}', voteKept: 'Bình chọn giữ lựa chọn gốc', voteDone: 'Đã bình chọn xong',
+      voteChange: 'Đổi lựa chọn của tôi', voteReopen: 'Mở lại bình chọn', voteClose: 'Đóng',
+      voteAuditManual: 'Đã bình chọn xong — nhưng đã có thay đổi thủ công ({manual}); mở lại để áp dụng kết quả bình chọn.', voteFamilyAdded: 'Có gia đình được thêm sau khi bình chọn — mở lại để bao gồm họ.', memberNamePh: 'Tên thành viên',
+      familyDefaultName: 'Gia đình của người tổ chức', familyFallbackName: 'Nhóm {n}', familyManage: 'Quản lý gia đình', familyMgmtTitle: 'Quản Lý Gia Đình', familyMgmtSub: 'Đặt tên, chọn màu và biểu tượng cho mỗi gia đình, sửa hồ sơ, tách / gộp / mời — thay đổi tự động lưu.', backToTrip: 'Quay lại chuyến đi',
+      familyColor: 'Màu', familyIcon: 'Biểu tượng', familyInitials: 'Chữ cái đầu', familyProfile: 'Hồ sơ gia đình', familyPrimaryContact: 'Người liên hệ chính', familyPhone: 'Điện thoại', familyEmail: 'Email', familyTeens: 'Thiếu niên', familyChildren: 'Trẻ em', familyToddlers: 'Trẻ nhỏ', familyInfants: 'Em bé',
+      familySpecialNeeds: 'Nhu cầu đặc biệt', familyLanguages: 'Ngôn ngữ', familyLanguagesPh: 'vd: Tiếng Việt, Tiếng Anh', familyFoodAllergies: 'Dị ứng thực phẩm', familyFoodPrefs2: 'Sở thích ăn uống', familyTransportation: 'Phương tiện', familyHotelPref: 'Ưu tiên khách sạn', familyHotelRoom: 'Phòng khách sạn', familyHotelRoomPh: 'vd: Phòng 214 (2 giường)', familyVehicle: 'Xe', familyVehiclePh: 'vd: Xe van — 7 chỗ', familyNotes: 'Ghi chú', childrenAgesPh: 'vd: 3, 14',
+      familyCopySuffix: '(bản sao)', familySplitSuffix: '(tách)', familyDuplicated: 'Đã nhân đôi gia đình', familySplit: 'Đã tách gia đình — điều chỉnh số người', familyMerged: 'Đã gộp gia đình', familyDeleted: 'Đã xóa gia đình', familyMinOne: 'Chuyến đi cần ít nhất một gia đình', familyMergeInto: 'Gộp vào', familyMergePick: 'Gộp vào…',
+      familyNamePromptTitle: 'Đặt tên gia đình của bạn', familyNamePromptSub: 'Bạn muốn gọi gia đình mình là gì? Bạn có thể đổi tên hoặc thêm gia đình bất cứ lúc nào.', familyNamePromptPh: 'vd: Gia đình Nguyễn',
+      familyRename: 'Đổi tên', familyEditProfile: 'Sửa hồ sơ', familyVoteHistory: 'Lịch sử bình chọn', familyTasks: 'Nhiệm vụ', familyPayments: 'Thanh toán', familyTransport: 'Phương tiện', familyNoVotes: 'Gia đình này chưa bình chọn.', familyDuplicate: 'Nhân đôi', familyDelete: 'Xóa', familyInvite: 'Mời',
+      voteWaitingFor: 'Đang chờ', taskAssignedTo: 'Giao cho', costShareEst: 'Dự kiến', costRemaining: 'Còn lại',
+      voteAuditChanged: 'Thay đổi do gia đình bình chọn: chọn {win} thay cho {orig}, {a}–{b}.', voteAuditTie: 'Hòa phiếu — giữ kế hoạch gốc.', voteAuditKept: 'Bình chọn giữ {orig} ({a}–{b}).',
+      vt_fd: '≈ cả ngày', vt_hd: '≈ nửa ngày', vt_h2: '≈ 2–3 giờ', vt_h1: '≈ 1–2 giờ',
+      fit_good: 'rất phù hợp', fit_ok: 'tạm ổn', fit_limited: 'hạn chế', fitSuggested: 'gợi ý — hãy kiểm chứng',
+      pc_highly_rated: 'đánh giá cao', pc_low_rated: 'đánh giá thấp hơn', pc_popular: 'rất đông khách', pc_closed_now: 'đang đóng cửa',
+      factRating: 'Đánh giá', factHours: 'Giờ mở cửa', factPhone: 'Điện thoại', factCost: 'Chi phí', factDuration: 'Thời gian thăm', factBestTime: 'Thời điểm tốt nhất', factParking: 'Đậu xe', factFamilyFit: 'Hợp gia đình', factAccessibility: 'Tiếp cận', factRestrooms: 'Nhà vệ sinh', factStroller: 'Xe đẩy', factFoodNearby: 'Đồ ăn gần đó', factDessertNearby: 'Tráng miệng gần đó', factEvNearby: 'Trạm sạc xe điện gần đó', factSafety: 'An toàn', factWeather: 'Thời tiết / ngày mưa',
+      weatherIndoor: 'Trong nhà — hợp ngày mưa', weatherOutdoor: 'Chủ yếu ngoài trời — xem dự báo', weatherMixed: 'Cả trong nhà lẫn ngoài trời',
       altHintTitle: 'Lựa chọn thay thế (tùy chọn)', altHintBody: 'Nhấn ✨ trên bất kỳ điểm dừng nào để xem các lựa chọn phù hợp với gia đình. Thay thế, thêm vào ngày, hoặc lưu để sau — kế hoạch gốc giữ nguyên trừ khi bạn thay đổi.',
       savedIdeasTitle: 'Ý tưởng đã lưu', savedFrom: 'Thay cho', savedAddToDay: 'Thêm vào ngày', savedRemove: 'Xóa',
       pkgHonestyNote: 'Cẩm nang này dùng dữ liệu chuyến đi của bạn. Ảnh là thật (Google/Wikipedia) hoặc có ghi chú; giá, đánh giá, giờ mở cửa và pin là ước tính hoặc “kiểm tra trước khi đi” — không bao giờ bịa.',
@@ -986,6 +1022,24 @@
       pkgAddFamily: 'Agregar miembros de familia', altActivities: 'Agregar actividades alternativas',
       addFamilyTitle: 'Agregar miembros de familia', addFamilySub: 'Dinos quién va — adultos, edades de los niños, preferencias de comida y alojamiento. Esto no cambia tu itinerario.', addFamilyDone: 'Listo', familyAdded: 'Datos de familia guardados',
       altSwapWith: 'Cambiar por esta', altAddToDay: 'Agregar a este día', altSaveForLater: 'Guardar para después', altClose: 'Cerrar', alternativeSaved: 'Guardado en tus ideas',
+      altPanelHelp: 'Al menos 2 alternativas para esta parada — compara, vota, cambia o guarda', reviews: 'reseñas', estimateLabel: 'estimado', aiSuggestionLabel: 'Sugerencia de IA — verifica', altFromStay: 'Cómo llegar desde el alojamiento', altMoreInfo: 'Más info',
+      voteTitle: 'Voto familiar', votePickFamily: 'Primero, elige qué familia eres:', voteCurrent: 'en el plan ahora', voteForThis: 'Votar por esto', voteYours: 'Tu voto', voteShort: 'Votar', voteStart: 'Iniciar voto familiar', voteForThisAlt: 'Votar',
+      voteProgress: '{n} de {m} familias votaron', voteWaitingAll: 'Esperando a que voten {m} familias', voteAllVoted: 'Todas las familias votaron', voteTie: 'Empate — se mantiene el plan original', voteMajoritySel: 'Mayoría eligió: {win}', voteKept: 'El voto mantuvo el original', voteDone: 'Voto familiar completo',
+      voteChange: 'Cambiar mi voto', voteReopen: 'Reabrir voto', voteClose: 'Cerrar',
+      voteAuditManual: 'Voto familiar completo — ya hay un cambio manual ({manual}); reabre para aplicar el voto.', voteFamilyAdded: 'Se agregó una familia después de este voto — reabre para incluirla.', memberNamePh: 'Nombre del miembro',
+      familyDefaultName: 'Familia del organizador', familyFallbackName: 'Grupo {n}', familyManage: 'Gestionar familias', familyMgmtTitle: 'Gestión de familias', familyMgmtSub: 'Nombra cada familia, dale un color e ícono, edita su perfil y divide / combina / invita — los cambios se guardan solos.', backToTrip: 'Volver al viaje',
+      familyColor: 'Color', familyIcon: 'Ícono', familyInitials: 'Iniciales', familyProfile: 'Perfil de familia', familyPrimaryContact: 'Contacto principal', familyPhone: 'Teléfono', familyEmail: 'Correo', familyTeens: 'Adolescentes', familyChildren: 'Niños', familyToddlers: 'Pequeños', familyInfants: 'Bebés',
+      familySpecialNeeds: 'Necesidades especiales', familyLanguages: 'Idiomas', familyLanguagesPh: 'p. ej. Vietnamita, Inglés', familyFoodAllergies: 'Alergias alimentarias', familyFoodPrefs2: 'Preferencias de comida', familyTransportation: 'Transporte', familyHotelPref: 'Preferencia de hotel', familyHotelRoom: 'Habitación', familyHotelRoomPh: 'p. ej. Hab. 214 (2 queen)', familyVehicle: 'Vehículo', familyVehiclePh: 'p. ej. Van — 7 plazas', familyNotes: 'Notas', childrenAgesPh: 'p. ej. 3, 14',
+      familyCopySuffix: '(copia)', familySplitSuffix: '(dividida)', familyDuplicated: 'Familia duplicada', familySplit: 'Familia dividida — ajusta los conteos', familyMerged: 'Familias combinadas', familyDeleted: 'Familia eliminada', familyMinOne: 'Un viaje necesita al menos una familia', familyMergeInto: 'Combinar con', familyMergePick: 'Combinar con…',
+      familyNamePromptTitle: 'Nombra a tu familia', familyNamePromptSub: '¿Cómo quieres llamar a tu familia? Puedes renombrar o agregar familias cuando quieras.', familyNamePromptPh: 'p. ej. La familia Nguyen',
+      familyRename: 'Renombrar', familyEditProfile: 'Editar perfil', familyVoteHistory: 'Historial de votos', familyTasks: 'Tareas', familyPayments: 'Pagos', familyTransport: 'Transporte', familyNoVotes: 'Esta familia aún no ha votado.', familyDuplicate: 'Duplicar', familyDelete: 'Eliminar', familyInvite: 'Invitar',
+      voteWaitingFor: 'Esperando a', taskAssignedTo: 'Asignado a', costShareEst: 'Estimado', costRemaining: 'Restante',
+      voteAuditChanged: 'Cambiado por voto familiar: se eligió {win} sobre {orig}, {a}–{b}.', voteAuditTie: 'Empate — se mantiene el plan original.', voteAuditKept: 'El voto mantuvo {orig} ({a}–{b}).',
+      vt_fd: '≈ día completo', vt_hd: '≈ medio día', vt_h2: '≈ 2–3 h', vt_h1: '≈ 1–2 h',
+      fit_good: 'muy adecuado', fit_ok: 'aceptable', fit_limited: 'limitado', fitSuggested: 'sugerido — verifica',
+      pc_highly_rated: 'muy bien valorado', pc_low_rated: 'valoración más baja', pc_popular: 'muy popular', pc_closed_now: 'cerrado ahora',
+      factRating: 'Valoración', factHours: 'Horario', factPhone: 'Teléfono', factCost: 'Costo', factDuration: 'Tiempo de visita', factBestTime: 'Mejor hora', factParking: 'Estacionamiento', factFamilyFit: 'Apto para familias', factAccessibility: 'Accesibilidad', factRestrooms: 'Baños', factStroller: 'Carriola', factFoodNearby: 'Comida cerca', factDessertNearby: 'Postre cerca', factEvNearby: 'Carga EV cerca', factSafety: 'Seguridad', factWeather: 'Clima / día lluvioso',
+      weatherIndoor: 'Interior — buena opción para días de lluvia', weatherOutdoor: 'Mayormente al aire libre — revisa el clima', weatherMixed: 'Interior y exterior',
       altHintTitle: 'Alternativas opcionales', altHintBody: 'Toca ✨ en cualquier parada para ver opciones según tu familia. Cambia, agrega al día o guarda para después — tu plan original se mantiene a menos que lo cambies.',
       savedIdeasTitle: 'Ideas guardadas', savedFrom: 'En lugar de', savedAddToDay: 'Agregar al día', savedRemove: 'Quitar',
       pkgHonestyNote: 'Esta guía reutiliza los datos de tu viaje. Las fotos son reales (Google/Wikipedia) o etiquetadas; precios, calificaciones, horarios y batería son estimaciones o “verifica antes de ir” — nunca inventados.',
@@ -1969,7 +2023,7 @@
     };
     return tr.costAssumptions;
   }
-  function famTravelers(f) { return (f.adults || 0) + (f.seniors || 0) + String(f.childrenAges || '').split(/[,\s]+/).filter(function (x) { return /\d/.test(x); }).length; }
+  function famTravelers(f) { return famPeople(f); }
   function tpCostMid(s) { var m = String(s || '').replace(/,/g, '').match(/\d+/g); if (!m) return 0; if (m.length >= 2) return (parseInt(m[0], 10) + parseInt(m[1], 10)) / 2; return parseInt(m[0], 10); }
   function computeTripCosts(tr) {
     var a = initCostAssumptions(tr);
@@ -2456,7 +2510,7 @@
 
   // ── Persistence (localStorage + Firestore once logged in) ──────────────
   function stripRuntime(trip) {
-    var c = {}; for (var k in trip) { if (k === '_demo' || k === '_fallback') continue; c[k] = trip[k]; }
+    var c = {}; for (var k in trip) { if (k === '_demo' || k === '_fallback' || k === '_namePrompted') continue; c[k] = trip[k]; }
     // Drop transient underscore-prefixed booking fields (_prevStatus checkbox-undo hint, _dep
     // dependency-graph annotation) — kept in memory for the session but NEVER persisted. Map to
     // shallow copies so the live booking objects keep their transient fields.
@@ -2506,6 +2560,7 @@
     else if (state.screen === 'families') host.appendChild(renderFamilies());
     else if (state.screen === 'prefs') host.appendChild(renderPrefs());
     else if (state.screen === 'plan') host.appendChild(renderPlan());
+    else if (state.screen === 'familyManagement') host.appendChild(renderFamilyManagement());
     else if (state.screen === 'sharejoin') host.appendChild(renderShareJoin());
     applyI18n(host);
     syncHeaderAcct();
@@ -2738,6 +2793,7 @@
     card.appendChild(head);
     var list = el('div', 'tc-sheet__list');
     var mt = el('button', 'tc-pbtn', '🗂 ' + t('dashTitle')); mt.type = 'button'; mt.addEventListener('click', function () { closeModal(); goDashboard(); }); list.appendChild(mt);
+    if (canEditPlan()) { var fm = el('button', 'tc-pbtn', '👨‍👩‍👧 ' + t('familyManage')); fm.type = 'button'; fm.addEventListener('click', function () { closeModal(); state.screen = 'familyManagement'; render(); }); list.appendChild(fm); }
     if (!tr._demo && isOwnerOfTrip()) {
       var ed = el('button', 'tc-pbtn', '✏️ ' + t('editTripBtn')); ed.type = 'button'; ed.addEventListener('click', function () { closeModal(); state.screen = 'create'; render(); }); list.appendChild(ed);
       var sh = el('button', 'tc-pbtn', '🔗 ' + t('shareTrip')); sh.type = 'button'; sh.addEventListener('click', function () { closeModal(); openShareModal(); }); list.appendChild(sh);
@@ -3182,7 +3238,7 @@
     state.trip = {
       id: uid('trip'), groupName: '', destination: '', destinations: [newDestination(0)], dateRange: '', departureCity: '',
       tripStyle: 'balanced', budget: 'moderate', lastDayFull: false, finalDayMode: 'ai_decide', families: [newFamily()], preferences: defaultPrefs(),
-      plan: null, votes: {}, notes: [], booking: {}, transportStatus: {}, hotelStatus: {}, suggestions: [], bookings: [], placeOverrides: {}, addedPlaces: [], dayTiming: {}, pinnedActivities: [],
+      plan: null, votes: {}, decisions: {}, notes: [], booking: {}, transportStatus: {}, hotelStatus: {}, suggestions: [], bookings: [], placeOverrides: {}, addedPlaces: [], dayTiming: {}, pinnedActivities: [],
       memberFamily: {}, liveHighlights: [], liveSourceNote: '', ownerUid: '', createdAt: Date.now(),
       returnTransportPreference: 'any', returnProvider: '', // final leg home (Journey Builder)
     };
@@ -3224,9 +3280,19 @@
       lockedByUser: false, needsResearch: false, needsBooking: false, verificationStatus: '' };
     return normalizeDestRole(d);
   }
-  function newFamily() {
-    return { id: uid('fam'), name: '', adults: 2, childrenAges: '', seniors: 0, foodPrefs: '', interests: [],
-             foodPrefsKeys: [], kidPrefs: [], teenInterests: [], seniorNeeds: [], hotelPrefs: [], stayPrefs: [],
+  // ── Family identity: unique color + icon so every family is recognizable on
+  //    sight across the timeline, voting, tasks, reservations, rides and costs. ──
+  var FAMILY_COLORS = ['#3b82f6', '#22c55e', '#a855f7', '#f59e0b', '#ec4899', '#14b8a6', '#ef4444', '#6366f1', '#84cc16', '#f97316'];
+  var FAMILY_EMOJI = ['👨‍👩‍👧', '👨‍👩‍👧‍👦', '👵', '👴', '🧑‍🤝‍🧑', '🏖', '🏔', '🚐', '⭐', '🌴', '🐝', '🦋', '🐢', '🦊', '🐧'];
+  function newFamily(idx) {
+    var i = (typeof idx === 'number' && idx >= 0) ? idx : 0;
+    return { id: uid('fam'), name: '', color: FAMILY_COLORS[i % FAMILY_COLORS.length], icon: '',
+             adults: 2, childrenAges: '', seniors: 0, teenagers: 0, children: 0, toddlers: 0, infants: 0,
+             // Rich profile (Family Management). Counts above are the per-age-group profile; childrenAges
+             // (free ages) still drives age-aware AI suggestions and is kept for back-compat.
+             primaryContact: '', phone: '', email: '', specialNeeds: '', languages: [], foodAllergies: '',
+             budgetLevel: '', hotelPreference: '', hotelRoom: '', vehicle: '', notes: '',
+             foodPrefs: '', interests: [], foodPrefsKeys: [], kidPrefs: [], teenInterests: [], seniorNeeds: [], hotelPrefs: [], stayPrefs: [],
              accessibility: '', napNeeds: '', roomNeeds: '',
              // transport kept in the model (defaulted) — the AI Transportation agent now
              // researches/compares car|plane|bus instead of asking the user (V2).
@@ -3238,9 +3304,52 @@
   function normalizeFamily(f) {
     if (!f) return newFamily();
     if (!Array.isArray(f.interests)) f.interests = [];
-    ['foodPrefsKeys', 'kidPrefs', 'teenInterests', 'seniorNeeds', 'hotelPrefs', 'stayPrefs', 'members'].forEach(function (k) { if (!Array.isArray(f[k])) f[k] = []; });
+    ['foodPrefsKeys', 'kidPrefs', 'teenInterests', 'seniorNeeds', 'hotelPrefs', 'stayPrefs', 'members', 'languages'].forEach(function (k) { if (!Array.isArray(f[k])) f[k] = []; });
     return f;
   }
+  // Display color/icon/label/headcount — always defined even for old trips (fallbacks by index).
+  function familyColor(f, idx) { return (f && f.color) || FAMILY_COLORS[((idx || 0) % FAMILY_COLORS.length + FAMILY_COLORS.length) % FAMILY_COLORS.length]; }
+  // Readable initials color for a given family color (dark text on light swatches → WCAG contrast).
+  function famTextColor(hex) {
+    var m = /^#?([0-9a-f]{6})$/i.exec(String(hex || '')); if (!m) return '#fff';
+    var n = parseInt(m[1], 16), r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+    return ((0.299 * r + 0.587 * g + 0.114 * b) / 255) > 0.62 ? '#0b1220' : '#fff';
+  }
+  function familyInitials(name) {
+    var parts = String(name || '').replace(/^the\s+/i, '').trim().split(/[\s\-]+/).filter(Boolean);
+    if (!parts.length) return '👪';
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  function familyIcon(f) { return (f && f.icon) ? f.icon : ''; } // '' → caller falls back to initials swatch
+  // A real label — NEVER the bare word "Family". Blank #1 → "Organizer's Family"; others → "Group N".
+  function familyLabel(f, idx) {
+    var nm = (f && (f.name || '').trim()); if (nm) return nm;
+    return (idx === 0) ? t('familyDefaultName') : t('familyFallbackName').replace('{n}', String((idx || 0) + 1));
+  }
+  // Bucketed headcount when the profile counts are set; else legacy adults+seniors+childrenAges.
+  function famPeople(f) {
+    if (!f) return 0;
+    var kidBuckets = (f.teenagers || 0) + (f.children || 0) + (f.toddlers || 0) + (f.infants || 0);
+    if (kidBuckets > 0) return (f.adults || 0) + (f.seniors || 0) + kidBuckets;
+    var legacyKids = String(f.childrenAges || '').split(/[,\s]+/).filter(function (x) { return /\d/.test(x); }).length;
+    return (f.adults || 0) + (f.seniors || 0) + legacyKids;
+  }
+  // A consistent color+icon+name chip used on the picker, voting, tasks, reservations, costs.
+  function familyChipEl(f, idx, opts) {
+    opts = opts || {};
+    var col = familyColor(f, idx);
+    var chipEl = el('span', 'tc-famchip' + (opts.cls ? ' ' + opts.cls : ''));
+    chipEl.style.setProperty('--fam', col);
+    var sw = el('span', 'tc-famchip__ic'); sw.style.background = col; sw.style.color = famTextColor(col);
+    var ic = familyIcon(f); sw.textContent = ic || familyInitials(familyLabel(f, idx));
+    if (ic) sw.classList.add('tc-famchip__ic--emoji');
+    chipEl.appendChild(sw);
+    if (!opts.iconOnly) chipEl.appendChild(el('span', 'tc-famchip__nm', familyLabel(f, idx)));
+    return chipEl;
+  }
+  // Index of a family in trip.families (for color fallback); -1 if not found.
+  function famIndex(id) { var fs = (state.trip && state.trip.families) || []; for (var i = 0; i < fs.length; i++) { if (fs[i].id === id) return i; } return -1; }
   // Pure, idempotent. Guarantees trip.destinations[] (ordered) AND the derived
   // trip.destination string stay in sync (the planner's NO_DESTINATION guard and
   // TC_SAMPLES are keyed by the string), and back-fills plan day fields so old/sample
@@ -4401,6 +4510,7 @@
     var tr = state.trip;
     // Real trips are login-gated (view + collaborate). Demos are open previews.
     if (!tr._demo && !realUser()) return loginGate();
+    maybePromptFamilyName(); // first-run: name the organizer's family (never leave it "Family")
     var plan = tr.plan || {};
     // Verify route distances/times via Google Maps once per plan (lazy) — replaces any
     // AI-invented distance/drive-time/ETA with real data. Runs for new, regenerated and
@@ -5517,11 +5627,19 @@
     var stops = 0;
     (day.sections || []).forEach(function (sec) {
       var label = sec.label || sec.timeOfDay || '';
-      (sec.places || []).forEach(function (p) {
-        if (!p || !(p.name || p.area)) return;
+      (sec.places || []).forEach(function (p0) {
+        if (!p0 || !(p0.name || p0.area)) return;
+        // The guide reflects an applied swap (family vote OR manual replace) — unmodified
+        // stops render exactly as before. Skips remain handled elsewhere (out of scope here).
+        var ov = (typeof getOverride === 'function') ? getOverride(p0) : null;
+        var p = (ov && ov.action === 'replaced' && ov.replacement) ? ov.replacement : p0;
         stops++;
         var kind = /restaurant|food|dining|cuisine/i.test((p.category || '') + ' ' + (sec.kind || '')) ? 'restaurant' : (/beach|coast|ocean/i.test((p.category || '') + (p.name || '')) ? 'beach' : 'attraction');
-        box.appendChild(pkgStopCard(tr, p, city, { kind: kind, time: label ? (t('to_' + label) || label) : '', gold: goldStr, mediaCat: kind === 'restaurant' ? 'restaurant' : 'attraction' }));
+        var card = pkgStopCard(tr, p, city, { kind: kind, time: label ? (t('to_' + label) || label) : '', gold: goldStr, mediaCat: kind === 'restaurant' ? 'restaurant' : 'attraction' });
+        var dec = (typeof decisions === 'function') ? decisions()[placeKey(p0)] : null;
+        if (ov && ov.action === 'replaced') card.appendChild(el('p', 'tc-pkg__swapnote', '↻ ' + ((ov.byVote && dec && dec.auditNote) ? dec.auditNote : (t('replacedOriginal') + ': ' + (ov.name || p0.name || ''))))); // vote audit only for a vote-applied swap
+        else if (dec && dec.status === 'resolved' && dec.auditNote) card.appendChild(el('p', 'tc-pkg__swapnote', '🗳 ' + dec.auditNote));
+        box.appendChild(card);
       });
     });
     if (!stops && day.isTravelDay) box.appendChild(el('p', 'tc-pkg__meta', '🚗 ' + (city ? (t('pkgTravelTo') + ' ' + city) : t('travelDay'))));
@@ -6514,31 +6632,243 @@
   }
   function removeSavedAlternative(id) { var arr = savedAlternatives(), i = -1; arr.forEach(function (x, j) { if (x.id === id) i = j; }); if (i >= 0) arr.splice(i, 1); saveTrip(state.trip); render(); }
   function addSavedToDay(idea) { var arr = savedAlternatives(), i = arr.indexOf(idea); if (i >= 0) arr.splice(i, 1); addPlaceToDay(idea.day != null ? idea.day : state.activeDay, idea.slot || 'afternoon', idea.name, idea.category || 'activity'); /* saves + renders */ }
-  // Optional, family-aware alternatives for one place. Each suggestion offers THREE non-destructive
-  // choices: Swap (records the original as replaced), Add to this day (keeps the original), or Save
-  // for later (stash). The plan is only altered when the user explicitly picks Swap or Add.
+
+  // ════════════════════════════════════════════════════════════════════════
+  //  FAMILY DECISION VOTES — "pick ONE of N options" (the selected place + its
+  //  alternatives). DISTINCT from the like/maybe/skip consensus engine; kept in
+  //  its own trip.decisions model so existing behavior is untouched. The math
+  //  (tally / winner / tie / applies) is the pure window.TCDecisions module; this
+  //  layer owns option seeding, applying the winning swap (a normal placeOverride
+  //  flagged byVote → recoverable via Undo / Re-open), the audit note, and saving.
+  //  The plan changes ONLY when ALL families have voted AND there is a unique
+  //  winner that differs from the original. Ties keep the original. History is
+  //  preserved: the decision object + audit note survive.
+  // ════════════════════════════════════════════════════════════════════════
+  function decisions() { var tr = state.trip; if (tr) tr.decisions = tr.decisions || {}; return (tr && tr.decisions) || {}; }
+  function getDecision(p) { var k = placeKey(p); return k ? (decisions()[k] || null) : null; }
+  function decisionFamilyCount() { return Math.max(1, tripFamilies().length); }
+  // CURRENT family ids — passed to TCDecisions.tally so votes from removed/merged families
+  // never count (they can't prematurely complete a vote or flip the applied winner).
+  function decisionFamilyIds() { return tripFamilies().map(function (f) { return f.id; }); }
+  // Drop votes for families that no longer exist (called after delete / merge / split).
+  function pruneDecisionVotes() {
+    var ids = {}; decisionFamilyIds().forEach(function (id) { ids[id] = true; });
+    var ds = decisions(), changed = false;
+    Object.keys(ds).forEach(function (k) { var v = (ds[k] && ds[k].votes) || {}; Object.keys(v).forEach(function (fid) { if (!ids[fid]) { delete v[fid]; changed = true; } }); });
+    return changed;
+  }
+  function altOption(a, original) { return { id: uid('opt'), name: a.name || '', category: a.category || (original && original.category) || '', cuisine: a.cuisine || '', why: a.why || a.whySelected || '', address: a.address || '', dataSource: a.dataSource || 'ai_researched_pending_verification', original: false }; }
+  function mergeDecisionOptions(d, p, alts) {
+    var have = {}; (d.options || []).forEach(function (o) { have[(o.name || '').trim().toLowerCase()] = true; });
+    (alts || []).forEach(function (a) { var nm = ((a && a.name) || '').trim().toLowerCase(); if (nm && !have[nm] && d.options.length < 5) { have[nm] = true; d.options.push(altOption(a, p)); } });
+  }
+  // Create the decision (original-only) if missing, then fold in currently-loaded alternatives.
+  function ensureDecision(p, ctx) {
+    var k = placeKey(p); if (!k) return null;
+    var d = decisions()[k];
+    if (!d) {
+      d = { id: uid('dec'), key: k, originalName: p.name || '', originalOptionId: 'orig', category: p.category || '',
+            day: (ctx && ctx.day != null) ? ctx.day : null, slot: (ctx && ctx.slot) || '',
+            options: [{ id: 'orig', name: p.name || '', category: p.category || '', cuisine: p.cuisine || '', why: p.whySelected || '', address: p.address || '', dataSource: p.dataSource || '', original: true }],
+            votes: {}, status: 'open', appliedOptionId: null, outcome: null, auditNote: '', createdBy: curUid() || '', createdAt: new Date().toISOString() };
+      decisions()[k] = d;
+    }
+    var alts = (state._alts && state._alts[k]); if (Array.isArray(alts)) mergeDecisionOptions(d, p, alts);
+    return d;
+  }
+  // Open the group-vote panel for a place (loading alternatives to choose among if needed).
+  function openDecision(p, ctx) {
+    var k = placeKey(p);
+    if (!(state._alts && state._alts[k])) loadAlternatives(p); // fetch the options to choose among
+    ensureDecision(p, ctx); state._decideOpen = k; saveTrip(state.trip); render();
+  }
+  // The current user's family casts/changes its ONE vote; auto-resolves once everyone has voted.
+  function castDecisionVote(p, optionId) {
+    if (!canEditPlan()) return;
+    var me = getMe();
+    if (!me) { state._decideOpen = placeKey(p); render(); return; } // must pick "which family am I" first
+    var d = ensureDecision(p); if (!d || d.status === 'resolved') return;
+    d.votes[me] = optionId;                 // one vote per family — overwrites the previous
+    resolveDecisionIfReady(p);              // applies winner + writes audit note when all have voted
+    saveTrip(state.trip); render();
+  }
+  function resolveDecisionIfReady(p) {
+    var d = getDecision(p); if (!d || d.status === 'resolved') return;
+    var T = root.TCDecisions; if (!T) return;
+    var ta = T.tally(d, decisionFamilyIds());        // CURRENT families only (removed families' votes ignored)
+    if (!ta.allVoted) return;                          // original preserved until the vote is complete
+    var spread = T.tallySpread(ta);
+    d.status = 'resolved'; d.outcome = ta.outcome; d.resolvedAt = new Date().toISOString();
+    d.resolvedFamilyCount = ta.totalFamilies;          // remember the denominator → detect "family added after vote"
+    // A deliberate MANUAL swap on this place wins over a vote outcome — never clobber it.
+    var prevOv = getOverrides()[placeKey(p)];
+    var manualSwap = prevOv && prevOv.action === 'replaced' && !prevOv.byVote;
+    if (ta.applies && ta.winner && !manualSwap) {
+      var win = (d.options || []).filter(function (o) { return o.id === ta.winner; })[0];
+      if (win) {
+        d.appliedOptionId = win.id;
+        // Apply via the SAME override path manual swaps use, flagged byVote for clean Undo / Re-open.
+        getOverrides()[placeKey(p)] = { name: p.name || '', action: 'replaced', replacement: altToPlace({ name: win.name, category: win.category, cuisine: win.cuisine, why: win.why, address: win.address, dataSource: win.dataSource }, p), byVote: true, createdBy: curUid() || '', createdAt: new Date().toISOString() };
+        d.auditNote = t('voteAuditChanged').replace('{win}', win.name).replace('{orig}', d.originalName).replace('{a}', String(spread[0] || 0)).replace('{b}', String(spread[1] || 0));
+      }
+    } else if (ta.applies && ta.winner && manualSwap) {
+      // Vote chose a winner but the organizer already manually swapped this stop — keep the manual choice.
+      d.appliedOptionId = null; d.auditNote = t('voteAuditManual').replace('{manual}', prevOv.replacement ? (prevOv.replacement.name || '') : '');
+    } else if (ta.outcome === 'tie') {
+      d.appliedOptionId = d.originalOptionId; d.auditNote = t('voteAuditTie');   // tie → keep original
+    } else {                                                                     // unique winner IS the original
+      d.appliedOptionId = d.originalOptionId; d.auditNote = t('voteAuditKept').replace('{orig}', d.originalName).replace('{a}', String(spread[0] || 0)).replace('{b}', String(spread[1] || 0));
+    }
+    toast(d.auditNote);
+  }
+  function reopenDecision(p) {
+    var d = getDecision(p); if (!d) return;
+    if (d.appliedOptionId && d.appliedOptionId !== d.originalOptionId) { var ov = getOverrides()[placeKey(p)]; if (ov && ov.byVote) delete getOverrides()[placeKey(p)]; } // undo a vote-applied swap only
+    d.status = 'open'; d.outcome = null; d.appliedOptionId = null; d.auditNote = '';
+    saveTrip(state.trip); render();
+  }
+  function winnerName(d) { var o = (d.options || []).filter(function (x) { return x.id === d.appliedOptionId; })[0]; return o ? o.name : ''; }
+  // Compact decision summary chip (shown on the card + in the guide so history is visible).
+  function decisionMiniNote(d) {
+    if (!d) return null;
+    var T = root.TCDecisions, ta = T ? T.tally(d, decisionFamilyIds()) : null;
+    var n = el('div', 'tc-decmini' + (d.status === 'resolved' ? ' tc-decmini--done' : ''));
+    if (d.status === 'resolved') {
+      n.appendChild(el('span', 'tc-decmini__t', '🗳 ' + (d.auditNote || t('voteDone'))));
+      if (decisionGrewSinceResolve(d)) n.appendChild(el('span', 'tc-decmini__hint', ' · ' + t('voteFamilyAdded')));
+    } else if (ta) n.appendChild(el('span', 'tc-decmini__t', '🗳 ' + t('voteProgress').replace('{n}', String(ta.votedFamilies)).replace('{m}', String(ta.totalFamilies))));
+    return n;
+  }
+  // A family was added AFTER this vote resolved → its outcome may be stale; surface a re-open hint.
+  function decisionGrewSinceResolve(d) { return !!(d && d.status === 'resolved' && d.resolvedFamilyCount != null && decisionFamilyCount() > d.resolvedFamilyCount); }
+  // Full interactive group-vote panel: options (original + alternatives), one vote per family,
+  // live tally, status line, audit note, change/re-open/close.
+  function decisionPanel(p, ctx) {
+    var d = ensureDecision(p, ctx);
+    var T = root.TCDecisions, me = getMe();
+    var ta = T ? T.tally(d, decisionFamilyIds()) : { counts: {}, votedFamilies: 0, totalFamilies: 1, remaining: 1, allVoted: false, applies: false, outcome: 'pending' };
+    var panel = el('div', 'tc-decide');
+    panel.appendChild(el('p', 'tc-decide__h', '🗳 ' + t('voteTitle')));
+    if (!me) { panel.appendChild(el('p', 'tc-hint', t('votePickFamily'))); panel.appendChild(familyPicker()); }
+    (d.options || []).forEach(function (o) {
+      var won = d.status === 'resolved' && d.appliedOptionId === o.id;
+      var row = el('div', 'tc-decide__opt' + (won ? ' tc-decide__opt--win' : ''));
+      var info = el('div', 'tc-decide__optinfo');
+      info.appendChild(el('strong', 'tc-decide__optnm', o.name));
+      var sub = (o.cuisine || o.category || '');
+      if (o.original) sub = sub ? (sub + ' · ' + t('voteCurrent')) : t('voteCurrent');
+      if (sub) info.appendChild(el('span', 'tc-decide__optcat', ' · ' + sub));
+      info.appendChild(el('span', 'tc-decide__optcount', ' · 👍 ' + (ta.counts[o.id] || 0)));
+      row.appendChild(info);
+      if (canEditPlan() && d.status !== 'resolved') {
+        var mine = me && d.votes[me] === o.id;
+        var vb = pbtn((mine ? '✓ ' : '') + t(mine ? 'voteYours' : 'voteForThis'), mine ? 'tc-pbtn--accent' : '', function () { castDecisionVote(p, o.id); });
+        if (!me) vb.disabled = true;
+        row.appendChild(vb);
+      }
+      // Which FAMILIES picked this option — by name + color (not generic chips).
+      var voters = tripFamilies().filter(function (fm) { return d.votes[fm.id] === o.id; });
+      if (voters.length) { var vrow = el('div', 'tc-decide__voters'); voters.forEach(function (fm) { vrow.appendChild(familyChipEl(familyObjById(fm.id), fm.idx, { cls: 'tc-famchip--sm' })); }); row.appendChild(vrow); }
+      panel.appendChild(row);
+    });
+    // Roster: families still to vote (names + colors), so the organizer sees who is pending.
+    var pending = tripFamilies().filter(function (fm) { return !d.votes[fm.id]; });
+    if (d.status !== 'resolved' && pending.length) {
+      var prow = el('div', 'tc-decide__pending'); prow.appendChild(el('span', 'tc-decide__pendlbl', '⏳ ' + t('voteWaitingFor')));
+      pending.forEach(function (fm) { prow.appendChild(familyChipEl(familyObjById(fm.id), fm.idx, { cls: 'tc-famchip--sm tc-famchip--pending' })); });
+      panel.appendChild(prow);
+    }
+    var sline;
+    if (d.status === 'resolved') sline = (d.outcome === 'tie') ? t('voteTie') : ((d.appliedOptionId && d.appliedOptionId !== d.originalOptionId) ? t('voteMajoritySel').replace('{win}', winnerName(d)) : t('voteKept'));
+    else if (ta.votedFamilies === 0) sline = t('voteWaitingAll').replace('{m}', String(ta.totalFamilies));
+    else if (!ta.allVoted) sline = t('voteProgress').replace('{n}', String(ta.votedFamilies)).replace('{m}', String(ta.totalFamilies));
+    else sline = t('voteAllVoted');
+    panel.appendChild(el('p', 'tc-decide__status', sline));
+    if (d.auditNote) panel.appendChild(el('p', 'tc-decide__audit', '📝 ' + d.auditNote));
+    if (decisionGrewSinceResolve(d)) panel.appendChild(el('p', 'tc-decide__status tc-decide__warn', '⚠ ' + t('voteFamilyAdded')));
+    var foot = el('div', 'tc-decide__foot');
+    if (me && d.status !== 'resolved' && d.votes[me]) foot.appendChild(pbtn('✎ ' + t('voteChange'), '', function () { var dd = getDecision(p); if (dd) { delete dd.votes[me]; saveTrip(state.trip); render(); } }));
+    if (d.status === 'resolved' && canEditPlan()) foot.appendChild(pbtn('↺ ' + t('voteReopen'), '', function () { reopenDecision(p); }));
+    foot.appendChild(pbtn(t('voteClose'), '', function () { state._decideOpen = null; render(); }));
+    panel.appendChild(foot);
+    return panel;
+  }
+
+  // ── Honest alternative-card display helpers (no fabricated facts) ────────
+  function stayAddress() {
+    var tr = state.trip; if (!tr) return '';
+    var dests = tr.destinations || [];
+    for (var i = 0; i < dests.length; i++) { var h = dests[i] && (dests[i].selectedHotel || dests[i].hotel); if (h && (h.address || h.name)) return h.address || h.name; }
+    return tr.destination || tr.departureCity || '';
+  }
+  function dirFromTo(from, to) { return 'https://www.google.com/maps/dir/' + encodeURIComponent(from || '') + '/' + encodeURIComponent(to || ''); }
+  // Family-fit SUGGESTION chips (toddler/kid/teen) — only for age groups the trip actually has,
+  // labeled "suggested, verify" (heuristic, never presented as fact).
+  function altFitRow(a, p) {
+    var row = el('div', 'tc-altopt__fit'); var T = root.TCDecisions; if (!T) return row;
+    var ages = ((state.trip && state.trip.families) || []).map(function (f) { return f.childrenAges || ''; }).join(', ');
+    var groups = T.ageGroups(ages), fit = T.fitHints(a.category || (p && p.category) || '', ages), any = false;
+    [['toddler', '👶'], ['kid', '🧒'], ['teen', '🧑']].forEach(function (g) { if (groups[g[0]]) { any = true; row.appendChild(chip('tc-fit tc-fit--' + fit[g[0]], g[1] + ' ' + t('fit_' + fit[g[0]]))); } });
+    if (any) row.appendChild(el('span', 'tc-altopt__fitnote', t('fitSuggested')));
+    return row;
+  }
+  // Facts row: visit-time estimate (labeled) + cost/rating (verify until real Google data loads) +
+  // directions-from-stay link. enrichAltFacts() fills rating/price/closed/pros-cons from Google.
+  function altFactsRow(a, p) {
+    var row = el('div', 'tc-altopt__facts'); var T = root.TCDecisions;
+    if (T) { var vb = T.visitBucket(a.category || (p && p.category) || ''); if (vb) row.appendChild(chip('tc-chip--est', '⏱ ' + t('vt_' + vb) + ' · ' + t('estimateLabel'))); }
+    var cost = el('a', 'tc-pkg__verify tc-altopt__cost'); cost.href = gsearch((a.name || '') + ' price'); cost.target = '_blank'; cost.rel = 'noopener'; cost.textContent = '💵 ' + t('pkgVerify'); row.appendChild(cost);
+    var stay = stayAddress(); if (stay) { var dl = linkBtn('🧭 ' + t('altFromStay'), dirFromTo(stay, (a.name || '') + (a.address ? (', ' + a.address) : '')), 'tc-altopt__dir'); row.appendChild(dl); }
+    enrichAltFacts(row, a, p);
+    return row;
+  }
+  function enrichAltFacts(row, a, p) {
+    if (typeof fetch !== 'function' || !row || !a || !a.name) return;
+    fetchPlaceDetailsClient(a.name, a.address || (state.trip && state.trip.destination) || '').then(function (d) {
+      if (!d) return;
+      if (d.rating) row.insertBefore(el('span', 'tc-chip tc-altopt__rating', '⭐ ' + d.rating + (d.reviewCount ? ' · ' + d.reviewCount : '') + ' · ✓ Google'), row.firstChild);
+      if (d.priceLevel) { var c = row.querySelector('.tc-altopt__cost'); if (c && c.parentNode) c.parentNode.replaceChild(el('span', 'tc-chip tc-altopt__cost', '💵 ' + d.priceLevel + ' · ✓ Google'), c); }
+      if (d.closed) row.appendChild(el('span', 'tc-chip tc-pkg__warn', '⚠ ' + t('pkgClosedStatus')));
+      var pc = root.TCDecisions ? root.TCDecisions.prosCons(d) : { pros: [], cons: [] };
+      pc.pros.forEach(function (kk) { row.appendChild(el('span', 'tc-chip tc-altopt__pro', '✓ ' + t('pc_' + kk))); });
+      pc.cons.forEach(function (kk) { row.appendChild(el('span', 'tc-chip tc-altopt__con', '• ' + t('pc_' + kk))); });
+    }).catch(function () {});
+  }
+  // One rich alternative card: photo, name, category/cuisine, honest facts, family-fit suggestion,
+  // why (labeled recommendation), and Vote / Swap / Add-to-day / Save-for-later actions.
+  function altCardEl(a, p, ctx) {
+    var optc = el('article', 'tc-altopt');
+    optc.appendChild(placeMedia({ name: a.name, category: a.category || (p && p.category) || 'attraction', address: a.address || '', city: (state.trip && state.trip.destination) || '' }, 'tc-altopt__media'));
+    var info = el('div', 'tc-altopt__info');
+    info.appendChild(el('strong', 'tc-altpanel__nm', a.name));
+    if (a.cuisine || a.category) info.appendChild(el('span', 'tc-altpanel__cat', ' · ' + (a.cuisine || a.category)));
+    info.appendChild(altFactsRow(a, p));
+    info.appendChild(altFitRow(a, p));
+    if (a.why) { var w = el('p', 'tc-altpanel__why'); w.appendChild(el('span', 'tc-altopt__reck', t('recommended') + ': ')); w.appendChild(doc.createTextNode(a.why)); info.appendChild(w); }
+    var detl = el('a', 'tc-altopt__verify'); detl.href = gsearch((a.name || '') + ' ' + (a.address || (state.trip && state.trip.destination) || '')); detl.target = '_blank'; detl.rel = 'noopener'; detl.textContent = '🔎 ' + t('altMoreInfo'); info.appendChild(detl);
+    optc.appendChild(info);
+    var arow = el('div', 'tc-altopt__acts');
+    arow.appendChild(pbtn('🗳 ' + t('voteForThisAlt'), '', function () { openDecision(p, ctx); }));
+    arow.appendChild(pbtn('↻ ' + t('altSwapWith'), 'tc-pbtn--accent', function () { setPlaceOverride(p, 'replaced', altToPlace(a, p)); }));
+    if (ctx && ctx.day != null) arow.appendChild(pbtn('＋ ' + t('altAddToDay'), '', function () { state._altOpen = null; addPlaceToDay(ctx.day, ctx.slot || 'afternoon', a.name, a.category || (p && p.category) || 'activity'); }));
+    arow.appendChild(pbtn('🔖 ' + t('altSaveForLater'), '', function () { saveAlternative(a, p, ctx); }));
+    optc.appendChild(arow);
+    return optc;
+  }
+  // Optional, family-aware alternatives for one place. Each suggestion offers non-destructive
+  // choices: Vote (group decision), Swap, Add to this day, or Save for later. The plan is only
+  // altered when the user explicitly picks Swap/Add, or when a family vote resolves to a winner.
   function altPanel(p, ctx) {
     ctx = ctx || {};
     var k = placeKey(p), panel = el('div', 'tc-altpanel');
     var alts = state._alts && state._alts[k];
+    var existing = decisions()[k];
+    if (existing && (existing.status === 'resolved' || Object.keys(existing.votes || {}).length)) { var mn = decisionMiniNote(existing); if (mn) panel.appendChild(mn); }
     if (alts === 'loading') { panel.appendChild(researchBanner('loadingAlts')); return panel; }
-    panel.appendChild(el('p', 'tc-altpanel__h', t('pickAlternative')));
-    var hasDay = ctx.day != null;
+    panel.appendChild(el('p', 'tc-altpanel__h', t('altPanelHelp')));
     if (Array.isArray(alts) && alts.length) {
-      alts.forEach(function (a) {
-        var optc = el('div', 'tc-altopt');
-        var info = el('div', 'tc-altopt__info');
-        info.appendChild(el('strong', 'tc-altpanel__nm', a.name));
-        if (a.cuisine || a.category) info.appendChild(el('span', 'tc-altpanel__cat', ' · ' + (a.cuisine || a.category)));
-        if (a.why) info.appendChild(el('span', 'tc-altpanel__why', a.why));
-        optc.appendChild(info);
-        var arow = el('div', 'tc-altopt__acts');
-        arow.appendChild(pbtn('↻ ' + t('altSwapWith'), 'tc-pbtn--accent', function () { setPlaceOverride(p, 'replaced', altToPlace(a, p)); }));
-        if (hasDay) arow.appendChild(pbtn('＋ ' + t('altAddToDay'), '', function () { state._altOpen = null; addPlaceToDay(ctx.day, ctx.slot || 'afternoon', a.name, a.category || p.category || 'activity'); }));
-        arow.appendChild(pbtn('🔖 ' + t('altSaveForLater'), '', function () { saveAlternative(a, p, ctx); }));
-        optc.appendChild(arow);
-        panel.appendChild(optc);
-      });
+      alts.forEach(function (a) { panel.appendChild(altCardEl(a, p, ctx)); }); // ≥2 rich cards per place/category
+      panel.appendChild(pbtn('🗳 ' + t('voteStart'), 'tc-altpanel__vote', function () { openDecision(p, ctx); }));
     } else if (Array.isArray(alts)) { panel.appendChild(el('p', 'tc-hint', t('noAlts'))); }
     // Search replacement (real source) + add your own + close.
     var city = p.address || (state.trip && state.trip.destination) || '';
@@ -6548,7 +6878,7 @@
     var add = el('button', 'tc-pbtn tc-pbtn--accent', '+ ' + t('addOwn')); add.type = 'button';
     add.addEventListener('click', function () {
       var nm = (inp.value || '').trim(); if (!nm) { toast(t('addOwnPh')); return; }
-      if (hasDay) { state._altOpen = null; addPlaceToDay(ctx.day, ctx.slot || 'afternoon', nm, p.category || 'activity'); }
+      if (ctx.day != null) { state._altOpen = null; addPlaceToDay(ctx.day, ctx.slot || 'afternoon', nm, p.category || 'activity'); }
       else { setPlaceOverride(p, 'replaced', { id: uid('cust'), name: nm, category: p.category || '', dataSource: 'user_entered' }); }
     });
     addRow.appendChild(add); panel.appendChild(addRow);
@@ -6630,6 +6960,9 @@
       // Optional, family-aware alternatives shown inline (Swap / Add to day / Save for later) —
       // never replaces the place unless the user explicitly picks Swap.
       if (!ctx.added && state._altOpen === ctx.pkey) body.appendChild(altPanel(ctx.p || p, ctx));
+      // Group family vote (pick one of N) — opens below the card; mini-note shows ongoing/resolved.
+      if (!ctx.added) { var _d = decisions()[ctx.pkey], _mov = getOverrides()[ctx.pkey], _manual = _mov && _mov.action === 'replaced' && !_mov.byVote; if (_d && !_manual && (_d.status === 'resolved' || Object.keys(_d.votes || {}).length)) { var _mn = decisionMiniNote(_d); if (_mn) body.appendChild(_mn); } }
+      if (!ctx.added && state._decideOpen === ctx.pkey) body.appendChild(decisionPanel(ctx.p || p, ctx));
       var wt = whyText(ctx);
       if (wt) body.appendChild(wt === 'loading' ? researchBanner('whyLoading') : (function () { var w = el('div', 'tc-whybox'); w.appendChild(el('span', 'tc-whybox__k', '❓ ' + t('whyHere'))); w.appendChild(el('p', 'tc-whybox__v', wt)); return w; })());
     }
@@ -6640,10 +6973,12 @@
     var chips = el('div', 'tc-place__chips');
     if (p.estimatedCost) chips.appendChild(chip('tc-chip--cost', '💵 ' + p.estimatedCost));
     if (p.estimatedDuration) chips.appendChild(chip('', '⏱ ' + p.estimatedDuration));
-    if (typeof p.kidFriendlyScore === 'number') chips.appendChild(scoreChip('🧒', p.kidFriendlyScore));
-    if (typeof p.toddlerFriendlyScore === 'number') chips.appendChild(scoreChip('👶', p.toddlerFriendlyScore));
-    if (typeof p.teenFriendlyScore === 'number') chips.appendChild(scoreChip('🧑', p.teenFriendlyScore));
-    if (typeof p.seniorFriendlyScore === 'number') chips.appendChild(scoreChip('🧓', p.seniorFriendlyScore));
+    var _fitShown = false;
+    if (typeof p.kidFriendlyScore === 'number') { chips.appendChild(scoreChip('🧒', p.kidFriendlyScore)); _fitShown = true; }
+    if (typeof p.toddlerFriendlyScore === 'number') { chips.appendChild(scoreChip('👶', p.toddlerFriendlyScore)); _fitShown = true; }
+    if (typeof p.teenFriendlyScore === 'number') { chips.appendChild(scoreChip('🧑', p.teenFriendlyScore)); _fitShown = true; }
+    if (typeof p.seniorFriendlyScore === 'number') { chips.appendChild(scoreChip('🧓', p.seniorFriendlyScore)); _fitShown = true; }
+    if (_fitShown) chips.appendChild(chip('tc-chip--aimark', t('aiSuggestionLabel'))); // friendliness scores are AI estimates, not measured
     if (p.walkingLevel) chips.appendChild(chip('tc-chip--walk', t('walk_' + p.walkingLevel) || p.walkingLevel));
     var bkFor = bookingForPlace(p); if (bkFor) chips.appendChild(chip('tc-chip--bk', bookingTypeIcon(bkFor.type) + ' ' + t('bs_' + (bkFor.bookingStatus || 'research_needed'))));
     body.appendChild(chips);
@@ -6681,6 +7016,10 @@
     if (!ctx.added) bar.appendChild(pbtn('✨ ' + t('altActivities'), 'tc-pbtn--ghost' + (state._altOpen === ctx.pkey ? ' tc-pbtn--on' : ''), function () {
       if (state._altOpen === ctx.pkey) { state._altOpen = null; render(); }
       else { state._altOpen = ctx.pkey; if (!(state._alts && state._alts[ctx.pkey])) loadAlternatives(ctx.p); else render(); }
+    }));
+    // Group family vote (pick one of N) — opens the decision panel (loads alternatives to choose among).
+    if (!ctx.added) bar.appendChild(pbtn('🗳 ' + t('voteShort'), 'tc-pbtn--ghost' + (state._decideOpen === ctx.pkey ? ' tc-pbtn--on' : ''), function () {
+      if (state._decideOpen === ctx.pkey) { state._decideOpen = null; render(); } else { openDecision(ctx.p, ctx); }
     }));
     bar.appendChild(pbtn('⋯ ' + t('moveCard'), 'tc-pbtn--ghost' + (state._cardMenu === ctx.pkey ? ' tc-pbtn--on' : ''), function () { state._cardMenu = (state._cardMenu === ctx.pkey) ? null : ctx.pkey; render(); }));
     return bar;
@@ -6768,10 +7107,12 @@
   function linkBtn(label, href, cls) { var a = el('a', 'tc-pbtn ' + (cls || ''), label); a.href = href || '#'; a.target = '_blank'; a.rel = 'noopener'; return a; }
   // ── Per-family collaboration: "who am I" + family-attributed votes ──────
   function tripFamilies() {
-    var out = [];
-    ((state.trip && state.trip.families) || []).forEach(function (f, i) { if (f && (f.name || '').trim()) out.push({ id: f.id || ('f' + i), name: f.name.trim() }); });
-    if (!out.length) ((state.trip && state.trip.plan && state.trip.plan.families) || []).forEach(function (n, i) { out.push({ id: 'pf' + i, name: String(n).split('(')[0].split('—')[0].trim() || ('#' + (i + 1)) }); });
-    if (!out.length) out.push({ id: 'me', name: 'Me' });
+    // Every trip family appears (even unnamed → a real label, NEVER the bare word "Family"),
+    // carrying its color + icon so it's identifiable everywhere (picker/voting/tasks/costs).
+    var fams = (state.trip && state.trip.families) || [];
+    var out = fams.map(function (f, i) { return { id: f.id || ('f' + i), name: familyLabel(f, i), color: familyColor(f, i), icon: familyIcon(f), idx: i }; });
+    if (!out.length) ((state.trip && state.trip.plan && state.trip.plan.families) || []).forEach(function (n, i) { out.push({ id: 'pf' + i, name: String(n).split('(')[0].split('—')[0].trim() || familyLabel(null, i), color: familyColor(null, i), icon: '', idx: i }); });
+    if (!out.length) out.push({ id: 'me', name: t('familyDefaultName'), color: familyColor(null, 0), icon: '', idx: 0 });
     return out;
   }
   // Which family the current account is, scoped per trip + per logged-in user.
@@ -6793,11 +7134,202 @@
     wrap.appendChild(el('span', 'tc-famsel__lbl', t('youAre')));
     var me = getMe();
     tripFamilies().forEach(function (f) {
-      var b = el('button', 'tc-famsel__btn' + (f.id === me ? ' tc-famsel__btn--on' : ''), f.name); b.type = 'button';
+      var b = el('button', 'tc-famsel__btn' + (f.id === me ? ' tc-famsel__btn--on' : ''));
+      b.type = 'button'; b.style.setProperty('--fam', f.color);
+      var sw = el('span', 'tc-famsel__sw'); sw.style.background = f.color; sw.style.color = famTextColor(f.color); sw.textContent = f.icon || familyInitials(f.name);
+      if (f.icon) sw.classList.add('tc-famchip__ic--emoji');
+      b.appendChild(sw); b.appendChild(el('span', null, f.name));
       b.addEventListener('click', function () { setMe(f.id); render(); });
       wrap.appendChild(b);
     });
+    // Manage families (rename / color / icon / profile / merge / split / invite). Editors only.
+    if (canEditPlan()) { var mg = el('button', 'tc-famsel__manage', '⚙ ' + t('familyManage')); mg.type = 'button'; mg.addEventListener('click', function () { state.screen = 'familyManagement'; render(); }); wrap.appendChild(mg); }
     return wrap;
+  }
+  // ════════════════════════════════════════════════════════════════════════
+  //  FAMILY MANAGEMENT — rename / color / icon / profile / duplicate / split /
+  //  merge / delete / invite. All fields persist on trip.families[] (synced via
+  //  saveTrip → Firestore merge), so refresh + shared members keep names/colors/
+  //  icons/members/votes/tasks/costs. NEVER renders the bare word "Family".
+  // ════════════════════════════════════════════════════════════════════════
+  function familiesArr() { var tr = state.trip; if (!tr) return []; tr.families = tr.families || []; return tr.families; }
+  function familyObjById(id) { return familiesArr().filter(function (f) { return f.id === id; })[0] || null; }
+  function uniqList(a) { var s = {}, o = []; (a || []).forEach(function (x) { if (x != null && !s[x]) { s[x] = 1; o.push(x); } }); return o; }
+  function renameFamily(id, name) { var f = familyObjById(id); if (!f) return; f.name = String(name || '').trim(); saveTrip(state.trip); render(); }
+  function setFamilyColor(id, color) { var f = familyObjById(id); if (!f) return; f.color = color; saveTrip(state.trip); render(); }
+  function setFamilyIcon(id, icon) { var f = familyObjById(id); if (!f) return; f.icon = icon || ''; saveTrip(state.trip); render(); }
+  function addFamily() { var fs = familiesArr(); fs.push(newFamily(fs.length)); saveTrip(state.trip); render(); }
+  function duplicateFamily(id) {
+    var f = familyObjById(id); if (!f) return; var fs = familiesArr();
+    var copy = JSON.parse(JSON.stringify(f)); copy.id = uid('fam'); copy.color = FAMILY_COLORS[fs.length % FAMILY_COLORS.length];
+    copy.name = familyLabel(f, famIndex(id)) + ' ' + t('familyCopySuffix');
+    copy.members = (copy.members || []).map(function (m) { return { id: uid('mem'), name: m.name }; });
+    fs.push(copy); saveTrip(state.trip); toast(t('familyDuplicated')); render();
+  }
+  function splitFamily(id) {
+    var f = familyObjById(id); if (!f) return; var fs = familiesArr();
+    var nf = newFamily(fs.length); nf.name = familyLabel(f, famIndex(id)) + ' ' + t('familySplitSuffix');
+    ['adults', 'seniors', 'teenagers', 'children', 'toddlers', 'infants'].forEach(function (k) { var mv = Math.floor((f[k] || 0) / 2); nf[k] = mv; f[k] = (f[k] || 0) - mv; });
+    fs.push(nf); saveTrip(state.trip); toast(t('familySplit')); render();
+  }
+  function mergeFamily(srcId, dstId) {
+    if (!srcId || srcId === dstId) return; var src = familyObjById(srcId), dst = familyObjById(dstId); if (!src || !dst) return;
+    ['adults', 'seniors', 'teenagers', 'children', 'toddlers', 'infants'].forEach(function (k) { dst[k] = (dst[k] || 0) + (src[k] || 0); });
+    dst.childrenAges = [dst.childrenAges, src.childrenAges].filter(function (s) { return (s || '').trim(); }).join(', ');
+    dst.members = (dst.members || []).concat(src.members || []);
+    ['foodPrefsKeys', 'stayPrefs', 'languages', 'seniorNeeds', 'hotelPrefs', 'interests'].forEach(function (k) { dst[k] = uniqList((dst[k] || []).concat(src[k] || [])); });
+    reassignFamilyRefs(srcId, dstId);
+    var fs = familiesArr(), i = fs.indexOf(src); if (i >= 0) fs.splice(i, 1);
+    reconcileFamilyRefs(); saveTrip(state.trip); toast(t('familyMerged')); render();
+  }
+  function deleteFamily(id) {
+    var fs = familiesArr(); if (fs.length <= 1) { toast(t('familyMinOne')); return; }
+    var i = -1; fs.forEach(function (f, j) { if (f.id === id) i = j; }); if (i < 0) return;
+    fs.splice(i, 1); reconcileFamilyRefs(); saveTrip(state.trip); toast(t('familyDeleted')); render();
+  }
+  // Move a family's votes / favorites / task assignments / payments to another (used by merge).
+  // Covers BOTH the decision-vote model AND the pre-existing like/skip consensus maps, so a merge
+  // never silently drops the merged family's say or strands a payment.
+  function reassignFamilyRefs(srcId, dstId) {
+    var tr = state.trip; if (!tr) return;
+    Object.keys(tr.decisions || {}).forEach(function (k) { var v = (tr.decisions[k] || {}).votes || {}; if (v[srcId] != null) { if (v[dstId] == null) v[dstId] = v[srcId]; delete v[srcId]; } });
+    // Like/maybe/skip + favorites + transport votes — fold src into dst (dst keeps its own if present).
+    ['votes', 'favorites', 'transportVotes'].forEach(function (mapName) {
+      var m = tr[mapName]; if (!m) return;
+      Object.keys(m).forEach(function (pid) { var fm = m[pid] || {}; if (fm[srcId] != null) { if (fm[dstId] == null) fm[dstId] = fm[srcId]; delete fm[srcId]; } });
+    });
+    (tr.bookings || []).forEach(function (b) { if (b.assignedToFamily === srcId) b.assignedToFamily = dstId; if (b.paidBy === srcId) b.paidBy = dstId; });
+    (tr.costLedger || []).forEach(function (e) { if (e.familyId === srcId) e.familyId = dstId; });
+    (tr.suggestions || []).forEach(function (s) { if (s.familyId === srcId) s.familyId = dstId; if (s.votes && s.votes[srcId] != null) { if (s.votes[dstId] == null) s.votes[dstId] = s.votes[srcId]; delete s.votes[srcId]; } });
+    if (tr.memberFamily) Object.keys(tr.memberFamily).forEach(function (u) { if (tr.memberFamily[u] === srcId) tr.memberFamily[u] = dstId; });
+    try { if (root.localStorage.getItem(meKey()) === srcId) root.localStorage.setItem(meKey(), dstId); } catch (e) {} // "you are" follows the merge
+  }
+  // After delete/merge/split: drop EVERY reference to a family that no longer exists — decision
+  // votes, the like/skip consensus + favorites + transport votes, task assignments + paidBy, the
+  // cost ledger, suggestion votes, the "you are" pointer — then re-run the auto-reject pass so a
+  // place auto-skipped only by a now-gone family returns to the plan (and stops being sent to the AI).
+  function reconcileFamilyRefs() {
+    var tr = state.trip; if (!tr) return;
+    var ids = {}; (tr.families || []).forEach(function (f) { ids[f.id] = true; });
+    pruneDecisionVotes();
+    ['votes', 'favorites', 'transportVotes'].forEach(function (mapName) {
+      var m = tr[mapName]; if (!m) return;
+      Object.keys(m).forEach(function (pid) { var fm = m[pid] || {}; Object.keys(fm).forEach(function (fid) { if (!ids[fid]) delete fm[fid]; }); if (!Object.keys(fm).length) delete m[pid]; });
+    });
+    (tr.bookings || []).forEach(function (b) { if (b.assignedToFamily && !ids[b.assignedToFamily]) { b.assignedToFamily = ''; b.assignedToMember = ''; } if (b.paidBy && !ids[b.paidBy]) b.paidBy = ''; });
+    (tr.costLedger || []).forEach(function (e) { if (e.familyId && !ids[e.familyId]) e.familyId = ''; });
+    (tr.suggestions || []).forEach(function (s) { if (s.familyId && !ids[s.familyId]) s.familyId = ''; if (s.votes) Object.keys(s.votes).forEach(function (fid) { if (!ids[fid]) delete s.votes[fid]; }); });
+    if (tr.memberFamily) Object.keys(tr.memberFamily).forEach(function (u) { if (!ids[tr.memberFamily[u]]) delete tr.memberFamily[u]; });
+    // The "you are" localStorage pointer can re-surface a deleted family — clear it if it's gone.
+    try { var meId = root.localStorage.getItem(meKey()); if (meId && !ids[meId]) root.localStorage.removeItem(meKey()); } catch (e) {}
+    // Orphaned votes may have driven auto-rejections; recompute so freed places come back.
+    _rejReconciledFor = null; try { reconcileAutoRejections(tr); } catch (e) {}
+  }
+  function inviteFamily() { if (typeof openShareModal === 'function') openShareModal(); } // reuse the owner share/invite flow
+  // First-run: prompt ONCE for the organizer's family name (never leave it the bare word "Family").
+  function maybePromptFamilyName() {
+    var tr = state.trip; if (!tr || tr._demo || state.readonly || tr._namePrompted) return;
+    var fs = tr.families || [];
+    if (fs.length === 1 && !(fs[0].name || '').trim()) { tr._namePrompted = true; try { saveTrip(tr); } catch (e) {} openFamilyNamePrompt(); }
+    else tr._namePrompted = true;
+  }
+  function openFamilyNamePrompt() {
+    var tr = state.trip; if (!tr) return; closeModal();
+    var ov = el('div', 'tc-modal'); ov.id = 'tcModal'; var card = el('div', 'tc-modal__card');
+    var head = el('div', 'tc-modal__head'); head.appendChild(el('strong', 'tc-modal__title', '👋 ' + t('familyNamePromptTitle'))); card.appendChild(head);
+    card.appendChild(el('p', 'tc-addfam__sub', t('familyNamePromptSub')));
+    var inp = input((tr.families[0] && tr.families[0].name) || '', t('familyNamePromptPh')); card.appendChild(field(t('familyName'), inp));
+    var acts = el('div', 'tc-modal__acts');
+    var save = el('button', 'tc-cta', t('save')); save.type = 'button';
+    save.addEventListener('click', function () { tr.families[0].name = (inp.value || '').trim() || t('familyDefaultName'); try { saveTrip(tr); } catch (e) {} closeModal(); render(); });
+    acts.appendChild(save); card.appendChild(acts);
+    ov.appendChild(card); ov.addEventListener('click', function (e) { if (e.target === ov) closeModal(); }); doc.body.appendChild(ov);
+    root.setTimeout(function () { try { inp.focus(); } catch (e) {} }, 60);
+  }
+  // ── Family Management screen ─────────────────────────────────────────────
+  function renderFamilyManagement() {
+    if (!canEditPlan()) { state.screen = 'plan'; return renderPlan(); } // editing gate (no managing a demo/read-only trip)
+    var s = el('section', 'tc-screen tc-fammgmt');
+    var back = el('button', 'tc-pbtn tc-pbtn--ghost', '← ' + t('backToTrip')); back.type = 'button'; back.addEventListener('click', function () { try { saveTrip(state.trip); } catch (e) {} state.screen = 'plan'; render(); }); s.appendChild(back);
+    s.appendChild(el('h2', 'tc-screen__title', '👨‍👩‍👧 ' + t('familyMgmtTitle')));
+    s.appendChild(el('p', 'tc-screen__sub', t('familyMgmtSub')));
+    familiesArr().forEach(function (f, i) { s.appendChild(familyMgmtCard(f, i)); });
+    var add = el('button', 'tc-addbtn', '+ ' + t('addFamily')); add.type = 'button'; add.addEventListener('click', function () { addFamily(); }); s.appendChild(add);
+    return s;
+  }
+  function familyMgmtCard(f, i) {
+    var c = el('article', 'tc-fammgmt__card'); c.style.setProperty('--fam', familyColor(f, i));
+    var head = el('div', 'tc-fammgmt__head');
+    head.appendChild(familyChipEl(f, i, { iconOnly: true }));
+    var nm = input(f.name, t('familyNamePh')); nm.className = 'tc-input tc-fammgmt__name';
+    nm.addEventListener('input', function () { f.name = nm.value; });
+    nm.addEventListener('change', function () { saveTrip(state.trip); render(); });
+    head.appendChild(nm);
+    c.appendChild(head);
+    c.appendChild(el('p', 'tc-fammgmt__people', '👥 ' + famPeople(f) + ' · ' + familyLabel(f, i)));
+    var colors = el('div', 'tc-fammgmt__opts');
+    FAMILY_COLORS.forEach(function (col) { var b = el('button', 'tc-swatch' + (familyColor(f, i) === col ? ' tc-swatch--on' : '')); b.type = 'button'; b.style.background = col; b.title = col; b.addEventListener('click', function () { setFamilyColor(f.id, col); }); colors.appendChild(b); });
+    c.appendChild(field(t('familyColor'), colors));
+    var icons = el('div', 'tc-fammgmt__opts');
+    var initB = el('button', 'tc-iconopt' + (!f.icon ? ' tc-iconopt--on' : ''), familyInitials(familyLabel(f, i))); initB.type = 'button'; initB.title = t('familyInitials'); initB.addEventListener('click', function () { setFamilyIcon(f.id, ''); }); icons.appendChild(initB);
+    FAMILY_EMOJI.forEach(function (em) { var b = el('button', 'tc-iconopt' + (f.icon === em ? ' tc-iconopt--on' : ''), em); b.type = 'button'; b.addEventListener('click', function () { setFamilyIcon(f.id, em); }); icons.appendChild(b); });
+    c.appendChild(field(t('familyIcon'), icons));
+    var prof = familyProfileEditor(f);
+    if (state._famFocus === f.id) { prof.open = true; root.setTimeout(function () { try { prof.scrollIntoView({ block: 'center' }); } catch (e) {} state._famFocus = null; }, 80); }
+    c.appendChild(prof);
+    var acts = el('div', 'tc-fammgmt__acts');
+    acts.appendChild(pbtn('📋 ' + t('familyDuplicate'), '', function () { duplicateFamily(f.id); }));
+    acts.appendChild(pbtn('✂ ' + t('familySplit'), '', function () { splitFamily(f.id); }));
+    var others = familiesArr().filter(function (x) { return x.id !== f.id; });
+    if (others.length) { var msel = selectFrom([''].concat(others.map(function (x) { return x.id; })), '', function (id) { return id ? (t('familyMergeInto') + ' ' + familyLabel(familyObjById(id), famIndex(id))) : t('familyMergePick'); }); msel.className = 'tc-input tc-fammgmt__merge'; msel.addEventListener('change', function () { if (msel.value) mergeFamily(f.id, msel.value); }); acts.appendChild(msel); }
+    acts.appendChild(pbtn('✉ ' + t('familyInvite'), '', function () { inviteFamily(); }));
+    if (familiesArr().length > 1) acts.appendChild(pbtn('🗑 ' + t('familyDelete'), 'tc-pbtn--danger', function () { deleteFamily(f.id); }));
+    c.appendChild(acts);
+    return c;
+  }
+  function familyProfileEditor(f) {
+    var box = el('details', 'tc-famprof'); box.appendChild(el('summary', 'tc-famprof__sum', '📇 ' + t('familyProfile')));
+    var body = el('div', 'tc-famprof__body');
+    function txt(labelKey, key, ph) { var inp = input(f[key] || '', ph || ''); inp.addEventListener('input', function () { f[key] = inp.value; }); inp.addEventListener('change', function () { saveTrip(state.trip); }); body.appendChild(field(t(labelKey), inp)); }
+    // Headcount edits persist on blur but do NOT full-render (which would collapse this <details>
+    // and dismiss the mobile number keypad). The header's people count refreshes on the next render.
+    txt('familyPrimaryContact', 'primaryContact'); txt('familyPhone', 'phone'); txt('familyEmail', 'email');
+    var counts = el('div', 'tc-row3'); [['adults', 'adults'], ['seniors', 'seniors'], ['familyTeens', 'teenagers'], ['familyChildren', 'children'], ['familyToddlers', 'toddlers'], ['familyInfants', 'infants']].forEach(function (pr) { var inp = input(f[pr[1]] || 0, '', 'number'); inp.min = 0; inp.addEventListener('input', function () { f[pr[1]] = +inp.value || 0; }); inp.addEventListener('change', function () { saveTrip(state.trip); }); counts.appendChild(field(t(pr[0]), inp)); }); body.appendChild(counts);
+    var ages = input(f.childrenAges || '', t('childrenAgesPh')); ages.addEventListener('input', function () { f.childrenAges = ages.value; }); ages.addEventListener('change', function () { saveTrip(state.trip); }); body.appendChild(field(t('childrenAges'), ages));
+    txt('familySpecialNeeds', 'specialNeeds');
+    var langInp = input((f.languages || []).join(', '), t('familyLanguagesPh')); langInp.addEventListener('input', function () { f.languages = langInp.value.split(',').map(function (s) { return s.trim(); }).filter(Boolean); }); langInp.addEventListener('change', function () { saveTrip(state.trip); }); body.appendChild(field(t('familyLanguages'), langInp));
+    txt('familyFoodAllergies', 'foodAllergies'); txt('familyFoodPrefs2', 'foodPrefs');
+    body.appendChild(field(t('budget'), seg(['budget', 'moderate', 'luxury'], f.budgetLevel, 'budget_', function (v) { f.budgetLevel = v; saveTrip(state.trip); })));
+    txt('familyTransportation', 'transportation'); txt('familyHotelPref', 'hotelPreference');
+    txt('familyHotelRoom', 'hotelRoom'); txt('familyVehicle', 'vehicle');
+    var notes = doc.createElement('textarea'); notes.className = 'tc-input'; notes.rows = 2; notes.value = f.notes || ''; notes.addEventListener('input', function () { f.notes = notes.value; }); notes.addEventListener('change', function () { saveTrip(state.trip); }); body.appendChild(field(t('familyNotes'), notes));
+    box.appendChild(body); return box;
+  }
+  // ── Mobile bottom sheet: tap a family chip → rename / profile / votes / tasks / payments / transport ──
+  function sheetBtn(label, fn) { var b = el('button', 'tc-pbtn', label); b.type = 'button'; b.addEventListener('click', fn); return b; }
+  function openFamilySheet(f, i) {
+    if (!f) return; closeModal();
+    var ov = el('div', 'tc-modal tc-sheet'); ov.id = 'tcModal'; var card = el('div', 'tc-modal__card');
+    var head = el('div', 'tc-modal__head'); head.appendChild(familyChipEl(f, i)); var x = el('button', 'tc-modal__x', '×'); x.type = 'button'; x.addEventListener('click', closeModal); head.appendChild(x); card.appendChild(head);
+    var list = el('div', 'tc-sheet__list');
+    var rrow = el('div', 'tc-sheet__rename'); var nm = input(f.name, t('familyNamePh')); nm.className = 'tc-input'; rrow.appendChild(nm);
+    var rb = el('button', 'tc-pbtn tc-pbtn--accent', '✓ ' + t('familyRename')); rb.type = 'button'; rb.addEventListener('click', function () { renameFamily(f.id, nm.value); closeModal(); }); rrow.appendChild(rb); list.appendChild(rrow);
+    list.appendChild(sheetBtn('👤 ' + t('familyEditProfile'), function () { closeModal(); state._famFocus = f.id; state.screen = 'familyManagement'; render(); }));
+    list.appendChild(sheetBtn('🗳 ' + t('familyVoteHistory'), function () { closeModal(); openFamilyVotes(f, i); }));
+    list.appendChild(sheetBtn('✅ ' + t('familyTasks'), function () { closeModal(); state.activeTab = 'bookings'; state._taskFilter = 'fam:' + f.id; render(); }));
+    list.appendChild(sheetBtn('💵 ' + t('familyPayments'), function () { closeModal(); state.activeTab = 'costs'; render(); }));
+    list.appendChild(sheetBtn('🚗 ' + t('familyTransport'), function () { closeModal(); state._famFocus = f.id; state.screen = 'familyManagement'; render(); }));
+    card.appendChild(list);
+    ov.appendChild(card); ov.addEventListener('click', function (e) { if (e.target === ov) closeModal(); }); doc.body.appendChild(ov);
+  }
+  function openFamilyVotes(f, i) {
+    closeModal(); var ds = decisions();
+    var ov = el('div', 'tc-modal'); ov.id = 'tcModal'; var card = el('div', 'tc-modal__card');
+    var head = el('div', 'tc-modal__head'); head.appendChild(el('strong', 'tc-modal__title', '🗳 ' + familyLabel(f, i))); var x = el('button', 'tc-modal__x', '×'); x.type = 'button'; x.addEventListener('click', closeModal); head.appendChild(x); card.appendChild(head);
+    var any = false;
+    Object.keys(ds).forEach(function (k) { var d = ds[k], oid = d.votes && d.votes[f.id]; if (!oid) return; any = true; var opt = (d.options || []).filter(function (o) { return o.id === oid; })[0]; card.appendChild(kv(d.originalName || k, (opt ? opt.name : '—') + (d.status === 'resolved' ? ' ✓' : ''))); });
+    if (!any) card.appendChild(el('p', 'tc-hint', t('familyNoVotes')));
+    ov.appendChild(card); ov.addEventListener('click', function (e) { if (e.target === ov) closeModal(); }); doc.body.appendChild(ov);
   }
   // ════════════════════════════════════════════════════════════════════════
   //  GROUP CONSENSUS ENGINE — every per-family Like/Maybe/Skip/Favorite, on EVERY
@@ -7144,6 +7676,92 @@
     return b;
   }
 
+  // ── Rich, HONEST place facts (Refinement 3) ─────────────────────────────
+  // Every line is EITHER a real value (with a source/AI badge) OR an honest
+  // "Verify before going" link. Google rating/hours/phone/price load async via
+  // the referrer-restricted client key (real). AI-derived hints are labeled as
+  // recommendations. Nothing — rating, hours, price, parking — is fabricated.
+  function factValue(value, opts) {
+    opts = opts || {};
+    var wrap = el('span', 'tc-fact__vwrap');
+    if (opts.tel && value) { var tl = el('a', 'tc-fact__v'); tl.href = 'tel:' + String(value).replace(/[^\d+]/g, ''); tl.textContent = value; wrap.appendChild(tl); }
+    else if (value) wrap.appendChild(el('span', 'tc-fact__v', value));
+    else if (opts.verify) { var a = el('a', 'tc-fact__verify'); a.href = opts.verify; a.target = '_blank'; a.rel = 'noopener'; a.textContent = '⚠ ' + t('pkgVerify'); wrap.appendChild(a); return wrap; }
+    else { wrap.appendChild(el('span', 'tc-fact__v tc-muted', '—')); return wrap; }
+    if (opts.source) wrap.appendChild(el('span', 'tc-fact__src', ' · ✓ ' + opts.source));
+    if (opts.ai) wrap.appendChild(el('span', 'tc-fact__ai', ' · ' + t('aiSuggestionLabel')));
+    return wrap;
+  }
+  function factLine(labelKey, value, opts) {
+    var row = el('div', 'tc-fact'); row.setAttribute('data-fact', labelKey);
+    row.appendChild(el('span', 'tc-fact__k', t(labelKey)));
+    row.appendChild(factValue(value, opts));
+    return row;
+  }
+  function replaceFact(box, labelKey, value, opts) {
+    if (!value || !box) return; var row = box.querySelector('[data-fact="' + labelKey + '"]'); if (!row) return;
+    var old = row.querySelector('.tc-fact__vwrap'); var nv = factValue(value, opts);
+    if (old) row.replaceChild(nv, old); else row.appendChild(nv);
+  }
+  function isEvRelevant() { var ev = (state.trip && state.trip.ev) || {}; return !!(ev.rangeMiles || ev.model); }
+  function weatherSuitabilitySuggestion(p) {
+    var T = root.TCDecisions, c = T ? T.catClass(p.category || '') : '';
+    if (c === 'museum' || c === 'shopping') return t('weatherIndoor');
+    if (c === 'beach' || c === 'scenic' || c === 'active') return t('weatherOutdoor');
+    return t('weatherMixed');
+  }
+  function familyFitLine(p) {
+    var row = el('div', 'tc-fact'); row.setAttribute('data-fact', 'factFamilyFit');
+    row.appendChild(el('span', 'tc-fact__k', t('factFamilyFit')));
+    var v = el('span', 'tc-fact__vwrap'); var T = root.TCDecisions, shown = false;
+    if (typeof p.toddlerFriendlyScore === 'number') { v.appendChild(scoreChip('👶', p.toddlerFriendlyScore)); shown = true; }
+    if (typeof p.kidFriendlyScore === 'number') { v.appendChild(scoreChip('🧒', p.kidFriendlyScore)); shown = true; }
+    if (typeof p.teenFriendlyScore === 'number') { v.appendChild(scoreChip('🧑', p.teenFriendlyScore)); shown = true; }
+    if (typeof p.seniorFriendlyScore === 'number') { v.appendChild(scoreChip('🧓', p.seniorFriendlyScore)); shown = true; }
+    if (shown) v.appendChild(el('span', 'tc-fact__ai', ' · ' + t('aiSuggestionLabel'))); // AI/plan scores are NOT measured facts
+    if (!shown && T) {
+      var ages = ((state.trip && state.trip.families) || []).map(function (f) { return f.childrenAges || ''; }).join(', ');
+      var groups = T.ageGroups(ages), fit = T.fitHints(p.category || '', ages);
+      [['toddler', '👶'], ['kid', '🧒'], ['teen', '🧑']].forEach(function (g) { if (groups[g[0]]) { v.appendChild(chip('tc-fit tc-fit--' + fit[g[0]], g[1] + ' ' + t('fit_' + fit[g[0]]))); shown = true; } });
+      if (shown) v.appendChild(el('span', 'tc-fact__ai', ' · ' + t('aiSuggestionLabel')));
+    }
+    if (!shown) { var a = el('a', 'tc-fact__verify'); a.href = gsearch((p.name || '') + ' family friendly'); a.target = '_blank'; a.rel = 'noopener'; a.textContent = '⚠ ' + t('pkgVerify'); v.appendChild(a); }
+    row.appendChild(v); return row;
+  }
+  function renderPlaceFacts(p) {
+    var T = root.TCDecisions, city = p.city || (state.trip && state.trip.destination) || '', name = p.name || '';
+    var box = el('div', 'tc-facts');
+    var q = function (suffix) { return gsearch((name + ' ' + city + ' ' + suffix).trim()); };
+    box.appendChild(factLine('factRating', '', { verify: q('reviews') }));                 // ← async Google
+    box.appendChild(factLine('factHours', '', { verify: q('hours') }));                     // ← async Google
+    box.appendChild(factLine('factPhone', '', { verify: q('phone') }));                     // ← async Google
+    box.appendChild(factLine('factCost', p.estimatedCost || '', p.estimatedCost ? { ai: true } : { verify: q('price') }));
+    var dur = p.estimatedDuration || (T ? (t('vt_' + T.visitBucket(p.category || '')) + ' (' + t('estimateLabel') + ')') : '');
+    box.appendChild(factLine('factDuration', dur, p.estimatedDuration ? {} : { ai: true }));
+    box.appendChild(factLine('factBestTime', p.bestTime || '', p.bestTime ? { ai: true } : { verify: q('best time to visit') }));
+    box.appendChild(factLine('factParking', p.parkingNotes || '', p.parkingNotes ? { ai: true } : { verify: q('parking') }));
+    box.appendChild(familyFitLine(p));
+    box.appendChild(factLine('factAccessibility', '', { verify: q('accessibility wheelchair') }));
+    box.appendChild(factLine('factRestrooms', '', { verify: q('restrooms') }));
+    box.appendChild(factLine('factStroller', '', { verify: q('stroller friendly') }));
+    box.appendChild(factLine('factFoodNearby', '', { verify: gsearch('restaurants near ' + name + ' ' + city) }));
+    box.appendChild(factLine('factDessertNearby', '', { verify: gsearch('dessert near ' + name + ' ' + city) }));
+    if (isEvRelevant()) box.appendChild(factLine('factEvNearby', '', { verify: MapLinkProvider.google('EV charging station', name + ' ' + city) }));
+    box.appendChild(factLine('factSafety', '', { verify: q('safety') }));
+    box.appendChild(factLine('factWeather', weatherSuitabilitySuggestion(p), { ai: true }));
+    enrichModalFacts(box, p, city);
+    return box;
+  }
+  function enrichModalFacts(box, p, city) {
+    if (typeof fetch !== 'function' || !box) return;
+    fetchPlaceDetailsClient(p.name, p.address || city).then(function (d) {
+      if (!d) return;
+      if (d.rating) replaceFact(box, 'factRating', '⭐ ' + d.rating + (d.reviewCount ? ' · ' + d.reviewCount + ' ' + t('reviews') : ''), { source: 'Google' });
+      if (d.hoursToday) replaceFact(box, 'factHours', d.hoursToday + (d.closed ? ' · ⚠ ' + t('pkgClosedStatus') : ''), { source: 'Google' });
+      if (d.phone) replaceFact(box, 'factPhone', d.phone, { source: 'Google', tel: d.phone });
+      if (d.priceLevel) replaceFact(box, 'factCost', '💵 ' + d.priceLevel, { source: 'Google' });
+    }).catch(function () {});
+  }
   function openPlaceModal(p) {
     closeModal();
     var ov = el('div', 'tc-modal'); ov.id = 'tcModal';
@@ -7155,11 +7773,8 @@
     card.appendChild(placeMedia(p, 'tc-modal__media'));
     if (p.address) card.appendChild(row2('📍', p.address));
     if (p.description) card.appendChild(el('p', 'tc-modal__desc', p.description));
-    if (p.whySelected) card.appendChild(kv(t('whySelected'), p.whySelected));
-    if (p.bestTime) card.appendChild(kv(t('bestTime'), p.bestTime));
-    if (p.estimatedDuration) card.appendChild(kv(t('duration'), p.estimatedDuration));
-    if (p.estimatedCost) card.appendChild(kv(t('cost'), p.estimatedCost));
-    if (p.parkingNotes) card.appendChild(kv(t('parking'), p.parkingNotes));
+    if (p.whySelected || p.why) { var wk = kv(t('whyFits'), p.whySelected || p.why); wk.appendChild(el('span', 'tc-fact__ai', ' · ' + t('aiSuggestionLabel'))); card.appendChild(wk); }
+    card.appendChild(renderPlaceFacts(p));        // ← full honest fact grid (Refinement 3)
     if (p.tips) card.appendChild(kv(t('tips'), p.tips));
     if (p.backupPlace) card.appendChild(kv(t('backup'), p.backupPlace));
     var acts = el('div', 'tc-modal__acts');
@@ -8250,13 +8865,15 @@
   // Build a DRAFT ride request from trip data and hand off to the EXISTING ride flow
   // (sessionStorage → /airport → RideIntake). NEVER auto-confirms a booking.
   function totalTravelers() {
-    return ((state.trip && state.trip.families) || []).reduce(function (n, f) {
-      return n + (f.adults || 0) + (f.seniors || 0) + String(f.childrenAges || '').split(/[,\s]+/).filter(function (x) { return /\d/.test(x); }).length;
-    }, 0) || 1;
+    return ((state.trip && state.trip.families) || []).reduce(function (n, f) { return n + famPeople(f); }, 0) || 1;
   }
   function groupKidsSeniors() {
     var kids = 0, sr = 0;
-    ((state.trip && state.trip.families) || []).forEach(function (f) { kids += String(f.childrenAges || '').split(/[,\s]+/).filter(function (x) { return /\d/.test(x); }).length; sr += (f.seniors || 0); });
+    ((state.trip && state.trip.families) || []).forEach(function (f) {
+      var buckets = (f.teenagers || 0) + (f.children || 0) + (f.toddlers || 0) + (f.infants || 0);
+      kids += buckets > 0 ? buckets : String(f.childrenAges || '').split(/[,\s]+/).filter(function (x) { return /\d/.test(x); }).length; // bucket-aware (mirror famPeople)
+      sr += (f.seniors || 0);
+    });
     return { kids: kids, seniors: sr };
   }
   // General DuLichCali service INQUIRY (no payment — a draft handoff to the existing ride flow):
@@ -9176,8 +9793,28 @@
     if (canEditPlan()) wrap.appendChild(field(t('costSplitMode'), (function () { var sel = selectFrom(['per_person', 'equal', 'per_family', 'owner_pays'], split.mode, function (o) { return t('split_' + o); }); sel.addEventListener('change', function () { split.mode = sel.value; saveTrip(tr); render(); }); return sel; })()));
     else wrap.appendChild(el('p', 'tc-hint', t('split_' + split.mode)));
     var shares = familyShares(tr, costs);
+    var _led0 = costLedger(tr);
     shares.forEach(function (fs) {
-      var row = el('div', 'tc-costrow'); row.appendChild(el('span', 'tc-costrow__k', fs.name + ' (' + fs.travelers + ')')); row.appendChild(el('strong', 'tc-costrow__v', money(fs.share))); wrap.appendChild(row);
+      var fo = familyObjById(fs.id), idx = famIndex(fs.id);
+      var paid = _led0.filter(function (e) { return e.familyId === fs.id && e.paid; }).reduce(function (n, e) { return n + (+e.amount || 0); }, 0);
+      var remaining = Math.max(0, fs.share - paid);
+      var card = el('div', 'tc-famshare'); if (fo) card.style.setProperty('--fam', familyColor(fo, idx));
+      var hd = el('div', 'tc-famshare__hd'); hd.appendChild(familyChipEl(fo, idx)); hd.appendChild(el('span', 'tc-famshare__ppl', '👥 ' + (fo ? famPeople(fo) : fs.travelers))); card.appendChild(hd);
+      var g = el('div', 'tc-famshare__grid');
+      [['costShareEst', money(fs.share)], ['costPaid', money(paid)], ['costRemaining', money(remaining)]].forEach(function (pr) { var cell = el('div', 'tc-famshare__cell'); cell.appendChild(el('span', 'tc-famshare__k', t(pr[0]))); cell.appendChild(el('strong', 'tc-famshare__v', pr[1])); g.appendChild(cell); });
+      card.appendChild(g);
+      if (fo) {
+        if (canEditPlan()) {
+          var ra = el('div', 'tc-famshare__assign');
+          var rIn = input(fo.hotelRoom || '', t('familyHotelRoomPh')); rIn.addEventListener('input', function () { fo.hotelRoom = rIn.value; }); rIn.addEventListener('change', function () { saveTrip(tr); }); ra.appendChild(field('🏨 ' + t('familyHotelRoom'), rIn));
+          var vIn = input(fo.vehicle || '', t('familyVehiclePh')); vIn.addEventListener('input', function () { fo.vehicle = vIn.value; }); vIn.addEventListener('change', function () { saveTrip(tr); }); ra.appendChild(field('🚗 ' + t('familyVehicle'), vIn));
+          card.appendChild(ra);
+        } else {
+          if (fo.hotelRoom) card.appendChild(el('p', 'tc-famshare__ro', '🏨 ' + fo.hotelRoom));
+          if (fo.vehicle) card.appendChild(el('p', 'tc-famshare__ro', '🚗 ' + fo.vehicle));
+        }
+      }
+      wrap.appendChild(card);
     });
     // Task payment balance (P2): per-family owed (from task actual/estimate costs) − actually paid;
     // total paid / remaining unpaid. Reuses the split mode + the who-paid ledger.
@@ -9500,7 +10137,7 @@
     if (b.dueDate) meta.appendChild(el('span', 'tc-na__chip', '⏰ ' + b.dueDate));
     var cost = b.actualCost || b.costEstimate || b.priceRange;
     if (cost) meta.appendChild(el('span', 'tc-na__chip', '💵 ' + (b.actualCost ? '' : '~') + String(cost).replace(/^\$?/, '$')));
-    if (b.assignedToFamily) { var fam = famName(b.assignedToFamily); if (fam) meta.appendChild(el('span', 'tc-na__chip', '👤 ' + fam)); }
+    if (b.assignedToFamily) { var _fo = familyObjById(b.assignedToFamily); if (_fo) meta.appendChild(familyChipEl(_fo, famIndex(b.assignedToFamily), { cls: 'tc-na__famchip' })); }
     if (b.assignedToMember) { var _mn = memberName(b.assignedToMember); if (_mn) meta.appendChild(el('span', 'tc-na__chip', '🙋 ' + _mn)); }
     c.appendChild(meta);
     if (!state.readonly && !tr._demo) {
@@ -9644,6 +10281,12 @@
         fbar.appendChild(fb);
       });
       wrap.appendChild(fbar);
+      if ((state._taskFilter || '').indexOf('fam:') === 0) {
+        var _ffid = state._taskFilter.slice(4), _fnote = el('div', 'tc-taskfamnote');
+        _fnote.appendChild(familyChipEl(familyObjById(_ffid), famIndex(_ffid)));
+        var _clr = el('button', 'tc-pbtn tc-pbtn--ghost', '✕ ' + t('tf_all')); _clr.type = 'button'; _clr.addEventListener('click', function () { state._taskFilter = 'all'; render(); }); _fnote.appendChild(_clr);
+        wrap.appendChild(_fnote);
+      }
     }
     if (isResearching('bookings') && !tr.bookings.length) wrap.appendChild(researchBanner('researchingBookings'));
     else if (!tr.bookings.length) wrap.appendChild(el('p', 'tc-empty', t('noBookings')));
@@ -9681,7 +10324,8 @@
           || (_flt === 'todo' && !_done)
           || (_flt === 'completed' && _done)
           || (_flt === 'urgent' && _p === 'P0' && !_done)
-          || (_flt === 'mine' && _me && b.assignedToFamily && b.assignedToFamily === _me);
+          || (_flt === 'mine' && _me && b.assignedToFamily && b.assignedToFamily === _me)
+          || (_flt.indexOf('fam:') === 0 && b.assignedToFamily === _flt.slice(4)); // tasks for ONE family (from the family sheet)
         if (_show) { wrap.appendChild(bookingCard(b, i)); _shown++; }
       });
       if (!_shown) wrap.appendChild(el('p', 'tc-empty', t('noBookings')));
@@ -9756,6 +10400,7 @@
     head.appendChild(el('span', 'tc-bk__pri tc-bk__pri--' + _pr, t('pri_' + _pr)));
     c.appendChild(head);
     c.appendChild(el('strong', 'tc-bk__title', b.title));
+    if (b.assignedToFamily) { var _bfo = familyObjById(b.assignedToFamily); if (_bfo) { var _aw = el('div', 'tc-bk__assignee'); _aw.appendChild(el('span', 'tc-bk__assigntag', '👤 ' + t('taskAssignedTo'))); _aw.appendChild(familyChipEl(_bfo, famIndex(b.assignedToFamily))); c.appendChild(_aw); } }
     if (done && b.completedAt) c.appendChild(el('p', 'tc-bk__donemeta', '✓ ' + t('taskCompletedBy') + (b.completedByName ? (' ' + b.completedByName) : '') + ' · ' + String(b.completedAt).slice(0, 10)));
     if (b.provider) c.appendChild(el('p', 'tc-bk__meta', t('providerLabel') + ': ' + b.provider));
     if (b.priceRange) c.appendChild(el('p', 'tc-bk__meta', '💵 ' + b.priceRange));
@@ -9959,19 +10604,33 @@
   // Who's travelling — family info / accessibility / special needs (the Group tab is now the
   // single home for "who is on this trip", replacing the removed Family Arrival Plan).
   function groupTravelersBlock() {
-    var fams = ((state.trip && state.trip.families) || []).filter(function (f) { return f && (f.name || f.adults || f.seniors || (f.childrenAges || '').trim()); });
+    var fams = ((state.trip && state.trip.families) || []).filter(function (f) { return f && (f.name || f.adults || f.seniors || f.teenagers || f.children || f.toddlers || f.infants || (f.childrenAges || '').trim()); });
     if (!fams.length) return null;
     var box = el('div', 'tc-travelers');
     box.appendChild(el('strong', 'tc-travelers__t', '👨‍👩‍👧 ' + t('groupTravelersTitle')));
     fams.forEach(function (f) {
-      var c = el('div', 'tc-traveler');
-      if (f.name) c.appendChild(el('strong', 'tc-traveler__name', f.name));
+      var idx = famIndex(f.id);
+      var c = el('div', 'tc-traveler'); c.style.setProperty('--fam', familyColor(f, idx));
+      var thd = el('div', 'tc-traveler__hd');
+      thd.appendChild(familyChipEl(f, idx));
+      // Tap a family → bottom sheet (rename / profile / votes / tasks / payments / transport). Editors only.
+      if (canEditPlan()) { var openBtn = el('button', 'tc-traveler__open', '⋯'); openBtn.type = 'button'; openBtn.title = t('familyManage'); openBtn.addEventListener('click', function () { openFamilySheet(f, idx); }); thd.appendChild(openBtn); }
+      c.appendChild(thd);
       var bits = [];
       if (f.adults) bits.push(f.adults + ' ' + t('travelersAdults'));
       if (f.seniors) bits.push(f.seniors + ' ' + t('seniors').toLowerCase());
       var ages = String(f.childrenAges || '').trim();
-      var kidsCount = ages.split(/[,\s]+/).filter(function (x) { return /\d/.test(x); }).length;
-      if (kidsCount) bits.push(kidsCount + ' ' + t('childrenLabel').toLowerCase() + (ages ? ' (' + ages + ')' : ''));
+      var buckets = (f.teenagers || 0) + (f.children || 0) + (f.toddlers || 0) + (f.infants || 0);
+      if (buckets > 0) {
+        if (f.teenagers) bits.push(f.teenagers + ' ' + t('familyTeens').toLowerCase());
+        if (f.children) bits.push(f.children + ' ' + t('familyChildren').toLowerCase());
+        if (f.toddlers) bits.push(f.toddlers + ' ' + t('familyToddlers').toLowerCase());
+        if (f.infants) bits.push(f.infants + ' ' + t('familyInfants').toLowerCase());
+        if (ages) bits.push('(' + ages + ')');
+      } else {
+        var kidsCount = ages.split(/[,\s]+/).filter(function (x) { return /\d/.test(x); }).length;
+        if (kidsCount) bits.push(kidsCount + ' ' + t('childrenLabel').toLowerCase() + (ages ? ' (' + ages + ')' : ''));
+      }
       if (bits.length) c.appendChild(el('p', 'tc-traveler__meta', bits.join(' · ')));
       var needs = [];
       (Array.isArray(f.seniorNeeds) ? f.seniorNeeds : []).forEach(function (n) { if (n) needs.push(n); });
@@ -9991,7 +10650,7 @@
       if (canEditPlan()) {
         var addRow = el('div', 'tc-mroster__add');
         var mi = input('', t('memberNamePh')); mi.className = 'tc-input tc-mroster__in';
-        var ma = el('button', 'tc-pbtn', '＋ ' + t('addMember')); ma.type = 'button';
+        var ma = el('button', 'tc-pbtn', '＋ ' + t('addMemberBtn')); ma.type = 'button';
         ma.addEventListener('click', function () { var v = (mi.value || '').trim(); if (!v) return; f.members = Array.isArray(f.members) ? f.members : []; f.members.push({ id: uid('mem'), name: v }); mi.value = ''; saveTrip(state.trip); render(); });
         addRow.appendChild(mi); addRow.appendChild(ma); c.appendChild(addRow);
       }
@@ -10172,6 +10831,12 @@
     _improveTrip: improveTrip, _runImprove: runImprove, _toggleImproveGoal: toggleImproveGoal, _improveSelectedGoals: improveSelectedGoals,
     _voteVerdict: voteVerdict, _recomputeAutoReject: recomputeAutoReject, _reconcileAutoRejections: reconcileAutoRejections, _rejectedNames: rejectedNames, _rejectedNameSet: rejectedNameSet, _unrejectPlace: unrejectPlace, _skippedNames: skippedNames,
     _consensusFor: consensusFor, _familyWeight: familyWeight, _buildPreferenceProfile: buildPreferenceProfile, _likedNames: likedNames, _favoritedNames: favoritedNames, _votesSummaryText: votesSummaryText, _voteRow: voteRow,
+    _render: render, _placeKey: placeKey, _setMe: setMe, _getMe: getMe, _canEditPlan: canEditPlan, _setPlaceOverride: setPlaceOverride, _getOverride: getOverride, _loadAlternatives: loadAlternatives,
+    _decisions: decisions, _getDecision: getDecision, _ensureDecision: ensureDecision, _openDecision: openDecision, _castDecisionVote: castDecisionVote, _resolveDecisionIfReady: resolveDecisionIfReady, _reopenDecision: reopenDecision, _decisionPanel: decisionPanel, _decisionFamilyCount: decisionFamilyCount, _decisionFamilyIds: decisionFamilyIds, _decisionMiniNote: decisionMiniNote,
+    _tripFamilies: tripFamilies, _familyColor: familyColor, _familyLabel: familyLabel, _familyChipEl: familyChipEl, _famName: famName, _famPeople: famPeople, _familyObjById: familyObjById, _famIndex: famIndex,
+    _renameFamily: renameFamily, _setFamilyColor: setFamilyColor, _setFamilyIcon: setFamilyIcon, _addFamily: addFamily, _deleteFamily: deleteFamily, _mergeFamily: mergeFamily, _splitFamily: splitFamily, _duplicateFamily: duplicateFamily, _reconcileFamilyRefs: reconcileFamilyRefs, _pruneDecisionVotes: pruneDecisionVotes,
+    _renderFamilyManagement: renderFamilyManagement, _familyMgmtCard: familyMgmtCard, _openFamilySheet: openFamilySheet, _renderCosts: renderCosts, _renderBookings: renderBookings, _bookingCard: bookingCard, _saveTrip: saveTrip, _loadTrip: loadTrip, _groupTravelersBlock: groupTravelersBlock,
+    _altPanel: altPanel, _altCardEl: altCardEl, _renderPlaceFacts: renderPlaceFacts, _openPlaceModal: openPlaceModal, _enrichModalFacts: enrichModalFacts,
     _preferredNames: preferredNames, _votesSignature: votesSignature, _votesChangedSinceOptimize: votesChangedSinceOptimize, _optimizeRebuild: optimizeRebuild, _consensusSort: consensusSort, _hotelVoteName: hotelVoteName,
     _researchTours: researchTours, _requestDlcInquiry: requestDlcInquiry, _reconcileRideResult: reconcileRideResult, _attachManualBooking: attachManualBooking, _openConfirmBookingModal: openConfirmBookingModal, _researchWeather: researchWeather, _checkHotelDeals: checkHotelDeals, _checkTicketDeals: checkTicketDeals, _toursPanel: toursPanel,
     _loadMedia: loadMedia, _addMedia: addMedia, _updateMedia: updateMedia, _deleteMedia: deleteMedia, _visibleMedia: visibleMedia, _mediaCol: mediaCol, _isImageUrl: isImageUrl, _dayOptionsForAlbum: dayOptionsForAlbum,

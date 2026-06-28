@@ -258,6 +258,7 @@
       pkgFamilyTips: 'Family tips', pkgTipKids: 'Pack snacks + plan rest stops; check stroller/restroom access at each stop.',
       pkgTipTeens: 'Mix in photo spots and active experiences teens enjoy.', pkgTipSeniors: 'Favor low-walking options and easy parking; build in rest time.',
       pkgPrint: 'Print / Save PDF', pkgEditItin: 'Edit in Itinerary', pkgNoItin: 'Finalize your itinerary first to generate the guide.',
+      pkgCall: 'Call', pkgClosedStatus: 'Temporarily closed — verify',
       pkgHonestyNote: 'This guide reuses your trip data. Photos are real (Google/Wikipedia) or labeled; prices, ratings, hours and battery are estimates or “verify before going” — never fabricated.',
       tab_food: 'Food', foodPicksTitle: 'Food picks', foodSub: 'AI-researched restaurants for your group at each stop — matched to your cuisines.', findFood: 'Find food picks (AI)', researchingFood: 'Finding the best restaurants for your group…', noFoodYet: 'Tap “Find food picks” for AI restaurant recommendations.', searchFoodBtn: 'Search', yelpBtn: 'Yelp', dishesLabel: 'Must-try', reservationLabel: 'Reservations',
       imgRepresentative: 'Representative image only', imgPending: 'Photo pending verification', viewPhotos: 'Photos', googleReviews: 'Google reviews', yelpReviews: 'Yelp reviews', menuBtn: 'Menu', mustTryLabel: 'Must-try',
@@ -596,6 +597,7 @@
       pkgFamilyTips: 'Mẹo cho gia đình', pkgTipKids: 'Mang theo đồ ăn vặt + dự trù điểm nghỉ; kiểm tra lối xe đẩy/nhà vệ sinh tại mỗi điểm.',
       pkgTipTeens: 'Xen kẽ các điểm chụp ảnh và hoạt động năng động cho thanh thiếu niên.', pkgTipSeniors: 'Ưu tiên ít đi bộ và bãi đậu xe dễ dàng; sắp xếp thời gian nghỉ.',
       pkgPrint: 'In / Lưu PDF', pkgEditItin: 'Sửa trong Lịch trình', pkgNoItin: 'Hoàn tất lịch trình trước để tạo cẩm nang.',
+      pkgCall: 'Gọi', pkgClosedStatus: 'Tạm đóng cửa — kiểm tra',
       pkgHonestyNote: 'Cẩm nang này dùng dữ liệu chuyến đi của bạn. Ảnh là thật (Google/Wikipedia) hoặc có ghi chú; giá, đánh giá, giờ mở cửa và pin là ước tính hoặc “kiểm tra trước khi đi” — không bao giờ bịa.',
       tab_food: 'Ẩm thực', foodPicksTitle: 'Gợi ý ẩm thực', foodSub: 'AI nghiên cứu nhà hàng cho cả nhóm tại từng điểm — hợp khẩu vị của bạn.', findFood: 'Tìm gợi ý ẩm thực (AI)', researchingFood: 'Đang tìm nhà hàng tốt nhất cho nhóm…', noFoodYet: 'Nhấn “Tìm gợi ý ẩm thực” để AI gợi ý nhà hàng.', searchFoodBtn: 'Tìm', yelpBtn: 'Yelp', dishesLabel: 'Nên thử', reservationLabel: 'Đặt chỗ',
       imgRepresentative: 'Chỉ là ảnh minh họa', imgPending: 'Ảnh chờ xác minh', viewPhotos: 'Ảnh', googleReviews: 'Đánh giá Google', yelpReviews: 'Đánh giá Yelp', menuBtn: 'Thực đơn', mustTryLabel: 'Nên thử',
@@ -934,6 +936,7 @@
       pkgFamilyTips: 'Consejos familiares', pkgTipKids: 'Lleva snacks + planifica paradas de descanso; revisa acceso para cochecito/baño en cada parada.',
       pkgTipTeens: 'Combina puntos fotográficos y experiencias activas para adolescentes.', pkgTipSeniors: 'Prioriza poca caminata y estacionamiento fácil; agrega tiempo de descanso.',
       pkgPrint: 'Imprimir / Guardar PDF', pkgEditItin: 'Editar en Itinerario', pkgNoItin: 'Finaliza tu itinerario primero para generar la guía.',
+      pkgCall: 'Llamar', pkgClosedStatus: 'Cerrado temporalmente — verifica',
       pkgHonestyNote: 'Esta guía reutiliza los datos de tu viaje. Las fotos son reales (Google/Wikipedia) o etiquetadas; precios, calificaciones, horarios y batería son estimaciones o “verifica antes de ir” — nunca inventados.',
       tab_food: 'Comida', foodPicksTitle: 'Recomendaciones de comida', foodSub: 'Restaurantes investigados por IA para tu grupo en cada parada, según tus cocinas.', findFood: 'Buscar comida (IA)', researchingFood: 'Buscando los mejores restaurantes para tu grupo…', noFoodYet: 'Toca “Buscar comida” para recomendaciones de restaurantes por IA.', searchFoodBtn: 'Buscar', yelpBtn: 'Yelp', dishesLabel: 'Para probar', reservationLabel: 'Reservas',
       imgRepresentative: 'Solo imagen representativa', imgPending: 'Foto pendiente de verificar', viewPhotos: 'Fotos', googleReviews: 'Reseñas de Google', yelpReviews: 'Reseñas de Yelp', menuBtn: 'Menú', mustTryLabel: 'Para probar',
@@ -1404,6 +1407,67 @@
     }).catch(function () { return null; });
     _clientPhotoCache[k] = pr;
     return pr;
+  }
+  // ── Client-side Google Places DETAILS (rating/hours/phone/website/price/address) ─────────────
+  // Same loader + referrer-restricted browser key + cache pattern as fetchPhotoClient. REAL data
+  // ONLY; resolves null when unavailable so the Guide keeps its honest "Verify before going"
+  // fallback. Never fabricated. New Places API (Place.searchByText) → legacy getDetails fallback.
+  function _pkgPriceLevel(v) {
+    if (v == null) return '';
+    var n = v;
+    if (typeof v === 'string') { var m = { PRICE_LEVEL_FREE: 0, PRICE_LEVEL_INEXPENSIVE: 1, PRICE_LEVEL_MODERATE: 2, PRICE_LEVEL_EXPENSIVE: 3, PRICE_LEVEL_VERY_EXPENSIVE: 4 }; n = m[v]; }
+    if (typeof n !== 'number' || n < 1) return '';
+    return new Array(Math.min(4, n) + 1).join('$');
+  }
+  function _todayHours(weekdayList) {
+    if (!Array.isArray(weekdayList) || !weekdayList.length) return '';
+    var day = new Date().getDay(), idx = (day === 0) ? 6 : day - 1; // weekday lists are Mon..Sun
+    return weekdayList[idx] || '';
+  }
+  var _placeDetailsCache = {};
+  function fetchPlaceDetailsClient(name, address) {
+    var k = (String(name || '') + '|' + String(address || '')).toLowerCase();
+    if (_placeDetailsCache[k]) return _placeDetailsCache[k];
+    var q = (String(name || '') + (address ? ', ' + address : '')).trim();
+    if (!q || typeof fetch !== 'function') { _placeDetailsCache[k] = Promise.resolve(null); return _placeDetailsCache[k]; }
+    var pr = tcImport('places').then(function (lib) {
+      if (!lib) return null;
+      if (lib.Place && typeof lib.Place.searchByText === 'function') {
+        return lib.Place.searchByText({ textQuery: q, maxResultCount: 1, fields: ['displayName', 'rating', 'userRatingCount', 'priceLevel', 'nationalPhoneNumber', 'websiteURI', 'formattedAddress', 'regularOpeningHours', 'businessStatus'] })
+          .then(function (res) {
+            var pl = res && res.places && res.places[0]; if (!pl) return _legacyDetails(lib, q);
+            return {
+              rating: (pl.rating != null) ? String(pl.rating) : '', reviewCount: (pl.userRatingCount != null) ? String(pl.userRatingCount) : '',
+              priceLevel: _pkgPriceLevel(pl.priceLevel), phone: pl.nationalPhoneNumber || '', website: pl.websiteURI || '',
+              address: pl.formattedAddress || '', hoursToday: _todayHours(pl.regularOpeningHours && pl.regularOpeningHours.weekdayDescriptions),
+              closed: !!(pl.businessStatus && pl.businessStatus !== 'OPERATIONAL'), source: 'google_places',
+            };
+          }).catch(function () { return _legacyDetails(lib, q); });
+      }
+      return _legacyDetails(lib, q);
+    }).catch(function () { return null; });
+    _placeDetailsCache[k] = pr;
+    return pr;
+  }
+  function _legacyDetails(lib, q) {
+    return new Promise(function (resolve) {
+      try {
+        if (!lib || !lib.PlacesService) return resolve(null);
+        var svc = new lib.PlacesService(doc.createElement('div'));
+        svc.findPlaceFromQuery({ query: q, fields: ['place_id'] }, function (results, status) {
+          if (status !== 'OK' || !results || !results[0] || !results[0].place_id) return resolve(null);
+          svc.getDetails({ placeId: results[0].place_id, fields: ['rating', 'user_ratings_total', 'price_level', 'formatted_phone_number', 'website', 'formatted_address', 'opening_hours', 'business_status'] }, function (det, st2) {
+            if (st2 !== 'OK' || !det) return resolve(null);
+            resolve({
+              rating: (det.rating != null) ? String(det.rating) : '', reviewCount: (det.user_ratings_total != null) ? String(det.user_ratings_total) : '',
+              priceLevel: _pkgPriceLevel(det.price_level), phone: det.formatted_phone_number || '', website: det.website || '',
+              address: det.formatted_address || '', hoursToday: _todayHours(det.opening_hours && det.opening_hours.weekday_text),
+              closed: !!(det.business_status && det.business_status !== 'OPERATIONAL'), source: 'google_places',
+            });
+          });
+        });
+      } catch (e) { resolve(null); }
+    });
   }
   // PlacePhotoProvider — real Google Places photos via the placePhotos callable; cached
   // per place. Sets state._photosUnavailable after a NO_MAPS_KEY so we stop calling.
@@ -5195,6 +5259,30 @@
   // Honest per-place card: real photo (or labeled no-photo+links), AI "why" labeled, directions +
   // booking, golden-hour when we have coords, and "Verify before going" search links for facts we
   // do NOT have a real source for (hours/price/rating are NEVER fabricated).
+  // Async-enrich a Guide stop card with REAL Google Places details (rating/hours/price/phone/
+  // website). Replaces the honest "verify" chips ONLY when real data resolves; keeps the verify
+  // links otherwise. Source labeled "✓ Google". Never fabricated.
+  function enrichStopCard(card, p, city) {
+    var name = (p && (p.name || p.area)) || ''; if (!name || typeof fetch !== 'function') return;
+    fetchPlaceDetailsClient(name, p.address || city).then(function (d) {
+      if (!d || !card) return;
+      var facts = card.querySelector('.tc-pkg__facts');
+      if (facts && (d.rating || d.priceLevel || d.hoursToday)) {
+        facts.innerHTML = '';
+        if (d.rating) facts.appendChild(el('span', 'tc-pkg__fact', '⭐ ' + d.rating + (d.reviewCount ? (' · ' + d.reviewCount) : '')));
+        if (d.priceLevel) facts.appendChild(el('span', 'tc-pkg__fact', '💵 ' + d.priceLevel));
+        if (d.hoursToday) facts.appendChild(el('span', 'tc-pkg__fact', '🕒 ' + d.hoursToday));
+        else { var hv = el('a', 'tc-pkg__verify'); hv.href = gsearch(name + ' ' + (city || '') + ' hours'); hv.target = '_blank'; hv.rel = 'noopener'; hv.textContent = '⚠ ' + t('pkgHours') + ': ' + t('pkgVerify'); facts.appendChild(hv); }
+        if (d.closed) facts.appendChild(el('span', 'tc-pkg__fact tc-pkg__warn', '⚠ ' + t('pkgClosedStatus')));
+        facts.appendChild(el('span', 'tc-pkg__fact tc-pkg__src', '✓ Google'));
+      }
+      var acts = card.querySelector('.tc-pkg__acts');
+      if (acts) {
+        if (d.phone) acts.appendChild(linkBtn('📞 ' + t('pkgCall'), 'tel:' + String(d.phone).replace(/[^\d+]/g, '')));
+        if (d.website) acts.appendChild(linkBtn('🌐 ' + t('website'), d.website));
+      }
+    }).catch(function () {});
+  }
   function pkgStopCard(tr, p, city, opts) {
     opts = opts || {};
     var c = el('article', 'tc-pkg__stop tc-pkg__stop--' + (opts.kind || 'place'));
@@ -5225,6 +5313,7 @@
     else { acts.appendChild(linkBtn('🚻 ' + t('pkgNearbyRestroom'), gsearch('public restroom near ' + (p.name || city) + ' ' + city))); }
     body.appendChild(acts);
     c.appendChild(body);
+    enrichStopCard(c, p, city); // async: real Google Places rating/hours/price/phone/website when available
     return c;
   }
   function pkgCover(tr, plan) {

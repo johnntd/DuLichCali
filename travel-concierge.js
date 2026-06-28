@@ -263,6 +263,10 @@
       pkgEvStart: 'Start battery %', pkgEvChargeTo: 'Charge to', pkgEvCharge80: 'Charge to 80% (fastest)', pkgEvCharge90: 'Charge to 90%', pkgEvCharge100: 'Charge to 100%',
       pkgEvUpdate: 'Update EV plan', pkgEvLegStops: '{n} charge stop(s)', pkgEvLegNoStop: 'No charge stop needed', pkgEvLegArrive: 'arrive ~{p}%',
       pkgEvMin: 'min', pkgEvLow: 'Tight on range — consider charging earlier or to a higher %.', pkgEvNearbyPlay: 'Playground',
+      pkgRegenerate: 'Regenerate', pkgRegenerated: 'Guide refreshed from your latest itinerary',
+      pkgLiveTitle: 'Live travel helper', pkgLiveSub: 'Check these before you go — live status is never fabricated.',
+      pkgLiveWeather: 'Weather', pkgLiveTraffic: 'Traffic', pkgLiveClosures: 'Road closures', pkgLiveWait: 'Restaurant wait', pkgLiveCrowd: 'Crowds',
+      pkgLiveNote: 'These open the real source — Du Lich Cali does not invent live conditions.',
       pkgHonestyNote: 'This guide reuses your trip data. Photos are real (Google/Wikipedia) or labeled; prices, ratings, hours and battery are estimates or “verify before going” — never fabricated.',
       tab_food: 'Food', foodPicksTitle: 'Food picks', foodSub: 'AI-researched restaurants for your group at each stop — matched to your cuisines.', findFood: 'Find food picks (AI)', researchingFood: 'Finding the best restaurants for your group…', noFoodYet: 'Tap “Find food picks” for AI restaurant recommendations.', searchFoodBtn: 'Search', yelpBtn: 'Yelp', dishesLabel: 'Must-try', reservationLabel: 'Reservations',
       imgRepresentative: 'Representative image only', imgPending: 'Photo pending verification', viewPhotos: 'Photos', googleReviews: 'Google reviews', yelpReviews: 'Yelp reviews', menuBtn: 'Menu', mustTryLabel: 'Must-try',
@@ -606,6 +610,10 @@
       pkgEvStart: 'Pin khởi đầu %', pkgEvChargeTo: 'Sạc đến', pkgEvCharge80: 'Sạc đến 80% (nhanh nhất)', pkgEvCharge90: 'Sạc đến 90%', pkgEvCharge100: 'Sạc đến 100%',
       pkgEvUpdate: 'Cập nhật kế hoạch sạc', pkgEvLegStops: '{n} lần sạc', pkgEvLegNoStop: 'Không cần dừng sạc', pkgEvLegArrive: 'đến nơi ~{p}%',
       pkgEvMin: 'phút', pkgEvLow: 'Pin hơi sát — cân nhắc sạc sớm hơn hoặc sạc nhiều hơn.', pkgEvNearbyPlay: 'Khu vui chơi',
+      pkgRegenerate: 'Tạo lại', pkgRegenerated: 'Đã làm mới cẩm nang theo lịch trình mới nhất',
+      pkgLiveTitle: 'Trợ lý theo thời gian thực', pkgLiveSub: 'Hãy kiểm tra trước khi đi — không bao giờ bịa tình trạng trực tiếp.',
+      pkgLiveWeather: 'Thời tiết', pkgLiveTraffic: 'Giao thông', pkgLiveClosures: 'Đường đóng', pkgLiveWait: 'Thời gian chờ nhà hàng', pkgLiveCrowd: 'Đông đúc',
+      pkgLiveNote: 'Các liên kết này mở nguồn thật — Du Lich Cali không tự bịa điều kiện trực tiếp.',
       pkgHonestyNote: 'Cẩm nang này dùng dữ liệu chuyến đi của bạn. Ảnh là thật (Google/Wikipedia) hoặc có ghi chú; giá, đánh giá, giờ mở cửa và pin là ước tính hoặc “kiểm tra trước khi đi” — không bao giờ bịa.',
       tab_food: 'Ẩm thực', foodPicksTitle: 'Gợi ý ẩm thực', foodSub: 'AI nghiên cứu nhà hàng cho cả nhóm tại từng điểm — hợp khẩu vị của bạn.', findFood: 'Tìm gợi ý ẩm thực (AI)', researchingFood: 'Đang tìm nhà hàng tốt nhất cho nhóm…', noFoodYet: 'Nhấn “Tìm gợi ý ẩm thực” để AI gợi ý nhà hàng.', searchFoodBtn: 'Tìm', yelpBtn: 'Yelp', dishesLabel: 'Nên thử', reservationLabel: 'Đặt chỗ',
       imgRepresentative: 'Chỉ là ảnh minh họa', imgPending: 'Ảnh chờ xác minh', viewPhotos: 'Ảnh', googleReviews: 'Đánh giá Google', yelpReviews: 'Đánh giá Yelp', menuBtn: 'Thực đơn', mustTryLabel: 'Nên thử',
@@ -949,6 +957,10 @@
       pkgEvStart: 'Batería inicial %', pkgEvChargeTo: 'Cargar a', pkgEvCharge80: 'Cargar a 80% (más rápido)', pkgEvCharge90: 'Cargar a 90%', pkgEvCharge100: 'Cargar a 100%',
       pkgEvUpdate: 'Actualizar plan EV', pkgEvLegStops: '{n} parada(s) de carga', pkgEvLegNoStop: 'Sin parada de carga', pkgEvLegArrive: 'llegas ~{p}%',
       pkgEvMin: 'min', pkgEvLow: 'Autonomía justa — considera cargar antes o a un % más alto.', pkgEvNearbyPlay: 'Parque infantil',
+      pkgRegenerate: 'Regenerar', pkgRegenerated: 'Guía actualizada con tu itinerario más reciente',
+      pkgLiveTitle: 'Asistente en tiempo real', pkgLiveSub: 'Revisa esto antes de ir — el estado en vivo nunca se inventa.',
+      pkgLiveWeather: 'Clima', pkgLiveTraffic: 'Tráfico', pkgLiveClosures: 'Cierres de vías', pkgLiveWait: 'Espera en restaurantes', pkgLiveCrowd: 'Multitudes',
+      pkgLiveNote: 'Estos abren la fuente real — Du Lich Cali no inventa condiciones en vivo.',
       pkgHonestyNote: 'Esta guía reutiliza los datos de tu viaje. Las fotos son reales (Google/Wikipedia) o etiquetadas; precios, calificaciones, horarios y batería son estimaciones o “verifica antes de ir” — nunca inventados.',
       tab_food: 'Comida', foodPicksTitle: 'Recomendaciones de comida', foodSub: 'Restaurantes investigados por IA para tu grupo en cada parada, según tus cocinas.', findFood: 'Buscar comida (IA)', researchingFood: 'Buscando los mejores restaurantes para tu grupo…', noFoodYet: 'Toca “Buscar comida” para recomendaciones de restaurantes por IA.', searchFoodBtn: 'Buscar', yelpBtn: 'Yelp', dishesLabel: 'Para probar', reservationLabel: 'Reservas',
       imgRepresentative: 'Solo imagen representativa', imgPending: 'Foto pendiente de verificar', viewPhotos: 'Fotos', googleReviews: 'Reseñas de Google', yelpReviews: 'Reseñas de Yelp', menuBtn: 'Menú', mustTryLabel: 'Para probar',
@@ -5480,7 +5492,30 @@
     bar.appendChild(pr);
     if (!tr._demo && isOwnerOfTrip()) { var sh = el('button', 'tc-pbtn', '🔗 ' + t('shareTrip')); sh.type = 'button'; sh.addEventListener('click', openShareModal); bar.appendChild(sh); }
     var ed = el('button', 'tc-pbtn', '✏️ ' + t('pkgEditItin')); ed.type = 'button'; ed.addEventListener('click', function () { state.activeTab = 'itinerary'; render(); }); bar.appendChild(ed);
+    // Regenerate guide after itinerary edits: clears the Places-detail cache so cards re-enrich,
+    // then re-renders (re-deriving timeline, cost, EV, golden-hour from the current plan).
+    if (!state.readonly && !tr._demo) { var rg = el('button', 'tc-pbtn', '↻ ' + t('pkgRegenerate')); rg.type = 'button'; rg.addEventListener('click', function () { _placeDetailsCache = {}; toast(t('pkgRegenerated')); render(); }); bar.appendChild(rg); }
     return bar;
+  }
+  // Live travel helper (Priority 5) — honest hooks: real live status is NOT fabricated, so these
+  // are "Check before going" actions (weather / traffic / closures / wait / crowds) that open the
+  // real source. Future phases can swap in live data feeds where a source exists.
+  function pkgLiveHelper(tr, plan) {
+    var dests = planDestinations(plan);
+    var city = ((dests[dests.length - 1] && (dests[dests.length - 1].city || dests[dests.length - 1])) || tr.destination || '').split(',')[0];
+    if (!city) return null;
+    var box = el('div', 'tc-pkg__live');
+    box.appendChild(el('strong', 'tc-pkg__h', '📡 ' + t('pkgLiveTitle')));
+    box.appendChild(el('p', 'tc-pkg__meta', t('pkgLiveSub')));
+    var grid = el('div', 'tc-pkg__acts');
+    grid.appendChild(linkBtn('🌦 ' + t('pkgLiveWeather'), gsearch('weather forecast ' + city)));
+    grid.appendChild(linkBtn('🚦 ' + t('pkgLiveTraffic'), MapLinkProvider.google(city)));
+    grid.appendChild(linkBtn('🚧 ' + t('pkgLiveClosures'), gsearch('road closures ' + city + ' today')));
+    grid.appendChild(linkBtn('⏱ ' + t('pkgLiveWait'), gsearch('busy times restaurants ' + city)));
+    grid.appendChild(linkBtn('👥 ' + t('pkgLiveCrowd'), gsearch('attraction crowd levels ' + city + ' today')));
+    box.appendChild(grid);
+    box.appendChild(el('p', 'tc-unverified', t('pkgLiveNote')));
+    return box;
   }
   function renderTravelGuide(plan) {
     var tr = state.trip, wrap = el('div', 'tc-pkg');
@@ -5490,6 +5525,7 @@
     wrap.appendChild(pkgExecSummary(tr, plan));
     plan.days.forEach(function (day, i) { wrap.appendChild(pkgDay(tr, plan, day, i)); });
     var ev = pkgEvHelper(tr, plan); if (ev) wrap.appendChild(ev);
+    var live = pkgLiveHelper(tr, plan); if (live) wrap.appendChild(live);
     var cost = pkgCostSummary(tr); if (cost) wrap.appendChild(cost);
     var fam = pkgFamilyTips(tr); if (fam) wrap.appendChild(fam);
     wrap.appendChild(el('p', 'tc-unverified', t('pkgHonestyNote')));

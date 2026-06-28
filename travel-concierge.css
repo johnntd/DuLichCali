@@ -1815,7 +1815,7 @@ select.tc-input { appearance: none; background-image: linear-gradient(45deg, tra
 .tc-pkg__route { font-family: var(--font-b); font-size: .95rem; color: #bae6fd; margin: .4rem 0 0; }
 .tc-pkg__covermeta { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .6rem; }
 .tc-pkg__chip { font-size: .74rem; padding: .2rem .6rem; border-radius: 99px; background: rgba(255,255,255,.12); color: var(--cream); }
-.tc-pkg__exec, .tc-pkg__ev, .tc-pkg__cost, .tc-pkg__family { padding: .8rem .9rem; border-radius: 14px; border: 1px solid var(--border); background: var(--tc-glass); }
+.tc-pkg__exec, .tc-pkg__ev, .tc-pkg__cost, .tc-pkg__family, .tc-pkg__live { padding: .8rem .9rem; border-radius: 14px; border: 1px solid var(--border); background: var(--tc-glass); }
 .tc-pkg__kvgrid { display: grid; grid-template-columns: 1fr; gap: .35rem; }
 .tc-pkg__kv { display: flex; justify-content: space-between; gap: .75rem; padding: .3rem 0; border-bottom: 1px solid var(--border); }
 .tc-pkg__kvk { color: var(--muted); font-size: .82rem; }
@@ -1862,7 +1862,7 @@ select.tc-input { appearance: none; background-image: linear-gradient(45deg, tra
   .app-bar, .tc-tabs, .tc-daytabs, .tc-actionbar, .tc-bottomnav, .tc-back, .tc-pkg__toolbar,
   .tc-lang, #lpLangPicker, .tc-pkg__acts, .tc-pkg__evrow, .tc-optnudge { display: none !important; }
   html, body, .tc-page { background: #fff !important; }
-  .tc-pkg, .tc-pkg__exec, .tc-pkg__ev, .tc-pkg__cost, .tc-pkg__family, .tc-pkg__stop { background: #fff !important; border-color: #ddd !important; box-shadow: none !important; }
+  .tc-pkg, .tc-pkg__exec, .tc-pkg__ev, .tc-pkg__cost, .tc-pkg__family, .tc-pkg__live, .tc-pkg__stop { background: #fff !important; border-color: #ddd !important; box-shadow: none !important; }
   .tc-pkg__title, .tc-pkg__daytitle, .tc-pkg__stopname, .tc-pkg__h, .tc-pkg__kvv, .tc-pkg__why, .tc-pkg__tip { color: #111 !important; }
   .tc-pkg__kvk, .tc-pkg__meta, .tc-pkg__daydate, .tc-pkg__daysum, .tc-pkg__fact { color: #444 !important; }
   .tc-pkg__route, .tc-pkg__kicker, .tc-pkg__daynum, .tc-pkg__time, .tc-pkg__gold, .tc-pkg__total { color: #a06a12 !important; }

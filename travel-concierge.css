@@ -1854,7 +1854,37 @@ select.tc-input { appearance: none; background-image: linear-gradient(45deg, tra
 .tc-ov-pkgcta__s { display: block; font-size: .78rem; color: var(--muted); line-height: 1.4; margin-top: .15rem; }
 .tc-ov-pkgcta__acts { display: flex; flex-wrap: wrap; gap: .45rem; width: 100%; }
 .tc-ov-pkgcta__go { white-space: nowrap; }
+.tc-ov-pkgcta__primary { white-space: nowrap; }
+.tc-ov-pkgcta__alt { white-space: nowrap; }
 @media (min-width: 768px) { .tc-ov-pkgcta__acts { width: auto; } }
+/* ── "Add family members" modal (no plan regeneration) ── */
+.tc-addfam .tc-addfam__sub { font-size: .82rem; color: var(--muted); line-height: 1.45; margin: 0 0 .7rem; }
+.tc-addfam__list { display: flex; flex-direction: column; gap: .7rem; }
+.tc-addfam .tc-addbtn { margin-top: .7rem; }
+/* ── Family-aware alternative options (Swap / Add to day / Save for later) ── */
+.tc-altopt { border: 1px solid var(--border-g); border-radius: 10px; padding: .5rem .6rem; background: var(--navy-900); display: flex; flex-direction: column; gap: .4rem; }
+.tc-altopt__info { display: flex; flex-direction: column; }
+.tc-altopt__acts { display: flex; flex-wrap: wrap; gap: .35rem; }
+.tc-altopt__acts .tc-pbtn { flex: 1; min-width: 7rem; text-align: center; }
+@media (min-width: 768px) { .tc-altopt__acts .tc-pbtn { flex: 0 1 auto; } }
+/* ── One-time alternatives helper banner ── */
+.tc-althint { display: flex; align-items: flex-start; gap: .6rem; margin: 0 0 .8rem; padding: .7rem .85rem; border-radius: 14px; border: 1px solid var(--tc-accent); background: linear-gradient(135deg, rgba(122,162,247,.14), rgba(122,162,247,.04)); }
+.tc-althint__body { flex: 1; }
+.tc-althint__t { display: block; font-family: var(--font-d); font-size: .98rem; color: var(--cream); }
+.tc-althint__s { font-size: .78rem; color: var(--muted); line-height: 1.45; margin: .2rem 0 0; }
+.tc-althint__x { flex: none; background: none; border: none; color: var(--muted); font-size: 1.3rem; line-height: 1; cursor: pointer; padding: 0 .2rem; }
+/* ── Saved-for-later ideas stash ── */
+.tc-saved { margin: 0 0 .9rem; border: 1px solid var(--border); border-radius: 14px; background: var(--navy-800); overflow: hidden; }
+.tc-saved__sum { cursor: pointer; padding: .6rem .85rem; font-family: var(--font-b); font-weight: 700; font-size: .82rem; color: var(--cream); list-style: none; }
+.tc-saved__sum::-webkit-details-marker { display: none; }
+.tc-saved[open] .tc-saved__sum { border-bottom: 1px solid var(--border); }
+.tc-saved__item { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; padding: .55rem .85rem; border-top: 1px solid var(--border); }
+.tc-saved__item:first-of-type { border-top: none; }
+.tc-saved__info { flex: 1; min-width: 9rem; display: flex; flex-direction: column; }
+.tc-saved__nm { font-size: .86rem; font-weight: 700; color: var(--cream); }
+.tc-saved__cat { font-size: .75rem; color: var(--muted); }
+.tc-saved__from { font-size: .73rem; color: var(--muted); margin-top: .1rem; }
+.tc-saved__acts { display: flex; gap: .35rem; }
 .tc-pkg__total { font-family: var(--font-d); font-size: 1.05rem; color: var(--tc-gold); margin: .5rem 0 0; }
 .tc-pkg__tip { font-size: .84rem; color: var(--cream); margin: .25rem 0; line-height: 1.5; }
 @media (min-width: 768px) {

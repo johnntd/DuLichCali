@@ -270,6 +270,12 @@
       pkgCreateCta: 'Create My Travel Package', pkgBannerTitle: 'Your premium Travel Package', pkgBannerSub: 'A printable, shareable guide — cover, daily plan, stays, food, attractions, EV charging & costs.',
       pkgBannerSampleSub: 'See the full premium guide for this sample — or make it your own trip.', pkgViewPackage: 'View Travel Package', pkgGenerateFull: 'Generate full Travel Package',
       pkgUseAsTrip: 'Use this as my trip', pkgCustomize: 'Customize this trip', pkgCloned: 'Saved as your trip — edit anything you like',
+      pkgReadyTitle: 'Your trip is ready', pkgReadySub: 'Everything below is saved. Next: add your family — then edit, add alternatives, or generate your travel package. Your plan stays exactly as-is unless you change it.',
+      pkgAddFamily: 'Add family members', altActivities: 'Add alternative activities',
+      addFamilyTitle: 'Add family members', addFamilySub: 'Tell us who is going — adults, kids’ ages, food & stay preferences. This does not change your itinerary.', addFamilyDone: 'Done', familyAdded: 'Family details saved',
+      altSwapWith: 'Swap with this', altAddToDay: 'Add to this day', altSaveForLater: 'Save for later', altClose: 'Close', alternativeSaved: 'Saved to your ideas',
+      altHintTitle: 'Optional alternatives', altHintBody: 'Tap ✨ on any stop for family-matched options. Swap, add to the day, or save for later — your original plan stays unless you change it.',
+      savedIdeasTitle: 'Saved ideas', savedFrom: 'Instead of', savedAddToDay: 'Add to day', savedRemove: 'Remove',
       pkgHonestyNote: 'This guide reuses your trip data. Photos are real (Google/Wikipedia) or labeled; prices, ratings, hours and battery are estimates or “verify before going” — never fabricated.',
       tab_food: 'Food', foodPicksTitle: 'Food picks', foodSub: 'AI-researched restaurants for your group at each stop — matched to your cuisines.', findFood: 'Find food picks (AI)', researchingFood: 'Finding the best restaurants for your group…', noFoodYet: 'Tap “Find food picks” for AI restaurant recommendations.', searchFoodBtn: 'Search', yelpBtn: 'Yelp', dishesLabel: 'Must-try', reservationLabel: 'Reservations',
       imgRepresentative: 'Representative image only', imgPending: 'Photo pending verification', viewPhotos: 'Photos', googleReviews: 'Google reviews', yelpReviews: 'Yelp reviews', menuBtn: 'Menu', mustTryLabel: 'Must-try',
@@ -620,6 +626,12 @@
       pkgCreateCta: 'Tạo cẩm nang du lịch', pkgBannerTitle: 'Cẩm nang du lịch cao cấp của bạn', pkgBannerSub: 'Cẩm nang có thể in & chia sẻ — bìa, lịch từng ngày, nơi ở, ẩm thực, điểm tham quan, sạc xe điện & chi phí.',
       pkgBannerSampleSub: 'Xem cẩm nang cao cấp đầy đủ cho mẫu này — hoặc biến thành chuyến đi của bạn.', pkgViewPackage: 'Xem cẩm nang', pkgGenerateFull: 'Tạo cẩm nang đầy đủ',
       pkgUseAsTrip: 'Dùng làm chuyến đi của tôi', pkgCustomize: 'Tùy chỉnh chuyến đi', pkgCloned: 'Đã lưu thành chuyến đi của bạn — chỉnh sửa tùy thích',
+      pkgReadyTitle: 'Chuyến đi của bạn đã sẵn sàng', pkgReadySub: 'Mọi thứ bên dưới đã được lưu. Tiếp theo: thêm gia đình — rồi chỉnh sửa, thêm lựa chọn thay thế, hoặc tạo cẩm nang du lịch. Kế hoạch giữ nguyên trừ khi bạn thay đổi.',
+      pkgAddFamily: 'Thêm thành viên gia đình', altActivities: 'Thêm hoạt động thay thế',
+      addFamilyTitle: 'Thêm thành viên gia đình', addFamilySub: 'Cho chúng tôi biết ai sẽ đi — người lớn, tuổi của trẻ, sở thích ăn uống & nơi ở. Việc này không thay đổi lịch trình của bạn.', addFamilyDone: 'Xong', familyAdded: 'Đã lưu thông tin gia đình',
+      altSwapWith: 'Thay bằng chỗ này', altAddToDay: 'Thêm vào ngày này', altSaveForLater: 'Lưu để dùng sau', altClose: 'Đóng', alternativeSaved: 'Đã lưu vào ý tưởng của bạn',
+      altHintTitle: 'Lựa chọn thay thế (tùy chọn)', altHintBody: 'Nhấn ✨ trên bất kỳ điểm dừng nào để xem các lựa chọn phù hợp với gia đình. Thay thế, thêm vào ngày, hoặc lưu để sau — kế hoạch gốc giữ nguyên trừ khi bạn thay đổi.',
+      savedIdeasTitle: 'Ý tưởng đã lưu', savedFrom: 'Thay cho', savedAddToDay: 'Thêm vào ngày', savedRemove: 'Xóa',
       pkgHonestyNote: 'Cẩm nang này dùng dữ liệu chuyến đi của bạn. Ảnh là thật (Google/Wikipedia) hoặc có ghi chú; giá, đánh giá, giờ mở cửa và pin là ước tính hoặc “kiểm tra trước khi đi” — không bao giờ bịa.',
       tab_food: 'Ẩm thực', foodPicksTitle: 'Gợi ý ẩm thực', foodSub: 'AI nghiên cứu nhà hàng cho cả nhóm tại từng điểm — hợp khẩu vị của bạn.', findFood: 'Tìm gợi ý ẩm thực (AI)', researchingFood: 'Đang tìm nhà hàng tốt nhất cho nhóm…', noFoodYet: 'Nhấn “Tìm gợi ý ẩm thực” để AI gợi ý nhà hàng.', searchFoodBtn: 'Tìm', yelpBtn: 'Yelp', dishesLabel: 'Nên thử', reservationLabel: 'Đặt chỗ',
       imgRepresentative: 'Chỉ là ảnh minh họa', imgPending: 'Ảnh chờ xác minh', viewPhotos: 'Ảnh', googleReviews: 'Đánh giá Google', yelpReviews: 'Đánh giá Yelp', menuBtn: 'Thực đơn', mustTryLabel: 'Nên thử',
@@ -970,6 +982,12 @@
       pkgCreateCta: 'Crear mi guía de viaje', pkgBannerTitle: 'Tu guía de viaje premium', pkgBannerSub: 'Una guía imprimible y compartible — portada, plan diario, alojamiento, comida, atracciones, carga EV y costos.',
       pkgBannerSampleSub: 'Mira la guía premium completa de este ejemplo — o conviértelo en tu propio viaje.', pkgViewPackage: 'Ver guía de viaje', pkgGenerateFull: 'Generar guía completa',
       pkgUseAsTrip: 'Usar como mi viaje', pkgCustomize: 'Personalizar este viaje', pkgCloned: 'Guardado como tu viaje — edita lo que quieras',
+      pkgReadyTitle: 'Tu viaje está listo', pkgReadySub: 'Todo lo de abajo está guardado. Siguiente: agrega a tu familia — luego edita, añade alternativas o genera tu guía de viaje. Tu plan queda igual a menos que lo cambies.',
+      pkgAddFamily: 'Agregar miembros de familia', altActivities: 'Agregar actividades alternativas',
+      addFamilyTitle: 'Agregar miembros de familia', addFamilySub: 'Dinos quién va — adultos, edades de los niños, preferencias de comida y alojamiento. Esto no cambia tu itinerario.', addFamilyDone: 'Listo', familyAdded: 'Datos de familia guardados',
+      altSwapWith: 'Cambiar por esta', altAddToDay: 'Agregar a este día', altSaveForLater: 'Guardar para después', altClose: 'Cerrar', alternativeSaved: 'Guardado en tus ideas',
+      altHintTitle: 'Alternativas opcionales', altHintBody: 'Toca ✨ en cualquier parada para ver opciones según tu familia. Cambia, agrega al día o guarda para después — tu plan original se mantiene a menos que lo cambies.',
+      savedIdeasTitle: 'Ideas guardadas', savedFrom: 'En lugar de', savedAddToDay: 'Agregar al día', savedRemove: 'Quitar',
       pkgHonestyNote: 'Esta guía reutiliza los datos de tu viaje. Las fotos son reales (Google/Wikipedia) o etiquetadas; precios, calificaciones, horarios y batería son estimaciones o “verifica antes de ir” — nunca inventados.',
       tab_food: 'Comida', foodPicksTitle: 'Recomendaciones de comida', foodSub: 'Restaurantes investigados por IA para tu grupo en cada parada, según tus cocinas.', findFood: 'Buscar comida (IA)', researchingFood: 'Buscando los mejores restaurantes para tu grupo…', noFoodYet: 'Toca “Buscar comida” para recomendaciones de restaurantes por IA.', searchFoodBtn: 'Buscar', yelpBtn: 'Yelp', dishesLabel: 'Para probar', reservationLabel: 'Reservas',
       imgRepresentative: 'Solo imagen representativa', imgPending: 'Foto pendiente de verificar', viewPhotos: 'Fotos', googleReviews: 'Reseñas de Google', yelpReviews: 'Reseñas de Yelp', menuBtn: 'Menú', mustTryLabel: 'Para probar',
@@ -3149,6 +3167,11 @@
     }
     if (sample.departureCity) state.trip.departureCity = sample.departureCity;
     if (Array.isArray(sample.transport)) state.trip.transport = JSON.parse(JSON.stringify(sample.transport));
+    // Carry the sample's family makeup (adults / kids' ages) so age-aware alternatives work
+    // immediately and "Add family members" starts from the sample's group, not a blank one.
+    if (Array.isArray(sample.families) && sample.families.length) {
+      state.trip.families = sample.families.map(function (f) { return normalizeFamily(Object.assign(newFamily(), JSON.parse(JSON.stringify(f)))); });
+    }
     normalizeDestinations(state.trip);
     state.trip._demo = true; state.readonly = true; // read-only local preview, no login/Firestore
     state.screen = 'plan'; state.activeDay = 0; state.activeTab = 'overview';
@@ -4705,39 +4728,84 @@
     c.addEventListener('click', function (e) { if (e.target && e.target.closest && e.target.closest('a, button')) return; try { openPlaceModal(ovWithCity(x, '')); } catch (err) {} });
     return c;
   }
-  // Clone a read-only sample into the signed-in user's own editable trip (then open the Guide or
-  // the edit screen). Login-gated; never writes a demo to Firestore until it's the user's trip.
-  function pkgUseAsMyTrip(toEdit) {
+  // Clone a read-only sample into the signed-in user's own editable trip — KEEPING the full plan
+  // intact (no regeneration; every day/activity/restaurant/stay survives byte-for-byte). Login-
+  // gated; never writes a demo to Firestore until it's the user's own trip. `then(tr)` runs once
+  // the trip is owned. Re-running on an already-owned trip is a no-op (never re-IDs / duplicates).
+  function pkgCloneIntact(then) {
     requireLogin(function () {
       var tr = state.trip; if (!tr) return;
-      tr._demo = false; state.readonly = false;
-      tr.id = uid('trip'); tr.ownerUid = curUid(); tr.createdAt = Date.now();
-      if (!tr.groupName && tr.plan) tr.groupName = tr.plan.destination || '';
-      try { saveTrip(tr); } catch (e) {}
-      toast(t('pkgCloned'));
-      if (toEdit) { state.screen = 'create'; } else { state.activeTab = 'guide'; }
+      var owned = tr.ownerUid && tr.ownerUid === curUid();
+      if (!owned) {
+        tr._demo = false; state.readonly = false;
+        tr.id = uid('trip'); tr.ownerUid = curUid(); tr.createdAt = Date.now();
+        if (!tr.groupName && tr.plan) tr.groupName = tr.plan.destination || '';
+        try { saveTrip(tr); } catch (e) {}
+        toast(t('pkgCloned'));
+      }
+      if (then) then(tr);
       render();
     });
   }
-  // Big, unmissable "Travel Package" entry at the top of the Overview — the premium Guide is one
-  // tap away (and for samples: generate it, or make the sample your own trip / customize it).
+  // The four post-selection actions. NONE of them regenerate the plan — selecting a sample/custom
+  // trip preserves the activities; the user only loses them if they explicitly edit or swap.
+  function pkgAddFamily() { pkgCloneIntact(function () { openAddFamilyModal(); }); }          // 1) simple next step
+  function pkgEditItinerary() { pkgCloneIntact(function () { state.activeTab = 'itinerary'; state.activeDay = 0; }); } // 2) existing edit engine (preserves)
+  function pkgAddAlternatives() { pkgCloneIntact(function () { state.activeTab = 'itinerary'; state.activeDay = 0; state._altHint = true; }); } // 3) optional, family-aware
+  function pkgOpenGuide() { state.activeTab = 'guide'; render(); }                              // 4) premium package (no login to view a sample)
+  // "Your trip is ready" action panel at the top of the Overview. After selecting a sample/custom
+  // trip the next step is SIMPLE — add family members — with the itinerary/alternatives/package all
+  // one tap away. The plan itself is never rebuilt by any of these.
   function pkgOverviewBanner(tr) {
+    var hasPlan = !!(tr && tr.plan && (tr.plan.days || []).length);
     var b = el('div', 'tc-ov-pkgcta');
-    b.appendChild(el('span', 'tc-ov-pkgcta__ic', '📖'));
+    b.appendChild(el('span', 'tc-ov-pkgcta__ic', '🧭'));
     var body = el('div', 'tc-ov-pkgcta__body');
-    body.appendChild(el('strong', 'tc-ov-pkgcta__t', t('pkgBannerTitle')));
-    body.appendChild(el('span', 'tc-ov-pkgcta__s', t(tr._demo ? 'pkgBannerSampleSub' : 'pkgBannerSub')));
+    body.appendChild(el('strong', 'tc-ov-pkgcta__t', t(hasPlan ? 'pkgReadyTitle' : 'pkgBannerTitle')));
+    body.appendChild(el('span', 'tc-ov-pkgcta__s', t(hasPlan ? 'pkgReadySub' : (tr._demo ? 'pkgBannerSampleSub' : 'pkgBannerSub'))));
     b.appendChild(body);
     var acts = el('div', 'tc-ov-pkgcta__acts');
-    var open = el('button', 'tc-cta tc-ov-pkgcta__go', '📖 ' + t(tr._demo ? 'pkgGenerateFull' : 'pkgViewPackage')); open.type = 'button';
-    open.addEventListener('click', function () { state.activeTab = 'guide'; render(); });
-    acts.appendChild(open);
-    if (tr._demo) {
-      var use = el('button', 'tc-pbtn', '✓ ' + t('pkgUseAsTrip')); use.type = 'button'; use.addEventListener('click', function () { pkgUseAsMyTrip(false); }); acts.appendChild(use);
-      var cust = el('button', 'tc-pbtn', '✏️ ' + t('pkgCustomize')); cust.type = 'button'; cust.addEventListener('click', function () { pkgUseAsMyTrip(true); }); acts.appendChild(cust);
-    }
+    // 1) Add family members — the recommended next step (gold primary). No plan changes.
+    var fam = el('button', 'tc-cta tc-ov-pkgcta__primary', '👨‍👩‍👧 ' + t('pkgAddFamily')); fam.type = 'button';
+    fam.addEventListener('click', function () { pkgAddFamily(); }); acts.appendChild(fam);
+    // 2) Edit itinerary — existing drag/move/skip/replace engine; preserves every activity.
+    acts.appendChild(pkgActBtn('✏️ ' + t('pkgEditItin'), '', pkgEditItinerary));
+    // 3) Add alternative activities — optional, family-aware Swap / Add-to-day / Save-for-later.
+    acts.appendChild(pkgActBtn('✨ ' + t('altActivities'), '', pkgAddAlternatives));
+    // 4) Generate / view the premium travel package (keeps the __go class for the E2E test).
+    acts.appendChild(pkgActBtn('📖 ' + t(tr._demo ? 'pkgGenerateFull' : 'pkgViewPackage'), 'tc-ov-pkgcta__go', pkgOpenGuide));
     b.appendChild(acts);
     return b;
+  }
+  function pkgActBtn(label, extra, fn) { var x = el('button', 'tc-pbtn tc-ov-pkgcta__alt ' + (extra || ''), label); x.type = 'button'; x.addEventListener('click', fn); return x; }
+  // Lightweight "Add family members" modal — edits trip.families in place and saves. It NEVER
+  // regenerates or rebuilds the itinerary, so every custom activity is preserved exactly.
+  function openAddFamilyModal() {
+    var tr = state.trip; if (!tr) return;
+    if (!Array.isArray(tr.families) || !tr.families.length) tr.families = [newFamily()];
+    closeModal();
+    var ov = el('div', 'tc-modal'); ov.id = 'tcModal';
+    var card = el('div', 'tc-modal__card tc-addfam');
+    var head = el('div', 'tc-modal__head');
+    head.appendChild(el('strong', 'tc-modal__title', '👨‍👩‍👧 ' + t('addFamilyTitle')));
+    var x = el('button', 'tc-modal__x', '×'); x.type = 'button'; x.addEventListener('click', closeModal); head.appendChild(x);
+    card.appendChild(head);
+    card.appendChild(el('p', 'tc-addfam__sub', t('addFamilySub')));
+    var listWrap = el('div', 'tc-addfam__list');
+    function redraw() { listWrap.innerHTML = ''; tr.families.forEach(function (f, i) { listWrap.appendChild(familyCard(f, i)); }); }
+    redraw();
+    // familyCard's "Remove" splices + render()s the page behind the modal; re-sync this list next tick.
+    listWrap.addEventListener('click', function (e) { if (e.target && e.target.closest && e.target.closest('.tc-famcard__rm')) root.setTimeout(redraw, 0); });
+    card.appendChild(listWrap);
+    var add = el('button', 'tc-addbtn', '+ ' + t('addFamily')); add.type = 'button';
+    add.addEventListener('click', function () { tr.families.push(newFamily()); redraw(); });
+    card.appendChild(add);
+    var acts = el('div', 'tc-modal__acts');
+    var done = el('button', 'tc-cta', '✓ ' + t('addFamilyDone')); done.type = 'button';
+    done.addEventListener('click', function () { try { saveTrip(tr); } catch (e) {} toast(t('familyAdded')); closeModal(); render(); });
+    acts.appendChild(done);
+    card.appendChild(acts);
+    ov.appendChild(card); ov.addEventListener('click', function (e) { if (e.target === ov) closeModal(); }); doc.body.appendChild(ov);
   }
   function renderOverview(plan) {
     var tr = state.trip;
@@ -5588,6 +5656,10 @@
     // Migrate auto-rejections from existing votes/bookings ONCE per trip load (idempotent).
     if (state.trip && !state.trip._demo && _rejReconciledFor !== state.trip.id) { _rejReconciledFor = state.trip.id; reconcileAutoRejections(state.trip); }
     var wrap = el('div', 'tc-itin');
+    // One-time helper after "Add alternative activities": tells the user where the optional swaps live.
+    if (state._altHint && canEditPlan()) wrap.appendChild(altHintBanner());
+    // Saved-for-later ideas (optional stash — never part of the plan until explicitly added to a day).
+    var sib = savedIdeasBlock(); if (sib) wrap.appendChild(sib);
     // ✨ Auto-rebuild nudge — when the group's votes changed since the last optimize.
     if (canEditPlan() && !state.trip._demo && votesChangedSinceOptimize(state.trip)) wrap.appendChild(optimizeNudge());
     if (!state.trip._demo) { var cs = costSummaryStrip(state.trip); if (cs) wrap.appendChild(cs); } // cost estimate visible from itinerary
@@ -5692,6 +5764,41 @@
     // Return / mixed days also get route opportunities (the journey home is flexible too).
     var rpA = routeOpportunitiesPanel(day, plan, di2); if (rpA) wrap.appendChild(rpA);
     return wrap;
+  }
+  // One-time helper banner shown after "Add alternative activities" — points the user at the
+  // ✨ button on each stop and reassures that the original plan stays intact.
+  function altHintBanner() {
+    var b = el('div', 'tc-althint');
+    var body = el('div', 'tc-althint__body');
+    body.appendChild(el('strong', 'tc-althint__t', '✨ ' + t('altHintTitle')));
+    body.appendChild(el('p', 'tc-althint__s', t('altHintBody')));
+    b.appendChild(body);
+    var x = el('button', 'tc-althint__x', '×'); x.type = 'button'; x.addEventListener('click', function () { state._altHint = false; render(); });
+    b.appendChild(x);
+    return b;
+  }
+  // Saved-for-later ideas stash (collapsible). Each idea can be added to a day or removed. Until
+  // the user adds one, the original itinerary is completely untouched.
+  function savedIdeasBlock() {
+    var arr = savedAlternatives(); if (!arr.length) return null;
+    var box = el('details', 'tc-saved'); box.open = true;
+    box.appendChild(el('summary', 'tc-saved__sum', '🔖 ' + t('savedIdeasTitle') + ' (' + arr.length + ')'));
+    arr.forEach(function (idea) {
+      var c = el('div', 'tc-saved__item');
+      var info = el('div', 'tc-saved__info');
+      info.appendChild(el('strong', 'tc-saved__nm', idea.name));
+      if (idea.cuisine || idea.category) info.appendChild(el('span', 'tc-saved__cat', ' · ' + (idea.cuisine || idea.category)));
+      if (idea.fromName) info.appendChild(el('span', 'tc-saved__from', t('savedFrom') + ': ' + idea.fromName));
+      c.appendChild(info);
+      if (canEditPlan()) {
+        var acts = el('div', 'tc-saved__acts');
+        acts.appendChild(pbtn('＋ ' + t('savedAddToDay'), 'tc-pbtn--accent', function () { addSavedToDay(idea); }));
+        acts.appendChild(pbtn('🗑 ' + t('savedRemove'), '', function () { removeSavedAlternative(idea.id); }));
+        c.appendChild(acts);
+      }
+      box.appendChild(c);
+    });
+    return box;
   }
   // Day-level age/weather/food alternatives (collapsible). Each value is a short phrase.
   function dayAlternativesBlock(day) {
@@ -6397,30 +6504,55 @@
     }
     return box;
   }
-  function altPanel(p) {
+  // Saved alternatives — an optional "ideas" stash. NEVER part of the plan until the user adds one
+  // to a day. Keyed nowhere in the plan, so the original itinerary is untouched while ideas wait.
+  function savedAlternatives() { var tr = state.trip; if (tr) tr.savedAlternatives = tr.savedAlternatives || []; return (tr && tr.savedAlternatives) || []; }
+  function saveAlternative(a, fromPlace, ctx) {
+    ctx = ctx || {};
+    savedAlternatives().push({ id: uid('idea'), name: a.name, category: a.category || (fromPlace && fromPlace.category) || '', cuisine: a.cuisine || '', why: a.why || '', fromName: (fromPlace && fromPlace.name) || '', day: (ctx.day != null) ? ctx.day : null, slot: ctx.slot || 'afternoon', dataSource: a.dataSource || 'ai_researched_pending_verification', createdAt: new Date().toISOString() });
+    state._altOpen = null; saveTrip(state.trip); toast(t('alternativeSaved')); render();
+  }
+  function removeSavedAlternative(id) { var arr = savedAlternatives(), i = -1; arr.forEach(function (x, j) { if (x.id === id) i = j; }); if (i >= 0) arr.splice(i, 1); saveTrip(state.trip); render(); }
+  function addSavedToDay(idea) { var arr = savedAlternatives(), i = arr.indexOf(idea); if (i >= 0) arr.splice(i, 1); addPlaceToDay(idea.day != null ? idea.day : state.activeDay, idea.slot || 'afternoon', idea.name, idea.category || 'activity'); /* saves + renders */ }
+  // Optional, family-aware alternatives for one place. Each suggestion offers THREE non-destructive
+  // choices: Swap (records the original as replaced), Add to this day (keeps the original), or Save
+  // for later (stash). The plan is only altered when the user explicitly picks Swap or Add.
+  function altPanel(p, ctx) {
+    ctx = ctx || {};
     var k = placeKey(p), panel = el('div', 'tc-altpanel');
     var alts = state._alts && state._alts[k];
     if (alts === 'loading') { panel.appendChild(researchBanner('loadingAlts')); return panel; }
     panel.appendChild(el('p', 'tc-altpanel__h', t('pickAlternative')));
+    var hasDay = ctx.day != null;
     if (Array.isArray(alts) && alts.length) {
       alts.forEach(function (a) {
-        var b = el('button', 'tc-altpanel__opt'); b.type = 'button';
-        b.appendChild(el('strong', 'tc-altpanel__nm', a.name));
-        if (a.cuisine || a.category) b.appendChild(el('span', 'tc-altpanel__cat', ' · ' + (a.cuisine || a.category)));
-        if (a.why) b.appendChild(el('span', 'tc-altpanel__why', a.why));
-        b.addEventListener('click', function () { setPlaceOverride(p, 'replaced', altToPlace(a, p)); });
-        panel.appendChild(b);
+        var optc = el('div', 'tc-altopt');
+        var info = el('div', 'tc-altopt__info');
+        info.appendChild(el('strong', 'tc-altpanel__nm', a.name));
+        if (a.cuisine || a.category) info.appendChild(el('span', 'tc-altpanel__cat', ' · ' + (a.cuisine || a.category)));
+        if (a.why) info.appendChild(el('span', 'tc-altpanel__why', a.why));
+        optc.appendChild(info);
+        var arow = el('div', 'tc-altopt__acts');
+        arow.appendChild(pbtn('↻ ' + t('altSwapWith'), 'tc-pbtn--accent', function () { setPlaceOverride(p, 'replaced', altToPlace(a, p)); }));
+        if (hasDay) arow.appendChild(pbtn('＋ ' + t('altAddToDay'), '', function () { state._altOpen = null; addPlaceToDay(ctx.day, ctx.slot || 'afternoon', a.name, a.category || p.category || 'activity'); }));
+        arow.appendChild(pbtn('🔖 ' + t('altSaveForLater'), '', function () { saveAlternative(a, p, ctx); }));
+        optc.appendChild(arow);
+        panel.appendChild(optc);
       });
     } else if (Array.isArray(alts)) { panel.appendChild(el('p', 'tc-hint', t('noAlts'))); }
-    // Search replacement (real source) + add your own + leave empty.
+    // Search replacement (real source) + add your own + close.
     var city = p.address || (state.trip && state.trip.destination) || '';
     panel.appendChild(linkBtn('🔎 ' + t('searchReplacement'), gsearch(((p.cuisine || p.category || '') + ' near ' + city).trim()), 'tc-altpanel__search'));
     var addRow = el('div', 'tc-altpanel__add');
     var inp = input('', t('addOwnPh')); addRow.appendChild(inp);
     var add = el('button', 'tc-pbtn tc-pbtn--accent', '+ ' + t('addOwn')); add.type = 'button';
-    add.addEventListener('click', function () { var nm = (inp.value || '').trim(); if (!nm) { toast(t('addOwnPh')); return; } setPlaceOverride(p, 'replaced', { id: uid('cust'), name: nm, category: p.category || '', dataSource: 'user_entered' }); });
+    add.addEventListener('click', function () {
+      var nm = (inp.value || '').trim(); if (!nm) { toast(t('addOwnPh')); return; }
+      if (hasDay) { state._altOpen = null; addPlaceToDay(ctx.day, ctx.slot || 'afternoon', nm, p.category || 'activity'); }
+      else { setPlaceOverride(p, 'replaced', { id: uid('cust'), name: nm, category: p.category || '', dataSource: 'user_entered' }); }
+    });
     addRow.appendChild(add); panel.appendChild(addRow);
-    var le = el('button', 'tc-pbtn', t('leaveEmpty')); le.type = 'button'; le.addEventListener('click', function () { state._altOpen = null; render(); }); panel.appendChild(le);
+    var le = el('button', 'tc-pbtn', t('altClose')); le.type = 'button'; le.addEventListener('click', function () { state._altOpen = null; render(); }); panel.appendChild(le);
     return panel;
   }
   // ── Media Enrichment: "Learn more" expandable. Deterministic honest links show instantly;
@@ -6495,6 +6627,9 @@
     if (controllable) {
       body.appendChild(cardControlBar(p, ctx));
       if (state._cardMenu === ctx.pkey) body.appendChild(cardMenuPanel(p, ctx));
+      // Optional, family-aware alternatives shown inline (Swap / Add to day / Save for later) —
+      // never replaces the place unless the user explicitly picks Swap.
+      if (!ctx.added && state._altOpen === ctx.pkey) body.appendChild(altPanel(ctx.p || p, ctx));
       var wt = whyText(ctx);
       if (wt) body.appendChild(wt === 'loading' ? researchBanner('whyLoading') : (function () { var w = el('div', 'tc-whybox'); w.appendChild(el('span', 'tc-whybox__k', '❓ ' + t('whyHere'))); w.appendChild(el('p', 'tc-whybox__v', wt)); return w; })());
     }
@@ -6542,6 +6677,11 @@
     if (ctx.pinned) bar.appendChild(el('span', 'tc-place__pinbadge', '📌 ' + t('pinnedHere')));
     bar.appendChild(el('span', 'tc-place__ctlsp'));
     bar.appendChild(pbtn('❓ ' + t('whyHere'), 'tc-pbtn--ghost', function () { explainPlacement(ctx); }));
+    // Family-aware alternatives (Swap / Add to day / Save for later) — not for user-added cards.
+    if (!ctx.added) bar.appendChild(pbtn('✨ ' + t('altActivities'), 'tc-pbtn--ghost' + (state._altOpen === ctx.pkey ? ' tc-pbtn--on' : ''), function () {
+      if (state._altOpen === ctx.pkey) { state._altOpen = null; render(); }
+      else { state._altOpen = ctx.pkey; if (!(state._alts && state._alts[ctx.pkey])) loadAlternatives(ctx.p); else render(); }
+    }));
     bar.appendChild(pbtn('⋯ ' + t('moveCard'), 'tc-pbtn--ghost' + (state._cardMenu === ctx.pkey ? ' tc-pbtn--on' : ''), function () { state._cardMenu = (state._cardMenu === ctx.pkey) ? null : ctx.pkey; render(); }));
     return bar;
   }

@@ -238,6 +238,27 @@
       stayMarkBooked: 'Mark booked', stayCostNights: '{n} nights', stayPerNight: '/night', stayNightlyEst: '/night (est.)',
       stayPriceEstimate: 'estimate — verify on Booking', stayBookingStatusTitle: 'Booking status',
       stayStatusResearch: 'Researching options', stayStatusChosen: 'Chosen — ready to book', stayStatusBooked: 'Booked',
+      // ── Travel Guide / Package (Phase 1) ──
+      tab_guide: 'Travel Guide', approxLabel: 'approx', pkgDirections: 'Directions',
+      to_morning: 'Morning', to_lunch: 'Lunch', to_afternoon: 'Afternoon', to_dinner: 'Dinner', to_evening: 'Evening',
+      cost_transport: 'Transport', cost_stay: 'Lodging', cost_activities: 'Activities', cost_food: 'Food', cost_other: 'Other',
+      pkgPreparedBy: 'Prepared by DuLichCali AI Concierge', pkgTripTitleFallback: 'Your California Trip',
+      pkgTravelers: 'Travelers', pkgFamilies: 'families', pkgAdults: 'adults', pkgChildren: 'children', pkgSeniors: 'seniors',
+      pkgExecSummary: 'Trip overview', pkgDates: 'Dates', pkgDays: 'Days', pkgDriving: 'Driving', pkgBudget: 'Estimated budget',
+      pkgHotels: 'Hotel', pkgSeeStayTab: 'Pick in the Stay tab', pkgReservations: 'Reservations', pkgBooked: 'booked',
+      pkgGoldenHour: 'Golden hour', pkgSunrise: 'Sunrise', pkgSunset: 'Sunset', pkgTravelTo: 'Travel to',
+      pkgHours: 'Hours', pkgPriceLevel: 'Price', pkgRating: 'Rating', pkgVerify: 'verify before going',
+      pkgNearbyCoffee: 'Coffee nearby', pkgNearbyRestroom: 'Restroom nearby',
+      pkgEvTitle: 'EV / charging helper', pkgTotalDrive: 'Total drive', pkgEvRange: 'Your EV range (mi)', pkgEvRangePh: 'e.g. 300',
+      pkgEvEstimate: 'Estimate', pkgEvStops: '~{n} charging stop(s) suggested', pkgEvAssume: 'assumes {r} mi range, start 90%, charge to 80%, 15% reserve',
+      pkgEvNoStop: 'Likely no charge stop needed — arrive ~{p}%', pkgEvNeedRange: 'Enter your vehicle range above for a charge estimate.',
+      pkgFindSuperchargers: 'Find Superchargers', pkgWhileCharging: 'What to do while charging',
+      pkgEvDisclaimer: 'Estimates only, from your entered range + verified distance — verify charging on the road.',
+      pkgCostTitle: 'Estimated cost', pkgEstTotal: 'Estimated total', pkgCostNote: 'All figures are estimates — verify before booking.',
+      pkgFamilyTips: 'Family tips', pkgTipKids: 'Pack snacks + plan rest stops; check stroller/restroom access at each stop.',
+      pkgTipTeens: 'Mix in photo spots and active experiences teens enjoy.', pkgTipSeniors: 'Favor low-walking options and easy parking; build in rest time.',
+      pkgPrint: 'Print / Save PDF', pkgEditItin: 'Edit in Itinerary', pkgNoItin: 'Finalize your itinerary first to generate the guide.',
+      pkgHonestyNote: 'This guide reuses your trip data. Photos are real (Google/Wikipedia) or labeled; prices, ratings, hours and battery are estimates or “verify before going” — never fabricated.',
       tab_food: 'Food', foodPicksTitle: 'Food picks', foodSub: 'AI-researched restaurants for your group at each stop — matched to your cuisines.', findFood: 'Find food picks (AI)', researchingFood: 'Finding the best restaurants for your group…', noFoodYet: 'Tap “Find food picks” for AI restaurant recommendations.', searchFoodBtn: 'Search', yelpBtn: 'Yelp', dishesLabel: 'Must-try', reservationLabel: 'Reservations',
       imgRepresentative: 'Representative image only', imgPending: 'Photo pending verification', viewPhotos: 'Photos', googleReviews: 'Google reviews', yelpReviews: 'Yelp reviews', menuBtn: 'Menu', mustTryLabel: 'Must-try',
       noVerifiedPhoto: 'No verified photo available', noVerifiedFood: 'No verified food photos', viewGooglePhotos: 'Google Photos', tripadvisor: 'Tripadvisor', verifiedPhoto: 'Verified photo', areaPhoto: 'Area photo · Wikimedia', likelyMatchPhoto: 'Likely match · Wikimedia', viaWikipedia: 'Wikipedia (CC)', viaWikimedia: 'Wikimedia Commons', morePhotos: 'More photos',
@@ -555,6 +576,27 @@
       stayMarkBooked: 'Đánh dấu đã đặt', stayCostNights: '{n} đêm', stayPerNight: '/đêm', stayNightlyEst: '/đêm (ước tính)',
       stayPriceEstimate: 'ước tính — kiểm tra trên Booking', stayBookingStatusTitle: 'Trạng thái đặt phòng',
       stayStatusResearch: 'Đang tìm lựa chọn', stayStatusChosen: 'Đã chọn — sẵn sàng đặt', stayStatusBooked: 'Đã đặt',
+      // ── Travel Guide / Package (Phase 1) ──
+      tab_guide: 'Cẩm nang chuyến đi', approxLabel: 'khoảng', pkgDirections: 'Chỉ đường',
+      to_morning: 'Buổi sáng', to_lunch: 'Bữa trưa', to_afternoon: 'Buổi chiều', to_dinner: 'Bữa tối', to_evening: 'Buổi tối',
+      cost_transport: 'Di chuyển', cost_stay: 'Lưu trú', cost_activities: 'Hoạt động', cost_food: 'Ăn uống', cost_other: 'Khác',
+      pkgPreparedBy: 'Thực hiện bởi Trợ lý AI DuLichCali', pkgTripTitleFallback: 'Chuyến đi California của bạn',
+      pkgTravelers: 'Khách', pkgFamilies: 'gia đình', pkgAdults: 'người lớn', pkgChildren: 'trẻ em', pkgSeniors: 'người cao tuổi',
+      pkgExecSummary: 'Tổng quan chuyến đi', pkgDates: 'Ngày', pkgDays: 'Số ngày', pkgDriving: 'Quãng đường lái', pkgBudget: 'Ngân sách ước tính',
+      pkgHotels: 'Khách sạn', pkgSeeStayTab: 'Chọn trong tab Nơi ở', pkgReservations: 'Đặt chỗ', pkgBooked: 'đã đặt',
+      pkgGoldenHour: 'Giờ vàng', pkgSunrise: 'Bình minh', pkgSunset: 'Hoàng hôn', pkgTravelTo: 'Di chuyển đến',
+      pkgHours: 'Giờ mở cửa', pkgPriceLevel: 'Giá', pkgRating: 'Đánh giá', pkgVerify: 'kiểm tra trước khi đi',
+      pkgNearbyCoffee: 'Cà phê gần đó', pkgNearbyRestroom: 'Nhà vệ sinh gần đó',
+      pkgEvTitle: 'Trợ lý xe điện / sạc', pkgTotalDrive: 'Tổng quãng đường', pkgEvRange: 'Tầm hoạt động xe (dặm)', pkgEvRangePh: 'vd: 300',
+      pkgEvEstimate: 'Ước tính', pkgEvStops: 'Gợi ý ~{n} điểm sạc', pkgEvAssume: 'giả định tầm {r} dặm, bắt đầu 90%, sạc đến 80%, dự phòng 15%',
+      pkgEvNoStop: 'Có thể không cần dừng sạc — đến nơi còn ~{p}%', pkgEvNeedRange: 'Nhập tầm hoạt động xe phía trên để ước tính sạc.',
+      pkgFindSuperchargers: 'Tìm trạm Supercharger', pkgWhileCharging: 'Làm gì khi đang sạc',
+      pkgEvDisclaimer: 'Chỉ là ước tính từ tầm hoạt động bạn nhập + quãng đường đã xác minh — hãy kiểm tra trạm sạc khi đi.',
+      pkgCostTitle: 'Chi phí ước tính', pkgEstTotal: 'Tổng ước tính', pkgCostNote: 'Tất cả chỉ là ước tính — hãy kiểm tra trước khi đặt.',
+      pkgFamilyTips: 'Mẹo cho gia đình', pkgTipKids: 'Mang theo đồ ăn vặt + dự trù điểm nghỉ; kiểm tra lối xe đẩy/nhà vệ sinh tại mỗi điểm.',
+      pkgTipTeens: 'Xen kẽ các điểm chụp ảnh và hoạt động năng động cho thanh thiếu niên.', pkgTipSeniors: 'Ưu tiên ít đi bộ và bãi đậu xe dễ dàng; sắp xếp thời gian nghỉ.',
+      pkgPrint: 'In / Lưu PDF', pkgEditItin: 'Sửa trong Lịch trình', pkgNoItin: 'Hoàn tất lịch trình trước để tạo cẩm nang.',
+      pkgHonestyNote: 'Cẩm nang này dùng dữ liệu chuyến đi của bạn. Ảnh là thật (Google/Wikipedia) hoặc có ghi chú; giá, đánh giá, giờ mở cửa và pin là ước tính hoặc “kiểm tra trước khi đi” — không bao giờ bịa.',
       tab_food: 'Ẩm thực', foodPicksTitle: 'Gợi ý ẩm thực', foodSub: 'AI nghiên cứu nhà hàng cho cả nhóm tại từng điểm — hợp khẩu vị của bạn.', findFood: 'Tìm gợi ý ẩm thực (AI)', researchingFood: 'Đang tìm nhà hàng tốt nhất cho nhóm…', noFoodYet: 'Nhấn “Tìm gợi ý ẩm thực” để AI gợi ý nhà hàng.', searchFoodBtn: 'Tìm', yelpBtn: 'Yelp', dishesLabel: 'Nên thử', reservationLabel: 'Đặt chỗ',
       imgRepresentative: 'Chỉ là ảnh minh họa', imgPending: 'Ảnh chờ xác minh', viewPhotos: 'Ảnh', googleReviews: 'Đánh giá Google', yelpReviews: 'Đánh giá Yelp', menuBtn: 'Thực đơn', mustTryLabel: 'Nên thử',
       noVerifiedPhoto: 'Chưa có ảnh xác minh', noVerifiedFood: 'Chưa có ảnh món ăn xác minh', viewGooglePhotos: 'Ảnh Google', tripadvisor: 'Tripadvisor', verifiedPhoto: 'Ảnh đã xác minh', areaPhoto: 'Ảnh khu vực · Wikimedia', likelyMatchPhoto: 'Có thể đúng · Wikimedia', viaWikipedia: 'Wikipedia (CC)', viaWikimedia: 'Wikimedia Commons', morePhotos: 'Thêm ảnh',
@@ -872,6 +914,27 @@
       stayMarkBooked: 'Marcar reservado', stayCostNights: '{n} noches', stayPerNight: '/noche', stayNightlyEst: '/noche (est.)',
       stayPriceEstimate: 'estimación — verifica en Booking', stayBookingStatusTitle: 'Estado de reserva',
       stayStatusResearch: 'Investigando opciones', stayStatusChosen: 'Elegido — listo para reservar', stayStatusBooked: 'Reservado',
+      // ── Travel Guide / Package (Phase 1) ──
+      tab_guide: 'Guía de viaje', approxLabel: 'aprox.', pkgDirections: 'Cómo llegar',
+      to_morning: 'Mañana', to_lunch: 'Almuerzo', to_afternoon: 'Tarde', to_dinner: 'Cena', to_evening: 'Noche',
+      cost_transport: 'Transporte', cost_stay: 'Alojamiento', cost_activities: 'Actividades', cost_food: 'Comida', cost_other: 'Otros',
+      pkgPreparedBy: 'Preparado por el Conserje IA de DuLichCali', pkgTripTitleFallback: 'Tu viaje por California',
+      pkgTravelers: 'Viajeros', pkgFamilies: 'familias', pkgAdults: 'adultos', pkgChildren: 'niños', pkgSeniors: 'adultos mayores',
+      pkgExecSummary: 'Resumen del viaje', pkgDates: 'Fechas', pkgDays: 'Días', pkgDriving: 'Conducción', pkgBudget: 'Presupuesto estimado',
+      pkgHotels: 'Hotel', pkgSeeStayTab: 'Elige en la pestaña Alojamiento', pkgReservations: 'Reservas', pkgBooked: 'reservado',
+      pkgGoldenHour: 'Hora dorada', pkgSunrise: 'Amanecer', pkgSunset: 'Atardecer', pkgTravelTo: 'Viajar a',
+      pkgHours: 'Horario', pkgPriceLevel: 'Precio', pkgRating: 'Calificación', pkgVerify: 'verifica antes de ir',
+      pkgNearbyCoffee: 'Café cerca', pkgNearbyRestroom: 'Baño cerca',
+      pkgEvTitle: 'Asistente de vehículo eléctrico / carga', pkgTotalDrive: 'Distancia total', pkgEvRange: 'Autonomía de tu EV (mi)', pkgEvRangePh: 'ej. 300',
+      pkgEvEstimate: 'Estimar', pkgEvStops: '~{n} parada(s) de carga sugerida(s)', pkgEvAssume: 'asume {r} mi de autonomía, inicio 90%, cargar a 80%, reserva 15%',
+      pkgEvNoStop: 'Probablemente sin parada de carga — llegas ~{p}%', pkgEvNeedRange: 'Ingresa la autonomía de tu vehículo arriba para una estimación de carga.',
+      pkgFindSuperchargers: 'Buscar Superchargers', pkgWhileCharging: 'Qué hacer mientras cargas',
+      pkgEvDisclaimer: 'Solo estimaciones, de la autonomía que ingresaste + distancia verificada — verifica la carga en el camino.',
+      pkgCostTitle: 'Costo estimado', pkgEstTotal: 'Total estimado', pkgCostNote: 'Todas las cifras son estimaciones — verifica antes de reservar.',
+      pkgFamilyTips: 'Consejos familiares', pkgTipKids: 'Lleva snacks + planifica paradas de descanso; revisa acceso para cochecito/baño en cada parada.',
+      pkgTipTeens: 'Combina puntos fotográficos y experiencias activas para adolescentes.', pkgTipSeniors: 'Prioriza poca caminata y estacionamiento fácil; agrega tiempo de descanso.',
+      pkgPrint: 'Imprimir / Guardar PDF', pkgEditItin: 'Editar en Itinerario', pkgNoItin: 'Finaliza tu itinerario primero para generar la guía.',
+      pkgHonestyNote: 'Esta guía reutiliza los datos de tu viaje. Las fotos son reales (Google/Wikipedia) o etiquetadas; precios, calificaciones, horarios y batería son estimaciones o “verifica antes de ir” — nunca inventados.',
       tab_food: 'Comida', foodPicksTitle: 'Recomendaciones de comida', foodSub: 'Restaurantes investigados por IA para tu grupo en cada parada, según tus cocinas.', findFood: 'Buscar comida (IA)', researchingFood: 'Buscando los mejores restaurantes para tu grupo…', noFoodYet: 'Toca “Buscar comida” para recomendaciones de restaurantes por IA.', searchFoodBtn: 'Buscar', yelpBtn: 'Yelp', dishesLabel: 'Para probar', reservationLabel: 'Reservas',
       imgRepresentative: 'Solo imagen representativa', imgPending: 'Foto pendiente de verificar', viewPhotos: 'Fotos', googleReviews: 'Reseñas de Google', yelpReviews: 'Reseñas de Yelp', menuBtn: 'Menú', mustTryLabel: 'Para probar',
       noVerifiedPhoto: 'Sin foto verificada', noVerifiedFood: 'Sin fotos de comida verificadas', viewGooglePhotos: 'Google Fotos', tripadvisor: 'Tripadvisor', verifiedPhoto: 'Foto verificada', areaPhoto: 'Foto del área · Wikimedia', likelyMatchPhoto: 'Coincidencia probable · Wikimedia', viaWikipedia: 'Wikipedia (CC)', viaWikimedia: 'Wikimedia Commons', morePhotos: 'Más fotos',
@@ -2567,7 +2630,7 @@
     }
     // V5: the trip surfaces not in the 5-tab bar are reachable here (set state.activeTab + render).
     list.appendChild(el('p', 'tc-sheet__lbl', t('moreNavTitle')));
-    [['journey', '🧭 ', 'tab_journey'], ['transport', '🚐 ', 'tab_transport'], ['stay', '🏨 ', 'tab_stay'], ['food', '🍽 ', 'tab_food'], ['events', '🎉 ', 'tab_events'], ['weather', '🌦️ ', 'tab_weather'], ['stopovers', '✨ ', 'tab_stopovers'], ['costs', '💰 ', 'tab_costs'], ['group', '👥 ', 'tab_group']].forEach(function (it) {
+    [['guide', '📖 ', 'tab_guide'], ['journey', '🧭 ', 'tab_journey'], ['transport', '🚐 ', 'tab_transport'], ['stay', '🏨 ', 'tab_stay'], ['food', '🍽 ', 'tab_food'], ['events', '🎉 ', 'tab_events'], ['weather', '🌦️ ', 'tab_weather'], ['stopovers', '✨ ', 'tab_stopovers'], ['costs', '💰 ', 'tab_costs'], ['group', '👥 ', 'tab_group']].forEach(function (it) {
       var b = el('button', 'tc-pbtn', it[1] + t(it[2])); b.type = 'button';
       b.addEventListener('click', function () { closeModal(); state.activeTab = it[0]; render(); });
       list.appendChild(b);
@@ -4272,10 +4335,10 @@
     // V5: 5 visible tabs. The other 8 surfaces stay fully reachable via the More sheet (which sets
     // state.activeTab). ALL_TABS validates activeTab against EVERY render branch — NOT just the 5
     // pills — so navigating to a hidden tab via More is never reset to 'overview' by the heal.
-    var ALL_TABS = ['overview', 'itinerary', 'journey', 'transport', 'stay', 'food', 'events', 'weather', 'stopovers', 'costs', 'bookings', 'album', 'clips', 'group'];
+    var ALL_TABS = ['overview', 'itinerary', 'guide', 'journey', 'transport', 'stay', 'food', 'events', 'weather', 'stopovers', 'costs', 'bookings', 'album', 'clips', 'group'];
     if (ALL_TABS.indexOf(state.activeTab) === -1) state.activeTab = 'overview'; // heal stale 'arrival'/'live'/'more'
     var TAB_PAIRS = [['overview', 'tab_overview'], ['itinerary', 'tab_days'], ['bookings', 'tab_tasks'], ['album', 'tab_album'], ['more', 'tab_more']];
-    var HIDDEN_TABS = ['journey', 'transport', 'stay', 'food', 'events', 'weather', 'stopovers', 'costs', 'group']; // reachable via More (clips lives inside Album)
+    var HIDDEN_TABS = ['guide', 'journey', 'transport', 'stay', 'food', 'events', 'weather', 'stopovers', 'costs', 'group']; // reachable via More (clips lives inside Album)
     function tabIsActive(key) {
       if (key === 'more') return HIDDEN_TABS.indexOf(state.activeTab) !== -1;
       if (key === 'album') return state.activeTab === 'album' || state.activeTab === 'clips';
@@ -4290,6 +4353,7 @@
     s.appendChild(tabs);
     if (state.activeTab === 'overview') s.appendChild(renderOverview(plan));
     else if (state.activeTab === 'itinerary') s.appendChild(renderItinerary(plan));
+    else if (state.activeTab === 'guide') s.appendChild(renderTravelGuide(plan));
     else if (state.activeTab === 'journey') s.appendChild(renderJourney(plan));
     else if (state.activeTab === 'transport') s.appendChild(renderTransport(plan));
     else if (state.activeTab === 'stay') s.appendChild(renderStays(plan));
@@ -5107,6 +5171,202 @@
     } else if (imp && !imp.loading) { body.appendChild(el('p', 'tc-hint', t('improveNone'))); }
     box.appendChild(body);
     return box;
+  }
+  // ════════════════════════════════════════════════════════════════════════
+  //  TRAVEL GUIDE / PACKAGE (Phase 1) — a premium, print-to-PDF, shareable
+  //  document generated from the FINALIZED itinerary. Reuses existing data
+  //  (days, stays, transport, attractions, food, cost, route, media, families).
+  //  HONEST ONLY: real photos via placeMedia; computed distances/golden-hour;
+  //  anything without a real source → "Verify before going" + a search/dir link
+  //  (TCPackage.verifyOrLink). No fabricated ratings/prices/tides/parking/battery.
+  //  Editing is NOT reinvented here — links back to the Itinerary control engine.
+  // ════════════════════════════════════════════════════════════════════════
+  function pkgFamilyCounts(tr) {
+    var a = 0, s = 0, kids = 0;
+    (tr.families || []).forEach(function (f) { a += (+f.adults || 0); s += (+f.seniors || 0); String(f.childrenAges || '').split(/[,\s]+/).forEach(function (x) { if (/\d/.test(x)) kids++; }); });
+    return { adults: a, seniors: s, children: kids, travelers: a + s + kids, families: (tr.families || []).length };
+  }
+  function pkgTotalDriveMiles(plan, tr) {
+    var miles = 0, src = 'estimated';
+    (tr.transport || []).forEach(function (lg) { var m = parseInt(String(lg.driveDistanceText || '').replace(/[^\d]/g, ''), 10); if (m) { miles += m; if (lg.driveSource === 'google_maps') src = 'google_maps'; } });
+    return { miles: miles, source: miles ? src : 'unknown' };
+  }
+  function pkgDestLatLng(tr, destIdx) { var d = (tr.destinations || [])[destIdx]; return d ? { lat: d._lat, lng: d._lng } : { lat: null, lng: null }; }
+  // Honest per-place card: real photo (or labeled no-photo+links), AI "why" labeled, directions +
+  // booking, golden-hour when we have coords, and "Verify before going" search links for facts we
+  // do NOT have a real source for (hours/price/rating are NEVER fabricated).
+  function pkgStopCard(tr, p, city, opts) {
+    opts = opts || {};
+    var c = el('article', 'tc-pkg__stop tc-pkg__stop--' + (opts.kind || 'place'));
+    c.appendChild(placeMedia({ name: p.name || (p.area || city), category: opts.mediaCat || 'attraction', address: p.address || p.area || '', city: city, imageUrl: null }, 'tc-place__media tc-pkg__media'));
+    var body = el('div', 'tc-pkg__stopbody');
+    var head = el('div', 'tc-pkg__stophead');
+    if (opts.time) head.appendChild(el('span', 'tc-pkg__time', opts.time));
+    head.appendChild(el('strong', 'tc-pkg__stopname', (opts.icon ? opts.icon + ' ' : '') + (p.name || p.area || city || '')));
+    body.appendChild(head);
+    if (p.cuisine) body.appendChild(el('p', 'tc-pkg__meta', '🍲 ' + p.cuisine));
+    if (p.address) body.appendChild(el('p', 'tc-pkg__meta', '📍 ' + p.address));
+    if (p.why) { var w = el('p', 'tc-pkg__why'); w.appendChild(el('span', 'tc-bk__rec-k', t('recommended') + ': ')); w.appendChild(doc.createTextNode(p.why)); body.appendChild(w); }
+    if (opts.gold) body.appendChild(el('p', 'tc-pkg__meta tc-pkg__gold', '📸 ' + t('pkgGoldenHour') + ': ' + opts.gold + ' (' + t('approxLabel') + ')'));
+    // Facts we don't have a live source for → honest "verify" links (never fabricated values).
+    var facts = el('div', 'tc-pkg__facts');
+    [['pkgHours', 'hours'], ['pkgPriceLevel', 'price'], ['pkgRating', 'reviews']].forEach(function (pr) {
+      var v = TCPackage.verifyOrLink(p[pr[1]], { label: t(pr[0]) + ': ' + t('pkgVerify'), url: gsearch((p.name || city || '') + ' ' + (city || '') + ' ' + pr[1]) });
+      var chipEl;
+      if (v.verify) { chipEl = el('a', 'tc-pkg__verify'); chipEl.href = v.url; chipEl.target = '_blank'; chipEl.rel = 'noopener'; chipEl.textContent = '⚠ ' + v.label; }
+      else chipEl = el('span', 'tc-pkg__fact', t(pr[0]) + ': ' + v.text);
+      facts.appendChild(chipEl);
+    });
+    body.appendChild(facts);
+    var acts = el('div', 'tc-pkg__acts');
+    acts.appendChild(linkBtn('🗺 ' + t('pkgDirections'), MapLinkProvider.google(p.name || p.area || city, city), 'tc-pbtn--accent'));
+    if (opts.kind === 'restaurant') { acts.appendChild(linkBtn('🌐 ' + t('website'), FoodLinkProvider.website(p.name, city))); acts.appendChild(linkBtn('☕ ' + t('pkgNearbyCoffee'), gsearch('coffee near ' + (p.name || city) + ' ' + city))); }
+    else if (opts.kind === 'stay') { acts.appendChild(linkBtn('🔎 ' + t('stayBooking'), StayLinkProvider.booking(p, city))); }
+    else { acts.appendChild(linkBtn('🚻 ' + t('pkgNearbyRestroom'), gsearch('public restroom near ' + (p.name || city) + ' ' + city))); }
+    body.appendChild(acts);
+    c.appendChild(body);
+    return c;
+  }
+  function pkgCover(tr, plan) {
+    var box = el('div', 'tc-pkg__cover');
+    var dests = planDestinations(plan);
+    var heroCity = (dests[0] && (dests[0].city || dests[0])) || tr.destination || '';
+    box.appendChild(placeMedia({ name: heroCity, category: 'destination', city: heroCity, imageUrl: null }, 'tc-place__media tc-pkg__hero'));
+    var inner = el('div', 'tc-pkg__coverin');
+    inner.appendChild(el('p', 'tc-pkg__kicker', '✦ ' + t('pkgPreparedBy')));
+    inner.appendChild(el('h1', 'tc-pkg__title', tr.groupName || (t('pkgTripTitleFallback'))));
+    var chain = dests.map(function (d) { return (d.city || d || '').split(',')[0]; }).filter(Boolean);
+    if (chain.length) inner.appendChild(el('p', 'tc-pkg__route', chain.join('  →  ')));
+    var meta = el('div', 'tc-pkg__covermeta');
+    if (tr.dateRange) meta.appendChild(el('span', 'tc-pkg__chip', '🗓 ' + tr.dateRange));
+    var fc = pkgFamilyCounts(tr);
+    meta.appendChild(el('span', 'tc-pkg__chip', '👪 ' + fc.travelers + ' ' + t('pkgTravelers') + (fc.families > 1 ? (' · ' + fc.families + ' ' + t('pkgFamilies')) : '')));
+    inner.appendChild(meta);
+    box.appendChild(inner);
+    return box;
+  }
+  function pkgKV(label, value) { var r = el('div', 'tc-pkg__kv'); r.appendChild(el('span', 'tc-pkg__kvk', label)); r.appendChild(el('span', 'tc-pkg__kvv', value)); return r; }
+  function pkgExecSummary(tr, plan) {
+    var box = el('div', 'tc-pkg__exec');
+    box.appendChild(el('strong', 'tc-pkg__h', '📋 ' + t('pkgExecSummary')));
+    var g = el('div', 'tc-pkg__kvgrid');
+    var fc = pkgFamilyCounts(tr), parsed = parseTripDates(tr.dateRange) || { count: 1 };
+    if (tr.dateRange) g.appendChild(pkgKV(t('pkgDates'), tr.dateRange));
+    g.appendChild(pkgKV(t('pkgTravelers'), fc.adults + ' ' + t('pkgAdults') + (fc.children ? (' · ' + fc.children + ' ' + t('pkgChildren')) : '') + (fc.seniors ? (' · ' + fc.seniors + ' ' + t('pkgSeniors')) : '')));
+    g.appendChild(pkgKV(t('pkgDays'), (parsed.count || 1) + ''));
+    var dm = pkgTotalDriveMiles(plan, tr);
+    if (dm.miles) g.appendChild(pkgKV(t('pkgDriving'), '~' + dm.miles + ' mi' + (dm.source === 'google_maps' ? '' : ' (' + t('approxLabel') + ')')));
+    var costs = null; try { costs = computeTripCosts(tr); } catch (e) {}
+    if (costs && costs.total) g.appendChild(pkgKV(t('pkgBudget'), '~$' + costs.total.low + '–$' + costs.total.high + ' (' + t('approxLabel') + ')'));
+    // chosen hotels (from Stay Intelligence selections), else a verify pointer
+    var hotels = (tr.destinations || []).map(function (d) { return d.selectedHotel && d.selectedHotel.name; }).filter(Boolean);
+    g.appendChild(pkgKV(t('pkgHotels'), hotels.length ? hotels.join(' · ') : t('pkgSeeStayTab')));
+    // reservations / outstanding tasks
+    var bk = tr.bookings || [], booked = bk.filter(function (b) { return b.bookingStatus === 'booked' || b.confirmationNumber; }).length;
+    if (bk.length) g.appendChild(pkgKV(t('pkgReservations'), booked + '/' + bk.length + ' ' + t('pkgBooked')));
+    box.appendChild(g);
+    return box;
+  }
+  function pkgDay(tr, plan, day, i) {
+    var box = el('div', 'tc-pkg__day');
+    var di = day.destinationIndex || 0, city = destCityName(plan, di);
+    var head = el('div', 'tc-pkg__dayhead');
+    head.appendChild(el('span', 'tc-pkg__daynum', t('day') + ' ' + (i + 1)));
+    head.appendChild(el('strong', 'tc-pkg__daytitle', (day.isTravelDay ? '🚗 ' : '') + (day.title || city || '')));
+    if (day.date) head.appendChild(el('span', 'tc-pkg__daydate', day.date));
+    box.appendChild(head);
+    if (day.summary) box.appendChild(el('p', 'tc-pkg__daysum', day.summary));
+    // golden hour for the day (real math from destination coords + date) — honest, labeled approx.
+    var ll = pkgDestLatLng(tr, di), gh = (ll.lat != null && day.date) ? TCPackage.goldenHour(day.date, ll.lat, ll.lng) : null;
+    var goldStr = gh ? gh.eveningGolden : '';
+    if (gh) box.appendChild(el('p', 'tc-pkg__meta tc-pkg__gold', '🌅 ' + t('pkgSunrise') + ' ' + gh.sunrise + ' · ' + t('pkgSunset') + ' ' + gh.sunset + ' · 📸 ' + t('pkgGoldenHour') + ' ' + gh.eveningGolden));
+    var stops = 0;
+    (day.sections || []).forEach(function (sec) {
+      var label = sec.label || sec.timeOfDay || '';
+      (sec.places || []).forEach(function (p) {
+        if (!p || !(p.name || p.area)) return;
+        stops++;
+        var kind = /restaurant|food|dining|cuisine/i.test((p.category || '') + ' ' + (sec.kind || '')) ? 'restaurant' : (/beach|coast|ocean/i.test((p.category || '') + (p.name || '')) ? 'beach' : 'attraction');
+        box.appendChild(pkgStopCard(tr, p, city, { kind: kind, time: label ? (t('to_' + label) || label) : '', gold: goldStr, mediaCat: kind === 'restaurant' ? 'restaurant' : 'attraction' }));
+      });
+    });
+    if (!stops && day.isTravelDay) box.appendChild(el('p', 'tc-pkg__meta', '🚗 ' + (city ? (t('pkgTravelTo') + ' ' + city) : t('travelDay'))));
+    return box;
+  }
+  // Honest EV trip helper (Phase 1): estimates ONLY from verified distance + USER-entered range.
+  function pkgEvHelper(tr, plan) {
+    var dm = pkgTotalDriveMiles(plan, tr); if (!dm.miles) return null;
+    var box = el('div', 'tc-pkg__ev');
+    box.appendChild(el('strong', 'tc-pkg__h', '⚡ ' + t('pkgEvTitle')));
+    box.appendChild(el('p', 'tc-pkg__meta', '🚗 ' + t('pkgTotalDrive') + ': ~' + dm.miles + ' mi' + (dm.source === 'google_maps' ? '' : ' (' + t('approxLabel') + ')')));
+    var range = parseInt(tr.evRangeMiles, 10) || 0;
+    if (!state.readonly && !tr._demo) {
+      var row = el('div', 'tc-pkg__evrow');
+      var inp = input(range ? String(range) : '', t('pkgEvRangePh')); inp.type = 'number'; inp.setAttribute('inputmode', 'numeric'); inp.className = 'tc-input tc-pkg__evinput';
+      row.appendChild(field(t('pkgEvRange'), inp));
+      var go = el('button', 'tc-pbtn tc-pbtn--accent', t('pkgEvEstimate')); go.type = 'button';
+      go.addEventListener('click', function () { var v = parseInt(inp.value, 10) || 0; tr.evRangeMiles = v; saveTrip(tr); render(); });
+      row.appendChild(go);
+      box.appendChild(row);
+    }
+    var plan2 = TCPackage.estimateEvPlan({ miles: dm.miles, rangeMiles: range });
+    if (plan2.rangeKnown) {
+      box.appendChild(el('p', 'tc-pkg__meta', '🔋 ' + t('pkgEvStops').replace('{n}', String(plan2.stops)) + ' (' + t('approxLabel') + ', ' + t('pkgEvAssume').replace('{r}', String(range)) + ')'));
+      if (plan2.stops === 0 && plan2.arrivalPct != null) box.appendChild(el('p', 'tc-pkg__meta', '✅ ' + t('pkgEvNoStop').replace('{p}', String(plan2.arrivalPct))));
+    } else {
+      box.appendChild(el('p', 'tc-pkg__meta', 'ℹ️ ' + t('pkgEvNeedRange')));
+    }
+    var acts = el('div', 'tc-pkg__acts');
+    acts.appendChild(linkBtn('🔌 ' + t('pkgFindSuperchargers'), gsearch('Tesla Supercharger along ' + ((planDestinations(plan)[0] || {}).city || tr.departureCity || '') + ' to ' + (tr.destination || '')), 'tc-pbtn--accent'));
+    acts.appendChild(linkBtn('☕ ' + t('pkgWhileCharging'), gsearch('coffee and food near Tesla Supercharger ' + (tr.destination || ''))));
+    box.appendChild(acts);
+    box.appendChild(el('p', 'tc-unverified', t('pkgEvDisclaimer')));
+    return box;
+  }
+  function pkgCostSummary(tr) {
+    var costs = null; try { costs = computeTripCosts(tr); } catch (e) {} if (!costs) return null;
+    var box = el('div', 'tc-pkg__cost');
+    box.appendChild(el('strong', 'tc-pkg__h', '💰 ' + t('pkgCostTitle')));
+    var g = el('div', 'tc-pkg__kvgrid');
+    Object.keys(costs.byCategory || {}).forEach(function (cat) { g.appendChild(pkgKV(t('cost_' + cat) || cat, '~$' + Math.round(costs.byCategory[cat]))); });
+    box.appendChild(g);
+    box.appendChild(el('p', 'tc-pkg__total', t('pkgEstTotal') + ': ~$' + costs.total.low + '–$' + costs.total.high));
+    box.appendChild(el('p', 'tc-unverified', t('pkgCostNote')));
+    return box;
+  }
+  function pkgFamilyTips(tr) {
+    var gp = tr.groupProfile || analyzeGroupProfile(tr.families, tr.budget, tr.tripStyle); if (!gp) return null;
+    var tips = [];
+    if (gp.kids || gp.toddlers) tips.push(t('pkgTipKids'));
+    if (gp.teens) tips.push(t('pkgTipTeens'));
+    if (gp.seniors) tips.push(t('pkgTipSeniors'));
+    if (!tips.length) return null;
+    var box = el('div', 'tc-pkg__family');
+    box.appendChild(el('strong', 'tc-pkg__h', '👨‍👩‍👧 ' + t('pkgFamilyTips')));
+    tips.forEach(function (tp) { box.appendChild(el('p', 'tc-pkg__tip', '• ' + tp)); });
+    return box;
+  }
+  function pkgToolbar(tr) {
+    var bar = el('div', 'tc-pkg__toolbar');
+    var pr = el('button', 'tc-pbtn tc-pbtn--accent', '🖨 ' + t('pkgPrint')); pr.type = 'button';
+    pr.addEventListener('click', function () { try { root.print(); } catch (e) {} });
+    bar.appendChild(pr);
+    if (!tr._demo && isOwnerOfTrip()) { var sh = el('button', 'tc-pbtn', '🔗 ' + t('shareTrip')); sh.type = 'button'; sh.addEventListener('click', openShareModal); bar.appendChild(sh); }
+    var ed = el('button', 'tc-pbtn', '✏️ ' + t('pkgEditItin')); ed.type = 'button'; ed.addEventListener('click', function () { state.activeTab = 'itinerary'; render(); }); bar.appendChild(ed);
+    return bar;
+  }
+  function renderTravelGuide(plan) {
+    var tr = state.trip, wrap = el('div', 'tc-pkg');
+    if (!plan || !Array.isArray(plan.days) || !plan.days.length) { wrap.appendChild(el('p', 'tc-empty', t('pkgNoItin'))); return wrap; }
+    wrap.appendChild(pkgToolbar(tr));
+    wrap.appendChild(pkgCover(tr, plan));
+    wrap.appendChild(pkgExecSummary(tr, plan));
+    plan.days.forEach(function (day, i) { wrap.appendChild(pkgDay(tr, plan, day, i)); });
+    var ev = pkgEvHelper(tr, plan); if (ev) wrap.appendChild(ev);
+    var cost = pkgCostSummary(tr); if (cost) wrap.appendChild(cost);
+    var fam = pkgFamilyTips(tr); if (fam) wrap.appendChild(fam);
+    wrap.appendChild(el('p', 'tc-unverified', t('pkgHonestyNote')));
+    return wrap;
   }
   function renderItinerary(plan) {
     // Migrate auto-rejections from existing votes/bookings ONCE per trip load (idempotent).

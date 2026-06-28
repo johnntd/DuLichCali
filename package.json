@@ -19,6 +19,7 @@
     "test:tmevents": "node tests/ticketmaster-events.test.js",
     "test:i18n": "node tests/tc-i18n-parity.test.js",
     "test:stays": "node tests/tc-stays.test.js",
+    "test:package": "node tests/tc-package.test.js",
     "test:mediaenrich": "node tests/tc-media-enrich.test.js",
     "auto:hair": "bash automation/auto_run.sh automation/prompts/hair_salon_system_audit.md",
     "auto:full": "bash automation/auto_run.sh automation/prompts/full_app_system_audit.md",

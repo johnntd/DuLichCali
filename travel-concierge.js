@@ -267,6 +267,9 @@
       pkgLiveTitle: 'Live travel helper', pkgLiveSub: 'Check these before you go — live status is never fabricated.',
       pkgLiveWeather: 'Weather', pkgLiveTraffic: 'Traffic', pkgLiveClosures: 'Road closures', pkgLiveWait: 'Restaurant wait', pkgLiveCrowd: 'Crowds',
       pkgLiveNote: 'These open the real source — Du Lich Cali does not invent live conditions.',
+      pkgCreateCta: 'Create My Travel Package', pkgBannerTitle: 'Your premium Travel Package', pkgBannerSub: 'A printable, shareable guide — cover, daily plan, stays, food, attractions, EV charging & costs.',
+      pkgBannerSampleSub: 'See the full premium guide for this sample — or make it your own trip.', pkgViewPackage: 'View Travel Package', pkgGenerateFull: 'Generate full Travel Package',
+      pkgUseAsTrip: 'Use this as my trip', pkgCustomize: 'Customize this trip', pkgCloned: 'Saved as your trip — edit anything you like',
       pkgHonestyNote: 'This guide reuses your trip data. Photos are real (Google/Wikipedia) or labeled; prices, ratings, hours and battery are estimates or “verify before going” — never fabricated.',
       tab_food: 'Food', foodPicksTitle: 'Food picks', foodSub: 'AI-researched restaurants for your group at each stop — matched to your cuisines.', findFood: 'Find food picks (AI)', researchingFood: 'Finding the best restaurants for your group…', noFoodYet: 'Tap “Find food picks” for AI restaurant recommendations.', searchFoodBtn: 'Search', yelpBtn: 'Yelp', dishesLabel: 'Must-try', reservationLabel: 'Reservations',
       imgRepresentative: 'Representative image only', imgPending: 'Photo pending verification', viewPhotos: 'Photos', googleReviews: 'Google reviews', yelpReviews: 'Yelp reviews', menuBtn: 'Menu', mustTryLabel: 'Must-try',
@@ -614,6 +617,9 @@
       pkgLiveTitle: 'Trợ lý theo thời gian thực', pkgLiveSub: 'Hãy kiểm tra trước khi đi — không bao giờ bịa tình trạng trực tiếp.',
       pkgLiveWeather: 'Thời tiết', pkgLiveTraffic: 'Giao thông', pkgLiveClosures: 'Đường đóng', pkgLiveWait: 'Thời gian chờ nhà hàng', pkgLiveCrowd: 'Đông đúc',
       pkgLiveNote: 'Các liên kết này mở nguồn thật — Du Lich Cali không tự bịa điều kiện trực tiếp.',
+      pkgCreateCta: 'Tạo cẩm nang du lịch', pkgBannerTitle: 'Cẩm nang du lịch cao cấp của bạn', pkgBannerSub: 'Cẩm nang có thể in & chia sẻ — bìa, lịch từng ngày, nơi ở, ẩm thực, điểm tham quan, sạc xe điện & chi phí.',
+      pkgBannerSampleSub: 'Xem cẩm nang cao cấp đầy đủ cho mẫu này — hoặc biến thành chuyến đi của bạn.', pkgViewPackage: 'Xem cẩm nang', pkgGenerateFull: 'Tạo cẩm nang đầy đủ',
+      pkgUseAsTrip: 'Dùng làm chuyến đi của tôi', pkgCustomize: 'Tùy chỉnh chuyến đi', pkgCloned: 'Đã lưu thành chuyến đi của bạn — chỉnh sửa tùy thích',
       pkgHonestyNote: 'Cẩm nang này dùng dữ liệu chuyến đi của bạn. Ảnh là thật (Google/Wikipedia) hoặc có ghi chú; giá, đánh giá, giờ mở cửa và pin là ước tính hoặc “kiểm tra trước khi đi” — không bao giờ bịa.',
       tab_food: 'Ẩm thực', foodPicksTitle: 'Gợi ý ẩm thực', foodSub: 'AI nghiên cứu nhà hàng cho cả nhóm tại từng điểm — hợp khẩu vị của bạn.', findFood: 'Tìm gợi ý ẩm thực (AI)', researchingFood: 'Đang tìm nhà hàng tốt nhất cho nhóm…', noFoodYet: 'Nhấn “Tìm gợi ý ẩm thực” để AI gợi ý nhà hàng.', searchFoodBtn: 'Tìm', yelpBtn: 'Yelp', dishesLabel: 'Nên thử', reservationLabel: 'Đặt chỗ',
       imgRepresentative: 'Chỉ là ảnh minh họa', imgPending: 'Ảnh chờ xác minh', viewPhotos: 'Ảnh', googleReviews: 'Đánh giá Google', yelpReviews: 'Đánh giá Yelp', menuBtn: 'Thực đơn', mustTryLabel: 'Nên thử',
@@ -961,6 +967,9 @@
       pkgLiveTitle: 'Asistente en tiempo real', pkgLiveSub: 'Revisa esto antes de ir — el estado en vivo nunca se inventa.',
       pkgLiveWeather: 'Clima', pkgLiveTraffic: 'Tráfico', pkgLiveClosures: 'Cierres de vías', pkgLiveWait: 'Espera en restaurantes', pkgLiveCrowd: 'Multitudes',
       pkgLiveNote: 'Estos abren la fuente real — Du Lich Cali no inventa condiciones en vivo.',
+      pkgCreateCta: 'Crear mi guía de viaje', pkgBannerTitle: 'Tu guía de viaje premium', pkgBannerSub: 'Una guía imprimible y compartible — portada, plan diario, alojamiento, comida, atracciones, carga EV y costos.',
+      pkgBannerSampleSub: 'Mira la guía premium completa de este ejemplo — o conviértelo en tu propio viaje.', pkgViewPackage: 'Ver guía de viaje', pkgGenerateFull: 'Generar guía completa',
+      pkgUseAsTrip: 'Usar como mi viaje', pkgCustomize: 'Personalizar este viaje', pkgCloned: 'Guardado como tu viaje — edita lo que quieras',
       pkgHonestyNote: 'Esta guía reutiliza los datos de tu viaje. Las fotos son reales (Google/Wikipedia) o etiquetadas; precios, calificaciones, horarios y batería son estimaciones o “verifica antes de ir” — nunca inventados.',
       tab_food: 'Comida', foodPicksTitle: 'Recomendaciones de comida', foodSub: 'Restaurantes investigados por IA para tu grupo en cada parada, según tus cocinas.', findFood: 'Buscar comida (IA)', researchingFood: 'Buscando los mejores restaurantes para tu grupo…', noFoodYet: 'Toca “Buscar comida” para recomendaciones de restaurantes por IA.', searchFoodBtn: 'Buscar', yelpBtn: 'Yelp', dishesLabel: 'Para probar', reservationLabel: 'Reservas',
       imgRepresentative: 'Solo imagen representativa', imgPending: 'Foto pendiente de verificar', viewPhotos: 'Fotos', googleReviews: 'Reseñas de Google', yelpReviews: 'Reseñas de Yelp', menuBtn: 'Menú', mustTryLabel: 'Para probar',
@@ -2718,7 +2727,7 @@
     }
     // V5: the trip surfaces not in the 5-tab bar are reachable here (set state.activeTab + render).
     list.appendChild(el('p', 'tc-sheet__lbl', t('moreNavTitle')));
-    [['guide', '📖 ', 'tab_guide'], ['journey', '🧭 ', 'tab_journey'], ['transport', '🚐 ', 'tab_transport'], ['stay', '🏨 ', 'tab_stay'], ['food', '🍽 ', 'tab_food'], ['events', '🎉 ', 'tab_events'], ['weather', '🌦️ ', 'tab_weather'], ['stopovers', '✨ ', 'tab_stopovers'], ['costs', '💰 ', 'tab_costs'], ['group', '👥 ', 'tab_group']].forEach(function (it) {
+    [['album', '📸 ', 'tab_album'], ['journey', '🧭 ', 'tab_journey'], ['transport', '🚐 ', 'tab_transport'], ['stay', '🏨 ', 'tab_stay'], ['food', '🍽 ', 'tab_food'], ['events', '🎉 ', 'tab_events'], ['weather', '🌦️ ', 'tab_weather'], ['stopovers', '✨ ', 'tab_stopovers'], ['costs', '💰 ', 'tab_costs'], ['group', '👥 ', 'tab_group']].forEach(function (it) {
       var b = el('button', 'tc-pbtn', it[1] + t(it[2])); b.type = 'button';
       b.addEventListener('click', function () { closeModal(); state.activeTab = it[0]; render(); });
       list.appendChild(b);
@@ -2796,7 +2805,7 @@
   }
   // A CTA that opens the create flow (used at the top of the hero and again at the bottom).
   function heroCtaBtn() {
-    var cta = el('button', 'tc-cta tc-hero__cta', t('start')); cta.type = 'button';
+    var cta = el('button', 'tc-cta tc-hero__cta', '📖 ' + t('pkgCreateCta')); cta.type = 'button';
     cta.addEventListener('click', function () { newTrip(); state.screen = 'create'; render(); });
     return cta;
   }
@@ -3131,7 +3140,15 @@
     state.trip.groupName = sample.groupName; state.trip.destination = sample.destination;
     state.trip.dateRange = sample.dateRange; state.trip.plan = JSON.parse(JSON.stringify(sample));
     state.trip.plan.dataSource = 'mock_sample_pending_verification';
-    state.trip.destinations = [{ id: uid('dest'), order: 0, city: sample.destination, startDate: '', endDate: '', hotel: null, notes: '' }];
+    // Multi-destination samples carry their own destinations[] (+ optional transport legs so the
+    // Guide's EV planner can show labeled-estimate distances). Single-dest samples fall back to one.
+    if (Array.isArray(sample.destinations) && sample.destinations.length) {
+      state.trip.destinations = sample.destinations.map(function (d, i) { return Object.assign({ id: uid('dest'), order: i, startDate: '', endDate: '', notes: '' }, JSON.parse(JSON.stringify(d))); });
+    } else {
+      state.trip.destinations = [{ id: uid('dest'), order: 0, city: sample.destination, startDate: '', endDate: '', hotel: null, notes: '' }];
+    }
+    if (sample.departureCity) state.trip.departureCity = sample.departureCity;
+    if (Array.isArray(sample.transport)) state.trip.transport = JSON.parse(JSON.stringify(sample.transport));
     normalizeDestinations(state.trip);
     state.trip._demo = true; state.readonly = true; // read-only local preview, no login/Firestore
     state.screen = 'plan'; state.activeDay = 0; state.activeTab = 'overview';
@@ -4425,11 +4442,12 @@
     // pills — so navigating to a hidden tab via More is never reset to 'overview' by the heal.
     var ALL_TABS = ['overview', 'itinerary', 'guide', 'journey', 'transport', 'stay', 'food', 'events', 'weather', 'stopovers', 'costs', 'bookings', 'album', 'clips', 'group'];
     if (ALL_TABS.indexOf(state.activeTab) === -1) state.activeTab = 'overview'; // heal stale 'arrival'/'live'/'more'
-    var TAB_PAIRS = [['overview', 'tab_overview'], ['itinerary', 'tab_days'], ['bookings', 'tab_tasks'], ['album', 'tab_album'], ['more', 'tab_more']];
-    var HIDDEN_TABS = ['guide', 'journey', 'transport', 'stay', 'food', 'events', 'weather', 'stopovers', 'costs', 'group']; // reachable via More (clips lives inside Album)
+    // Guide (the premium Travel Package) is a PRIMARY tab so customers can't miss it; Album moves
+    // into "More" (photos are secondary to the package). Clips still live inside Album.
+    var TAB_PAIRS = [['overview', 'tab_overview'], ['itinerary', 'tab_days'], ['guide', 'tab_guide'], ['bookings', 'tab_tasks'], ['more', 'tab_more']];
+    var HIDDEN_TABS = ['album', 'journey', 'transport', 'stay', 'food', 'events', 'weather', 'stopovers', 'costs', 'group']; // reachable via More
     function tabIsActive(key) {
-      if (key === 'more') return HIDDEN_TABS.indexOf(state.activeTab) !== -1;
-      if (key === 'album') return state.activeTab === 'album' || state.activeTab === 'clips';
+      if (key === 'more') return HIDDEN_TABS.indexOf(state.activeTab) !== -1 || state.activeTab === 'clips';
       return state.activeTab === key;
     }
     var tabs = el('div', 'tc-tabs');
@@ -4687,9 +4705,44 @@
     c.addEventListener('click', function (e) { if (e.target && e.target.closest && e.target.closest('a, button')) return; try { openPlaceModal(ovWithCity(x, '')); } catch (err) {} });
     return c;
   }
+  // Clone a read-only sample into the signed-in user's own editable trip (then open the Guide or
+  // the edit screen). Login-gated; never writes a demo to Firestore until it's the user's trip.
+  function pkgUseAsMyTrip(toEdit) {
+    requireLogin(function () {
+      var tr = state.trip; if (!tr) return;
+      tr._demo = false; state.readonly = false;
+      tr.id = uid('trip'); tr.ownerUid = curUid(); tr.createdAt = Date.now();
+      if (!tr.groupName && tr.plan) tr.groupName = tr.plan.destination || '';
+      try { saveTrip(tr); } catch (e) {}
+      toast(t('pkgCloned'));
+      if (toEdit) { state.screen = 'create'; } else { state.activeTab = 'guide'; }
+      render();
+    });
+  }
+  // Big, unmissable "Travel Package" entry at the top of the Overview — the premium Guide is one
+  // tap away (and for samples: generate it, or make the sample your own trip / customize it).
+  function pkgOverviewBanner(tr) {
+    var b = el('div', 'tc-ov-pkgcta');
+    b.appendChild(el('span', 'tc-ov-pkgcta__ic', '📖'));
+    var body = el('div', 'tc-ov-pkgcta__body');
+    body.appendChild(el('strong', 'tc-ov-pkgcta__t', t('pkgBannerTitle')));
+    body.appendChild(el('span', 'tc-ov-pkgcta__s', t(tr._demo ? 'pkgBannerSampleSub' : 'pkgBannerSub')));
+    b.appendChild(body);
+    var acts = el('div', 'tc-ov-pkgcta__acts');
+    var open = el('button', 'tc-cta tc-ov-pkgcta__go', '📖 ' + t(tr._demo ? 'pkgGenerateFull' : 'pkgViewPackage')); open.type = 'button';
+    open.addEventListener('click', function () { state.activeTab = 'guide'; render(); });
+    acts.appendChild(open);
+    if (tr._demo) {
+      var use = el('button', 'tc-pbtn', '✓ ' + t('pkgUseAsTrip')); use.type = 'button'; use.addEventListener('click', function () { pkgUseAsMyTrip(false); }); acts.appendChild(use);
+      var cust = el('button', 'tc-pbtn', '✏️ ' + t('pkgCustomize')); cust.type = 'button'; cust.addEventListener('click', function () { pkgUseAsMyTrip(true); }); acts.appendChild(cust);
+    }
+    b.appendChild(acts);
+    return b;
+  }
   function renderOverview(plan) {
     var tr = state.trip;
     var wrap = el('div', 'tc-ov');
+    wrap.appendChild(pkgOverviewBanner(tr)); // prominent Travel Package entry (Priority: discoverability)
 
     // ── Block 1: Cinematic Hero — experience-first. NO readiness ring / budget chip / status
     //    chips / next-task CTA (those live in the Task & Cost centers). Real photo via placeMedia

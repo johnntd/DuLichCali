@@ -1846,6 +1846,15 @@ select.tc-input { appearance: none; background-image: linear-gradient(45deg, tra
 .tc-pkg__evset { display: flex; flex-wrap: wrap; gap: .5rem; align-items: flex-end; margin: .5rem 0; }
 .tc-pkg__evleg { padding: .55rem .65rem; margin: .4rem 0; border-radius: 10px; border: 1px solid var(--border); background: var(--navy-800); }
 .tc-pkg__evlegrte { display: block; font-family: var(--font-d); font-size: .95rem; color: var(--cream); margin-bottom: .25rem; }
+/* Prominent Travel Package entry banner on the Overview */
+.tc-ov-pkgcta { display: flex; gap: .7rem; align-items: center; flex-wrap: wrap; margin: 0 0 1rem; padding: .85rem 1rem; border-radius: 16px; border: 1px solid var(--tc-gold); background: linear-gradient(135deg, rgba(241,194,101,.14), rgba(214,161,62,.06)); box-shadow: var(--tc-glow-gold); }
+.tc-ov-pkgcta__ic { font-size: 1.8rem; line-height: 1; }
+.tc-ov-pkgcta__body { flex: 1; min-width: 160px; }
+.tc-ov-pkgcta__t { display: block; font-family: var(--font-d); font-size: 1.05rem; color: var(--cream); }
+.tc-ov-pkgcta__s { display: block; font-size: .78rem; color: var(--muted); line-height: 1.4; margin-top: .15rem; }
+.tc-ov-pkgcta__acts { display: flex; flex-wrap: wrap; gap: .45rem; width: 100%; }
+.tc-ov-pkgcta__go { white-space: nowrap; }
+@media (min-width: 768px) { .tc-ov-pkgcta__acts { width: auto; } }
 .tc-pkg__total { font-family: var(--font-d); font-size: 1.05rem; color: var(--tc-gold); margin: .5rem 0 0; }
 .tc-pkg__tip { font-size: .84rem; color: var(--cream); margin: .25rem 0; line-height: 1.5; }
 @media (min-width: 768px) {

@@ -890,5 +890,73 @@ window.TC_SAMPLES = {
         ]
       }
     ]
+  },
+  "sj_anaheim": {
+    "destination": "Anaheim & San Diego, California",
+    "groupName": "Family Vacation — Anaheim & San Diego",
+    "dateRange": "Jul 1–4, 2026",
+    "departureCity": "San Jose, CA",
+    "summary": "A 4-day Southern California family trip: a scenic coastal drive from San Jose down to Anaheim (Pismo Beach, Avila Beach, Santa Barbara), a San Diego Zoo + La Jolla day trip, an Orange County beach-and-eats day (Crystal Cove, Laguna, Balboa Island, Little Saigon food), and the drive home. Home base is a stay in Anaheim. All places are real; hours/prices/ratings are pulled live from Google or shown as \"verify before going.\"",
+    "destinations": [
+      { "city": "Anaheim, California", "role": "main_destination", "_lat": 33.8366, "_lng": -117.9143, "hotel": "10072 Gravier Street, Anaheim, CA", "selectedHotel": { "name": "Your stay — 10072 Gravier St, Anaheim", "area": "10072 Gravier Street, Anaheim, CA", "city": "Anaheim, CA" } },
+      { "city": "San Diego, California", "role": "stopover", "_lat": 32.7157, "_lng": -117.1611 }
+    ],
+    "families": [
+      { "id": "f1", "name": "Family", "adults": 2, "seniors": 0, "childrenAges": "8, 12" }
+    ],
+    "transport": [
+      { "fromCity": "San Jose, CA", "toCity": "Anaheim, California", "driveDistanceText": "340 mi", "driveSource": "estimated", "legType": "outbound" },
+      { "fromCity": "Anaheim, California", "toCity": "San Diego, California", "driveDistanceText": "95 mi", "driveSource": "estimated", "legType": "inter" },
+      { "fromCity": "San Diego, California", "toCity": "Anaheim, California", "driveDistanceText": "95 mi", "driveSource": "estimated", "legType": "inter" },
+      { "fromCity": "Anaheim, California", "toCity": "San Jose, CA", "driveDistanceText": "340 mi", "driveSource": "estimated", "legType": "return" }
+    ],
+    "days": [
+      {
+        "date": "Jul 1, 2026", "title": "San Jose → Anaheim (Coastal Drive)", "destinationIndex": 0, "isTravelDay": true,
+        "summary": "Scenic drive south with beach + town stops, arriving in Anaheim by evening.",
+        "sections": [
+          { "timeOfDay": "morning", "title": "Central Coast stops", "places": [
+            { "id": "d1-pismo", "name": "Pismo Beach", "category": "beach", "address": "Pismo Beach, CA", "why": "Classic Central Coast beach + pier — a perfect leg-stretch and lunch stop." },
+            { "id": "d1-avila", "name": "Avila Beach", "category": "beach", "address": "Avila Beach, CA", "why": "Calm, family-friendly cove just south of Pismo." },
+            { "id": "d1-sb", "name": "Stearns Wharf, Santa Barbara", "category": "sightseeing", "address": "217 Stearns Wharf, Santa Barbara, CA 93101", "why": "Walk the wharf before the final push to Anaheim." }
+          ] }
+        ]
+      },
+      {
+        "date": "Jul 2, 2026", "title": "San Diego Zoo Day Trip", "destinationIndex": 1,
+        "summary": "Day trip south to the world-famous San Diego Zoo, then the La Jolla coast.",
+        "sections": [
+          { "timeOfDay": "morning", "title": "San Diego Zoo", "places": [
+            { "id": "d2-zoo", "name": "San Diego Zoo", "category": "zoo", "ticketed": true, "address": "2920 Zoo Dr, San Diego, CA 92101", "why": "World-class zoo — rope-drop for the pandas, midday shade break." }
+          ] },
+          { "timeOfDay": "afternoon", "title": "La Jolla coast", "places": [
+            { "id": "d2-lajolla", "name": "La Jolla Cove", "category": "beach", "address": "1100 Coast Blvd, La Jolla, CA 92037", "why": "Sea lions, snorkeling coves, and golden-hour cliffs." }
+          ] }
+        ]
+      },
+      {
+        "date": "Jul 3, 2026", "title": "Orange County Beaches & Eats", "destinationIndex": 0,
+        "summary": "Crystal Cove + Laguna beaches, Balboa Island, and a Little Saigon / OC food crawl.",
+        "sections": [
+          { "timeOfDay": "morning", "title": "Beaches", "places": [
+            { "id": "d3-crystal", "name": "Crystal Cove State Park", "category": "beach", "address": "8471 N Coast Hwy, Laguna Beach, CA 92651", "why": "Tide pools and historic cottages between Newport and Laguna." },
+            { "id": "d3-laguna", "name": "Laguna Beach (Main Beach)", "category": "beach", "address": "Main Beach, Laguna Beach, CA 92651", "why": "Coves, art, and one of SoCal's prettiest main beaches." }
+          ] },
+          { "timeOfDay": "afternoon", "title": "Balboa Island", "places": [
+            { "id": "d3-balboa", "name": "Balboa Island", "category": "sightseeing", "address": "Balboa Island, Newport Beach, CA 92662", "why": "Ferry, frozen bananas, and a walkable bayfront loop." }
+          ] },
+          { "timeOfDay": "evening", "title": "Little Saigon / OC food crawl", "places": [
+            { "id": "d3-creampan", "name": "Cream Pan", "category": "restaurant", "address": "13362 Newport Ave, Tustin, CA 92780", "why": "Famous strawberry croissant — go early before they sell out." },
+            { "id": "d3-buncha", "name": "Bun Cha 1008", "category": "restaurant", "address": "Bun Cha 1008, Garden Grove, CA", "why": "Hanoi-style bun cha in Little Saigon." },
+            { "id": "d3-moranngak", "name": "Mo Ran Gak", "category": "restaurant", "address": "9651 Garden Grove Blvd, Garden Grove, CA 92844", "why": "Korean BBQ / tofu-house option for the group (or Anjin / Ohshima)." }
+          ] }
+        ]
+      },
+      {
+        "date": "Jul 4, 2026", "title": "Anaheim → San Jose (Return)", "destinationIndex": 0, "isTravelDay": true, "isReturnDay": true,
+        "summary": "Easy morning, then the drive home up I-5.",
+        "sections": []
+      }
+    ]
   }
 };
